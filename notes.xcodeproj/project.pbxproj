@@ -8,7 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		AD6727B52BD06FA700D47A73 /* sectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD6727B42BD06FA700D47A73 /* sectionView.swift */; };
-		ADA90CB62BD0182300290948 /* notesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA90CB52BD0182300290948 /* notesApp.swift */; };
+		AD6727BB2BD080FE00D47A73 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD6727BA2BD080FE00D47A73 /* UIKit.framework */; platformFilter = ios; };
+		AD6727BF2BD0816A00D47A73 /* noteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD6727BE2BD0816A00D47A73 /* noteApp.swift */; };
+		AD6727C12BD0878900D47A73 /* thumbnailsAdd.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD6727C02BD0878900D47A73 /* thumbnailsAdd.swift */; };
 		ADA90CB82BD0182300290948 /* homeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA90CB72BD0182300290948 /* homeView.swift */; };
 		ADA90CBA2BD0182400290948 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ADA90CB92BD0182400290948 /* Assets.xcassets */; };
 		ADA90CBE2BD0182400290948 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ADA90CBD2BD0182400290948 /* Preview Assets.xcassets */; };
@@ -39,8 +41,10 @@
 
 /* Begin PBXFileReference section */
 		AD6727B42BD06FA700D47A73 /* sectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = sectionView.swift; sourceTree = "<group>"; };
+		AD6727BA2BD080FE00D47A73 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS17.4.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
+		AD6727BE2BD0816A00D47A73 /* noteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = noteApp.swift; sourceTree = "<group>"; };
+		AD6727C02BD0878900D47A73 /* thumbnailsAdd.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = thumbnailsAdd.swift; sourceTree = "<group>"; };
 		ADA90CB22BD0182300290948 /* notes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = notes.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		ADA90CB52BD0182300290948 /* notesApp.swift */ = {isa = PBXFileReference; explicitFileType = text.man; path = notesApp.swift; sourceTree = "<group>"; };
 		ADA90CB72BD0182300290948 /* homeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = homeView.swift; sourceTree = "<group>"; };
 		ADA90CB92BD0182400290948 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		ADA90CBB2BD0182400290948 /* notes.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = notes.entitlements; sourceTree = "<group>"; };
@@ -60,6 +64,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AD6727BB2BD080FE00D47A73 /* UIKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -83,8 +88,17 @@
 		AD6727B82BD07B8000D47A73 /* assets */ = {
 			isa = PBXGroup;
 			children = (
+				AD6727C02BD0878900D47A73 /* thumbnailsAdd.swift */,
 			);
 			path = assets;
+			sourceTree = "<group>";
+		};
+		AD6727B92BD080FE00D47A73 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				AD6727BA2BD080FE00D47A73 /* UIKit.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		ADA90CA92BD0182300290948 = {
@@ -94,6 +108,7 @@
 				ADA90CC62BD0182400290948 /* notesTests */,
 				ADA90CD02BD0182400290948 /* notesUITests */,
 				ADA90CB32BD0182300290948 /* Products */,
+				AD6727B92BD080FE00D47A73 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -112,8 +127,8 @@
 			children = (
 				AD6727B82BD07B8000D47A73 /* assets */,
 				ADA90CE02BD018FE00290948 /* chapter */,
-				ADA90CB52BD0182300290948 /* notesApp.swift */,
 				ADA90CB72BD0182300290948 /* homeView.swift */,
+				AD6727BE2BD0816A00D47A73 /* noteApp.swift */,
 				ADA90CB92BD0182400290948 /* Assets.xcassets */,
 				ADA90CBB2BD0182400290948 /* notes.entitlements */,
 				ADA90CBC2BD0182400290948 /* Preview Content */,
@@ -298,9 +313,10 @@
 				AD6727B52BD06FA700D47A73 /* sectionView.swift in Sources */,
 				ADA90CE22BD0193F00290948 /* chapterView.swift in Sources */,
 				ADA90CB82BD0182300290948 /* homeView.swift in Sources */,
-				ADA90CB62BD0182300290948 /* notesApp.swift in Sources */,
 				ADA90CE82BD019A900290948 /* titleText.swift in Sources */,
 				ADA90CEA2BD01A2C00290948 /* bodyText.swift in Sources */,
+				AD6727C12BD0878900D47A73 /* thumbnailsAdd.swift in Sources */,
+				AD6727BF2BD0816A00D47A73 /* noteApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -462,6 +478,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"notes/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -498,6 +515,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"notes/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;

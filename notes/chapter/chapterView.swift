@@ -28,17 +28,18 @@ struct ChapterView: View {
     }
     
     
-    func titleStyle() -> some View {
+    func thumbnail() -> some View {
         VStack {
+
             Text(title)
-                .font(.title)
-                .foregroundColor(.gray)
-            Text(content)
-                .font(.body)
+                .font(.custom("Helvetica", size: 14, relativeTo: .body))
                 .foregroundColor(.blue)
+            Text(content)
+                .font(.custom("Helvetica", size: 14, relativeTo: .body))
+                .foregroundColor(.gray)
         }
-        .frame(width: 150, height: 150)
-        .background(.gray)
+        .frame(width: 100, height: 100)
+        .background(.green)
         .cornerRadius(10)
     }
     
@@ -51,7 +52,7 @@ struct ChapterView: View {
 
 #Preview {
     ChapterView(title: "Mon titre", content: "Le contenue")
-        .titleStyle()
+        .thumbnail()
 }
 
 
