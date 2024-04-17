@@ -34,9 +34,9 @@ struct bodyText: View {
                         .focused($isFocused)
                         .onChange(of: isFocused) { () -> Void in
                             if isFocused {
-                                print("focus")
+                                print("focus body")
                             } else {
-                                print("unfocus")
+                                print("unfocus body")
                                 isShowingTitle.toggle()
                             }
                         }

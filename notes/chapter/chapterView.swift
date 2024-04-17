@@ -7,23 +7,51 @@
 
 import SwiftUI
 
-struct chapterView: View {
+
+struct ChapterView: View {
+    let id: UUID
     @State private var title: String
     @State private var content: String
-    
-    
+
     init(title: String, content: String) {
         self._title = State(initialValue: title)
         self._content = State(initialValue: content)
+        self.id = UUID()
     }
-    
-    
+
     var body: some View {
-        titleText(title: title)
-        bodyText(content: content)
+        VStack(alignment: .leading) {
+            titleText(title: title)
+            bodyText(content: content)
+            Spacer()
+        }
     }
+    
+    
+    func titleStyle() -> some View {
+        VStack {
+            Text(title)
+                .font(.title)
+                .foregroundColor(.gray)
+            Text(content)
+                .font(.body)
+                .foregroundColor(.blue)
+        }
+        .frame(width: 150, height: 150)
+        .background(.gray)
+        .cornerRadius(10)
+    }
+    
+
 }
 
+
+
+
+
 #Preview {
-    chapterView(title: "Mon titre", content: "Le contenue")
+    ChapterView(title: "Mon titre", content: "Le contenue")
+        .titleStyle()
 }
+
+

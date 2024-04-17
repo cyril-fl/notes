@@ -9,7 +9,11 @@ import SwiftUI
 
 struct sectionView: View {
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        HStack {
+            ChapterView(title: "Titre1", content: "Content2")
+            ChapterView(title: "Titre2", content: "Content3")
+            ChapterView(title: "Titre3", content: "Content3")
+        }
     }
 }
 

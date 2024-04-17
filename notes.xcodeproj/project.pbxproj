@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AD6727B52BD06FA700D47A73 /* sectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD6727B42BD06FA700D47A73 /* sectionView.swift */; };
 		ADA90CB62BD0182300290948 /* notesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA90CB52BD0182300290948 /* notesApp.swift */; };
 		ADA90CB82BD0182300290948 /* homeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA90CB72BD0182300290948 /* homeView.swift */; };
 		ADA90CBA2BD0182400290948 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ADA90CB92BD0182400290948 /* Assets.xcassets */; };
@@ -37,8 +38,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		AD6727B42BD06FA700D47A73 /* sectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = sectionView.swift; sourceTree = "<group>"; };
 		ADA90CB22BD0182300290948 /* notes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = notes.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		ADA90CB52BD0182300290948 /* notesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = notesApp.swift; sourceTree = "<group>"; };
+		ADA90CB52BD0182300290948 /* notesApp.swift */ = {isa = PBXFileReference; explicitFileType = text.man; path = notesApp.swift; sourceTree = "<group>"; };
 		ADA90CB72BD0182300290948 /* homeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = homeView.swift; sourceTree = "<group>"; };
 		ADA90CB92BD0182400290948 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		ADA90CBB2BD0182400290948 /* notes.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = notes.entitlements; sourceTree = "<group>"; };
@@ -78,6 +80,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		AD6727B82BD07B8000D47A73 /* assets */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = assets;
+			sourceTree = "<group>";
+		};
 		ADA90CA92BD0182300290948 = {
 			isa = PBXGroup;
 			children = (
@@ -101,6 +110,7 @@
 		ADA90CB42BD0182300290948 /* notes */ = {
 			isa = PBXGroup;
 			children = (
+				AD6727B82BD07B8000D47A73 /* assets */,
 				ADA90CE02BD018FE00290948 /* chapter */,
 				ADA90CB52BD0182300290948 /* notesApp.swift */,
 				ADA90CB72BD0182300290948 /* homeView.swift */,
@@ -141,6 +151,7 @@
 			children = (
 				ADA90CE32BD0197100290948 /* textElement */,
 				ADA90CE12BD0193F00290948 /* chapterView.swift */,
+				AD6727B42BD06FA700D47A73 /* sectionView.swift */,
 			);
 			path = chapter;
 			sourceTree = "<group>";
@@ -284,6 +295,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AD6727B52BD06FA700D47A73 /* sectionView.swift in Sources */,
 				ADA90CE22BD0193F00290948 /* chapterView.swift in Sources */,
 				ADA90CB82BD0182300290948 /* homeView.swift in Sources */,
 				ADA90CB62BD0182300290948 /* notesApp.swift in Sources */,

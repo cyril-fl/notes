@@ -32,9 +32,9 @@ struct titleText: View {
                     .focused($isFocused)
                     .onChange(of: isFocused) { () -> Void in
                         if isFocused {
-                            print("focus")
+                            print("focus Title")
                         } else {
-                            print("unfocus")
+                            print("unfocus Title")
                             isShowingTitle.toggle()
                         }
                     }
