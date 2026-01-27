@@ -1,0 +1,12 @@
+{
+  "components": {
+    "editor": {
+      "placeholder": "Écrivez votre note ici..."
+    }
+  },
+  "placeholder": {
+    "editor": "Écrivez votre note ici...",
+    "folder_untitled": "Noubveau dossier",
+    "note_untitled": "Sans titre"
+  }
+}

@@ -1,0 +1,6 @@
+@import 'tailwindcss';
+@import '@nuxt/ui';
+
+@plugin 'tailwind-scrollbar';
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
