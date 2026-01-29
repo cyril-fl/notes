@@ -32,6 +32,12 @@ export const useDataStore = defineStore('data', () => {
     return _raw.value;
   };
 
+  const handleReadId = (data: DataSchema) => {
+    _raw.value = [..._raw.value, data];
+
+    return _raw.value;
+  };
+
   const handleUpdate = (data: DataSchema | DataSchema[]) => {
     const d = Array.isArray(data) ? data : [data];
 
@@ -40,15 +46,19 @@ export const useDataStore = defineStore('data', () => {
     return _raw.value;
   };
 
-  const handleUpdateId = (id: string, data: DataSchema) => {
+  const handleUpdateId = (id: string, data: Partial<DataSchema>) => {
     const index = _raw.value.findIndex((n) => n.id === id);
 
     if (index === -1) return;
 
     const current = _raw.value[index];
-    const updated = defu(data, current);
+    const unchecked = defu(data, current);
 
-    _raw.value[index] = updated;
+    const updated = dataParams.safeParse(unchecked);
+
+    if (!updated.success) return;
+
+    _raw.value[index] = updated.data;
 
     return _raw.value;
   };
@@ -56,6 +66,7 @@ export const useDataStore = defineStore('data', () => {
   const handleDelete = () => {
     _raw.value = [];
 
+    console.log('After delete, raw data:', _raw.value);
     return _raw.value;
   };
 
@@ -108,6 +119,14 @@ export const useDataStore = defineStore('data', () => {
     data.value = newData;
   };
 
+  function getSnapshot(): DataSchema[];
+  function getSnapshot(id: string): DataSchema | undefined;
+  function getSnapshot(id?: string): DataSchema | DataSchema[] | undefined {
+    return id
+      ? structuredClone(_raw.value.find((n) => n.id === id))
+      : structuredClone(_raw.value);
+  }
+
   /* Lifecycle */
   watch(
     _raw,
@@ -126,9 +145,11 @@ export const useDataStore = defineStore('data', () => {
     popularTags,
     hasLoaded,
     onRead: handleRead,
+    onReadId: handleReadId,
     onUpdate: handleUpdate,
     onUpdateId: handleUpdateId,
     onDelete: handleDelete,
     onDeleteId: handleDeleteId,
+    getSnapshot,
   };
 });

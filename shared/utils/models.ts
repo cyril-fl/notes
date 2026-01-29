@@ -1,6 +1,12 @@
 import twitter from 'twitter-text';
 import { ItemType } from '../types/models';
-import type { FolderSchema, ItemSchema, NoteSchema } from '../types/models';
+import type {
+  FolderSchema,
+  ItemSchema,
+  NoteSchema,
+  DraftFolder,
+  DraftNote,
+} from '../types/models';
 import type { CalendarDate } from '@internationalized/date';
 import { today, getLocalTimeZone } from '@internationalized/date';
 
@@ -14,6 +20,8 @@ export abstract class Item {
   public updatedAt: CalendarDate;
 
   abstract readonly type: ItemType;
+
+  abstract draft: unknown;
 
   private _path: string[];
 
@@ -56,6 +64,15 @@ export class Folder extends Item {
     this.title = data.title;
     this.childrenIds = data.childrenIds;
   }
+
+  public get draft(): DraftFolder {
+    return {
+      type: this.type,
+      title: this.title,
+      childrenIds: this.childrenIds,
+      path: this.ancestors,
+    };
+  }
 }
 
 // Note Item
@@ -80,5 +97,13 @@ export class Note extends Item {
 
   public get mentions(): string[] {
     return twitter.extractMentions(this.content);
+  }
+
+  public get draft(): DraftNote {
+    return {
+      type: this.type,
+      content: this.content,
+      path: this.ancestors,
+    };
   }
 }

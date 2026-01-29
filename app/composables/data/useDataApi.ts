@@ -1,14 +1,3 @@
-type BodyRequest = Record<string, unknown> | undefined;
-interface FetchOptions<T extends BodyRequest = undefined> {
-  url: string;
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
-  body?: T;
-}
-
-type FetchResult<R> =
-  | { ok: true; response: ServerResponse<R> }
-  | { ok: false; error: Error };
-
 export function useDataApi() {
   /* Define */
   const store = useDataStore();
@@ -17,74 +6,43 @@ export function useDataApi() {
   const error = useState<Error | null>('error', () => null);
   const isLoading = useState('isLoading', () => false);
 
-  /* TODO
-
-  - transforme fetch en builder avec callback on success et on error dazns un utils externe
-  - rendre le code optimisete
-  - gerer les todo depuis le server
-  */
+  const _fetch = useFetchApi({ isLoading, error });
 
   /* Data */
 
   /* Methods */
-  const _fetch = async <R, T extends BodyRequest = undefined>(
-    options: FetchOptions<T>,
-    ctx?: string
-  ): Promise<FetchResult<R>> => {
-    const prefix = ctx ? `[ELEMENT API] - ${ctx}` : `[ELEMENT API]`;
-
-    try {
-      if (isLoading.value) throw new Error('Already loading...');
-
-      isLoading.value = true;
-      error.value = null;
-
-      const response = await $fetch<ServerResponse<R>>(`/api/${options.url}`, {
-        method: options.method,
-        body: options.body,
-        headers: {},
-      });
-
-      console.info(prefix + ' response', response);
-
-      return { ok: true, response };
-    } catch (e) {
-      const err = e instanceof Error ? e : new Error(String(e));
-      error.value = err;
-
-      console.error(prefix + ' error', err);
-
-      return { ok: false, error: err };
-    } finally {
-      isLoading.value = false;
-    }
-  };
-
   // CRUD Operations
   const handleCreate = async (
     data: DraftData
-  ): Promise<DataPublic | undefined> => {
+  ): Promise<DataSchema | undefined> => {
+    const mock: DataSchema = {
+      ...data,
+      id: `mock-${generateId(data.type)}`,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    store.onUpdate(mock);
+
     const result = await _fetch<DataSchema | undefined, DraftData>(
       {
         url: 'data/create',
         method: 'POST',
         body: data,
       },
-      'CREATE_ELEMENT'
-    );
+      'CREATE'
+    )
+      .onSuccess((res) => {
+        if (!res.data) throw new Error('No data returned from create API');
+        store.onUpdateId(mock.id, res.data);
+      })
+      .onError((_err) => {
+        store.onDeleteId(mock.id);
+      });
 
-    if (!result.ok) return;
+    if (!result.ok || !result.response.data) return;
 
-    const response = result.response;
-
-    if (!response.data) return;
-
-    store.onUpdate(response.data);
-    await nextTick();
-
-    const get = getById(response.data.id);
-
-    return get;
+    return result.response.data;
   };
 
   const handleRead = async (): Promise<DataSchema[] | undefined> => {
@@ -93,7 +51,7 @@ export function useDataApi() {
         url: 'data/read',
         method: 'GET',
       },
-      'READ_ELEMENTS'
+      'READ'
     );
 
     if (!result.ok) return;
@@ -106,59 +64,90 @@ export function useDataApi() {
 
   const handleUpdate = async (
     id: string,
-    data: Partial<DataPublic>
+    data: Partial<DraftData>
   ): Promise<DataSchema | undefined> => {
+    const snapshot = store.getSnapshot(id);
+    const current = getById(id);
+
+    if (!current || !snapshot) {
+      console.warn(`[DATA API] - UPDATE  No item found with id ${id}`);
+      return;
+    }
+
+    const optimisticUpdate: Partial<DataSchema> = {
+      ...data,
+      updatedAt: new Date(),
+    };
+
+    store.onUpdateId(id, optimisticUpdate);
+
     const result = await _fetch<DataSchema, Partial<DraftData>>(
       {
         url: `data/update/${id}`,
         method: 'POST',
         body: data,
       },
-      'UPDATE_ELEMENT'
-    );
+      'UPDATE'
+    )
+      .onSuccess((res) => {
+        if (!res.data) throw new Error('No data returned from update API');
+        store.onUpdateId(id, res.data);
+      })
+      .onError(() => {
+        store.onUpdateId(id, snapshot);
+      });
 
     if (!result.ok) return;
 
-    console.log('[DATA API - UPDATE] result', result);
-    store.onUpdateId(id, result.response.data);
     await nextTick();
 
     return result.response.data;
   };
 
   const handleDelete = async (): Promise<boolean> => {
+    const snapshot = store.getSnapshot();
+
+    store.onDelete();
+
     const result = await _fetch<boolean>(
       {
         url: `data/delete`,
         method: 'POST',
       },
-      'DELETE_ELEMENTS'
-    );
-
-    console.log('[DATA API - DELETE] result', result);
+      'DELETE'
+    ).onError((_err) => {
+      store.onRead(snapshot);
+    });
 
     if (!result.ok) return false;
 
-    store.onDelete();
     await nextTick();
 
     return result.response.data;
   };
 
   const handleDeleteId = async (id: string): Promise<boolean> => {
+    const snapshot = store.getSnapshot(id);
+
+    if (!snapshot) {
+      console.warn(`[DATA API] - DELETE No item found with id ${id}`);
+      return false;
+    }
+
+    store.onDeleteId(id);
+
     const result = await _fetch<boolean>(
       {
         url: `data/delete/${id}`,
         method: 'POST',
       },
-      'DELETE_ELEMENT'
-    );
-
-    console.log('[DATA API - DELETE ID] result', result);
+      'DELETE'
+    ).onError((_err) => {
+      store.onReadId(snapshot);
+    });
 
     if (!result.ok) return false;
 
-    store.onDeleteId(id);
     await nextTick();
 
     return result.response.data;

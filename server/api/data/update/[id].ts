@@ -5,8 +5,6 @@ export default defineEventHandler(
     const id = getRouterParam(event, 'id');
     guard(id, 'ID required.', 400); // i18n
 
-    console.log('[DATA API - UPDATE] id', id);
-
     const mongo = useStorage('mongodb');
 
     const existing = await mongo.getItem<DataSchema>(id);
