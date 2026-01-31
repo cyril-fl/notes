@@ -89,3 +89,5 @@ export type FolderPublic = Public<Folder>;
 export type NotePublic = Public<Note>;
 /** Union of public types {@link FolderPublic} and {@link NotePublic} */
 export type DataPublic = FolderPublic | NotePublic;
+
+export type Data = Folder | Note;

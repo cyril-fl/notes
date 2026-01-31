@@ -1,15 +1,15 @@
 import removeMarkdown from 'remove-markdown';
 
 import { sha256 } from 'js-sha256';
+import { useI18n } from 'vue-i18n';
 
 /* Title extraction */
-// TODO Mettre ca en param
-const TITLE_MAX_LENGTH = 50;
-const DEFAULT_TITLE = 'Sans titre';
-
 function truncateTitle(text: string): string {
-  const toTruncate = text.length > TITLE_MAX_LENGTH;
-  return toTruncate ? text.slice(0, TITLE_MAX_LENGTH) + '…' : text;
+  const config = useRuntimeConfig().public;
+
+  const maxLength = config.notes.title.maxLength ?? 100;
+  const toTruncate = text.length > maxLength;
+  return toTruncate ? text.slice(0, maxLength) + '…' : text;
 }
 
 function findMarkdownTitle(
@@ -31,8 +31,11 @@ function findMarkdownTitle(
 }
 
 export function extractTitleFromContent(markdownContent: string): string {
+  const config = useRuntimeConfig().public;
+  const { t } = useI18n();
+
   const title = findMarkdownTitle(markdownContent);
-  return title ?? DEFAULT_TITLE;
+  return title ?? t(config.notes.title.default);
 }
 
 /* ID */

@@ -1,20 +1,15 @@
-import { defu } from 'defu';
-
 export const useDataStore = defineStore('data', () => {
-  /* Define */
+  /* Define – only serializable state (no Map, no class instances) */
   const _raw = ref<DataSchema[]>([]);
-
-  const tree = ref<Tree>({});
-  const map = shallowRef<Lookup>(new Map());
-  const data = shallowRef<Data>({
-    notes: [],
-    folders: [],
-  });
-  const tags = ref<MappedTags>(new Map());
-
   const hasLoaded = ref<boolean>(false);
 
-  /* Data */
+  /* Single computed → one buildFromRaw per _raw change, no DataCloneError */
+  const _derived = computed(() => handleStoreUpdate(_raw.value));
+  const map = computed(() => _derived.value.map);
+  const tree = computed(() => _derived.value.tree);
+  const data = computed(() => _derived.value.data);
+  const tags = computed(() => _derived.value.tags);
+
   const popularTags = computed(() =>
     Array.from(tags.value.values())
       .sort((a, b) => b.count - a.count)
@@ -23,85 +18,73 @@ export const useDataStore = defineStore('data', () => {
 
   /* Methods */
   const handleRead = (data: DataSchema[]) => {
-    if (!hasLoaded.value) {
-      hasLoaded.value = true;
-    }
-
+    if (!hasLoaded.value) hasLoaded.value = true;
     _raw.value = data;
-
     return _raw.value;
   };
 
   const handleReadId = (data: DataSchema) => {
     _raw.value = [..._raw.value, data];
-
     return _raw.value;
   };
 
   const handleUpdate = (data: DataSchema | DataSchema[]) => {
     const d = Array.isArray(data) ? data : [data];
-
     _raw.value = [..._raw.value, ...d];
-
     return _raw.value;
   };
 
   const handleUpdateId = (id: string, data: Partial<DataSchema>) => {
     const index = _raw.value.findIndex((n) => n.id === id);
-
     if (index === -1) return;
 
     const current = _raw.value[index];
-    const unchecked = defu(data, current);
+    const unchecked = defuDedupArrays(data, current);
 
     const updated = dataParams.safeParse(unchecked);
-
     if (!updated.success) return;
 
-    _raw.value[index] = updated.data;
-
+    _raw.value = _raw.value.map((item, i) =>
+      i === index ? updated.data : item
+    );
     return _raw.value;
   };
 
   const handleDelete = () => {
     _raw.value = [];
-
-    console.log('After delete, raw data:', _raw.value);
     return _raw.value;
   };
 
-  const handleDeleteId = (id: string) => {
-    _raw.value = _raw.value.filter((n) => n.id !== id);
+  const handleDeleteId = (id: string | string[]) => {
+    const ids = Array.isArray(id) ? id : [id];
+
+    const filtered = _raw.value.filter((n) => !ids.includes(n.id));
+    _raw.value = [...filtered];
 
     return _raw.value;
   };
 
-  const handleStoreUpdate = (items: DataSchema[]) => {
+  function handleStoreUpdate(items: DataSchema[]) {
     const newMap: Lookup = new Map();
     const newTags: MappedTags = new Map();
-    const newData: Data = {
+    const newData: StoredData = {
       notes: [],
       folders: [],
     };
 
     for (const item of items) {
-      let instance: Note | Folder | null = null;
-
       const handlers = {
         [ItemType.FOLDER]: () => {
           const props = folderParams.parse(item);
           const folder = new Folder(props);
           newData.folders.push(folder);
-
           return folder;
         },
         [ItemType.NOTE]: () => {
           const props = noteParams.parse(item);
           const note = new Note(props);
           newData.notes.push(note);
-
           extractTags({ note, tags: newTags });
-
           return note;
         },
       };
@@ -109,33 +92,20 @@ export const useDataStore = defineStore('data', () => {
       const handler = handlers[item.type];
       if (!handler) continue;
 
-      instance = handler();
-
+      const instance = handler();
       newMap.set(instance.id, instance);
     }
 
-    map.value = newMap;
-    tags.value = newTags;
-    data.value = newData;
-  };
+    const newTree = rebuildTree(newData.folders);
+
+    return { map: newMap, data: newData, tags: newTags, tree: newTree };
+  }
 
   function getSnapshot(): DataSchema[];
   function getSnapshot(id: string): DataSchema | undefined;
   function getSnapshot(id?: string): DataSchema | DataSchema[] | undefined {
-    return id
-      ? structuredClone(_raw.value.find((n) => n.id === id))
-      : structuredClone(_raw.value);
+    return id ? _raw.value.find((n) => n.id === id) : _raw.value;
   }
-
-  /* Lifecycle */
-  watch(
-    _raw,
-    (newValue) => {
-      console.log('Raw data changed, updating store...', newValue);
-      handleStoreUpdate(newValue);
-    },
-    { immediate: true, deep: true }
-  );
 
   return {
     tree,

@@ -18,7 +18,12 @@ interface Emits {
   (e: 'update:hashtags' | 'update:mentions', value: string[]): void;
 }
 
-defineProps<Partial<EditorProps>>();
+const props = withDefaults(defineProps<Partial<EditorProps>>(), {
+  readonly: false,
+  showHashtags: true,
+  showMentions: true,
+  showPreview: true,
+});
 
 const emit = defineEmits<Emits>();
 
@@ -30,12 +35,27 @@ const toolBarItems = useEditorToolBar();
 /* Data */
 const extensions = [Emoji, TextAlign, Highlight];
 
-const hashtags = computed(() =>
-  content.value ? twitter.extractHashtags(content.value) : []
-);
-const mentions = computed(() =>
-  content.value ? twitter.extractMentions(content.value) : []
-);
+const hashtags = computed(() => twitter.extractHashtags(content.value ?? ''));
+
+const mentions = computed(() => twitter.extractMentions(content.value ?? ''));
+
+const preview = computed(() => [
+  {
+    label: 'Preview',
+    condition: props.showPreview,
+    content: content.value ?? '  ',
+  },
+  {
+    label: 'Extracted hashtags',
+    condition: props.showHashtags,
+    content: hashtags.value,
+  },
+  {
+    label: 'Extracted mentions',
+    condition: props.showMentions,
+    content: mentions.value,
+  },
+]);
 
 // SSR-safe function to append menus to body (avoids z-index issues in docs)
 // eslint-disable-next-line no-constant-condition
@@ -93,7 +113,7 @@ onBeforeUnmount(() => {
     v-model="content"
     :extensions="extensions"
     content-type="markdown"
-    :placeholder="$t('components.editor.placeholder')"
+    :placeholder="$t('placeholder.editor')"
     :editable="!readonly"
     class="bg-muted w-full min-h-21"
     @update:model-value="handleUpdateContent"
@@ -111,16 +131,12 @@ onBeforeUnmount(() => {
     />
   </UEditor>
 
-  <p v-if="showPreview">
-    Preview:
-    {{ content }}
-  </p>
-  <p v-if="showHashtags">
-    Hashtags:
-    {{ hashtags }}
-  </p>
-  <p v-if="showMentions">
-    Mentions:
-    {{ mentions }}
-  </p>
+  <ul>
+    <template v-for="item in preview" :key="item.label">
+      <li v-if="item.condition">
+        <p>{{ item.label }} :</p>
+        <pre>{{ item.content }}</pre>
+      </li>
+    </template>
+  </ul>
 </template>

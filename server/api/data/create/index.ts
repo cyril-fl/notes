@@ -10,8 +10,6 @@ export default defineEventHandler(
 
     const now = new Date();
 
-    console.log('[DATA API - CREATE] parsed', parsed);
-
     const id = generateId(parsed.data.type);
 
     const note: DataSchema = {
@@ -20,8 +18,6 @@ export default defineEventHandler(
       updatedAt: now,
       ...parsed.data,
     };
-
-    console.log('[DATA API - CREATE] note', note);
 
     await mongo.setItem(id, note);
 

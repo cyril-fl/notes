@@ -2,6 +2,7 @@
 // Define
 import type { EditorProps } from '~/components/Editor.vue';
 
+const route = useRoute();
 const props = withDefaults(defineProps<Partial<EditorProps>>(), {
   readonly: false,
   showHashtags: true,
@@ -9,7 +10,14 @@ const props = withDefaults(defineProps<Partial<EditorProps>>(), {
   showPreview: true,
 });
 
-const { handleCreate } = useDataApi();
+const { handleCreate, handleCreateNoteInFolder } = useDataApi();
+const { getById } = useDataUtils();
+
+const folder = computed<Folder | undefined>(() => {
+  const ancestorParam = route.params.ancestor;
+  if (!ancestorParam || typeof ancestorParam !== 'string') return undefined;
+  return getById(ancestorParam, { types: ItemType.FOLDER });
+});
 
 const content = ref<string | null>(null);
 
@@ -21,10 +29,18 @@ const { onUpdate: onUpdateMentions } = useMentions();
 const handleSubmit = async () => {
   if (!content.value) return;
 
+  if (folder.value) {
+    await handleCreateNoteInFolder({
+      folder: folder.value,
+      content: content.value,
+    });
+    return;
+  }
+
   await handleCreate({
-    path: [], // TODO set path autrement
     type: ItemType.NOTE,
     content: content.value,
+    path: [],
   });
 };
 
@@ -35,7 +51,7 @@ const handleSubmit = async () => {
 
 <template>
   <div>
-    <p>FORM NEW</p>
+    <p>FORM NEW {{ route.params.ancestor }}</p>
     <Editor
       v-model:content="content"
       v-bind="props"

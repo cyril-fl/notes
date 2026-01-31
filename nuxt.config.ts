@@ -11,11 +11,12 @@ export default defineNuxtConfig({
         target: 'ES2022',
         module: 'ESNext',
       },
+      include: ['types/**/*.d.ts'],
     },
   },
   // Directories
   imports: {
-    dirs: ['composables/**', 'utils/**', 'app/types'],
+    dirs: ['composables/**', 'types/*', 'app/types'],
   },
   modules: [
     '@nuxt/image',
@@ -57,6 +58,18 @@ export default defineNuxtConfig({
           process.env.MONGODB_URI || 'mongodb://localhost:27017/',
         databaseName: 'notes-pad',
         collectionName: 'items',
+      },
+    },
+  },
+
+  // Custom (public = exposé au client)
+  runtimeConfig: {
+    public: {
+      notes: {
+        title: {
+          maxLength: 50,
+          default: 'notes.default_title',
+        },
       },
     },
   },

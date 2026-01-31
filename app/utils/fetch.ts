@@ -1,20 +1,22 @@
 export type BodyRequest = Record<string, unknown> | undefined;
 
+export enum HTTPMethod {
+  GET = 'GET',
+  POST = 'POST',
+  PUT = 'PUT',
+  DELETE = 'DELETE',
+  PATCH = 'PATCH',
+}
+
 export interface FetchOptions<T extends BodyRequest = undefined> {
   url: string;
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  method: HTTPMethod;
   body?: T;
 }
 
 export type FetchResult<R> =
   | { ok: true; response: ServerResponse<R> }
   | { ok: false; error: Error };
-
-/* TODO
-  - transforme fetch en builder avec callback on success et on error dazns un utils externe
-  - rendre le code optimisete
-  - gerer les todo depuis le server
-*/
 
 interface Props {
   isLoading: Ref<boolean>;
@@ -49,11 +51,7 @@ export function useFetchApi({ isLoading, error }: Props) {
 
         const response = await $fetch<ServerResponse<R>>(
           `/api/${options.url}`,
-          {
-            method: options.method,
-            body: options.body,
-            headers: {},
-          }
+          options
         );
 
         console.info(prefix + ' response', response);

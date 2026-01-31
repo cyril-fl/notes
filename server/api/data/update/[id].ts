@@ -11,17 +11,14 @@ export default defineEventHandler(
     const parsedExisting = dataParams.safeParse(existing);
     guard(parsedExisting.data, 'Note not found.', 404);
 
-    console.log('[DATA API - UPDATE] parsedExisting', parsedExisting);
     const body = await readBody<RequestBody<DraftData>>(event);
 
-    console.log('[DATA API - UPDATE] body', body);
-    const parsedBody = dataDraftPartial.safeParse(body); // TODO fail ici
+    const parsedBody = dataDraftPartial.safeParse(body);
     guard(parsedBody.data, 'Invalid data.', 400);
-
-    console.log('[DATA API - UPDATE] parsedBody', parsedBody);
 
     const now = new Date();
 
+    // TODO check defu  voir si les children sont bien merge
     const raw = defu(
       {
         ...parsedBody.data,
@@ -30,12 +27,8 @@ export default defineEventHandler(
       parsedExisting.data
     );
 
-    console.log('[DATA API - UPDATE] raw', raw);
-
     const updated = dataParams.safeParse(raw);
     guard(updated.data, 'Invalid data.', 400);
-
-    console.log('[DATA API - UPDATE] updated', updated);
 
     await mongo.setItem(id, updated.data);
 

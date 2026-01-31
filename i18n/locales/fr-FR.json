@@ -1,8 +1,6 @@
 {
-  "components": {
-    "editor": {
-      "placeholder": "Écrivez votre note ici..."
-    }
+  "notes": {
+    "default_title": "Sans titre"
   },
   "placeholder": {
     "editor": "Écrivez votre note ici...",

@@ -24,6 +24,11 @@ const handleDelete = (note: Note) => {
           <p>mentions: {{ note.mentions }}</p>
           <p>createdAt: {{ note.createdAt }}</p>
           <p>updatedAt: {{ note.updatedAt }}</p>
+          <div
+            class="bg-muted p-4 rounded-md w-full text-xs text-muted-foreground"
+          >
+            <pre>{{ note }}</pre>
+          </div>
         </NuxtLink>
         <button
           class="bg-inverted text-inverted p-1 rounded-sm hover:bg-muted hover:text-muted"
