@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 import type { Editor } from '@tiptap/core';
-import type { EditorToolbarItem } from '~/types/ui';
+import type { BaseEditorToolbarItem } from '~/types/ui';
 
 const props = defineProps<{
   editor: Editor | null;
-  items: EditorToolbarItem[][];
+  items: BaseEditorToolbarItem[][];
 }>();
 
-function runCommand(item: EditorToolbarItem) {
+function runCommand(item: BaseEditorToolbarItem) {
   const editor = props.editor;
   if (!editor) return;
 

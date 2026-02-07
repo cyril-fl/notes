@@ -1,9 +1,8 @@
 <script lang="ts" setup></script>
 
 <template>
-  <main class="vessel vessel-flex px-4 py-8">
+  <main class="vessel vessel-flex">
     <UINavigation />
-
     <slot />
   </main>
 </template>

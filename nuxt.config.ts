@@ -23,7 +23,7 @@ export default defineNuxtConfig({
     '@nuxtjs/i18n',
     '@pinia/nuxt',
     '@nuxt/image',
-    '@nuxtjs/color-mode',
+    '@nuxt/ui',
     'reka-ui/nuxt',
     '@nuxt/icon',
     '@nuxtjs/google-fonts',

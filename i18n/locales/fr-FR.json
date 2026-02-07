@@ -44,5 +44,26 @@
     "editor": "Écrivez votre note ici...",
     "folder_untitled": "Noubveau dossier",
     "note_untitled": "Sans titre"
+  },
+  "editor": {
+    "toolbar": {
+      "undo": "Annuler",
+      "redo": "Rétablir",
+      "bold": "Gras",
+      "italic": "Italique",
+      "underline": "Souligné",
+      "strike": "Barré",
+      "heading1": "Titre 1",
+      "heading2": "Titre 2",
+      "heading3": "Titre 3",
+      "alignLeft": "Aligner à gauche",
+      "alignCenter": "Centrer",
+      "alignRight": "Aligner à droite",
+      "bulletList": "Liste à puces",
+      "orderedList": "Liste numérotée",
+      "blockquote": "Citation",
+      "code": "Code",
+      "link": "Lien"
+    }
   }
 }

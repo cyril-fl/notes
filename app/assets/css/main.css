@@ -1,81 +1,16 @@
 @import 'tailwindcss';
 @import './variables.css';
+@import './colors.css';
 
 @plugin 'tailwind-scrollbar';
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 
-@layer utilities {
-    .bg-default {
-        background-color: var(--bg-default);
-    }
-
-    .bg-muted {
-        background-color: var(--bg-muted);
-    }
-
-    .bg-elevated {
-        background-color: var(--bg-elevated);
-    }
-
-    .bg-accented {
-        background-color: var(--bg-accented);
-    }
-
-    .bg-inverted {
-        background-color: var(--bg-inverted);
-    }
-
-    .text-default {
-        color: var(--text-default);
-    }
-
-    .text-foreground {
-        color: var(--text-default);
-    }
-
-    .text-muted {
-        color: var(--text-muted);
-    }
-
-    .text-dimmed {
-        color: var(--text-dimmed);
-    }
-
-    .text-toned {
-        color: var(--text-toned);
-    }
-
-    .text-highlighted {
-        color: var(--text-highlighted);
-    }
-
-    .text-inverted {
-        color: var(--text-inverted);
-    }
-
-    .border-default {
-        border-color: var(--border-default);
-    }
-
-    .border-muted {
-        border-color: var(--border-muted);
-    }
-
-    .border-accented {
-        border-color: var(--border-accented);
-    }
-
-    .border-inverted {
-        border-color: var(--border-inverted);
-    }
-}
-
 @layer components {
     .vessel {
         background-color: var(--bg-default);
         color: var(--text-default);
-        @apply min-h-screen w-screen;
+        @apply min-h-screen w-screen px-4 py-8;
     }
 
     .vessel-flex {

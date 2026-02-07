@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// Define
-import type { EditorProps } from '~/components/Editor.vue';
+import type { EditorProps } from '~/composables/editor/useEditor';
 
+/* Define */
 const route = useRoute();
 const props = withDefaults(defineProps<Partial<EditorProps>>(), {
   readonly: false,
@@ -21,11 +21,11 @@ const folder = computed<Folder | undefined>(() => {
 
 const content = ref<string | null>(null);
 
-const { onUpdate: onUpdateHashtags } = useHashtags();
+// const { onUpdate: onUpdateHashtags } = useHashtags();
 const { onUpdate: onUpdateMentions } = useMentions();
-// Data
+/* Data */
 
-// Methods
+/* Methods */
 const handleSubmit = async () => {
   if (!content.value) return;
 
@@ -44,22 +44,21 @@ const handleSubmit = async () => {
   });
 };
 
-// Lifecycle
+/* Lifecycle */
 
-// SEO
+/* SEO */
 </script>
 
 <template>
-  <div>
-    <p>FORM NEW {{ route.params.ancestor }}</p>
-    <Editor
+  <section class="grow flex flex-col">
+    <UIEditor 
       v-model:content="content"
       v-bind="props"
       @submit="handleSubmit"
-      @update:hashtags="onUpdateHashtags"
       @update:mentions="onUpdateMentions"
-    />
-  </div>
+      />
+      <!-- @update:hashtags="onUpdateHashtags" -->
+  </section>
 </template>
 
 <style scoped></style>

@@ -98,6 +98,14 @@
     --text-highlighted: var(--primary-600);
     --text-inverted: var(--neutral-50);
 
+    /* TEXT TOKENS RGB (Light Mode) - for opacity support */
+    --text-default-rgb: 35 35 35;
+    --text-muted-rgb: 93 93 93;
+    --text-dimmed-rgb: 136 136 136;
+    --text-toned-rgb: 109 109 109;
+    --text-highlighted-rgb: 37 99 235;
+    --text-inverted-rgb: 246 246 246;
+
     /* BACKGROUND TOKENS (Light Mode) */
     --bg-default: #ffffff;
     --bg-muted: var(--neutral-50);
@@ -105,11 +113,24 @@
     --bg-accented: var(--primary-50);
     --bg-inverted: var(--neutral-950);
 
+    /* BACKGROUND TOKENS RGB (Light Mode) - for opacity support */
+    --bg-default-rgb: 255 255 255;
+    --bg-muted-rgb: 246 246 246;
+    --bg-elevated-rgb: 255 255 255;
+    --bg-accented-rgb: 239 246 255;
+    --bg-inverted-rgb: 35 35 35;
+
     /* BORDER TOKENS (Light Mode) */
     --border-default: var(--neutral-200);
     --border-muted: var(--neutral-100);
     --border-accented: var(--primary-500);
     --border-inverted: var(--neutral-800);
+
+    /* BORDER TOKENS RGB (Light Mode) - for opacity support */
+    --border-default-rgb: 209 209 209;
+    --border-muted-rgb: 231 231 231;
+    --border-accented-rgb: 59 130 246;
+    --border-inverted-rgb: 69 69 69;
 
     /* BORDER RADIUS */
     --radius-xs: 0.125rem;
@@ -130,6 +151,14 @@
     --text-highlighted: var(--primary-400);
     --text-inverted: var(--neutral-950);
 
+    /* TEXT TOKENS RGB (Dark Mode) - for opacity support */
+    --text-default-rgb: 246 246 246;
+    --text-muted-rgb: 136 136 136;
+    --text-dimmed-rgb: 109 109 109;
+    --text-toned-rgb: 136 136 136;
+    --text-highlighted-rgb: 96 165 250;
+    --text-inverted-rgb: 35 35 35;
+
     /* BACKGROUND TOKENS (Dark Mode) */
     --bg-default: var(--neutral-950);
     --bg-muted: var(--neutral-900);
@@ -137,11 +166,24 @@
     --bg-accented: var(--primary-950);
     --bg-inverted: var(--neutral-50);
 
+    /* BACKGROUND TOKENS RGB (Dark Mode) - for opacity support */
+    --bg-default-rgb: 35 35 35;
+    --bg-muted-rgb: 61 61 61;
+    --bg-elevated-rgb: 69 69 69;
+    --bg-accented-rgb: 23 37 84;
+    --bg-inverted-rgb: 246 246 246;
+
     /* BORDER TOKENS (Dark Mode) */
     --border-default: var(--neutral-700);
     --border-muted: var(--neutral-800);
     --border-accented: var(--primary-500);
     --border-inverted: var(--neutral-200);
+
+    /* BORDER TOKENS RGB (Dark Mode) - for opacity support */
+    --border-default-rgb: 79 79 79;
+    --border-muted-rgb: 69 69 69;
+    --border-accented-rgb: 59 130 246;
+    --border-inverted-rgb: 209 209 209;
 }
 
 @theme inline {

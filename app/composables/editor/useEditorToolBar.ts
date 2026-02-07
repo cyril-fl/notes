@@ -1,43 +1,43 @@
-import type { EditorToolbarItem } from '~/types/ui';
+import { ALIGNMENTS, type EditorToolbarItem, MARKS } from '~/types/ui';
 
 export const useEditorToolBar = (): EditorToolbarItem[][] => {
   const actions: EditorToolbarItem[] = [
     {
       kind: 'undo',
       icon: 'i-lucide-undo',
-      tooltip: { text: 'Annuler' },
+      tooltip: { label: 'editor.toolbar.undo' },
     },
     {
       kind: 'redo',
       icon: 'i-lucide-redo',
-      tooltip: { text: 'Rétablir' },
+      tooltip: { label: 'editor.toolbar.redo' },
     },
   ];
 
   const formatting: EditorToolbarItem[] = [
     {
       kind: 'mark',
-      mark: 'bold',
+      mark: MARKS.BOLD,
       icon: 'i-lucide-bold',
-      tooltip: { text: 'Gras' },
+      tooltip: { label: 'editor.toolbar.bold' },
     },
     {
       kind: 'mark',
-      mark: 'italic',
+      mark: MARKS.ITALIC,
       icon: 'i-lucide-italic',
-      tooltip: { text: 'Italique' },
+      tooltip: { label: 'editor.toolbar.italic' },
     },
     {
       kind: 'mark',
-      mark: 'underline',
+      mark: MARKS.UNDERLINE,
       icon: 'i-lucide-underline',
-      tooltip: { text: 'Souligné' },
+      tooltip: { label: 'editor.toolbar.underline' },
     },
     {
       kind: 'mark',
-      mark: 'strike',
+      mark: MARKS.STRIKE,
       icon: 'i-lucide-strikethrough',
-      tooltip: { text: 'Barré' },
+      tooltip: { label: 'editor.toolbar.strike' },
     },
   ];
 
@@ -46,40 +46,40 @@ export const useEditorToolBar = (): EditorToolbarItem[][] => {
       kind: 'heading',
       level: 1,
       icon: 'i-lucide-heading-1',
-      tooltip: { text: 'Titre 1' },
+      tooltip: { label: 'editor.toolbar.heading1' },
     },
     {
       kind: 'heading',
       level: 2,
       icon: 'i-lucide-heading-2',
-      tooltip: { text: 'Titre 2' },
+      tooltip: { label: 'editor.toolbar.heading2' },
     },
     {
       kind: 'heading',
       level: 3,
       icon: 'i-lucide-heading-3',
-      tooltip: { text: 'Titre 3' },
+      tooltip: { label: 'editor.toolbar.heading3' },
     },
   ];
 
   const textAlignment: EditorToolbarItem[] = [
     {
       kind: 'textAlign',
-      align: 'left',
+      align: ALIGNMENTS.LEFT,
       icon: 'i-lucide-align-left',
-      tooltip: { text: 'Aligner à gauche' },
+      tooltip: { label: 'editor.toolbar.alignLeft' },
     },
     {
       kind: 'textAlign',
-      align: 'center',
+      align: ALIGNMENTS.CENTER,
       icon: 'i-lucide-align-center',
-      tooltip: { text: 'Centrer' },
+      tooltip: { label: 'editor.toolbar.alignCenter' },
     },
     {
       kind: 'textAlign',
-      align: 'right',
+      align: ALIGNMENTS.RIGHT,
       icon: 'i-lucide-align-right',
-      tooltip: { text: 'Aligner à droite' },
+      tooltip: { label: 'editor.toolbar.alignRight' },
     },
   ];
 
@@ -87,23 +87,23 @@ export const useEditorToolBar = (): EditorToolbarItem[][] => {
     {
       kind: 'bulletList',
       icon: 'i-lucide-list',
-      tooltip: { text: 'Liste à puces' },
+      tooltip: { label: 'editor.toolbar.bulletList' },
     },
     {
       kind: 'orderedList',
       icon: 'i-lucide-list-ordered',
-      tooltip: { text: 'Liste numérotée' },
+      tooltip: { label: 'editor.toolbar.orderedList' },
     },
     {
       kind: 'blockquote',
       icon: 'i-lucide-text-quote',
-      tooltip: { text: 'Citation' },
+      tooltip: { label: 'editor.toolbar.blockquote' },
     },
     {
       kind: 'mark',
-      mark: 'code',
+      mark: MARKS.CODE,
       icon: 'i-lucide-code',
-      tooltip: { text: 'Code' },
+      tooltip: { label: 'editor.toolbar.code' },
     },
   ];
 
@@ -111,7 +111,7 @@ export const useEditorToolBar = (): EditorToolbarItem[][] => {
     {
       kind: 'link',
       icon: 'i-lucide-link',
-      tooltip: { text: 'Lien' },
+      tooltip: { label: 'editor.toolbar.link' },
     },
   ];
 
