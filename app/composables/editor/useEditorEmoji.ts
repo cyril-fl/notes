@@ -1,4 +1,4 @@
-import type { EditorEmojiMenuItem } from '@nuxt/ui';
+import type { EditorEmojiMenuItem } from '~/types/ui';
 import { gitHubEmojis } from '@tiptap/extension-emoji';
 
 export const useEditorEmoji = (): EditorEmojiMenuItem[] => {

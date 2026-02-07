@@ -1,4 +1,4 @@
-import type { EditorMentionMenuItem } from '@nuxt/ui/runtime/types/index.js';
+import type { EditorMentionMenuItem } from '~/types/ui';
 
 export const useEditorMention = (): EditorMentionMenuItem[] => {
   const mentionsItems: EditorMentionMenuItem[] = [];

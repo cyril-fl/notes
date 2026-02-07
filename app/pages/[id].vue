@@ -5,15 +5,15 @@
 const route = useRoute();
 const id = computed<string>(() => {
   const pathParams = route.params.id;
+
   if (!pathParams || Array.isArray(pathParams)) return '';
+
   return pathParams;
 });
 
 const { getById } = useDataUtils();
 
-const item = computed(() => {
-  return getById(id.value, { types: ItemType.FOLDER });
-});
+const item = computed(() => getById(id.value, { types: ItemType.FOLDER }));
 
 const children = computed(() => {
   const raw = item.value?.childrenIds;
@@ -21,6 +21,7 @@ const children = computed(() => {
     notes: [],
     folders: [],
   };
+
   if (!raw) return result;
 
   return raw.reduce<StoredData>((acc, id) => {
@@ -50,8 +51,9 @@ const children = computed(() => {
 </script>
 
 <template>
+  <p>Notes id</p>
   <div v-if="item" class="space-y-4">
-    <div class="bg-muted p-4 rounded-md w-full text-xs text-muted-foreground">
+    <div class="bg-muted p-4 rounded-md w-full text-xs text-muted">
       <pre>{{ item }}</pre>
     </div>
 

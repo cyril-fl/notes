@@ -30,7 +30,7 @@ const { handleUpdate } = useDataApi();
 
 const content = ref<string | null>(note.value?.content ?? null);
 
-const { onUpdate: onUpdateHashtags } = useHashtags();
+// const { onUpdate: onUpdateHashtags } = useHashtags();
 const { onUpdate: onUpdateMentions } = useMentions();
 // Data
 
@@ -63,8 +63,8 @@ watch(
       v-model:content="content"
       v-bind="props"
       @submit="handleSubmit"
-      @update:hashtags="onUpdateHashtags"
       @update:mentions="onUpdateMentions"
     />
+    <!--      @update:hashtags="onUpdateHashtags"-->
   </section>
 </template>

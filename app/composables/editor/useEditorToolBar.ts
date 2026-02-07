@@ -1,4 +1,4 @@
-import type { EditorToolbarItem } from '@nuxt/ui';
+import type { EditorToolbarItem } from '~/types/ui';
 
 export const useEditorToolBar = (): EditorToolbarItem[][] => {
   const actions: EditorToolbarItem[] = [

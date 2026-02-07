@@ -16,14 +16,17 @@ export default defineNuxtConfig({
   },
   // Directories
   imports: {
-    dirs: ['composables/**', 'types/*', 'app/types'],
+    dirs: ['composables/**/*', 'types/**/*', 'app/types'],
   },
   modules: [
-    '@nuxt/image',
-    '@nuxt/ui',
     '@nuxt/eslint',
     '@nuxtjs/i18n',
     '@pinia/nuxt',
+    '@nuxt/image',
+    '@nuxtjs/color-mode',
+    'reka-ui/nuxt',
+    '@nuxt/icon',
+    '@nuxtjs/google-fonts',
   ],
 
   // UI
@@ -31,10 +34,16 @@ export default defineNuxtConfig({
   colorMode: {
     preference: 'system',
     fallback: 'light',
+    storageKey: 'nuxt-color-mode',
   },
-  ui: {
-    theme: {
-      colors: ['plain'],
+  icon: {
+    mode: 'css',
+    cssLayer: 'base',
+  },
+
+  googleFonts: {
+    families: {
+      'Reddit Sans': true,
     },
   },
 
@@ -62,7 +71,7 @@ export default defineNuxtConfig({
     },
   },
 
-  // Custom (public = exposé au client)
+  // Config
   runtimeConfig: {
     public: {
       notes: {

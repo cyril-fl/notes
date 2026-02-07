@@ -1,6 +1,44 @@
 {
+  "page": {
+    "home": {
+      "title": "Accueil",
+      "description": "Votre application de prise de notes pour organiser vos idées et vos pensées."
+    }
+  },
+  "button": {
+    "open_graph": "Ouvrir le graphe",
+    "open_editor": "Ouvrir l'éditeur"
+  },
+  "menu": {
+    "navigation": {
+      "title": "Navigation",
+      "folders": {
+        "title": "Dossiers"
+      },
+      "hashtags": {
+        "title": "Tags"
+      }
+    },
+    "folder_tree": {
+      "title": "Dossiers"
+    }
+  },
   "notes": {
     "default_title": "Sans titre"
+  },
+  "pages": {
+    "home": {
+      "title": "Accueil"
+    },
+    "graph": {
+      "title": "Graph"
+    },
+    "notes": {
+      "title": "Notes",
+      "new": {
+        "title": "Nouvelle note"
+      }
+    }
   },
   "placeholder": {
     "editor": "Écrivez votre note ici...",

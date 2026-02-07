@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import Emoji from '@tiptap/extension-emoji';
-import TextAlign from '@tiptap/extension-text-align';
-import Highlight from '@tiptap/extension-highlight';
 import twitter from 'twitter-text';
 import striptags from 'striptags';
 
@@ -28,13 +25,8 @@ const props = withDefaults(defineProps<Partial<EditorProps>>(), {
 const emit = defineEmits<Emits>();
 
 const content = defineModel<string | null>('content');
-const emojiItems = useEditorEmoji();
-const mentionsItems = useEditorMention();
-const toolBarItems = useEditorToolBar();
 
 /* Data */
-const extensions = [Emoji, TextAlign, Highlight];
-
 const hashtags = computed(() => twitter.extractHashtags(content.value ?? ''));
 
 const mentions = computed(() => twitter.extractMentions(content.value ?? ''));
@@ -57,23 +49,20 @@ const preview = computed(() => [
   },
 ]);
 
-// SSR-safe function to append menus to body (avoids z-index issues in docs)
-// eslint-disable-next-line no-constant-condition
-const appendToBody = false ? () => document.body : undefined;
-
 /* Methods */
 const handleSubmit = () => {
   emit('submit');
 };
 
 const handleUpdateContent = (newContent: string | null) => {
-  if (!newContent) return;
-
+  if (newContent === null || newContent === undefined) {
+    content.value = null;
+    return;
+  }
   const normalized = striptags(newContent)
     .replace(/&nbsp;/gi, ' ')
     .replace(/\u00A0/g, ' ')
     .trim();
-
   content.value = normalized.length !== 0 ? normalized : null;
 };
 
@@ -92,10 +81,9 @@ watch(mentions, (newMentions, oldMentions) => {
     return;
   emit('update:mentions', newMentions);
 });
-// Save on navigation
+
 onBeforeRouteLeave(handleSubmit);
 
-// Save on close/refresh
 onMounted(() => {
   window.addEventListener('beforeunload', handleSubmit);
 });
@@ -103,35 +91,26 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', handleSubmit);
 });
-
-/* SEO */
 </script>
 
 <template>
-  <UEditor
-    v-slot="{ editor }"
-    v-model="content"
-    :extensions="extensions"
-    content-type="markdown"
-    :placeholder="$t('placeholder.editor')"
-    :editable="!readonly"
-    class="bg-muted w-full min-h-21"
-    @update:model-value="handleUpdateContent"
-  >
-    <UEditorToolbar v-if="!readonly" :editor="editor" :items="toolBarItems" />
-    <UEditorEmojiMenu
-      :editor="editor"
-      :items="emojiItems"
-      :append-to="appendToBody"
+  <ClientOnly>
+    <EditorCore
+      :content="content"
+      :placeholder="$t('placeholder.editor')"
+      :readonly="readonly"
+      @update:content="handleUpdateContent"
     />
-    <UEditorMentionMenu
-      :editor="editor"
-      :items="mentionsItems"
-      :append-to="appendToBody"
-    />
-  </UEditor>
+    <template #fallback>
+      <div
+        class="bg-muted min-h-21 w-full rounded-md border border-default px-3 py-2"
+      >
+        <span class="text-muted">{{ $t('placeholder.editor') }}</span>
+      </div>
+    </template>
+  </ClientOnly>
 
-  <ul>
+  <ul class="mt-4">
     <template v-for="item in preview" :key="item.label">
       <li v-if="item.condition">
         <p>{{ item.label }} :</p>
