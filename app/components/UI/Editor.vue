@@ -86,4 +86,59 @@ input:focus-visible {
   outline: none !important;
   box-shadow: none !important;
 }
+
+:deep(.ProseMirror > h1) {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 700;
+}
+:deep(.ProseMirror > h2) {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+}
+:deep(.ProseMirror > h3) {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+}
+:deep(.ProseMirror > h4) {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+}
+:deep(.ProseMirror > h5) {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 700;
+}
+:deep(.ProseMirror > h6) {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 700;
+}
+:deep(.ProseMirror > p) {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 400;
+}
+:deep(.ProseMirror > ul) {
+  list-style-type: disc;
+}
+:deep(.ProseMirror > ol) {
+  list-style-type: decimal;
+}
+:deep(.ProseMirror > li) {
+  margin-left: 1rem;
+}
+:deep(.ProseMirror > blockquote) {
+  margin-left: 1rem;
+  border-left: 2px solid #ccc;
+  padding-left: 1rem;
+}
+:deep(.ProseMirror > code) {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 400;
+}
 </style>

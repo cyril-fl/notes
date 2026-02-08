@@ -1,6 +1,7 @@
 import { ALIGNMENTS, type EditorToolbarItem, MARKS } from '~/types/ui';
 
 export const useEditorToolBar = (): EditorToolbarItem[][] => {
+  const { editor } = useEditorContext();
   const actions: EditorToolbarItem[] = [
     {
       kind: 'undo',
@@ -47,18 +48,24 @@ export const useEditorToolBar = (): EditorToolbarItem[][] => {
       level: 1,
       icon: 'i-lucide-heading-1',
       tooltip: { label: 'editor.toolbar.heading1' },
+      onClick: () =>
+        editor.value?.chain().focus().toggleHeading({ level: 1 }).run(),
     },
     {
       kind: 'heading',
       level: 2,
       icon: 'i-lucide-heading-2',
       tooltip: { label: 'editor.toolbar.heading2' },
+      onClick: () =>
+        editor.value?.chain().focus().toggleHeading({ level: 2 }).run(),
     },
     {
       kind: 'heading',
       level: 3,
       icon: 'i-lucide-heading-3',
       tooltip: { label: 'editor.toolbar.heading3' },
+      onClick: () =>
+        editor.value?.chain().focus().toggleHeading({ level: 3 }).run(),
     },
   ];
 

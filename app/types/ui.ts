@@ -1,18 +1,7 @@
+import type { Labeled, Navigable, Iconable, Clickable } from './protocol';
+
 // Global
 export type CssClass = string | string[] | Record<string, boolean>;
-
-// Protocol
-interface Labeled {
-  label: string;
-}
-
-interface Navigable {
-  to: string;
-}
-
-export interface Iconable {
-  icon: string;
-}
 
 // Button types
 export interface ButtonProps extends Partial<Labeled & Navigable & Iconable> {
@@ -44,7 +33,7 @@ export enum ALIGNMENTS {
   RIGHT = 'right',
 }
 
-export interface BaseEditorToolbarItem extends Iconable {
+export interface BaseEditorToolbarItem extends Iconable, Partial<Clickable> {
   kind: string;
   tooltip?: BaseEditorTooltipOptions;
 }

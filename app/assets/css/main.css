@@ -1,19 +1,76 @@
 @import 'tailwindcss';
+@import '@nuxt/ui';
 @import './variables.css';
-@import './colors.css';
+
+@source '../components';
+
+@variant light (&:where(.light, .light *));
+@variant dark (&:where(.dark, .dark *));
 
 @plugin 'tailwind-scrollbar';
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 
-@layer components {
-    .vessel {
-        background-color: var(--bg-default);
-        color: var(--text-default);
-        @apply min-h-screen w-screen px-4 py-8;
-    }
+@layer theme {
+  :root,
+  :host,
+  .light {
+    --ui-header-height: 4rem;
+    --ui-text-dimmed: var(--plain-400);
+    --ui-text-muted: var(--plain-600);
+    --ui-text-toned: var(--plain-500);
+    --ui-text: var(--plain-950);
+    --ui-text-highlighted: var(--plain-900);
+    --ui-text-inverted: white;
 
-    .vessel-flex {
-        @apply flex;
-    }
+    --ui-bg: white;
+    --ui-bg-muted: var(--plain-50);
+    --ui-bg-elevated: white;
+    --ui-bg-accented: var(--plain-200);
+    --ui-bg-inverted: var(--plain-950);
+
+    --ui-border: var(--plain-200);
+    --ui-border-muted: var(--plain-200);
+    --ui-border-accented: var(--plain-300);
+    --ui-border-inverted: var(--plain-900);
+
+    --ui-radius: 0.25rem;
+    --ui-container: 80rem;
+  }
+
+  .dark {
+    --ui-text-dimmed: var(--plain-500);
+    --ui-text-muted: var(--plain-400);
+    --ui-text-toned: var(--plain-300);
+    --ui-text: var(--plain-200);
+    --ui-text-highlighted: white;
+    --ui-text-inverted: var(--plain-900);
+
+    --ui-bg: var(--plain-950);
+    --ui-bg-muted: var(--plain-900);
+    --ui-bg-elevated: var(--plain-800);
+    --ui-bg-accented: var(--plain-700);
+    --ui-bg-inverted: white;
+
+    --ui-border: var(--plain-800);
+    --ui-border-muted: var(--plain-700);
+    --ui-border-accented: var(--plain-700);
+    --ui-border-inverted: white;
+  }
+}
+
+@layer components {
+  .vessel {
+    background-color: var(--ui-bg);
+    color: var(--ui-text);
+    @apply min-h-screen w-screen px-4 py-8;
+  }
+
+  .vessel-flex {
+    @apply flex;
+  }
+
+  .icon-stroke-bold svg {
+    stroke-width: 2.5px;
+  }
 }
