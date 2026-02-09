@@ -2,6 +2,11 @@ import type { InjectionKey, ShallowRef } from 'vue';
 import { type Editor, useEditor } from '@tiptap/vue-3';
 import { Markdown } from '@tiptap/markdown';
 import StarterKit from '@tiptap/starter-kit';
+import { TaskList, TaskItem } from '@tiptap/extension-list';
+import Link from '@tiptap/extension-link';
+import Highlight from '@tiptap/extension-highlight';
+import Placeholder from '@tiptap/extension-placeholder';
+import TextAlign from '@tiptap/extension-text-align';
 import Emoji from '@tiptap/extension-emoji';
 import striptags from 'striptags';
 import twitter from 'twitter-text';
@@ -34,16 +39,51 @@ export function useProvideEditorContext(props: EditorProps) {
     autofocus: 'end',
     contentType: 'markdown',
     extensions: [
-      Markdown.configure({
-        indentation: { style: 'tab', size: 1 },
-      }),
       StarterKit.configure({
         heading: {
-          levels: [1, 2, 3],
+          levels: [1, 2, 3, 4, 5, 6],
         },
+        dropcursor: {
+          width: 3,
+          class: 'bg-primary-500 text-primary-500 rounded-full',
+        },
+        link: false,
+      }),
+      Markdown.configure({
+        indentation: { style: 'tab', size: 1 },
+        markedOptions: { gfm: true },
+      }),
+      TaskList.configure({}),
+      TaskItem.configure({
+        nested: true,
       }),
       Emoji.configure({
         enableEmoticons: true,
+      }),
+      Link.configure({
+        openOnClick: false,
+        autolink: true,
+        linkOnPaste: true,
+        HTMLAttributes: {
+          rel: 'noopener noreferrer',
+          target: '_blank',
+        },
+        isAllowedUri: (url, ctx) => {
+          const protocol = (url.split(':')[0] ?? '').toLowerCase();
+          if (!['http', 'https', 'mailto'].includes(protocol)) return false;
+          return ctx.defaultValidate(url);
+        },
+      }),
+      Highlight.configure({
+        multicolor: false,
+      }),
+      Placeholder.configure({
+        placeholder: 'Commencez à écrire…',
+        emptyEditorClass: 'is-editor-empty',
+      }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+        alignments: ['left', 'center', 'right'],
       }),
     ],
     onUpdate: ({ editor }) => {

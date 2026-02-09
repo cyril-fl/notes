@@ -64,7 +64,7 @@ function runCommand(item: BaseEditorToolbarItem) {
           type="button"
           @click="runCommand(item)"
         >
-          <Icon v-if="item.icon" :name="item.icon" class="size-4" />
+          <UIcon v-if="item.icon" :name="item.icon" class="size-4" />
         </button>
       </template>
       <span

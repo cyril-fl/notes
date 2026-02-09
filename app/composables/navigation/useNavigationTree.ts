@@ -18,7 +18,7 @@ export function useNavigationTree() {
       navItems.push({
         label: item.title,
         icon: 'i-lucide-folder',
-        to: item.id,
+        to: `/${item.id}/`,
         children,
       });
     }

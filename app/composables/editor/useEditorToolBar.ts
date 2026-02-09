@@ -1,17 +1,22 @@
-import { ALIGNMENTS, type EditorToolbarItem, MARKS } from '~/types/ui';
+import { type EditorToolbarItem, MARKS } from '~/types/ui';
+import LinkDialog from '~/components/UI/Editor/LinkDialog.vue';
 
 export const useEditorToolBar = (): EditorToolbarItem[][] => {
   const { editor } = useEditorContext();
+  const overlay = useOverlay();
+  const linkDialog = overlay.create(LinkDialog);
   const actions: EditorToolbarItem[] = [
     {
       kind: 'undo',
       icon: 'i-lucide-undo',
       tooltip: { label: 'editor.toolbar.undo' },
+      onClick: () => editor.value?.chain().focus().undo().run(),
     },
     {
       kind: 'redo',
       icon: 'i-lucide-redo',
       tooltip: { label: 'editor.toolbar.redo' },
+      onClick: () => editor.value?.chain().focus().redo().run(),
     },
   ];
 
@@ -21,106 +26,139 @@ export const useEditorToolBar = (): EditorToolbarItem[][] => {
       mark: MARKS.BOLD,
       icon: 'i-lucide-bold',
       tooltip: { label: 'editor.toolbar.bold' },
+      onClick: () => editor.value?.chain().focus().toggleBold().run(),
     },
     {
       kind: 'mark',
       mark: MARKS.ITALIC,
       icon: 'i-lucide-italic',
       tooltip: { label: 'editor.toolbar.italic' },
+      onClick: () => editor.value?.chain().focus().toggleItalic().run(),
     },
     {
       kind: 'mark',
       mark: MARKS.UNDERLINE,
       icon: 'i-lucide-underline',
       tooltip: { label: 'editor.toolbar.underline' },
+      onClick: () => editor.value?.chain().focus().toggleUnderline().run(),
     },
     {
       kind: 'mark',
       mark: MARKS.STRIKE,
       icon: 'i-lucide-strikethrough',
       tooltip: { label: 'editor.toolbar.strike' },
+      onClick: () => editor.value?.chain().focus().toggleStrike().run(),
+    },
+    {
+      kind: 'mark',
+      mark: MARKS.HIGHLIGHT,
+      icon: 'i-lucide-highlighter',
+      tooltip: { label: 'editor.toolbar.highlight' },
+      onClick: () => editor.value?.chain().focus().toggleHighlight().run(),
     },
   ];
 
-  const headings: EditorToolbarItem[] = [
-    {
-      kind: 'heading',
-      level: 1,
-      icon: 'i-lucide-heading-1',
-      tooltip: { label: 'editor.toolbar.heading1' },
-      onClick: () =>
-        editor.value?.chain().focus().toggleHeading({ level: 1 }).run(),
-    },
-    {
-      kind: 'heading',
-      level: 2,
-      icon: 'i-lucide-heading-2',
-      tooltip: { label: 'editor.toolbar.heading2' },
-      onClick: () =>
-        editor.value?.chain().focus().toggleHeading({ level: 2 }).run(),
-    },
-    {
-      kind: 'heading',
-      level: 3,
-      icon: 'i-lucide-heading-3',
-      tooltip: { label: 'editor.toolbar.heading3' },
-      onClick: () =>
-        editor.value?.chain().focus().toggleHeading({ level: 3 }).run(),
-    },
-  ];
-
-  const textAlignment: EditorToolbarItem[] = [
-    {
-      kind: 'textAlign',
-      align: ALIGNMENTS.LEFT,
-      icon: 'i-lucide-align-left',
-      tooltip: { label: 'editor.toolbar.alignLeft' },
-    },
-    {
-      kind: 'textAlign',
-      align: ALIGNMENTS.CENTER,
-      icon: 'i-lucide-align-center',
-      tooltip: { label: 'editor.toolbar.alignCenter' },
-    },
-    {
-      kind: 'textAlign',
-      align: ALIGNMENTS.RIGHT,
-      icon: 'i-lucide-align-right',
-      tooltip: { label: 'editor.toolbar.alignRight' },
-    },
-  ];
+  const headings: EditorToolbarItem[] = Array.from({ length: 6 }).map(
+    (_, i) => {
+      const level = (i + 1) as 1 | 2 | 3 | 4 | 5 | 6;
+      return {
+        kind: 'heading',
+        level,
+        icon: `i-lucide-heading-${level}`,
+        tooltip: { label: `editor.toolbar.heading${level}` },
+        onClick: () =>
+          editor.value?.chain().focus().toggleHeading({ level }).run(),
+      };
+    }
+  );
 
   const lists: EditorToolbarItem[] = [
     {
       kind: 'bulletList',
       icon: 'i-lucide-list',
       tooltip: { label: 'editor.toolbar.bulletList' },
+      onClick: () => editor.value?.chain().focus().toggleBulletList().run(),
     },
     {
       kind: 'orderedList',
       icon: 'i-lucide-list-ordered',
       tooltip: { label: 'editor.toolbar.orderedList' },
+      onClick: () => editor.value?.chain().focus().toggleOrderedList().run(),
+    },
+    {
+      kind: 'taskList',
+      icon: 'i-lucide-check-square',
+      tooltip: { label: 'editor.toolbar.taskList' },
+      onClick: () => editor.value?.chain().focus().toggleTaskList().run(),
     },
     {
       kind: 'blockquote',
       icon: 'i-lucide-text-quote',
       tooltip: { label: 'editor.toolbar.blockquote' },
+      onClick: () => editor.value?.chain().focus().toggleBlockquote().run(),
     },
+  ];
+
+  const blocks: EditorToolbarItem[] = [
     {
       kind: 'mark',
       mark: MARKS.CODE,
       icon: 'i-lucide-code',
       tooltip: { label: 'editor.toolbar.code' },
+      onClick: () => editor.value?.chain().focus().toggleCode().run(),
+    },
+    {
+      kind: 'codeBlock',
+      icon: 'i-lucide-square-code',
+      tooltip: { label: 'editor.toolbar.codeBlock' },
+      onClick: () => editor.value?.chain().focus().toggleCodeBlock().run(),
+    },
+    {
+      kind: 'horizontalRule',
+      icon: 'i-lucide-minus',
+      tooltip: { label: 'editor.toolbar.horizontalRule' },
+      onClick: () => editor.value?.chain().focus().setHorizontalRule().run(),
     },
   ];
+
+  const ALLOWED_LINK_PROTOCOLS: string[] = ['http', 'https', 'mailto'];
+
+  const isAllowedLinkUrl = (url: string): boolean => {
+    const trimmed = url.trim();
+    if (!trimmed) return false;
+    const protocol = (trimmed.split(':')[0] ?? '').toLowerCase();
+    return ALLOWED_LINK_PROTOCOLS.includes(protocol);
+  };
+
+  const normalizeLinkHref = (input: string): string => {
+    const trimmed = input.trim();
+    if (!trimmed) return '';
+    const protocol = (trimmed.split(':')[0] ?? '').toLowerCase();
+    if (ALLOWED_LINK_PROTOCOLS.includes(protocol)) return trimmed;
+    return `https://${trimmed}`;
+  };
 
   const links: EditorToolbarItem[] = [
     {
       kind: 'link',
       icon: 'i-lucide-link',
       tooltip: { label: 'editor.toolbar.link' },
+      onClick: async () => {
+        const ed = editor.value;
+        if (!ed) return;
+        const { href } = ed.getAttributes('link');
+        const result = await linkDialog.open({ href: href ?? '' });
+        if (!result) return;
+        if ('unset' in result) {
+          ed.chain().focus().unsetLink().run();
+          return;
+        }
+        const linkHref = normalizeLinkHref(result.href);
+        if (!isAllowedLinkUrl(linkHref)) return;
+        ed.chain().focus().setLink({ href: linkHref }).run();
+      },
     },
   ];
 
-  return [actions, formatting, headings, textAlignment, lists, links];
+  return [actions, formatting, headings, lists, blocks, links];
 };

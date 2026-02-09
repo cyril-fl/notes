@@ -71,9 +71,7 @@ const children = computed(() => {
     <h3>Notes : {{ children.notes.length }}</h3>
     <ul>
       <li v-for="note in children.notes" :key="note.id">
-        <NuxtLink :to="`/notes/${note.id}`" as="div">
-          {{ note.title }}
-        </NuxtLink>
+        <UINotesCard :note="note" />
       </li>
     </ul>
   </div>

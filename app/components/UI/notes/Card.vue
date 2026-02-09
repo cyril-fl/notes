@@ -30,9 +30,6 @@ defineProps<NotesCardProps>();
     <p>mentions: {{ note.mentions }}</p>
     <p>createdAt: {{ note.createdAt }}</p>
     <p>updatedAt: {{ note.updatedAt }}</p>
-    <div class="bg-muted p-4 rounded-md w-full text-xs text-muted">
-      <pre>{{ note }}</pre>
-    </div>
     <button @click="() => handleDelete(note)">DELETE</button>
   </NuxtLink>
 </template>

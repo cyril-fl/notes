@@ -3,11 +3,6 @@ import type { Labeled, Navigable, Iconable, Clickable } from './protocol';
 // Global
 export type CssClass = string | string[] | Record<string, boolean>;
 
-// Button types
-export interface ButtonProps extends Partial<Labeled & Navigable & Iconable> {
-  [key: string]: unknown;
-}
-
 // Navigation types
 export interface NavigationMenuItem
   extends Labeled, Partial<Navigable & Iconable> {
@@ -19,20 +14,16 @@ export interface NavigationMenuProps {
 }
 
 // Editor types
+export type Level = 1 | 2 | 3 | 4 | 5 | 6;
+
 export enum MARKS {
   BOLD = 'bold',
   ITALIC = 'italic',
   UNDERLINE = 'underline',
   STRIKE = 'strike',
   CODE = 'code',
+  HIGHLIGHT = 'highlight',
 }
-
-export enum ALIGNMENTS {
-  LEFT = 'left',
-  CENTER = 'center',
-  RIGHT = 'right',
-}
-
 export interface BaseEditorToolbarItem extends Iconable, Partial<Clickable> {
   kind: string;
   tooltip?: BaseEditorTooltipOptions;
@@ -42,22 +33,17 @@ export interface BaseEditorTooltipOptions {
 }
 
 export interface EditorToolbarHeadingItem extends BaseEditorToolbarItem {
-  level: 1 | 2 | 3 | 4 | 5 | 6;
+  level: Level;
 }
 
 export interface EditorToolbarMarkItem extends BaseEditorToolbarItem {
   mark: MARKS;
 }
 
-export interface EditorToolbarAlignItem extends BaseEditorToolbarItem {
-  align: ALIGNMENTS;
-}
-
 export type EditorToolbarItem =
   | BaseEditorToolbarItem
   | EditorToolbarHeadingItem
-  | EditorToolbarMarkItem
-  | EditorToolbarAlignItem;
+  | EditorToolbarMarkItem;
 
 //_________________________________
 // Types de remplacement pour Nuxt UI

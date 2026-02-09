@@ -17,7 +17,7 @@ definePageMeta({
   <section
     class="flex flex-col size-full items-center justify-center min-h-[70vh] gap-6 px-4 text-center"
   >
-    <Icon class="size-16 text-default mx-auto" name="i-lucide-notebook-pen" />
+    <UIcon class="size-16 text-default mx-auto" name="i-lucide-notebook-pen" />
     <hgroup class="text-center space-y-6">
       <h1 class="text-4xl font-bold text-default">
         {{ $t('page.home.title') }}
@@ -27,7 +27,7 @@ definePageMeta({
       </p>
     </hgroup>
     <div class="flex gap-4 justify-center pt-4">
-      <UIButton
+      <UButton
         :label="$t('button.open_graph')"
         color="neutral"
         icon="i-lucide-git-branch"
@@ -35,7 +35,7 @@ definePageMeta({
         to="/graph"
         variant="soft"
       />
-      <UIButton
+      <UButton
         :label="$t('button.open_editor')"
         color="primary"
         icon="i-lucide-file-text"

@@ -4,9 +4,9 @@ export function useNavigation() {
   // Define
   enum PATHS {
     home = '/',
-    graph = '/diagram',
-    notes = '/notes',
-    newNote = '/notes/new',
+    graph = '/diagram/',
+    notes = '/notes/',
+    newNote = '/notes/new/',
   }
 
   const { items } = useNavigationTree();

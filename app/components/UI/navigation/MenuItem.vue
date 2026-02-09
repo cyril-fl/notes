@@ -14,7 +14,7 @@ defineProps<{
 
 <template>
   <li>
-    <UIButton
+    <UButton
       :icon="item.icon"
       :label="$t(item.label)"
       :to="item.to"

@@ -32,6 +32,7 @@
     "@tiptap/extension-emoji": "^3.19.0",
     "@tiptap/extension-highlight": "^3.19.0",
     "@tiptap/extension-link": "^3.19.0",
+    "@tiptap/extension-list": "^3.19.0",
     "@tiptap/extension-placeholder": "^3.19.0",
     "@tiptap/extension-text-align": "^3.19.0",
     "@tiptap/markdown": "^3.19.0",
