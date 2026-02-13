@@ -27,6 +27,7 @@ const { onUpdate: onUpdateMentions } = useMentions();
 
 /* Methods */
 const handleSubmit = async () => {
+  console.log('[HANDLE SUBMIT] - content', content.value);
   if (!content.value) return;
 
   if (folder.value) {
@@ -37,11 +38,12 @@ const handleSubmit = async () => {
     return;
   }
 
-  await handleCreate({
+  const result = await handleCreate({
     type: ItemType.NOTE,
     content: content.value,
     path: [],
   });
+  console.log('[HANDLE SUBMIT] - result', result);
 };
 
 /* Lifecycle */
@@ -51,13 +53,12 @@ const handleSubmit = async () => {
 
 <template>
   <section class="grow flex flex-col">
-    <UIEditor 
+    <UIEditor
       v-model:content="content"
       v-bind="props"
       @submit="handleSubmit"
       @update:mentions="onUpdateMentions"
-      />
-      <!-- @update:hashtags="onUpdateHashtags" -->
+    />
   </section>
 </template>
 

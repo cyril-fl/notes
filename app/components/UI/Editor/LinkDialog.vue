@@ -47,7 +47,11 @@ const handleCancel = () => {
   <UModal
     :open="true"
     :title="isEditing ? 'Modifier le lien' : 'Ajouter un lien'"
-    @update:open="(val: boolean) => { if (!val) handleCancel() }"
+    @update:open="
+      (val: boolean) => {
+        if (!val) handleCancel();
+      }
+    "
   >
     <template #body>
       <form @submit.prevent="handleSubmit">
@@ -75,19 +79,11 @@ const handleCancel = () => {
 
         <div class="grow" />
 
-        <UButton
-          color="neutral"
-          variant="ghost"
-          @click="handleCancel"
-        >
+        <UButton color="neutral" variant="ghost" @click="handleCancel">
           Annuler
         </UButton>
 
-        <UButton
-          color="primary"
-          :disabled="!isValidUrl"
-          @click="handleSubmit"
-        >
+        <UButton color="primary" :disabled="!isValidUrl" @click="handleSubmit">
           Valider
         </UButton>
       </div>

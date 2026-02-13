@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { NavigationTreeItem } from '~/composables/navigation/useNavigationTree';
+import type { NavigationTreeItem } from '~/composables/tree/useNavigationTree';
 
 const props = defineProps<{
   item: NavigationTreeItem;

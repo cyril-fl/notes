@@ -1,10 +1,11 @@
 import { type EditorToolbarItem, MARKS } from '~/types/ui';
-import LinkDialog from '~/components/UI/Editor/LinkDialog.vue';
+import LinkDialog from '~/components/UI/editor/LinkDialog.vue';
 
 export const useEditorToolBar = (): EditorToolbarItem[][] => {
   const { editor } = useEditorContext();
   const overlay = useOverlay();
   const linkDialog = overlay.create(LinkDialog);
+
   const actions: EditorToolbarItem[] = [
     {
       kind: 'undo',

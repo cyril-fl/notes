@@ -69,7 +69,7 @@ const children = computed(() => {
     </ul>
 
     <h3>Notes : {{ children.notes.length }}</h3>
-    <ul>
+    <ul class="grid bg-red-500">
       <li v-for="note in children.notes" :key="note.id">
         <UINotesCard :note="note" />
       </li>

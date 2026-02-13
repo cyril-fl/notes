@@ -13,6 +13,10 @@ export interface NavigationMenuProps {
   item: NavigationMenuItem;
 }
 
+export type NavigationTreeItem = NavigationMenuItem;
+
+export type NavigationTreeProps = NavigationMenuProps;
+
 // Editor types
 export type Level = 1 | 2 | 3 | 4 | 5 | 6;
 

@@ -1,4 +1,4 @@
-import type { InjectionKey, ShallowRef } from 'vue';
+import type { InjectionKey, ModelRef, ShallowRef } from 'vue';
 import { type Editor, useEditor } from '@tiptap/vue-3';
 import { Markdown } from '@tiptap/markdown';
 import StarterKit from '@tiptap/starter-kit';
@@ -19,7 +19,6 @@ interface PreviewItem {
 
 interface Context {
   editor: ShallowRef<Editor | undefined, Editor | undefined>;
-  content: Ref<string | null>;
   preview: ComputedRef<PreviewItem[]>;
 }
 
@@ -32,10 +31,14 @@ export interface EditorProps {
   showPreview: boolean;
 }
 
-export function useProvideEditorContext(props: EditorProps) {
-  const content = ref<string | null>(null);
+export function useProvideEditorContext(
+  props: EditorProps,
+  content: ModelRef<string | null>
+) {
+  let isInternalUpdate = false;
 
   const editor = useEditor({
+    content: content.value ?? '',
     autofocus: 'end',
     contentType: 'markdown',
     extensions: [
@@ -87,9 +90,7 @@ export function useProvideEditorContext(props: EditorProps) {
       }),
     ],
     onUpdate: ({ editor }) => {
-      const json = editor.getJSON();
-      const markdownContent = editor.markdown?.serialize(json) ?? null;
-
+      const markdownContent = editor.getMarkdown() ?? null;
       handleUpdateContent(markdownContent);
     },
   });
@@ -118,6 +119,7 @@ export function useProvideEditorContext(props: EditorProps) {
 
   const handleUpdateContent = (newContent: string | null) => {
     if (newContent === null) {
+      isInternalUpdate = true;
       content.value = null;
       return;
     }
@@ -125,12 +127,33 @@ export function useProvideEditorContext(props: EditorProps) {
       .replace(/&nbsp;/gi, ' ')
       .replace(/\u00A0/g, ' ')
       .trim();
+    isInternalUpdate = true;
     content.value = normalized.length !== 0 ? normalized : null;
   };
 
+  watch(
+    content,
+    (newValue) => {
+      if (isInternalUpdate) {
+        isInternalUpdate = false;
+        return;
+      }
+      if (!editor.value) return;
+
+      const currentMarkdown = editor.value.getMarkdown();
+      const incoming = newValue ?? '';
+      if (currentMarkdown === incoming) return;
+
+      editor.value.commands.setContent(incoming, {
+        contentType: 'markdown',
+        emitUpdate: false,
+      });
+    },
+    { flush: 'post' }
+  );
+
   const context: Context = {
     editor,
-    content,
     preview,
   };
 

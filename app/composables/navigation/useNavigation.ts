@@ -1,15 +1,12 @@
-import { useNavigationTree } from '~/composables/navigation/useNavigationTree';
+export enum NAVIGATION {
+  home = '/',
+  graph = '/diagram/',
+  notes = '/editor/',
+  newNote = '/editor/new/',
+}
 
 export function useNavigation() {
   // Define
-  enum PATHS {
-    home = '/',
-    graph = '/diagram/',
-    notes = '/notes/',
-    newNote = '/notes/new/',
-  }
-
-  const { items } = useNavigationTree();
 
   // Data
   const data: NavigationMenuItem[] = [
@@ -19,33 +16,26 @@ export function useNavigation() {
         {
           label: 'pages.home.title',
           icon: 'i-lucide-home',
-          to: PATHS.home,
+          to: NAVIGATION.home,
         },
         {
           label: 'pages.graph.title',
           icon: 'i-lucide-git-branch',
-          to: PATHS.graph,
+          to: NAVIGATION.graph,
         },
         {
           label: 'pages.notes.title',
           icon: 'i-lucide-list',
-          to: PATHS.notes,
+          to: NAVIGATION.notes,
         },
         {
           label: 'pages.notes.new.title',
           icon: 'i-lucide-plus-circle',
-          to: PATHS.newNote,
+          to: NAVIGATION.newNote,
         },
       ],
     },
-    {
-      label: 'menu.navigation.folders.title',
-      children: items.value,
-    },
   ];
-
-  // Methods
-  // const isCurrent = (path: string) => route.path === path;
 
   return {
     links: data,

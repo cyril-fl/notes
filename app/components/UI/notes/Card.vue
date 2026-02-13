@@ -21,17 +21,19 @@ defineProps<NotesCardProps>();
 </script>
 
 <template>
-  <NuxtLink :to="`/notes/${note.id}`" as="div">
-    <p>id: {{ note.id }}</p>
-    <p>id: {{ note.id }}</p>
-    <p>title: {{ note.title }}</p>
-    <p>content: {{ note.content }}</p>
-    <p>hashtags: {{ note.hashtags }}</p>
-    <p>mentions: {{ note.mentions }}</p>
-    <p>createdAt: {{ note.createdAt }}</p>
-    <p>updatedAt: {{ note.updatedAt }}</p>
+  <div class="flex flex-col gap-2">
+    <NuxtLink
+      :to="`${NAVIGATION.notes}${note.id}`"
+      as="p"
+      class="bg-muted text-xs text-default p-4 rounded-md aspect-square size-30 overflow-hidden"
+    >
+    <span class="line-clamp-5">
+      {{ note.content }}
+    </span>
+    </NuxtLink>
+    <ul class="text-xs text-muted text-center">
+      <li>{{ note.updatedAt }}</li>
+    </ul>
     <button @click="() => handleDelete(note)">DELETE</button>
-  </NuxtLink>
+  </div>
 </template>
-
-<style scoped></style>

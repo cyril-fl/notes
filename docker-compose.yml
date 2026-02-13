@@ -1,0 +1,10 @@
+services:
+  mongo:
+    image: mongo:latest # version stable récente
+    container_name: mongo
+    ports:
+      - 27017:27017 # map le port local 27017 vers le container
+    volumes:
+      - mongo_data:/data/db # persistance des données
+volumes:
+  mongo_data:

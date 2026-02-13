@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { EditorProps } from '~/composables/editor/useEditor';
-import {  useProvideEditorContext} from '~/composables/editor/useEditor'; 
+import { useProvideEditorContext } from '~/composables/editor/useEditor';
 import { EditorContent } from '@tiptap/vue-3';
 /* Define */
 
@@ -18,11 +18,12 @@ const props = withDefaults(defineProps<Partial<EditorProps>>(), {
 
 const emit = defineEmits<Emits>();
 
-const { content, editor, preview } = useProvideEditorContext(props);
-
-const model = defineModel<string | null>({
+const model = defineModel<string | null>('content', {
   default: null,
 });
+
+const { editor, preview } = useProvideEditorContext(props, model);
+
 /* Data */
 
 /* Methods */
@@ -31,12 +32,13 @@ const handleSubmit = () => {
 };
 
 /* Lifecycle */
-watch(
-  () => content.value,
-  () => {
-    model.value = content.value;
-  }
-);
+// watch(
+//   () => content.value,
+//   () => {
+//     // model.value = content.value;
+//   },
+//   { immediate: true }
+// );
 
 onBeforeRouteLeave(handleSubmit);
 
@@ -53,12 +55,9 @@ onBeforeUnmount(() => {
 <template>
   <div class="editor-content bg-muted grow rounded-2xl p-4 overflow-hidden">
     <UIEditorToolBar />
-    <EditorContent
-      :editor="editor"
-      class="size-full"
-    />
+    <EditorContent :editor="editor" class="size-full" />
   </div>
-  <ul v-if="preview.some(item => item.condition)" class="mt-4">
+  <ul v-if="preview.some((item) => item.condition)" class="mt-4">
     <template v-for="item in preview" :key="item.label">
       <li v-if="item.condition">
         <p>{{ item.label }} :</p>

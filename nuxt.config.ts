@@ -24,7 +24,6 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@nuxt/image',
     '@nuxt/ui',
-    'reka-ui/nuxt',
     '@nuxt/icon',
     '@nuxtjs/google-fonts',
   ],

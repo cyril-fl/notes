@@ -11,10 +11,7 @@ defineProps<NavigationMenuProps>();
 
 <template>
   <!--  Group-->
-  <UINavigationMenuGroup
-    v-if="item.children && item.children.length > 0"
-    :item="item"
-  >
+  <UINavigationMenuGroup v-if="item.children" :item="item">
     <UINavigationMenu
       v-for="(child, index) in item.children"
       :key="`child-${child.label}-${index}`"
@@ -23,5 +20,6 @@ defineProps<NavigationMenuProps>();
   </UINavigationMenuGroup>
 
   <!--  Simple item -->
+
   <UINavigationMenuItem v-else :item="item" />
 </template>

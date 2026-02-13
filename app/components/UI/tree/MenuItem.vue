@@ -1,14 +1,15 @@
-<script lang="ts" setup>
+<script setup lang="ts">
 // Imports
-import type { NavigationMenuItem } from '~/types/ui';
-
+import type { NavigationTreeProps } from '~/types/ui';
 // Define
-defineProps<{
-  item: NavigationMenuItem;
-}>();
+defineProps<NavigationTreeProps>();
+
 // Data
+
 // Methods
+
 // Lifecycle
+
 // SEO
 </script>
 

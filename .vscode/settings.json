@@ -3,5 +3,8 @@
   "i18n-ally.localesPaths": ["i18n", "i18n/locales"],
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
-  "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveMode": "modifications",
+  "prettier.enable": true,
+  "prettier.tabWidth": 2
 }
