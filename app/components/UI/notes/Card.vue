@@ -1,11 +1,5 @@
 <script setup lang="ts">
 // Define
-const { handleDeleteId } = useDataApi();
-
-const handleDelete = (note: Note) => {
-  handleDeleteId(note.id);
-};
-
 interface NotesCardProps {
   note: Note;
 }
@@ -34,6 +28,6 @@ defineProps<NotesCardProps>();
     <ul class="text-xs text-muted text-center">
       <li>{{ note.updatedAt }}</li>
     </ul>
-    <button @click="() => handleDelete(note)">DELETE</button>
+    <button @click="() => $hooks.callHook('data:delete:id', note.id)">DELETE</button>
   </div>
 </template>

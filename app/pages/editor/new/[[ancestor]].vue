@@ -2,6 +2,7 @@
 import type { EditorProps } from '~/composables/editor/useEditor';
 
 /* Define */
+const { $hooks } = useNuxtApp();
 const route = useRoute();
 const props = withDefaults(defineProps<Partial<EditorProps>>(), {
   readonly: false,
@@ -10,7 +11,6 @@ const props = withDefaults(defineProps<Partial<EditorProps>>(), {
   showPreview: true,
 });
 
-const { handleCreate, handleCreateNoteInFolder } = useDataApi();
 const { getById } = useDataUtils();
 
 const folder = computed<Folder | undefined>(() => {
@@ -27,23 +27,22 @@ const { onUpdate: onUpdateMentions } = useMentions();
 
 /* Methods */
 const handleSubmit = async () => {
-  console.log('[HANDLE SUBMIT] - content', content.value);
   if (!content.value) return;
 
   if (folder.value) {
-    await handleCreateNoteInFolder({
+    await $hooks.callHook('data:create:note:in-folder', {
       folder: folder.value,
       content: content.value,
     });
     return;
   }
 
-  const result = await handleCreate({
+  const result = await $hooks.callHook('data:create:note', {
     type: ItemType.NOTE,
     content: content.value,
     path: [],
   });
-  console.log('[HANDLE SUBMIT] - result', result);
+  logSubmit.info('created', result?.id);
 };
 
 /* Lifecycle */

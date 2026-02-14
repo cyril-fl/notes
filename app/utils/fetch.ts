@@ -32,11 +32,8 @@ interface FetchBuilder<R> extends PromiseLike<FetchResult<R>> {
 
 export function useFetchApi({ isLoading, error }: Props) {
   return function fetch<R, T extends BodyRequest = undefined>(
-    options: FetchOptions<T>,
-    ctx?: string
+    options: FetchOptions<T> & { ctx?: string }
   ): FetchBuilder<R> {
-    const prefix = ctx ? `[DATA API] - ${ctx}` : `[DATA API]`;
-
     let onSuccessCallback: ((response: ServerResponse<R>) => void) | null =
       null;
     let onErrorCallback: ((error: Error) => void) | null = null;
@@ -54,7 +51,7 @@ export function useFetchApi({ isLoading, error }: Props) {
           options
         );
 
-        console.info(prefix + ' response', response);
+        logApi.info(' response', response);
 
         await onSuccessCallback?.(response);
         return { ok: true, response };
@@ -62,7 +59,7 @@ export function useFetchApi({ isLoading, error }: Props) {
         const err = e instanceof Error ? e : new Error(String(e));
         error.value = err;
 
-        console.error(prefix + ' error', err);
+        logApi.error(' error', err);
 
         onErrorCallback?.(err);
         return { ok: false, error: err };

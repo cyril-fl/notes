@@ -20,6 +20,5 @@ defineProps<NavigationMenuProps>();
   </UINavigationMenuGroup>
 
   <!--  Simple item -->
-
   <UINavigationMenuItem v-else :item="item" />
 </template>

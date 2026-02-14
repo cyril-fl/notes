@@ -2,6 +2,7 @@
 import type { EditorProps } from '~/composables/editor/useEditor';
 
 /* Define */
+const { $hooks } = useNuxtApp();
 const route = useRoute();
 const props = withDefaults(defineProps<Partial<EditorProps>>(), {
   readonly: false,
@@ -10,7 +11,6 @@ const props = withDefaults(defineProps<Partial<EditorProps>>(), {
   showPreview: true,
 });
 
-const { handleUpdate } = useDataApi();
 const { getById } = useDataUtils();
 
 const store = useDataStore();
@@ -54,12 +54,12 @@ const { onUpdate: onUpdateMentions } = useMentions();
 /* Data */
 
 /* Methods */
-// const handleSubmit = async () => {
-//   if (!(note.value?.id && content.value)) return;
-//   await handleUpdate(note.value.id, {
-//     content: content.value,
-//   });
-// };
+const handleSubmit = async () => {
+  if (!(note.value?.id && content.value)) return;
+  await $hooks.callHook('on:update:id', note.value.id, {
+    content: content.value,
+  });
+};
 
 /* Lifecycle */
 watch(
@@ -80,8 +80,8 @@ watch(
       v-bind="props"
       v-model:content="content"
       @update:mentions="onUpdateMentions"
+      @submit="handleSubmit"
     />
     <!-- v-model:content="content" -->
-    <!-- @submit="handleSubmit" -->
   </section>
 </template>

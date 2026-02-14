@@ -31,15 +31,6 @@ const handleSubmit = () => {
   emit('submit');
 };
 
-/* Lifecycle */
-// watch(
-//   () => content.value,
-//   () => {
-//     // model.value = content.value;
-//   },
-//   { immediate: true }
-// );
-
 onBeforeRouteLeave(handleSubmit);
 
 onMounted(() => {

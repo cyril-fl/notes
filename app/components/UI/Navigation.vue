@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 const { links } = useNavigation();
 const { folders } = useNavigationTree();
-const { handleCreateFolder } = useDataApi();
 const { hashtags, hasTags } = useHashtags();
 </script>
 
@@ -32,7 +31,7 @@ const { hashtags, hasTags } = useHashtags();
         color="neutral"
         variant="ghost"
         square
-        @click="handleCreateFolder('NEW')"
+        @click="$hooks.callHook('data:create:folder')"
       />
     </div>
   </nav>

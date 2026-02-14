@@ -1,5 +1,7 @@
 export const useDataStore = defineStore('data', () => {
   /* Define – only serializable state (no Map, no class instances) */
+
+  const { $hooks } = useNuxtApp();
   const _raw = ref<DataSchema[]>([]);
   const hasLoaded = ref<boolean>(false);
 
@@ -17,24 +19,24 @@ export const useDataStore = defineStore('data', () => {
   );
 
   /* Methods */
-  const handleRead = (data: DataSchema[]) => {
+  function handleRead(data: DataSchema[]) {
     if (!hasLoaded.value) hasLoaded.value = true;
     _raw.value = data;
     return _raw.value;
-  };
+  }
 
-  const handleReadId = (data: DataSchema) => {
+  function handleReadId(data: DataSchema) {
     _raw.value = [..._raw.value, data];
     return _raw.value;
-  };
+  }
 
-  const handleUpdate = (data: DataSchema | DataSchema[]) => {
+  function handleUpdate(data: DataSchema | DataSchema[]) {
     const d = Array.isArray(data) ? data : [data];
     _raw.value = [..._raw.value, ...d];
     return _raw.value;
-  };
+  }
 
-  const handleUpdateId = (id: string, data: Partial<DataSchema>) => {
+  function handleUpdateId(id: string, data: Partial<DataSchema>) {
     const index = _raw.value.findIndex((n) => n.id === id);
     if (index === -1) return;
 
@@ -48,21 +50,21 @@ export const useDataStore = defineStore('data', () => {
       i === index ? updated.data : item
     );
     return _raw.value;
-  };
+  }
 
-  const handleDelete = () => {
+  function handleDelete() {
     _raw.value = [];
     return _raw.value;
-  };
+  }
 
-  const handleDeleteId = (id: string | string[]) => {
+  function handleDeleteId(id: string | string[]) {
     const ids = Array.isArray(id) ? id : [id];
 
     const filtered = _raw.value.filter((n) => !ids.includes(n.id));
     _raw.value = [...filtered];
 
     return _raw.value;
-  };
+  }
 
   function handleStoreUpdate(items: DataSchema[]) {
     const newMap: Lookup = new Map();
@@ -107,6 +109,19 @@ export const useDataStore = defineStore('data', () => {
     return id ? _raw.value.find((n) => n.id === id) : _raw.value;
   }
 
+  $hooks.addHooks({
+    // C
+    // R
+    'on:read': handleRead,
+    'on:read:id': handleReadId,
+    // U
+    'on:update': handleUpdate,
+    'on:update:id': handleUpdateId,
+    // D
+    'on:delete': handleDelete,
+    'on:delete:id': handleDeleteId,
+  });
+
   return {
     tree,
     map,
@@ -114,12 +129,7 @@ export const useDataStore = defineStore('data', () => {
     tags,
     popularTags,
     hasLoaded,
-    onRead: handleRead,
-    onReadId: handleReadId,
-    onUpdate: handleUpdate,
-    onUpdateId: handleUpdateId,
-    onDelete: handleDelete,
-    onDeleteId: handleDeleteId,
     getSnapshot,
+    loadData: handleRead,
   };
 });
