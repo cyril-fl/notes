@@ -1,13 +1,19 @@
+interface FolderState {
+  isEditing: boolean;
+  targetId?: string;
+}
+
 export function useFolder() {
-  const isEditing = useState('isEditing', () => false);
+  const isEditing = useState<FolderState>('folder-editing', () => ({
+    isEditing: false,
+  }));
 
-  /* TODO Créer des hook pour gerer le is edition, lajout de folder ext
+  function setState(state: Partial<FolderState>) {
+    isEditing.value = { ...isEditing.value, ...state };
+  }
 
-  voir si des inject son necessaire mais je ne pense pas .
-
-  utiliser un Editable de teka reka pour editer
-  */
   return {
     isEditing,
+    setState,
   };
 }

@@ -7,8 +7,6 @@ import Link from '@tiptap/extension-link';
 import Highlight from '@tiptap/extension-highlight';
 import Placeholder from '@tiptap/extension-placeholder';
 import TextAlign from '@tiptap/extension-text-align';
-import Emoji from '@tiptap/extension-emoji';
-import striptags from 'striptags';
 import twitter from 'twitter-text';
 
 interface PreviewItem {
@@ -33,12 +31,12 @@ export interface EditorProps {
 
 export function useProvideEditorContext(
   props: EditorProps,
-  content: ModelRef<string | null>
+  content: ModelRef<string | undefined>
 ) {
-  let isInternalUpdate = false;
+  const isEditorReady = ref(false);
 
   const editor = useEditor({
-    content: content.value ?? '',
+    content: content.value,
     autofocus: 'end',
     contentType: 'markdown',
     extensions: [
@@ -56,12 +54,9 @@ export function useProvideEditorContext(
         indentation: { style: 'tab', size: 1 },
         markedOptions: { gfm: true },
       }),
-      TaskList.configure({}),
+      TaskList.configure(),
       TaskItem.configure({
         nested: true,
-      }),
-      Emoji.configure({
-        enableEmoticons: true,
       }),
       Link.configure({
         openOnClick: false,
@@ -90,7 +85,8 @@ export function useProvideEditorContext(
       }),
     ],
     onUpdate: ({ editor }) => {
-      const markdownContent = editor.getMarkdown() ?? null;
+      if (!isEditorReady.value) return;
+      const markdownContent = editor.getMarkdown() ?? '';
       handleUpdateContent(markdownContent);
     },
   });
@@ -103,7 +99,7 @@ export function useProvideEditorContext(
     {
       label: 'Preview',
       condition: props.showPreview,
-      content: content.value ?? '  ',
+      content: content.value ?? '',
     },
     {
       label: 'Extracted hashtags',
@@ -117,40 +113,11 @@ export function useProvideEditorContext(
     },
   ]);
 
-  const handleUpdateContent = (newContent: string | null) => {
-    if (newContent === null) {
-      isInternalUpdate = true;
-      content.value = null;
-      return;
+  const handleUpdateContent = (newContent: string) => {
+    if (content.value !== newContent) {
+      content.value = newContent;
     }
-    const normalized = striptags(newContent)
-      .replace(/&nbsp;/gi, ' ')
-      .replace(/\u00A0/g, ' ')
-      .trim();
-    isInternalUpdate = true;
-    content.value = normalized.length !== 0 ? normalized : null;
   };
-
-  watch(
-    content,
-    (newValue) => {
-      if (isInternalUpdate) {
-        isInternalUpdate = false;
-        return;
-      }
-      if (!editor.value) return;
-
-      const currentMarkdown = editor.value.getMarkdown();
-      const incoming = newValue ?? '';
-      if (currentMarkdown === incoming) return;
-
-      editor.value.commands.setContent(incoming, {
-        contentType: 'markdown',
-        emitUpdate: false,
-      });
-    },
-    { flush: 'post' }
-  );
 
   const context: Context = {
     editor,

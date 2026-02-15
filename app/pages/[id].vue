@@ -3,6 +3,7 @@
 
 // Data
 const route = useRoute();
+const { t } = useI18n();
 const id = computed<string>(() => {
   const pathParams = route.params.id;
 
@@ -43,6 +44,18 @@ const children = computed(() => {
   }, result);
 });
 
+const details = computed(() => {
+  const _folder = t('pages.folder.folders_count', { count: children.value.folders.length });
+  const _note = t('pages.folder.notes_count', { count: children.value.notes.length });
+
+  const result = []
+
+  if (children.value.folders.length) result.push(_folder);
+  if (children.value.notes.length) result.push(_note);
+
+  return result.join(' | ');
+});
+
 // Methods
 
 // Lifecycle
@@ -51,15 +64,12 @@ const children = computed(() => {
 </script>
 
 <template>
-  <p>Notes id</p>
   <div v-if="item" class="space-y-4">
-    <div class="bg-muted p-4 rounded-md w-full text-xs text-muted">
-      <pre>{{ item }}</pre>
-    </div>
+    <hgroup class="flex items-baseline  gap-2">
+      <h1 class="font-bold text-2xl">{{ item.title }}</h1>
+      <h3>{{ details }}</h3>
+    </hgroup>
 
-    <h1>{{ item.title }}</h1>
-
-    <h3>Folders : {{ children.folders.length }}</h3>
     <ul>
       <li v-for="folder in children.folders" :key="folder.id">
         <NuxtLink :to="`/${folder.id}`" as="div">
@@ -68,8 +78,7 @@ const children = computed(() => {
       </li>
     </ul>
 
-    <h3>Notes : {{ children.notes.length }}</h3>
-    <ul class="grid bg-red-500">
+    <ul class="flex flew-wrap gap-4">
       <li v-for="note in children.notes" :key="note.id">
         <UINotesCard :note="note" />
       </li>

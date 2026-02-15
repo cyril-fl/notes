@@ -21,13 +21,15 @@ defineProps<NotesCardProps>();
       as="p"
       class="bg-muted text-xs text-default p-4 rounded-md aspect-square size-30 overflow-hidden"
     >
-    <span class="line-clamp-5">
-      {{ note.content }}
-    </span>
+      <span class="line-clamp-5">
+        {{ note.content }}
+      </span>
     </NuxtLink>
     <ul class="text-xs text-muted text-center">
       <li>{{ note.updatedAt }}</li>
     </ul>
-    <button @click="() => $hooks.callHook('data:delete:id', note.id)">DELETE</button>
+    <button @click="() => $hooks.callHook('data:delete:id', note.id)">
+      DELETE
+    </button>
   </div>
 </template>

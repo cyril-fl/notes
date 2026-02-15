@@ -58,7 +58,7 @@ interface WhitPath {
 }
 
 export type CreateNoteInFolderParameters = WithFolder & WithContent;
-export type CreateFolderInFolderParameters = WithFolder & WithTitle;
+export type CreateFolderInFolderParameters = WithFolder & Partial<WithTitle>;
 
 export interface CreateFolder extends WithTitle, WhitPath {
   childrenIds: string[];

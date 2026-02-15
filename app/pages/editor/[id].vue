@@ -66,7 +66,7 @@ watch(
   () => ({ note: note.value, hasLoaded: hasLoaded.value }),
   ({ note, hasLoaded }) => {
     if (note || !hasLoaded) return;
-    navigateTo('/notes/new', { replace: true });
+    navigateTo(NAVIGATION.newNote, { replace: true });
   },
   { immediate: true }
 );

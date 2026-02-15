@@ -69,9 +69,20 @@ export const useDataStore = defineStore('data', () => {
   function handleStoreUpdate(items: DataSchema[]) {
     const newMap: Lookup = new Map();
     const newTags: MappedTags = new Map();
+    const rootFolder = new Folder({
+      id: 'root',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      path: [],
+      type: ItemType.FOLDER,
+      title: 'Root',
+      childrenIds: [],
+    });
+
+    newMap.set(rootFolder.id, rootFolder);
     const newData: StoredData = {
       notes: [],
-      folders: [],
+      folders: [rootFolder],
     };
 
     for (const item of items) {
@@ -86,6 +97,11 @@ export const useDataStore = defineStore('data', () => {
           const props = noteParams.parse(item);
           const note = new Note(props);
           newData.notes.push(note);
+
+          if (note.ancestor === null) {
+            note.path = ['root'];
+          }
+
           extractTags({ note, tags: newTags });
           return note;
         },
@@ -95,6 +111,11 @@ export const useDataStore = defineStore('data', () => {
       if (!handler) continue;
 
       const instance = handler();
+
+      if (instance.ancestor === 'root') {
+        rootFolder.childrenIds.push(instance.id);
+      }
+
       newMap.set(instance.id, instance);
     }
 

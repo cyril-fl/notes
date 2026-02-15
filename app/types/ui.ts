@@ -1,11 +1,17 @@
-import type { Labeled, Navigable, Iconable, Clickable } from './protocol';
+import type {
+  Labeled,
+  Navigable,
+  Iconable,
+  Clickable,
+  Identifiable,
+} from './protocol';
 
 // Global
 export type CssClass = string | string[] | Record<string, boolean>;
 
 // Navigation types
 export interface NavigationMenuItem
-  extends Labeled, Partial<Navigable & Iconable> {
+  extends Identifiable, Labeled, Partial<Navigable & Iconable> {
   children?: NavigationMenuItem[];
 }
 

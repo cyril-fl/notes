@@ -18,9 +18,7 @@ const props = withDefaults(defineProps<Partial<EditorProps>>(), {
 
 const emit = defineEmits<Emits>();
 
-const model = defineModel<string | null>('content', {
-  default: null,
-});
+const model = defineModel<string | undefined>('content');
 
 const { editor, preview } = useProvideEditorContext(props, model);
 

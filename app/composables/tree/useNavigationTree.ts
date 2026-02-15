@@ -2,17 +2,14 @@ import type { NavigationTreeItem } from '~/types/ui';
 
 export function useNavigationTree() {
   const store = useDataStore();
-  const { tree } = storeToRefs(store);
+  const { tree, data: _data } = storeToRefs(store);
   const { getById } = useDataUtils();
-
-  const items = computed<NavigationTreeItem[]>(() =>
-    makeNavigationTreeItem(tree.value)
-  );
 
   const data = computed<NavigationTreeItem[]>(() => [
     {
+      id: 'folders',
       label: 'menu.navigation.folders.title',
-      children: items.value,
+      children: makeNavigationTreeItem(tree.value),
     },
   ]);
 
@@ -30,6 +27,7 @@ export function useNavigationTree() {
         childKeys.length > 0 ? makeNavigationTreeItem(subtree) : undefined;
 
       navItems.push({
+        id: item.id,
         label: item.title,
         icon: 'i-lucide-folder',
         to: `/${item.id}/`,

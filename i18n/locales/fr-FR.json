@@ -1,8 +1,21 @@
 {
-  "page": {
+  "pages": {
     "home": {
       "title": "Accueil",
       "description": "Votre application de prise de notes pour organiser vos idées et vos pensées."
+    },
+    "graph": {
+      "title": "Graph"
+    },
+    "folder": {
+      "folders_count": "Aucun dossier | 1 dossier | {count} dossiers",
+      "notes_count": "Aucune note | 1 note | {count} notes"
+    },
+    "notes": {
+      "title": "Notes",
+      "new": {
+        "title": "Nouvelle note"
+      }
     }
   },
   "button": {
@@ -13,7 +26,8 @@
     "navigation": {
       "title": "Navigation",
       "folders": {
-        "title": "Dossiers"
+        "title": "Dossiers",
+        "root": "Notes rapides"
       },
       "hashtags": {
         "title": "Tags"
@@ -21,24 +35,17 @@
     },
     "folder_tree": {
       "title": "Dossiers"
+    },
+    "context": {
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "rename": "Renommer",
+      "add_note": "Ajouter une note",
+      "add_folder": "Ajouter un dossier"
     }
   },
   "notes": {
     "default_title": "Sans titre"
-  },
-  "pages": {
-    "home": {
-      "title": "Accueil"
-    },
-    "graph": {
-      "title": "Graph"
-    },
-    "notes": {
-      "title": "Notes",
-      "new": {
-        "title": "Nouvelle note"
-      }
-    }
   },
   "placeholder": {
     "editor": "Écrivez votre note ici...",

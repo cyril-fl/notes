@@ -15,9 +15,9 @@ defineProps<NavigationTreeProps>();
 <template>
   <!--  Group -->
   <UITreeMenuGroup v-if="item.children" :item="item">
-    <UITreeMenuItem
+    <UITreeMenu
       v-for="(child, index) in item.children"
-      :key="`child-${child.label}-${index}`"
+      :key="`child-${child.id}-${index}`"
       :item="child"
     />
   </UITreeMenuGroup>

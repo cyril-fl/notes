@@ -4,6 +4,10 @@ export interface Labeled {
   label: string;
 }
 
+export interface Identifiable {
+  id: string;
+}
+
 export interface Navigable {
   to: string;
 }

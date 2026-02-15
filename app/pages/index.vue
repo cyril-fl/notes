@@ -20,10 +20,10 @@ definePageMeta({
     <UIcon class="size-16 text-default mx-auto" name="i-lucide-notebook-pen" />
     <hgroup class="text-center space-y-6">
       <h1 class="text-4xl font-bold text-default">
-        {{ $t('page.home.title') }}
+        {{ $t('pages.home.title') }}
       </h1>
       <p class="text-lg text-muted max-w-md mx-auto">
-        {{ $t('page.home.description') }}
+        {{ $t('pages.home.description') }}
       </p>
     </hgroup>
     <div class="flex gap-4 justify-center pt-4">

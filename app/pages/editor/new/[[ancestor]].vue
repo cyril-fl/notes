@@ -13,13 +13,44 @@ const props = withDefaults(defineProps<Partial<EditorProps>>(), {
 
 const { getById } = useDataUtils();
 
+const ancestorId = computed<string | null>(() => {
+  const param = route.params.ancestor;
+  if (!param || Array.isArray(param)) return null;
+  return param;
+});
+
 const folder = computed<Folder | undefined>(() => {
-  const ancestorParam = route.params.ancestor;
-  if (!ancestorParam || typeof ancestorParam !== 'string') return undefined;
-  return getById(ancestorParam, { types: ItemType.FOLDER });
+  if (!ancestorId.value) return undefined;
+  return getById(ancestorId.value, { types: ItemType.FOLDER });
 });
 
 const content = ref<string | null>(null);
+const editorKey = ref<string>(
+  ancestorId.value ? `editor-new-${ancestorId.value}` : 'editor-new-root'
+);
+const isSwitchingContext = ref(false);
+
+watch(
+  () => ancestorId.value,
+  (next, prev) => {
+    if (next === prev) return;
+    isSwitchingContext.value = true;
+    content.value = null;
+    editorKey.value = next
+      ? `editor-new-${next}`
+      : `editor-new-root-${Date.now()}`;
+  }
+);
+
+watch(
+  () => folder.value,
+  () => {
+    if (isSwitchingContext.value) {
+      isSwitchingContext.value = false;
+    }
+  },
+  { immediate: true }
+);
 
 // const { onUpdate: onUpdateHashtags } = useHashtags();
 const { onUpdate: onUpdateMentions } = useMentions();
@@ -27,6 +58,7 @@ const { onUpdate: onUpdateMentions } = useMentions();
 
 /* Methods */
 const handleSubmit = async () => {
+  if (isSwitchingContext.value) return;
   if (!content.value) return;
 
   if (folder.value) {
@@ -38,10 +70,10 @@ const handleSubmit = async () => {
   }
 
   const result = await $hooks.callHook('data:create:note', {
-    type: ItemType.NOTE,
     content: content.value,
     path: [],
   });
+
   logSubmit.info('created', result?.id);
 };
 
@@ -53,6 +85,7 @@ const handleSubmit = async () => {
 <template>
   <section class="grow flex flex-col">
     <UIEditor
+      :key="editorKey"
       v-model:content="content"
       v-bind="props"
       @submit="handleSubmit"

@@ -297,6 +297,9 @@ export function createDataApiRegistrar() {
       await handleUpdate(folder.id, {
         childrenIds: Array.from(children),
       });
+
+      console.log('handleCreateFolderInFolder:', result);
+      return result;
     }
 
     async function handleCreateNote({

@@ -14,7 +14,7 @@ defineProps<NavigationMenuProps>();
   <UINavigationMenuGroup v-if="item.children" :item="item">
     <UINavigationMenu
       v-for="(child, index) in item.children"
-      :key="`child-${child.label}-${index}`"
+      :key="`child-${child.id}-${index}`"
       :item="child"
     />
   </UINavigationMenuGroup>
