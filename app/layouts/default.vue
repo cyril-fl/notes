@@ -4,5 +4,5 @@
   <main class="vessel vessel-flex">
     <UINavigation />
     <slot />
-  </main>
+  </main> 
 </template>

@@ -27,12 +27,12 @@ const note = computed(() => {
     : null;
 });
 
-const _content = ref<string | null>(note.value?.content ?? null);
+const _content = ref<string | undefined>(note.value?.content);
 const content = computed({
   get: () => {
     return _content.value;
   },
-  set: (value: string | null) => {
+  set: (value: string | undefined) => {
     _content.value = value;
   },
 });
@@ -42,9 +42,9 @@ let hasInitializedContent = !!_content.value;
 watch(
   () => note.value?.content,
   (noteContent) => {
-    if (hasInitializedContent || noteContent === undefined) return;
+    if (hasInitializedContent) return;
     hasInitializedContent = true;
-    _content.value = noteContent ?? null;
+    _content.value = noteContent;
   },
   { immediate: true }
 );
@@ -75,13 +75,12 @@ watch(
 </script>
 
 <template>
-  <section class="grow flex flex-col">
+  <UIPageSection :title="note?.title || $t('pages.editor.title')">
     <UIEditor
       v-bind="props"
       v-model:content="content"
       @update:mentions="onUpdateMentions"
       @submit="handleSubmit"
     />
-    <!-- v-model:content="content" -->
-  </section>
+  </UIPageSection>
 </template>

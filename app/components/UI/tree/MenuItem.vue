@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// Imports
 import {
   EditableArea,
   EditableInput,
@@ -17,59 +16,25 @@ const props = defineProps<NavigationTreeProps>();
 const model = ref(props.item.label);
 const editable = useTemplateRef('editable');
 const inputRef = useTemplateRef('inputRef');
-const { getById } = useDataUtils();
-const { t } = useI18n();
 
-const items = ref<ContextMenuItem[][]>([
-    [
-      {
-        label: t('menu.context.add_folder'),
-        icon: 'i-lucide-folder-plus',
-        onSelect: async () => {
-          const folder = getById(props.item.id, { types: ItemType.FOLDER });
-          if (!folder) return;
+const { addFolder, addNote, deleteItem, updateFolderLink } = useActions();
 
-          const results = await $hooks.callHookParallel(
-            'data:create:folder:in-folder',
-            { folder }
-          );
-
-          const newFolder = Array.isArray(results)
-            ? results.find((r) => r !== undefined)
-            : undefined;
-          if (!newFolder) return;
-
-          $hooks.callHook('navigation:folder:blur-except', props.item.id);
-          $hooks.callHook('navigation:folder:edit', newFolder.id);
-        },
-      },
-      {
-        label: t('menu.context.add_note'),
-        icon: 'i-lucide-file-plus',
-        to: `${NAVIGATION.newNote}${props.item.id}/`,
-      },
-    ],
-    [
-      {
-        label: t('menu.context.rename'),
-        icon: 'i-lucide-pencil',
-        onSelect: () => {
-          $hooks.callHook('navigation:folder:edit', props.item.id);
-        },
-        disabled: props.item.id === 'root',
-      },
-      {
-        label: t('menu.context.delete'),
-        icon: 'i-lucide-trash',
-        color: 'error',
-        onSelect: () => {
-          $hooks.callHook('data:delete:id', props.item.id);
-        },
-        disabled: props.item.id === 'root',
-      },
-    ],
-]);
 // Data
+const actions = ref<ContextMenuItem[][]>([
+  [
+    // ADD
+    addFolder(props.item.id, (newId) => {
+      $hooks.callHook('folder-navigation:blur-except', props.item.id);
+      $hooks.callHook('folder-navigation:update', newId);
+    }),
+    addNote(props.item.id),
+  ],
+  [
+    // EDIT
+    updateFolderLink(props.item.id),
+    deleteItem(props.item.id),
+  ],
+]);
 
 // Methods
 async function handleEdit(id: string) {
@@ -92,6 +57,7 @@ function handleSubmit(value: string | null | undefined) {
   if (!trimmedValue || trimmedValue === props.item.label) return;
 
   $hooks.callHook('data:update', props.item.id, { title: trimmedValue });
+  $hooks.callHook('card:folder:refresh', props.item.id, trimmedValue);
 }
 
 function handleBlur(id: string) {
@@ -105,11 +71,18 @@ function handleBlurExcept(id: string) {
 }
 
 // Lifecycle
+watch(
+  () => props.item,
+  (newLabel) => {
+    model.value = newLabel.label;
+  }
+);
+
 onMounted(() => {
   $hooks.addHooks({
-    'navigation:folder:edit': handleEdit,
-    'navigation:folder:blur': handleBlur,
-    'navigation:folder:blur-except': handleBlurExcept,
+    'folder-navigation:update': handleEdit,
+    'folder-navigation:blur': handleBlur,
+    'folder-navigation:blur-except': handleBlurExcept,
   });
 });
 // SEO
@@ -117,7 +90,7 @@ onMounted(() => {
 
 <template>
   <li>
-    <UContextMenu :items="items">
+    <UContextMenu :items="actions">
       <UButton
         :icon="item.icon"
         :to="item.to"

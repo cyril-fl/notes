@@ -24,7 +24,7 @@ const folder = computed<Folder | undefined>(() => {
   return getById(ancestorId.value, { types: ItemType.FOLDER });
 });
 
-const content = ref<string | null>(null);
+const content = ref<string | undefined>();
 const editorKey = ref<string>(
   ancestorId.value ? `editor-new-${ancestorId.value}` : 'editor-new-root'
 );
@@ -35,7 +35,7 @@ watch(
   (next, prev) => {
     if (next === prev) return;
     isSwitchingContext.value = true;
-    content.value = null;
+    content.value = undefined;
     editorKey.value = next
       ? `editor-new-${next}`
       : `editor-new-root-${Date.now()}`;
@@ -83,7 +83,7 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <section class="grow flex flex-col">
+  <UIPageSection :title="$t('pages.editor.new.title')">
     <UIEditor
       :key="editorKey"
       v-model:content="content"
@@ -91,7 +91,7 @@ const handleSubmit = async () => {
       @submit="handleSubmit"
       @update:mentions="onUpdateMentions"
     />
-  </section>
+  </UIPageSection>
 </template>
 
 <style scoped></style>

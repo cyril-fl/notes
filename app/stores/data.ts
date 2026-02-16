@@ -121,6 +121,13 @@ export const useDataStore = defineStore('data', () => {
 
     const newTree = rebuildTree(newData.folders);
 
+    console.debug('[DataStore] Updated store with', {
+      map: newMap,
+      data: newData,
+      tags: newTags,
+      tree: newTree,
+    });
+
     return { map: newMap, data: newData, tags: newTags, tree: newTree };
   }
 

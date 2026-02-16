@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /* Define */
-
+const { icons } = useIcons();
 /* Data */
 
 /* Methods */
@@ -9,39 +9,37 @@
 
 /* SEO */
 definePageMeta({
-  layouts: 'pages',
+  layout: 'pages',
 });
 </script>
 
 <template>
-  <section
-    class="flex flex-col size-full items-center justify-center min-h-[70vh] gap-6 px-4 text-center"
-  >
-    <UIcon class="size-16 text-default mx-auto" name="i-lucide-notebook-pen" />
+  <UIPageSection class="items-center justify-center">
+    <UIcon class="size-16 text-default mx-auto" :name="icons.notebook" />
     <hgroup class="text-center space-y-6">
       <h1 class="text-4xl font-bold text-default">
         {{ $t('pages.home.title') }}
       </h1>
-      <p class="text-lg text-muted max-w-md mx-auto">
+      <h3 class="text-lg text-muted max-w-md mx-auto">
         {{ $t('pages.home.description') }}
-      </p>
+      </h3>
     </hgroup>
     <div class="flex gap-4 justify-center pt-4">
       <UButton
         :label="$t('button.open_graph')"
         color="neutral"
-        icon="i-lucide-git-branch"
+        :icon="icons.branch"
         size="lg"
-        to="/graph"
+        :to="NAVIGATION.graph"
         variant="soft"
       />
       <UButton
         :label="$t('button.open_editor')"
         color="primary"
-        icon="i-lucide-file-text"
+        :icon="icons.note"
         size="lg"
-        to="/editor"
+        :to="NAVIGATION.notes"
       />
     </div>
-  </section>
+  </UIPageSection>
 </template>

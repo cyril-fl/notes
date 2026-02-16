@@ -2,11 +2,12 @@
 const { links } = useNavigation();
 const { folders } = useNavigationTree();
 const { hashtags, hasTags } = useHashtags();
+const { icons } = useIcons();
 </script>
 
 <template>
-  <nav class="flex flex-col gap-2 list-none justify-between">
-    <div>
+  <nav class="flex h-[calc(100vh-4rem)] flex-col gap-2 list-none">
+    <div class="min-h-0 flex-1 overflow-y-auto pr-1">
       <UINavigationMenu
         v-for="(link, index) in links"
         :key="`link-${link.label}-${index}`"
@@ -25,9 +26,9 @@ const { hashtags, hasTags } = useHashtags();
         {{ hashtags }}
       </template>
     </div>
-    <div>
+    <div class="pt-2">
       <UButton
-        icon="i-lucide-folder-plus"
+        :icon="icons.folderadd"
         color="neutral"
         variant="ghost"
         square

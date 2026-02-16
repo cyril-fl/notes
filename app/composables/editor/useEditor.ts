@@ -8,6 +8,7 @@ import Highlight from '@tiptap/extension-highlight';
 import Placeholder from '@tiptap/extension-placeholder';
 import TextAlign from '@tiptap/extension-text-align';
 import twitter from 'twitter-text';
+import striptags from 'striptags';
 
 interface PreviewItem {
   label: string;
@@ -33,7 +34,7 @@ export function useProvideEditorContext(
   props: EditorProps,
   content: ModelRef<string | undefined>
 ) {
-  const isEditorReady = ref(false);
+  // const isEditorReady = ref(false);
 
   const editor = useEditor({
     content: content.value,
@@ -85,8 +86,7 @@ export function useProvideEditorContext(
       }),
     ],
     onUpdate: ({ editor }) => {
-      if (!isEditorReady.value) return;
-      const markdownContent = editor.getMarkdown() ?? '';
+      const markdownContent = editor.getMarkdown();
       handleUpdateContent(markdownContent);
     },
   });
@@ -113,10 +113,16 @@ export function useProvideEditorContext(
     },
   ]);
 
-  const handleUpdateContent = (newContent: string) => {
-    if (content.value !== newContent) {
-      content.value = newContent;
+  const handleUpdateContent = (newContent: string | null) => {
+    if (newContent === null) {
+      content.value = undefined;
+      return;
     }
+    const normalized = striptags(newContent)
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/\u00A0/g, ' ')
+      .trim();
+    content.value = normalized.length !== 0 ? normalized : undefined;
   };
 
   const context: Context = {

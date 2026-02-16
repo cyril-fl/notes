@@ -63,13 +63,9 @@
   .vessel {
     background-color: var(--ui-bg);
     color: var(--ui-text);
-    @apply min-h-screen w-screen px-4 py-8;
+    @apply min-h-screen w-screen flex px-4 py-8;
   }
-
-  .vessel-flex {
-    @apply flex;
-  }
-
+  
   .icon-stroke-bold svg {
     stroke-width: 2.5px;
   }

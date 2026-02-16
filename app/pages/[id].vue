@@ -1,9 +1,15 @@
 <script setup lang="ts">
+import type { ContextMenuItem } from '@nuxt/ui';
+
 // Define
 
 // Data
 const route = useRoute();
 const { t } = useI18n();
+const icons = useIcons();
+const { addFolder, addNote } = useActions();
+const { $hooks } = useNuxtApp();
+
 const id = computed<string>(() => {
   const pathParams = route.params.id;
 
@@ -45,16 +51,29 @@ const children = computed(() => {
 });
 
 const details = computed(() => {
-  const _folder = t('pages.folder.folders_count', { count: children.value.folders.length });
-  const _note = t('pages.folder.notes_count', { count: children.value.notes.length });
+  const _folder = t('pages.folder.folders_count', {
+    count: children.value.folders.length,
+  });
+  const _note = t('pages.folder.notes_count', {
+    count: children.value.notes.length,
+  });
 
-  const result = []
+  const _result = [];
 
-  if (children.value.folders.length) result.push(_folder);
-  if (children.value.notes.length) result.push(_note);
+  if (children.value.folders.length) _result.push(_folder);
+  if (children.value.notes.length) _result.push(_note);
 
-  return result.join(' | ');
+  return _result.join(' | ');
 });
+
+const actions = ref<ContextMenuItem[][]>([
+  [
+    addFolder(id.value, (newId) => {
+      $hooks.callHook('folder-card:update', newId);
+    }),
+    addNote(id.value),
+  ],
+]);
 
 // Methods
 
@@ -64,30 +83,38 @@ const details = computed(() => {
 </script>
 
 <template>
-  <div v-if="item" class="space-y-4">
-    <hgroup class="flex items-baseline  gap-2">
-      <h1 class="font-bold text-2xl">{{ item.title }}</h1>
-      <h3>{{ details }}</h3>
-    </hgroup>
-
-    <ul>
+  <UIPageSection
+    v-if="item"
+    :title="item.title"
+    :description="details"
+    :context-actions="actions"
+  >
+    <UEmpty
+      v-if="!children.folders.length && !children.notes.length"
+      :icon="icons.folderempty"
+      :title="t('pages.folder.empty')"
+      class="grow"
+      variant="naked"
+    />
+    <ul v-else class="flex flex-wrap gap-4">
       <li v-for="folder in children.folders" :key="folder.id">
-        <NuxtLink :to="`/${folder.id}`" as="div">
-          {{ folder.title }}
-        </NuxtLink>
+        <UIFolderCard :item="folder" />
       </li>
-    </ul>
-
-    <ul class="flex flew-wrap gap-4">
       <li v-for="note in children.notes" :key="note.id">
-        <UINotesCard :note="note" />
+        <UINotesCard :item="note" />
       </li>
     </ul>
-  </div>
-  <div v-else>
-    <p>Item not found</p>
-    <NuxtLink to="/notes"> Retour </NuxtLink>
-  </div>
+  </UIPageSection>
+  <UIPageSection v-else>
+    <!-- <p>Item not found</p> -->
+    <!-- <NuxtLink to="/notes"> Retour </NuxtLink> -->
+    <UEmpty
+      :icon="icons.folderempty"
+      :title="t('pages.folder.not_found')"
+      class="size-full"
+      variant="naked"
+    />
+  </UIPageSection>
 </template>
 
 <style scoped></style>

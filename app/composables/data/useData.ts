@@ -8,6 +8,10 @@ interface CheckPathValidityOptions {
   throwError: boolean;
 }
 
+interface TypeOptions<T extends ItemType> {
+  types: T;
+}
+
 enum CRUD {
   CREATE = 'CREATE',
   READ = 'READ',
@@ -35,7 +39,7 @@ export function useDataUtils() {
   function getById(id: string): Data | undefined;
   function getById<T extends ItemType>(
     id: string,
-    options: { types: T }
+    options: TypeOptions<T>
   ): ItemByType<T> | undefined;
   function getById(
     id: string,
@@ -75,6 +79,25 @@ export function useDataUtils() {
     return includeSelf
       ? selfAndRelatedIds
       : selfAndRelatedIds.filter((child) => child !== id);
+  }
+
+  function getChildrenCountByType<T extends ItemType>(
+    id: string,
+    options: TypeOptions<T>
+  ): number | undefined {
+    const result = map.value.get(id);
+    if (!result || result.type !== ItemType.FOLDER) return undefined;
+
+    const childrenIds = [];
+
+    for (const childId of result.childrenIds) {
+      const child = map.value.get(childId);
+      if (!child || child.type !== options.types) continue;
+
+      childrenIds.push(childId);
+    }
+
+    return childrenIds.length;
   }
 
   function checkPathValidity(
@@ -119,6 +142,7 @@ export function useDataUtils() {
   return {
     getById,
     getRelatedIds,
+    getChildrenCountByType,
     checkPathValidity,
   };
 }

@@ -9,9 +9,11 @@
     },
     "folder": {
       "folders_count": "Aucun dossier | 1 dossier | {count} dossiers",
-      "notes_count": "Aucune note | 1 note | {count} notes"
+      "notes_count": "Aucune note | 1 note | {count} notes",
+      "not_found": "Dossier non trouvé",
+      "empty": "Ce dossier est vide"
     },
-    "notes": {
+    "editor": {
       "title": "Notes",
       "new": {
         "title": "Nouvelle note"

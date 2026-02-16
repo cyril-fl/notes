@@ -5,17 +5,18 @@ export const useEditorToolBar = (): EditorToolbarItem[][] => {
   const { editor } = useEditorContext();
   const overlay = useOverlay();
   const linkDialog = overlay.create(LinkDialog);
+  const { icons } = useIcons();
 
   const actions: EditorToolbarItem[] = [
     {
       kind: 'undo',
-      icon: 'i-lucide-undo',
+      icon: icons.undo,
       tooltip: { label: 'editor.toolbar.undo' },
       onClick: () => editor.value?.chain().focus().undo().run(),
     },
     {
       kind: 'redo',
-      icon: 'i-lucide-redo',
+      icon: icons.redo,
       tooltip: { label: 'editor.toolbar.redo' },
       onClick: () => editor.value?.chain().focus().redo().run(),
     },
@@ -25,35 +26,35 @@ export const useEditorToolBar = (): EditorToolbarItem[][] => {
     {
       kind: 'mark',
       mark: MARKS.BOLD,
-      icon: 'i-lucide-bold',
+      icon: icons.bold,
       tooltip: { label: 'editor.toolbar.bold' },
       onClick: () => editor.value?.chain().focus().toggleBold().run(),
     },
     {
       kind: 'mark',
       mark: MARKS.ITALIC,
-      icon: 'i-lucide-italic',
+      icon: icons.italic,
       tooltip: { label: 'editor.toolbar.italic' },
       onClick: () => editor.value?.chain().focus().toggleItalic().run(),
     },
     {
       kind: 'mark',
       mark: MARKS.UNDERLINE,
-      icon: 'i-lucide-underline',
+      icon: icons.underline,
       tooltip: { label: 'editor.toolbar.underline' },
       onClick: () => editor.value?.chain().focus().toggleUnderline().run(),
     },
     {
       kind: 'mark',
       mark: MARKS.STRIKE,
-      icon: 'i-lucide-strikethrough',
+      icon: icons.strike,
       tooltip: { label: 'editor.toolbar.strike' },
       onClick: () => editor.value?.chain().focus().toggleStrike().run(),
     },
     {
       kind: 'mark',
       mark: MARKS.HIGHLIGHT,
-      icon: 'i-lucide-highlighter',
+      icon: icons.highlight,
       tooltip: { label: 'editor.toolbar.highlight' },
       onClick: () => editor.value?.chain().focus().toggleHighlight().run(),
     },
@@ -76,25 +77,25 @@ export const useEditorToolBar = (): EditorToolbarItem[][] => {
   const lists: EditorToolbarItem[] = [
     {
       kind: 'bulletList',
-      icon: 'i-lucide-list',
+      icon: icons.unorderedlist,
       tooltip: { label: 'editor.toolbar.bulletList' },
       onClick: () => editor.value?.chain().focus().toggleBulletList().run(),
     },
     {
       kind: 'orderedList',
-      icon: 'i-lucide-list-ordered',
+      icon: icons.orderlist,
       tooltip: { label: 'editor.toolbar.orderedList' },
       onClick: () => editor.value?.chain().focus().toggleOrderedList().run(),
     },
     {
       kind: 'taskList',
-      icon: 'i-lucide-check-square',
+      icon: icons.tasklist,
       tooltip: { label: 'editor.toolbar.taskList' },
       onClick: () => editor.value?.chain().focus().toggleTaskList().run(),
     },
     {
       kind: 'blockquote',
-      icon: 'i-lucide-text-quote',
+      icon: icons.quote,
       tooltip: { label: 'editor.toolbar.blockquote' },
       onClick: () => editor.value?.chain().focus().toggleBlockquote().run(),
     },
@@ -104,19 +105,19 @@ export const useEditorToolBar = (): EditorToolbarItem[][] => {
     {
       kind: 'mark',
       mark: MARKS.CODE,
-      icon: 'i-lucide-code',
+      icon: icons.code,
       tooltip: { label: 'editor.toolbar.code' },
       onClick: () => editor.value?.chain().focus().toggleCode().run(),
     },
     {
       kind: 'codeBlock',
-      icon: 'i-lucide-square-code',
+      icon: icons.codeblock,
       tooltip: { label: 'editor.toolbar.codeBlock' },
       onClick: () => editor.value?.chain().focus().toggleCodeBlock().run(),
     },
     {
       kind: 'horizontalRule',
-      icon: 'i-lucide-minus',
+      icon: icons.horizontalRule,
       tooltip: { label: 'editor.toolbar.horizontalRule' },
       onClick: () => editor.value?.chain().focus().setHorizontalRule().run(),
     },
@@ -142,7 +143,7 @@ export const useEditorToolBar = (): EditorToolbarItem[][] => {
   const links: EditorToolbarItem[] = [
     {
       kind: 'link',
-      icon: 'i-lucide-link',
+      icon: icons.link,
       tooltip: { label: 'editor.toolbar.link' },
       onClick: async () => {
         const ed = editor.value;

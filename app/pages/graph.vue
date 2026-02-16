@@ -11,7 +11,7 @@
 </script>
 
 <template>
-  <div>Diagram</div>
+  <UIPageSection :title="$t('pages.graph.title')"> test </UIPageSection>
 </template>
 
 <style scoped></style>

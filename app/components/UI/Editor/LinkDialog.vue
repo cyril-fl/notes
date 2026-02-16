@@ -14,6 +14,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>();
 
+const { icons } = useIcons();
 const isEditing = computed(() => !!props.href);
 
 /* Data */
@@ -59,7 +60,7 @@ const handleCancel = () => {
           v-model="url"
           autofocus
           placeholder="https://exemple.com"
-          icon="i-lucide-link"
+          :icon="icons.link"
           size="lg"
         />
       </form>
@@ -71,7 +72,7 @@ const handleCancel = () => {
           v-if="isEditing"
           color="error"
           variant="soft"
-          icon="i-lucide-unlink"
+          :icon="icons.unlink"
           @click="handleRemove"
         >
           Supprimer

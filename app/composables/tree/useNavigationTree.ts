@@ -2,6 +2,7 @@ import type { NavigationTreeItem } from '~/types/ui';
 
 export function useNavigationTree() {
   const store = useDataStore();
+  const { icons } = useIcons();
   const { tree, data: _data } = storeToRefs(store);
   const { getById } = useDataUtils();
 
@@ -29,7 +30,7 @@ export function useNavigationTree() {
       navItems.push({
         id: item.id,
         label: item.title,
-        icon: 'i-lucide-folder',
+        icon: icons.folder,
         to: `/${item.id}/`,
         children,
       });

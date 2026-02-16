@@ -31,13 +31,9 @@ const handleSubmit = () => {
 
 onBeforeRouteLeave(handleSubmit);
 
-onMounted(() => {
-  window.addEventListener('beforeunload', handleSubmit);
-});
+onMounted(() => window.addEventListener('beforeunload', handleSubmit));
 
-onBeforeUnmount(() => {
-  window.removeEventListener('beforeunload', handleSubmit);
-});
+onBeforeUnmount(() => window.removeEventListener('beforeunload', handleSubmit));
 /* SEO */
 </script>
 

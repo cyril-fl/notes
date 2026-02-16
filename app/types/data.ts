@@ -1,3 +1,4 @@
+import type { ContextMenuItem } from '@nuxt/ui';
 import type { Folder, Note } from '~~/shared/utils/models';
 
 /** Folder tree structure includes only folders ids*/
@@ -42,25 +43,29 @@ export interface ExtractPathOptions<T extends boolean = boolean> {
   asBoolean: T;
 }
 
-// ---
+export interface Titled {
+  title: string;
+}
+export interface Descriptible {
+  description: string;
+}
+export interface Contextualizable {
+  contextActions?: ContextMenuItem[][];
+}
 interface WithFolder {
   folder: Folder;
 }
 interface WithContent {
   content: string;
 }
-interface WithTitle {
-  title: string;
-}
-
 interface WhitPath {
   path: string[];
 }
 
 export type CreateNoteInFolderParameters = WithFolder & WithContent;
-export type CreateFolderInFolderParameters = WithFolder & Partial<WithTitle>;
+export type CreateFolderInFolderParameters = WithFolder & Partial<Titled>;
 
-export interface CreateFolder extends WithTitle, WhitPath {
+export interface CreateFolder extends Titled, WhitPath {
   childrenIds: string[];
 }
 export type CreateNote = WithContent & WhitPath;

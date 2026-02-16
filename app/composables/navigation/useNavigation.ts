@@ -1,6 +1,6 @@
 export enum NAVIGATION {
   home = '/',
-  graph = '/diagram/',
+  graph = '/graph/',
   notes = '/editor/',
   newNote = '/editor/new/',
 }
@@ -8,6 +8,7 @@ export enum NAVIGATION {
 export function useNavigation() {
   // Define
 
+  const { icons } = useIcons();
   // Data
   const data: NavigationMenuItem[] = [
     {
@@ -15,27 +16,21 @@ export function useNavigation() {
       label: 'menu.navigation.title',
       children: [
         {
-          id: 'home',
-          label: 'pages.home.title',
-          icon: 'i-lucide-home',
-          to: NAVIGATION.home,
-        },
-        {
           id: 'graph',
           label: 'pages.graph.title',
-          icon: 'i-lucide-git-branch',
+          icon: icons.branch,
           to: NAVIGATION.graph,
         },
         {
           id: 'notes',
-          label: 'pages.notes.title',
-          icon: 'i-lucide-list',
+          label: 'pages.editor.title',
+          icon: icons.unorderedlist,
           to: NAVIGATION.notes,
         },
         {
           id: 'new-note',
-          label: 'pages.notes.new.title',
-          icon: 'i-lucide-plus-circle',
+          label: 'pages.editor.new.title',
+          icon: icons.noteadd,
           to: NAVIGATION.newNote,
         },
       ],
