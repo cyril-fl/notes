@@ -3,6 +3,7 @@ const { links } = useNavigation();
 const { folders } = useNavigationTree();
 const { hashtags, hasTags } = useHashtags();
 const { icons } = useIcons();
+const { openCreateModal } = useFolder();
 </script>
 
 <template>
@@ -32,8 +33,10 @@ const { icons } = useIcons();
         color="neutral"
         variant="ghost"
         square
-        @click="$hooks.callHook('data:create:folder')"
+        @click="openCreateModal()"
       />
     </div>
+
+    <UIFolderCreateFolderDialog />
   </nav>
 </template>

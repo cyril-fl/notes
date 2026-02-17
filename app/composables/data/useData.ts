@@ -274,7 +274,36 @@ export function createDataApiRegistrar() {
 
       const relatedIds = getRelatedIds(id, { includeSelf: true });
 
-      $hooks.callHook('on:delete:id', relatedIds);
+      const batchedId: string[][] = [];
+      let currentBatch: string[] = [];
+      let currentLength = 0;
+      const maxLength = 20;
+
+      for (const id of relatedIds) {
+        // +1 accounts for the comma separator when joining ids.
+        const nextLength =
+          currentLength + id.length + (currentBatch.length ? 1 : 0);
+
+        if (currentBatch.length && nextLength > maxLength) {
+          batchedId.push(currentBatch);
+          currentBatch = [];
+          currentLength = 0;
+        }
+
+        currentBatch.push(id);
+        currentLength += id.length + (currentBatch.length > 1 ? 1 : 0);
+      }
+
+      if (currentBatch.length) batchedId.push(currentBatch);
+
+      console.debug(
+        `[DataStore] Deleting ids in ${batchedId.length} batches:`,
+        batchedId
+      );
+
+      await Promise.all(
+        batchedId.map((batch) => $hooks.callHookParallel('on:delete:id', batch))
+      );
 
       const result = await _fetch<boolean>({
         ctx: `${CRUD.DELETE} ${id}`,
@@ -322,7 +351,6 @@ export function createDataApiRegistrar() {
         childrenIds: Array.from(children),
       });
 
-      console.log('handleCreateFolderInFolder:', result);
       return result;
     }
 

@@ -12,47 +12,45 @@ import type { NavigationTreeProps } from '~/types/ui';
 // Define
 const { $hooks } = useNuxtApp();
 const props = defineProps<NavigationTreeProps>();
+const { state: folderState, requestEdit, clearEdit } = useFolder();
 
 const model = ref(props.item.label);
 const editable = useTemplateRef('editable');
 const inputRef = useTemplateRef('inputRef');
 
-const { addFolder, addNote, deleteItem, updateFolderLink } = useActions();
+const { addFolder, addNote, deleteItem } = useActions();
 
 // Data
+
+/** Ce MenuItem est-il la cible de l'édition inline (rename) ? */
+const isEditTarget = computed(
+  () => folderState.value.editingId === props.item.id
+);
+
 const actions = ref<ContextMenuItem[][]>([
   [
-    // ADD
-    addFolder(props.item.id, (newId) => {
-      $hooks.callHook('folder-navigation:blur-except', props.item.id);
-      $hooks.callHook('folder-navigation:update', newId);
-    }),
+    // ADD — ouvre la modale de création
+    addFolder(props.item.id),
     addNote(props.item.id),
   ],
   [
-    // EDIT
-    updateFolderLink(props.item.id),
+    // EDIT — rename inline via Editable
+    {
+      label: 'Renommer',
+      icon: 'i-lucide-pencil',
+      onSelect: () => requestEdit(props.item.id),
+      disabled: props.item.id === 'root',
+    },
     deleteItem(props.item.id),
   ],
 ]);
 
 // Methods
-async function handleEdit(id: string) {
-  if (id !== props.item.id) return;
-  editable.value?.edit();
-  await nextTick();
-  setTimeout(() => {
-    const input = inputRef.value;
-    if (input) {
-      input.focus();
-      input.selectionStart = input.selectionEnd = input.value.length;
-    }
-  }, 50);
-}
 
 function handleSubmit(value: string | null | undefined) {
-  if (!value) return;
+  clearEdit(props.item.id);
 
+  if (!value) return;
   const trimmedValue = value.trim();
   if (!trimmedValue || trimmedValue === props.item.label) return;
 
@@ -60,31 +58,28 @@ function handleSubmit(value: string | null | undefined) {
   $hooks.callHook('card:folder:refresh', props.item.id, trimmedValue);
 }
 
-function handleBlur(id: string) {
-  if (id !== props.item.id) return;
-  editable.value?.submit();
-}
-
-function handleBlurExcept(id: string) {
-  if (id === props.item.id) return;
-  editable.value?.submit();
-}
-
 // Lifecycle
 watch(
-  () => props.item,
+  () => props.item.label,
   (newLabel) => {
-    model.value = newLabel.label;
+    model.value = newLabel;
   }
 );
 
-onMounted(() => {
-  $hooks.addHooks({
-    'folder-navigation:update': handleEdit,
-    'folder-navigation:blur': handleBlur,
-    'folder-navigation:blur-except': handleBlurExcept,
-  });
+/** Active le mode édition inline lorsque requestEdit est appelé */
+watch(isEditTarget, async (isTarget) => {
+  if (!isTarget) return;
+
+  editable.value?.edit();
+  await nextTick();
+
+  const input = inputRef.value;
+  if (!input) return;
+  input.focus({ preventScroll: true });
+  const end = input.value.length;
+  input.setSelectionRange(end, end);
 });
+
 // SEO
 </script>
 

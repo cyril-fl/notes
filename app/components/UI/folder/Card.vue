@@ -13,12 +13,13 @@ interface FolderCardProps {
 }
 
 const { $hooks } = useNuxtApp();
-const icons = useIcons();
+const { icons } = useIcons();
 const props = defineProps<FolderCardProps>();
 
 const model = ref(props.item.title);
 const editable = useTemplateRef('editable');
 const inputRef = useTemplateRef('inputRef');
+const hookDisposers: Array<() => void> = [];
 const { getChildrenCountByType } = useDataUtils();
 
 const { addNote, deleteItem, updateFolderCard } = useActions();
@@ -64,17 +65,19 @@ function handleSubmit(value: string | null | undefined) {
 
 // Lifecycle
 watch(
-  () => props.item,
-  (newItem) => {
-    model.value = newItem.title;
+  () => props.item.title,
+  (newTitle) => {
+    model.value = newTitle;
   }
 );
 
-onMounted(() =>
-  $hooks.addHooks({
-    'folder-card:update': handleEdit,
-  })
-);
+onMounted(() => {
+  hookDisposers.push($hooks.hook('folder-card:update', handleEdit));
+});
+
+onBeforeUnmount(() => {
+  hookDisposers.forEach((dispose) => dispose());
+});
 // SEO
 </script>
 

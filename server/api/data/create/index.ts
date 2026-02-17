@@ -12,17 +12,17 @@ export default defineEventHandler(
 
     const id = generateId(parsed.data.type);
 
-    const note: DataSchema = {
+    const item: DataSchema = {
       id,
       createdAt: now,
       updatedAt: now,
       ...parsed.data,
     };
 
-    await mongo.setItem(id, note);
+    await mongo.setItem(id, item);
 
     setResponseStatus(event, 201);
 
-    return { message: 'Note created successfully.', data: note };
+    return { message: `${item.type} created successfully.`, data: item };
   }
 );

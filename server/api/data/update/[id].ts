@@ -32,6 +32,9 @@ export default defineEventHandler(
 
     await mongo.setItem(id, updated.data);
 
-    return { message: 'Successfully updated note.', data: updated.data };
+    return {
+      message: `${updated.data.type} updated successfully.`,
+      data: updated.data,
+    };
   }
 );

@@ -51,8 +51,15 @@
   },
   "placeholder": {
     "editor": "Écrivez votre note ici...",
-    "folder_untitled": "Noubveau dossier",
+    "folder_untitled": "Nouveau dossier",
     "note_untitled": "Sans titre"
+  },
+  "modal": {
+    "create_folder": {
+      "title": "Nouveau dossier",
+      "cancel": "Annuler",
+      "submit": "Créer"
+    }
   },
   "editor": {
     "toolbar": {

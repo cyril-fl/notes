@@ -8,26 +8,32 @@ export const useActions = () => {
 
   const addFolder = (
     folderId: string,
-    callback?: (newId: string) => void
+    callback?: (newId: string) => void | Promise<void>
   ): ContextMenuItem => ({
     label: t('menu.context.add_folder'),
     icon: icons.folderadd,
     onSelect: async () => {
-      const folder = getById(folderId, { types: ItemType.FOLDER });
-      if (!folder) return;
+      if (callback) {
+        // Création directe + callback (ex: Card / page dossier)
+        const folder = getById(folderId, { types: ItemType.FOLDER });
+        if (!folder) return;
 
-      const results = await $hooks.callHookParallel(
-        'data:create:folder:in-folder',
-        { folder }
-      );
+        const results = await $hooks.callHookParallel(
+          'data:create:folder:in-folder',
+          { folder }
+        );
 
-      const newFolder = Array.isArray(results)
-        ? results.find((r) => r !== undefined)
-        : undefined;
-      if (!newFolder) return;
+        const newFolder = Array.isArray(results)
+          ? results.find((r) => r !== undefined)
+          : undefined;
+        if (!newFolder) return;
 
-      // TODO ici c'est pas typer a cause du hook, regarder pour ameliorer ca
-      callback?.(newFolder.id);
+        await callback(newFolder.id);
+      } else {
+        // Pas de callback → ouvre la modale (ex: arbre de navigation)
+        const { openCreateModal } = useFolder();
+        openCreateModal(folderId);
+      }
     },
   });
 
@@ -57,12 +63,15 @@ export const useActions = () => {
     disabled: id === 'root',
   });
 
-  const updateFolderLink = (id: string): ContextMenuItem => ({
-    label: t('menu.context.rename'),
-    icon: icons.edit,
-    onSelect: () => $hooks.callHook('folder-navigation:update', id),
-    disabled: id === 'root',
-  });
+  const updateFolderLink = (id: string): ContextMenuItem => {
+    const { requestEdit: _requestEdit } = useFolder();
+    return {
+      label: t('menu.context.rename'),
+      icon: icons.edit,
+      onSelect: () => _requestEdit(id),
+      disabled: id === 'root',
+    };
+  };
 
   return {
     addFolder,
