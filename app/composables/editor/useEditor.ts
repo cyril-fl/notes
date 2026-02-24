@@ -24,6 +24,7 @@ interface Context {
 const SYMBOL: InjectionKey<Context> = Symbol('editor-context');
 
 export interface EditorProps {
+  title?: string;
   readonly: boolean;
   showHashtags: boolean;
   showMentions: boolean;
@@ -34,8 +35,6 @@ export function useProvideEditorContext(
   props: EditorProps,
   content: ModelRef<string | undefined>
 ) {
-  // const isEditorReady = ref(false);
-
   const editor = useEditor({
     content: content.value,
     autofocus: 'end',

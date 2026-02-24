@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import type { ContextMenuItem } from '@nuxt/ui';
 
-// Define
-
-// Data
 const route = useRoute();
+const router = useRouter();
 const { t } = useI18n();
-const icons = useIcons();
-const { addFolder, addNote } = useActions();
-const { $hooks } = useNuxtApp();
+const { icons } = useIcons();
+const { update } = useDataActions();
+const { emitFolderCardUpdate } = useUIEvents();
 
 const id = computed<string>(() => {
   const pathParams = route.params.id;
@@ -19,6 +17,11 @@ const id = computed<string>(() => {
 });
 
 const { getById } = useDataUtils();
+
+const folderIdRef = computed<string | null>(() => id.value || null);
+const folderActions = useActions(folderIdRef, {
+  requestEdit: () => {},
+});
 
 const item = computed(() => getById(id.value, { types: ItemType.FOLDER }));
 
@@ -66,20 +69,26 @@ const details = computed(() => {
   return _result.join(' | ');
 });
 
-const actions = ref<ContextMenuItem[][]>([
+const isRenaming = computed(() => route.query.rename === '1');
+
+function handleRename(newTitle: string) {
+  update(id.value, { title: newTitle });
+  cleanRenameQuery();
+}
+
+function cleanRenameQuery() {
+  const { rename, ...rest } = route.query;
+  router.replace({ query: rest });
+}
+
+const actions = computed<ContextMenuItem[][]>(() => [
   [
-    addFolder(id.value, (newId) => {
-      $hooks.callHook('folder-card:update', newId);
+    folderActions.addFolder((newId) => {
+      emitFolderCardUpdate(newId);
     }),
-    addNote(id.value),
+    folderActions.addNote(),
   ],
 ]);
-
-// Methods
-
-// Lifecycle
-
-// SEO
 </script>
 
 <template>
@@ -87,7 +96,10 @@ const actions = ref<ContextMenuItem[][]>([
     v-if="item"
     :title="item.title"
     :description="details"
+    :editable="isRenaming"
     :context-actions="actions"
+    @submit="handleRename"
+    @cancel="cleanRenameQuery"
   >
     <UEmpty
       v-if="!children.folders.length && !children.notes.length"

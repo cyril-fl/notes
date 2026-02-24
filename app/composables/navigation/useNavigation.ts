@@ -6,10 +6,8 @@ export enum NAVIGATION {
 }
 
 export function useNavigation() {
-  // Define
-
   const { icons } = useIcons();
-  // Data
+
   const data: NavigationMenuItem[] = [
     {
       id: 'main',

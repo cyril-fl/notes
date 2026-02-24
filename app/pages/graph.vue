@@ -1,14 +1,4 @@
-<script lang="ts" setup>
-// Define
-
-// Data
-
-// Methods
-
-// Lifecycle
-
-// SEO
-</script>
+<script lang="ts" setup></script>
 
 <template>
   <UIPageSection :title="$t('pages.graph.title')"> test </UIPageSection>

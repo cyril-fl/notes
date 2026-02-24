@@ -1,5 +1,4 @@
 export function useDataApi() {
-  /* Define */
   const store = useDataStore();
   const { getById, getRelatedIds, checkPathValidity } = useDataUtils();
 
@@ -8,9 +7,6 @@ export function useDataApi() {
 
   const _fetch = useFetchApi({ isLoading, error });
 
-  /* Data */
-
-  /* Methods */
   // CRUD Basic Operations
   async function handleCreate(
     data: DraftData

@@ -1,13 +1,6 @@
 <script setup lang="ts">
-/* Define */
 const { icons } = useIcons();
-/* Data */
 
-/* Methods */
-
-/* Lifecycle */
-
-/* SEO */
 definePageMeta({
   layout: 'pages',
 });
@@ -15,7 +8,17 @@ definePageMeta({
 
 <template>
   <UIPageSection class="items-center justify-center">
-    <UIcon class="size-16 text-default mx-auto" :name="icons.notebook" />
+    <div
+      class="bg-primary text-inverted squircle-round p-4 flex items-center justify-center"
+    >
+      <NuxtImg
+        src="/logo/dark-xl.svg"
+        alt="Logo"
+        width="64"
+        height="64"
+        class="size-16 mx-auto"
+      />
+    </div>
     <hgroup class="text-center space-y-6">
       <h1 class="text-4xl font-bold text-default">
         {{ $t('pages.home.title') }}

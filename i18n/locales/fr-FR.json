@@ -1,4 +1,7 @@
 {
+  "app": {
+    "name": "My notes"
+  },
   "pages": {
     "home": {
       "title": "Accueil",

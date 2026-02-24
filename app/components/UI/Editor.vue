@@ -2,7 +2,6 @@
 import type { EditorProps } from '~/composables/editor/useEditor';
 import { useProvideEditorContext } from '~/composables/editor/useEditor';
 import { EditorContent } from '@tiptap/vue-3';
-/* Define */
 
 interface Emits {
   (e: 'submit'): void;
@@ -11,9 +10,9 @@ interface Emits {
 
 const props = withDefaults(defineProps<Partial<EditorProps>>(), {
   readonly: false,
-  showHashtags: true,
-  showMentions: true,
-  showPreview: true,
+  showHashtags: false,
+  showMentions: false,
+  showPreview: false,
 });
 
 const emit = defineEmits<Emits>();
@@ -22,9 +21,6 @@ const model = defineModel<string | undefined>('content');
 
 const { editor, preview } = useProvideEditorContext(props, model);
 
-/* Data */
-
-/* Methods */
 const handleSubmit = () => {
   emit('submit');
 };
@@ -34,12 +30,21 @@ onBeforeRouteLeave(handleSubmit);
 onMounted(() => window.addEventListener('beforeunload', handleSubmit));
 
 onBeforeUnmount(() => window.removeEventListener('beforeunload', handleSubmit));
-/* SEO */
 </script>
 
 <template>
-  <div class="editor-content bg-muted grow rounded-2xl p-4 overflow-hidden">
-    <UIEditorToolBar />
+  <div
+    class="editor-content relative bg-muted grow rounded-2xl p-4 overflow-x-hidden overflow-y-auto"
+  >
+    <div
+      class="flex items-center gap-2 sticky top-0 z-10 py-2 bg-muted/80 backdrop-blur-sm"
+    >
+      <UIPageTitle
+        :title="props.title ?? $t('notes.default_title')"
+        class="grow min-w-0"
+      />
+      <UIEditorToolBar />
+    </div>
     <EditorContent :editor="editor" class="size-full" />
   </div>
   <ul v-if="preview.some((item) => item.condition)" class="mt-4">

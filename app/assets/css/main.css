@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'tailwind-squircle2/css';
 @import '@nuxt/ui';
 @import './variables.css';
 
@@ -36,6 +37,15 @@
 
     --ui-radius: 0.25rem;
     --ui-container: 80rem;
+
+    /* Map Nuxt UI brand tokens to custom palette */
+    --ui-primary: var(--primary-600);
+    --ui-secondary: var(--secondary-600);
+    --ui-success: var(--success-600);
+    --ui-info: var(--info-600);
+    --ui-warning: var(--warning-500);
+    --ui-error: var(--error-500);
+    --ui-neutral: var(--plain-600);
   }
 
   .dark {
@@ -56,16 +66,28 @@
     --ui-border-muted: var(--plain-700);
     --ui-border-accented: var(--plain-700);
     --ui-border-inverted: white;
+
+    --ui-primary: var(--primary-400);
+    --ui-secondary: var(--secondary-400);
+    --ui-success: var(--success-400);
+    --ui-info: var(--info-400);
+    --ui-warning: var(--warning-400);
+    --ui-error: var(--error-400);
+    --ui-neutral: var(--plain-400);
   }
 }
 
 @layer components {
   .vessel {
-    background-color: var(--ui-bg);
+    background-color: var(--ui-bg-muted);
     color: var(--ui-text);
-    @apply min-h-screen w-screen flex px-4 py-8;
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    width: 100vw;
+    height: 100vh;
   }
-  
+
   .icon-stroke-bold svg {
     stroke-width: 2.5px;
   }

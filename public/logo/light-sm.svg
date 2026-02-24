@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 888 623" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-miterlimit:1.5;">
+    <g transform="matrix(1,0,0,1,-470,-1668)">
+        <g transform="matrix(1,0,0,1,-1129.62,-720.472)">
+            <g id="Calque1">
+                <g>
+                    <g>
+                        <g id="Calque11" serif:id="Calque1">
+                        </g>
+                        <g transform="matrix(0.461538,0,0,0.461538,1192.96,2082.37)">
+                            <path d="M2383,1009.14L2383,1636.53C2383,1802.37 2248.36,1937.01 2082.53,1937.01L1481.58,1937.01C1315.74,1937.01 1181.1,1802.37 1181.1,1636.53L1181.1,1009.14C1181.1,843.299 1315.74,708.661 1481.58,708.661L2082.53,708.661C2248.36,708.661 2383,843.299 2383,1009.14ZM2238.56,1009.14C2238.56,923.021 2168.64,853.106 2082.53,853.106L1481.58,853.106C1395.46,853.106 1325.55,923.021 1325.55,1009.14L1325.55,1636.53C1325.55,1722.65 1395.46,1792.56 1481.58,1792.56L2082.53,1792.56C2168.64,1792.56 2238.56,1722.65 2238.56,1636.53L2238.56,1009.14Z"/>
+                        </g>
+                        <g transform="matrix(0.598147,0,0,0.598147,939.131,1992.18)">
+                            <circle cx="1996.56" cy="1121.55" r="59.551"/>
+                        </g>
+                        <g transform="matrix(0.598147,0,0,0.598147,703.285,1992.18)">
+                            <circle cx="1996.56" cy="1121.55" r="59.551"/>
+                        </g>
+                        <g transform="matrix(0.806028,0,0,0.879121,586.966,1669.38)">
+                            <path d="M1847.24,1191.14C1847.24,1220.8 1813.64,1244.88 1772.24,1244.88C1730.85,1244.88 1697.24,1220.8 1697.24,1191.14" style="fill:none;stroke:black;stroke-width:49.41px;"/>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+        <g id="Calque12" serif:id="Calque1">
+        </g>
+        <g id="Calque13" serif:id="Calque1">
+        </g>
+    </g>
+</svg>

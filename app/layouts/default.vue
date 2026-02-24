@@ -1,8 +1,10 @@
 <script lang="ts" setup></script>
 
 <template>
-  <main class="vessel vessel-flex">
-    <UINavigation />
+  <main class="vessel">
+    <UISidePanel>
+      <UINavigation />
+    </UISidePanel>
     <slot />
-  </main> 
+  </main>
 </template>

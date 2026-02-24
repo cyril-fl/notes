@@ -2,32 +2,35 @@
 import type { PageTitleProps } from './Title.vue';
 import type { Contextualizable } from '~/types/data';
 
-// Define
 type SectionProps = Partial<PageTitleProps & Contextualizable>;
 const props = defineProps<SectionProps>();
+
+const emit = defineEmits<{
+  submit: [value: string];
+  cancel: [];
+}>();
+
 const slots = useSlots();
 
-// Data
 const isContextMenuActive = computed(
   () => props.contextActions && props.contextActions.length > 0
 );
-// Methods
-
-// Lifecycle
-
-// SEO
 </script>
 
 <template>
   <UContextMenu :items="props.contextActions" :disabled="!isContextMenuActive">
-    <section class="space-y-8 grow flex flex-col" v-bind="$attrs">
-      <!-- :disabled="!isContextMenuActive" -->
+    <section
+      class="space-y-8 grow flex flex-col bg-default rounded-2xl p-4"
+      v-bind="$attrs"
+    >
       <slot v-if="!slots.header" name="header">
-        <header class="">
+        <header v-if="props.title">
           <UIPageTitle
-            v-if="props.title"
             :title="props.title"
             :description="props.description"
+            :editable="props.editable"
+            @submit="emit('submit', $event)"
+            @cancel="emit('cancel')"
           />
         </header>
       </slot>

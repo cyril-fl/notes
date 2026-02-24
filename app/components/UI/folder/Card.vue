@@ -7,41 +7,35 @@ import {
   EditableRoot,
 } from 'reka-ui';
 
-// Define
 interface FolderCardProps {
   item: Folder;
 }
 
-const { $hooks } = useNuxtApp();
 const { icons } = useIcons();
 const props = defineProps<FolderCardProps>();
+const { update } = useDataActions();
+const { onFolderCardUpdate } = useUIEvents();
 
 const model = ref(props.item.title);
 const editable = useTemplateRef('editable');
 const inputRef = useTemplateRef('inputRef');
-const hookDisposers: Array<() => void> = [];
 const { getChildrenCountByType } = useDataUtils();
 
-const { addNote, deleteItem, updateFolderCard } = useActions();
+// const { addNote, deleteItem, updateFolderCard } = useActions();
 
-// Data
 const notesChild = computed(() =>
   getChildrenCountByType(props.item.id, { types: ItemType.NOTE })
 );
 
 const actions = ref<ContextMenuItem[][]>([
-  [
-    // CRUD Note
-    addNote(props.item.id),
-  ],
-  [
-    // CRUD Folder
-    updateFolderCard(props.item.id),
-    deleteItem(props.item.id),
-  ],
+  // [addNote],
+  // [
+  //   // CRUD Folder
+  //   updateFolderCard(props.item.id),
+  //   deleteItem(props.item.id),
+  // ],
 ]);
 
-// Methods
 async function handleEdit(id: string) {
   if (id !== props.item.id) return;
   editable.value?.edit();
@@ -59,11 +53,9 @@ function handleSubmit(value: string | null | undefined) {
   if (!value) return;
   const trimmedValue = value.trim();
   if (!trimmedValue || trimmedValue === props.item.title) return;
-  $hooks.callHook('data:update', props.item.id, { title: trimmedValue });
-  $hooks.callHook('folder-navigation:refresh', props.item.id, trimmedValue);
+  update(props.item.id, { title: trimmedValue });
 }
 
-// Lifecycle
 watch(
   () => props.item.title,
   (newTitle) => {
@@ -72,13 +64,9 @@ watch(
 );
 
 onMounted(() => {
-  hookDisposers.push($hooks.hook('folder-card:update', handleEdit));
+  const dispose = onFolderCardUpdate(handleEdit);
+  onBeforeUnmount(dispose);
 });
-
-onBeforeUnmount(() => {
-  hookDisposers.forEach((dispose) => dispose());
-});
-// SEO
 </script>
 
 <template>

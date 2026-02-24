@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-/* Define */
 interface Props {
   href?: string;
 }
@@ -17,10 +16,8 @@ const emit = defineEmits<Emits>();
 const { icons } = useIcons();
 const isEditing = computed(() => !!props.href);
 
-/* Data */
 const url = ref(props.href ?? '');
 
-/* Methods */
 const ALLOWED_PROTOCOLS = ['http', 'https', 'mailto'];
 
 const isValidUrl = computed(() => {

@@ -1,26 +1,19 @@
 <script setup lang="ts">
 import type { ContextMenuItem } from '@nuxt/ui';
 
-// Define
 interface NotesCardProps {
   item: Note;
 }
 
-const props = defineProps<NotesCardProps>();
-const { deleteItem } = useActions();
+defineProps<NotesCardProps>();
+// const { deleteItem } = useActions();
 
-// Data
 const actions = ref<ContextMenuItem[][]>([
   [
     // CRUD
-    deleteItem(props.item.id),
+    // deleteItem(props.item.id),
   ],
 ]);
-// Methods
-
-// Lifecycle
-
-// SEO
 </script>
 
 <template>

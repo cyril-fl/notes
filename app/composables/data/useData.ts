@@ -147,262 +147,251 @@ export function useDataUtils() {
   };
 }
 
-export function createDataApiRegistrar() {
-  return () => {
-    const { $hooks } = useNuxtApp();
+export function useDataActions() {
+  const store = useDataStore();
+  const { fetch: _fetch } = useDataApi();
+  const { getById, getRelatedIds, checkPathValidity } = useDataUtils();
 
-    const store = useDataStore();
-    const { fetch: _fetch } = useDataApi();
-    const { getById, getRelatedIds, checkPathValidity } = useDataUtils();
+  // CRUD Basic Operations
+  async function handleCreate(
+    data: DraftData
+  ): Promise<DataSchema | undefined> {
+    const mock: DataSchema = {
+      ...data,
+      id: `mock-${generateId(data.type)}`,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
 
-    /* Methods */
-    // CRUD Basic Operations
-    async function handleCreate(
-      data: DraftData
-    ): Promise<DataSchema | undefined> {
-      const mock: DataSchema = {
-        ...data,
-        id: `mock-${generateId(data.type)}`,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+    store.update(mock);
 
-      $hooks.callHook('on:update', mock);
-
-      const result = await _fetch<DataSchema | undefined, DraftData>({
-        ctx: `${CRUD.CREATE} ${data.type.toUpperCase()}`,
-        url: 'data/create',
-        method: HTTPMethod.POST,
-        body: data,
+    const result = await _fetch<DataSchema | undefined, DraftData>({
+      ctx: `${CRUD.CREATE} ${data.type.toUpperCase()}`,
+      url: 'data/create',
+      method: HTTPMethod.POST,
+      body: data,
+    })
+      .onSuccess((res) => {
+        if (!res.data) throw new Error('No data returned from create API');
+        store.updateById(mock.id, res.data);
       })
-        .onSuccess((res) => {
-          if (!res.data) throw new Error('No data returned from create API');
-          $hooks.callHook('on:update:id', mock.id, res.data);
-        })
-        .onError((_err) => {
-          $hooks.callHook('on:delete:id', mock.id);
-        });
-
-      if (!result.ok || !result.response.data) return;
-
-      return result.response.data;
-    }
-
-    async function handleRead(): Promise<DataSchema[] | undefined> {
-      const result = await _fetch<DataSchema[]>({
-        ctx: CRUD.READ,
-        url: 'data/read',
-        method: HTTPMethod.GET,
+      .onError((_err) => {
+        store.deleteById(mock.id);
       });
 
-      if (!result.ok) return;
+    if (!result.ok || !result.response.data) return;
 
-      $hooks.callHook('on:read', result.response.data);
-      await nextTick();
+    return result.response.data;
+  }
 
-      return result.response.data;
-    }
-
-    async function handleUpdate(
-      id: string,
-      data: Partial<DraftData>
-    ): Promise<DataSchema | undefined> {
-      const snapshot = store.getSnapshot(id);
-      const current = getById(id);
-
-      if (!current || !snapshot) {
-        logApi.warn(CRUD.UPDATE, `No item found with id ${id}`);
-        return;
-      }
-
-      const optimisticUpdate: Partial<DataSchema> = {
-        ...data,
-        updatedAt: new Date(),
-      };
-
-      $hooks.callHook('on:update:id', id, optimisticUpdate);
-
-      const result = await _fetch<DataSchema, Partial<DraftData>>({
-        ctx: `${CRUD.UPDATE} ${id}`,
-        url: `data/update/${id}`,
-        method: HTTPMethod.PATCH,
-        body: data,
-      })
-        .onSuccess((res) => {
-          if (!res.data) throw new Error('No data returned from update API');
-          $hooks.callHook('on:update:id', id, res.data);
-        })
-        .onError(() => {
-          $hooks.callHook('on:update:id', id, snapshot);
-        });
-
-      if (!result.ok) return;
-
-      await nextTick();
-
-      return result.response.data;
-    }
-
-    async function handleDelete(): Promise<boolean> {
-      const snapshot = store.getSnapshot();
-
-      $hooks.callHook('on:delete');
-
-      const result = await _fetch<boolean>({
-        ctx: CRUD.DELETE,
-        url: `data/delete`,
-        method: HTTPMethod.DELETE,
-      }).onError((_err) => {
-        logApi.warn(CRUD.DELETE, 'Error occurred, restoring previous state');
-        $hooks.callHook('on:read', snapshot);
-      });
-
-      if (!result.ok) return false;
-
-      await nextTick();
-
-      return result.response.data;
-    }
-
-    async function handleDeleteId(id: string): Promise<boolean> {
-      const snapshot = store.getSnapshot(id);
-
-      if (!snapshot) {
-        logApi.warn(CRUD.DELETE, `No item found with id ${id}`);
-        return false;
-      }
-
-      const relatedIds = getRelatedIds(id, { includeSelf: true });
-
-      const batchedId: string[][] = [];
-      let currentBatch: string[] = [];
-      let currentLength = 0;
-      const maxLength = 20;
-
-      for (const id of relatedIds) {
-        // +1 accounts for the comma separator when joining ids.
-        const nextLength =
-          currentLength + id.length + (currentBatch.length ? 1 : 0);
-
-        if (currentBatch.length && nextLength > maxLength) {
-          batchedId.push(currentBatch);
-          currentBatch = [];
-          currentLength = 0;
-        }
-
-        currentBatch.push(id);
-        currentLength += id.length + (currentBatch.length > 1 ? 1 : 0);
-      }
-
-      if (currentBatch.length) batchedId.push(currentBatch);
-
-      console.debug(
-        `[DataStore] Deleting ids in ${batchedId.length} batches:`,
-        batchedId
-      );
-
-      await Promise.all(
-        batchedId.map((batch) => $hooks.callHookParallel('on:delete:id', batch))
-      );
-
-      const result = await _fetch<boolean>({
-        ctx: `${CRUD.DELETE} ${id}`,
-        url: `data/delete/${relatedIds.join(',')}`,
-        method: HTTPMethod.DELETE,
-      }).onError((_err) => {
-        $hooks.callHook('on:read:id', snapshot);
-      });
-
-      if (!result.ok) return false;
-
-      await nextTick();
-
-      return result.response.data;
-    }
-
-    // CRUD Advanced Operations
-    async function handleCreateFolder({
-      path = [],
-      title = 'New Folder', //i18n
-      childrenIds = [],
-    }: Partial<CreateFolder> = {}): Promise<DataSchema | undefined> {
-      return await handleCreate({
-        path,
-        type: ItemType.FOLDER,
-        title,
-        childrenIds,
-      });
-    }
-
-    async function handleCreateFolderInFolder({
-      folder,
-      title,
-    }: CreateFolderInFolderParameters) {
-      const result = await handleCreateFolder({
-        path: folder.path,
-        title,
-        childrenIds: [],
-      });
-      if (!result) return;
-
-      const children = new Set([...folder.childrenIds, result.id]);
-
-      await handleUpdate(folder.id, {
-        childrenIds: Array.from(children),
-      });
-
-      return result;
-    }
-
-    async function handleCreateNote({
-      path = [],
-      content = '',
-    }: Partial<CreateNote> = {}): Promise<DataSchema | undefined> {
-      return await handleCreate({
-        path,
-        type: ItemType.NOTE,
-        content,
-      });
-    }
-
-    async function handleCreateNoteInFolder({
-      folder,
-      content,
-    }: CreateNoteInFolderParameters) {
-      const { id, path, childrenIds } = folder;
-
-      // Todo utiliser un genre de useAlert
-      if (!checkPathValidity(path, { throwError: true })) return;
-
-      const result = await handleCreate({
-        type: ItemType.NOTE,
-        content,
-        path,
-      });
-
-      if (!result) return;
-
-      const children = new Set([...childrenIds, result.id]);
-
-      await handleUpdate(id, {
-        childrenIds: Array.from(children),
-      });
-    }
-
-    $hooks.addHooks({
-      // C
-      'data:create': handleCreate,
-      'data:create:folder': handleCreateFolder,
-      'data:create:folder:in-folder': handleCreateFolderInFolder,
-      'data:create:note': handleCreateNote,
-      'data:create:note:in-folder': handleCreateNoteInFolder,
-      // R
-      'data:read': handleRead,
-      // U
-      'data:update': handleUpdate,
-      // D
-      'data:delete': handleDelete,
-      'data:delete:id': handleDeleteId,
+  async function handleRead(): Promise<DataSchema[] | undefined> {
+    const result = await _fetch<DataSchema[]>({
+      ctx: CRUD.READ,
+      url: 'data/read',
+      method: HTTPMethod.GET,
     });
+
+    if (!result.ok) return;
+
+    store.read(result.response.data);
+    await nextTick();
+
+    return result.response.data;
+  }
+
+  async function handleUpdate(
+    id: string,
+    data: Partial<DraftData>
+  ): Promise<DataSchema | undefined> {
+    const snapshot = store.getSnapshot(id);
+    const current = getById(id);
+
+    if (!current || !snapshot) {
+      logApi.warn(CRUD.UPDATE, `No item found with id ${id}`);
+      return;
+    }
+
+    const optimisticUpdate: Partial<DataSchema> = {
+      ...data,
+      updatedAt: new Date(),
+    };
+
+    store.updateById(id, optimisticUpdate);
+
+    const result = await _fetch<DataSchema, Partial<DraftData>>({
+      ctx: `${CRUD.UPDATE} ${id}`,
+      url: `data/update/${id}`,
+      method: HTTPMethod.PATCH,
+      body: data,
+    })
+      .onSuccess((res) => {
+        if (!res.data) throw new Error('No data returned from update API');
+        store.updateById(id, res.data);
+      })
+      .onError(() => {
+        store.updateById(id, snapshot);
+      });
+
+    if (!result.ok) return;
+
+    await nextTick();
+
+    return result.response.data;
+  }
+
+  async function handleDelete(): Promise<boolean> {
+    const snapshot = store.getSnapshot();
+
+    store.delete();
+
+    const result = await _fetch<boolean>({
+      ctx: CRUD.DELETE,
+      url: `data/delete`,
+      method: HTTPMethod.DELETE,
+    }).onError((_err) => {
+      logApi.warn(CRUD.DELETE, 'Error occurred, restoring previous state');
+      store.read(snapshot);
+    });
+
+    if (!result.ok) return false;
+
+    await nextTick();
+
+    return result.response.data;
+  }
+
+  async function handleDeleteId(id: string): Promise<boolean> {
+    const snapshot = store.getSnapshot(id);
+
+    if (!snapshot) {
+      logApi.warn(CRUD.DELETE, `No item found with id ${id}`);
+      return false;
+    }
+
+    const relatedIds = getRelatedIds(id, { includeSelf: true });
+
+    const batchedId: string[][] = [];
+    let currentBatch: string[] = [];
+    let currentLength = 0;
+    const maxLength = 20;
+
+    for (const id of relatedIds) {
+      // +1 accounts for the comma separator when joining ids.
+      const nextLength =
+        currentLength + id.length + (currentBatch.length ? 1 : 0);
+
+      if (currentBatch.length && nextLength > maxLength) {
+        batchedId.push(currentBatch);
+        currentBatch = [];
+        currentLength = 0;
+      }
+
+      currentBatch.push(id);
+      currentLength += id.length + (currentBatch.length > 1 ? 1 : 0);
+    }
+
+    if (currentBatch.length) batchedId.push(currentBatch);
+
+    console.debug(
+      `[DataStore] Deleting ids in ${batchedId.length} batches:`,
+      batchedId
+    );
+
+    await Promise.all(batchedId.map((batch) => store.deleteById(batch)));
+
+    const result = await _fetch<boolean>({
+      ctx: `${CRUD.DELETE} ${id}`,
+      url: `data/delete/${relatedIds.join(',')}`,
+      method: HTTPMethod.DELETE,
+    }).onError((_err) => {
+      store.readById(snapshot);
+    });
+
+    if (!result.ok) return false;
+
+    await nextTick();
+
+    return result.response.data;
+  }
+
+  // CRUD Advanced Operations
+  async function handleCreateFolder({
+    path = [],
+    title = 'New Folder', //i18n
+    childrenIds = [],
+  }: Partial<CreateFolder> = {}): Promise<DataSchema | undefined> {
+    return await handleCreate({
+      path,
+      type: ItemType.FOLDER,
+      title,
+      childrenIds,
+    });
+  }
+
+  async function handleCreateFolderInFolder({
+    folder,
+    title,
+  }: CreateFolderInFolderParameters) {
+    const result = await handleCreateFolder({
+      path: folder.path,
+      title,
+      childrenIds: [],
+    });
+    if (!result) return;
+
+    const children = new Set([...folder.childrenIds, result.id]);
+
+    await handleUpdate(folder.id, {
+      childrenIds: Array.from(children),
+    });
+
+    return result;
+  }
+
+  async function handleCreateNote({
+    path = [],
+    content = '',
+  }: Partial<CreateNote> = {}): Promise<DataSchema | undefined> {
+    return await handleCreate({
+      path,
+      type: ItemType.NOTE,
+      content,
+    });
+  }
+
+  async function handleCreateNoteInFolder({
+    folder,
+    content,
+  }: CreateNoteInFolderParameters) {
+    const { id, path, childrenIds } = folder;
+
+    // Todo utiliser un genre de useAlert
+    if (!checkPathValidity(path, { throwError: true })) return;
+
+    const result = await handleCreate({
+      type: ItemType.NOTE,
+      content,
+      path,
+    });
+
+    if (!result) return;
+
+    const children = new Set([...childrenIds, result.id]);
+
+    await handleUpdate(id, {
+      childrenIds: Array.from(children),
+    });
+  }
+
+  return {
+    create: handleCreate,
+    createFolder: handleCreateFolder,
+    createFolderInFolder: handleCreateFolderInFolder,
+    createNote: handleCreateNote,
+    createNoteInFolder: handleCreateNoteInFolder,
+    read: handleRead,
+    update: handleUpdate,
+    delete: handleDelete,
+    deleteById: handleDeleteId,
   };
 }

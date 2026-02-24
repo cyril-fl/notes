@@ -1,36 +1,51 @@
 export const useIcons = () => {
   const icons = {
-    branch: 'i-lucide-git-branch',
-    bold: 'i-lucide-bold',
-    code: 'i-lucide-code',
-    codeblock: 'i-lucide-square-code',
-    delete: 'i-lucide-trash',
-    edit: 'i-lucide-pencil',
-    folder: 'i-lucide-folder',
-    folderadd: 'i-lucide-folder-plus',
-    folderempty: 'i-lucide-folder-open',
-    highlight: 'i-lucide-highlighter',
-    horizontalRule: 'i-lucide-minus',
-    italic: 'i-lucide-italic',
-    link: 'i-lucide-link',
-    note: 'i-lucide-file-text',
-    noteadd: 'i-lucide-file-plus',
-    notebook: 'i-lucide-notebook',
-    orderlist: 'i-lucide-list-ordered',
-    quote: 'i-lucide-text-quote',
-    redo: 'i-lucide-redo',
-    strike: 'i-lucide-strikethrough',
-    tasklist: 'i-lucide-check-square',
-    underline: 'i-lucide-underline',
-    unlink: 'i-lucide-unlink',
-    undo: 'i-lucide-undo',
-    unorderedlist: 'i-lucide-list',
-    openlist: 'i-lucide-chevron-up',
-    closelist: 'i-lucide-chevron-down',
+    branch: 'mingcute:git-branch-fill',
+    bold: 'mingcute:bold-fill',
+    code: 'mingcute:brackets-angle-fill',
+    codeblock: 'mingcute:black-board-2-line',
+    delete: 'mingcute:delete-2-fill',
+    edit: 'mingcute:pencil-line',
+    folder: 'mingcute:folder-line',
+    folderadd: 'mingcute:new-folder-line',
+    folderempty: 'mingcute:folder-open-line',
+    highlight: 'mingcute:mark-pen-fill',
+    horizontalRule: 'i-mingcute:minimize-fill',
+    italic: 'mingcute:italic-fill',
+    link: 'mingcute:link-fill',
+    note: 'mingcute:document-2-line',
+    noteadd: 'mingcute:file-new-line',
+    notebook: 'mingcute:notebook-line',
+    orderlist: 'mingcute:list-ordered-fill',
+    quote: 'mingcute:blockquote-fill',
+    redo: 'mingcute:forward-2-fill',
+    strike: 'mingcute:strikethrough-fill',
+    tasklist: 'mingcute:list-check-3-line',
+    underline: 'mingcute:underline-fill',
+    unlink: 'mingcute:unlink-2-line',
+    undo: 'mingcute:back-2-fill',
+    unorderedlist: 'mingcute:list-check-fill',
+    openlist: 'mingcute:up-fill',
+    closelist: 'mingcute:down-fill',
   };
 
-  function getListStateIcon(isOpen: boolean) {
-    return isOpen ? icons.openlist : icons.closelist;
+  function getListStateIcon(
+    isOpen: boolean,
+    orientation: 'vertical' | 'horizontal' = 'vertical'
+  ) {
+    const openIcon = {
+      vertical: {
+        openlist: 'mingcute:up-fill',
+        closelist: 'mingcute:down-fill',
+      },
+      horizontal: {
+        closelist: 'mingcute:left-fill',
+
+        openlist: 'mingcute:right-fill',
+      },
+    }[orientation];
+
+    return isOpen ? openIcon.openlist : openIcon.closelist;
   }
 
   return { icons, getListStateIcon };

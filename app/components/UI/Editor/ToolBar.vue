@@ -1,36 +1,51 @@
 <script setup lang="ts">
-import { ToggleGroupItem, ToggleGroupRoot } from 'reka-ui';
-/* Define */
-const items = useEditorToolBar();
-/* Data */
+import {
+  ToolbarRoot,
+  ToolbarSeparator,
+  ToolbarToggleGroup,
+  ToolbarToggleItem,
+} from 'reka-ui';
 
-/* Methods */
-/* Lifecycle */
-/* SEO */
+const items = useEditorToolBar();
+const { getListStateIcon } = useIcons();
+const isOpen = ref(false);
 </script>
 
 <template>
-  <div class="flex gap-2 items-center justify-center">
-    <ToggleGroupRoot
-      v-for="(group, g_index) in items"
-      :key="`group-${g_index}`"
-      class="flex bg-elevated items-center gap-1 border shadow-sm rounded-lg overflow-hidden"
-    >
-      <template
-        v-for="(item, i_index) in group"
-        :key="`item-${g_index}-${i_index}`"
-      >
-        <ToggleGroupItem
-          :value="item.kind"
-          class="flex items-center hover:bg-accented/30 active:bg-accented/50 p-1 active:text-dimmed"
+  <ToolbarRoot
+    orientation="horizontal"
+    :loop="true"
+    class="flex gap-2 items-center shrink-0"
+  >
+    <UButton
+      :icon="getListStateIcon(isOpen, 'horizontal')"
+      color="neutral"
+      variant="soft"
+      size="xs"
+      square
+      @click="isOpen = !isOpen"
+    />
+    <div v-show="isOpen" class="flex gap-2 items-center overflow-x-auto">
+      <template v-for="(group, g_index) in items" :key="`group-${g_index}`">
+        <ToolbarSeparator
+          v-if="g_index > 0"
+          class="w-px h-5 bg-muted shrink-0"
+        />
+        <ToolbarToggleGroup
+          type="multiple"
+          class="flex bg-elevated items-center gap-1 border-muted shadow-sm rounded-lg overflow-hidden shrink-0"
         >
-          <UIcon
-            :name="item.icon"
-            class="text-lg font-bold"
+          <ToolbarToggleItem
+            v-for="(item, i_index) in group"
+            :key="`item-${g_index}-${i_index}`"
+            :value="item.kind"
+            class="flex items-center hover:bg-accented/30 active:bg-accented/50 p-1 active:text-dimmed"
             @click="item.onClick"
-          />
-        </ToggleGroupItem>
+          >
+            <UIcon :name="item.icon" class="text-lg font-bold" />
+          </ToolbarToggleItem>
+        </ToolbarToggleGroup>
       </template>
-    </ToggleGroupRoot>
-  </div>
+    </div>
+  </ToolbarRoot>
 </template>

@@ -1,17 +1,11 @@
 <script setup lang="ts">
 import type { EditorProps } from '~/composables/editor/useEditor';
 
-/* Define */
-const { $hooks } = useNuxtApp();
 const route = useRoute();
-const props = withDefaults(defineProps<Partial<EditorProps>>(), {
-  readonly: false,
-  showHashtags: true,
-  showMentions: true,
-  showPreview: true,
-});
+const props = defineProps<Partial<EditorProps>>();
 
 const { getById } = useDataUtils();
+const { update } = useDataActions();
 
 const store = useDataStore();
 const { hasLoaded } = storeToRefs(store);
@@ -51,17 +45,12 @@ watch(
 
 // const { onUpdate: onUpdateHashtags } = useHashtags();
 const { onUpdate: onUpdateMentions } = useMentions();
-/* Data */
 
-/* Methods */
 const handleSubmit = async () => {
   if (!(note.value?.id && content.value)) return;
-  await $hooks.callHook('on:update:id', note.value.id, {
-    content: content.value,
-  });
+  await update(note.value.id, { content: content.value });
 };
 
-/* Lifecycle */
 watch(
   () => ({ note: note.value, hasLoaded: hasLoaded.value }),
   ({ note, hasLoaded }) => {
@@ -70,12 +59,10 @@ watch(
   },
   { immediate: true }
 );
-
-/* SEO */
 </script>
 
 <template>
-  <UIPageSection :title="note?.title || $t('pages.editor.title')">
+  <UIPageSection>
     <UIEditor
       v-bind="props"
       v-model:content="content"

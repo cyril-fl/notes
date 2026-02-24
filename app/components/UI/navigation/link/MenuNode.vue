@@ -1,24 +1,19 @@
 <script lang="ts" setup>
-// Imports
 import type { NavigationMenuProps } from '~/types/ui';
-// Define
+
 defineProps<NavigationMenuProps>();
-// Data
-// Methods
-// Lifecycle
-// SEO
 </script>
 
 <template>
   <!--  Group-->
-  <UINavigationMenuGroup v-if="item.children" :item="item">
-    <UINavigationMenu
+  <UINavigationLinkMenuGroup v-if="item.children" :item="item">
+    <UINavigationLinkMenuNode
       v-for="(child, index) in item.children"
       :key="`child-${child.id}-${index}`"
       :item="child"
     />
-  </UINavigationMenuGroup>
+  </UINavigationLinkMenuGroup>
 
   <!--  Simple item -->
-  <UINavigationMenuItem v-else :item="item" />
+  <UINavigationLinkMenuItem v-else :item="item" />
 </template>

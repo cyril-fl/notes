@@ -1,7 +1,6 @@
 export const useDataStore = defineStore('data', () => {
   /* Define – only serializable state (no Map, no class instances) */
 
-  const { $hooks } = useNuxtApp();
   const _raw = ref<DataSchema[]>([]);
   const hasLoaded = ref<boolean>(false);
 
@@ -18,7 +17,6 @@ export const useDataStore = defineStore('data', () => {
       .slice(0, 5)
   );
 
-  /* Methods */
   function handleRead(data: DataSchema[]) {
     if (!hasLoaded.value) hasLoaded.value = true;
     _raw.value = data;
@@ -130,19 +128,6 @@ export const useDataStore = defineStore('data', () => {
     return id ? _raw.value.find((n) => n.id === id) : _raw.value;
   }
 
-  $hooks.addHooks({
-    // C
-    // R
-    'on:read': handleRead,
-    'on:read:id': handleReadId,
-    // U
-    'on:update': handleUpdate,
-    'on:update:id': handleUpdateId,
-    // D
-    'on:delete': handleDelete,
-    'on:delete:id': handleDeleteId,
-  });
-
   return {
     tree,
     map,
@@ -152,5 +137,11 @@ export const useDataStore = defineStore('data', () => {
     hasLoaded,
     getSnapshot,
     loadData: handleRead,
+    read: handleRead,
+    readById: handleReadId,
+    update: handleUpdate,
+    updateById: handleUpdateId,
+    delete: handleDelete,
+    deleteById: handleDeleteId,
   };
 });

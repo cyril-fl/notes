@@ -1,42 +1,30 @@
 <script lang="ts" setup>
-const { links } = useNavigation();
-const { folders } = useNavigationTree();
-const { hashtags, hasTags } = useHashtags();
-const { icons } = useIcons();
-const { openCreateModal } = useFolder();
+provideCurrentFolder();
 </script>
 
 <template>
-  <nav class="flex h-[calc(100vh-4rem)] flex-col gap-2 list-none">
+  <nav class="flex h-full flex-col space-y-4 list-none">
+    <div class="flex gap-2 items-center select-none">
+      <div
+        class="squircle-round bg-accented gap-2 aspect-square p-[1 px] flex items-center justify-center size-fit"
+      >
+        <NuxtImg
+          src="/logo/dark-sm.svg"
+          alt="Logo"
+          width="32"
+          height="32"
+          class="size-8"
+        />
+      </div>
+      <H1 class="text-xl font-bold">{{ $t('app.name') }}</H1>
+    </div>
     <div class="min-h-0 flex-1 overflow-y-auto pr-1">
-      <UINavigationMenu
-        v-for="(link, index) in links"
-        :key="`link-${link.label}-${index}`"
-        :item="link"
-      />
-      <UITreeMenu
-        v-for="folder in folders"
-        :key="`folder-${folder.label}`"
-        :item="folder"
-      />
-
-      <template v-if="hasTags">
-        <p class="text-sm font-semibold text-muted px-2">
-          {{ $t('menu.navigation.hashtags.title') }}
-        </p>
-        {{ hashtags }}
-      </template>
+      <UINavigationLinkMenu />
+      <UINavigationTreeMenu />
+      <UINavigationHashtags />
     </div>
-    <div class="pt-2">
-      <UButton
-        :icon="icons.folderadd"
-        color="neutral"
-        variant="ghost"
-        square
-        @click="openCreateModal()"
-      />
-    </div>
-
-    <UIFolderCreateFolderDialog />
+    <!-- <div class="pt-2"> -->
+    <!-- <UButton :icon="icons.folderadd" color="neutral" variant="ghost" square /> -->
+    <!-- </div> -->
   </nav>
 </template>
