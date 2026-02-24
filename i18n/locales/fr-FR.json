@@ -83,6 +83,14 @@
       "blockquote": "Citation",
       "code": "Code",
       "link": "Lien"
+    },
+    "link": {
+      "add": "Ajouter un lien",
+      "edit": "Modifier le lien",
+      "placeholder": "https://exemple.com",
+      "remove": "Supprimer",
+      "cancel": "Annuler",
+      "submit": "Valider"
     }
   }
 }

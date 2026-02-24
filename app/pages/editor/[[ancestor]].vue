@@ -24,29 +24,6 @@ const editorKey = ref<string>(
 );
 const isSwitchingContext = ref(false);
 
-watch(
-  () => ancestorId.value,
-  (next, prev) => {
-    if (next === prev) return;
-    isSwitchingContext.value = true;
-    content.value = undefined;
-    editorKey.value = next
-      ? `editor-new-${next}`
-      : `editor-new-root-${Date.now()}`;
-  }
-);
-
-watch(
-  () => folder.value,
-  () => {
-    if (isSwitchingContext.value) {
-      isSwitchingContext.value = false;
-    }
-  },
-  { immediate: true }
-);
-
-// const { onUpdate: onUpdateHashtags } = useHashtags();
 const { onUpdate: onUpdateMentions } = useMentions();
 
 const handleSubmit = async () => {
@@ -68,6 +45,28 @@ const handleSubmit = async () => {
 
   logSubmit.info('created', result?.id);
 };
+
+watch(
+  () => ancestorId.value,
+  (next, prev) => {
+    if (next === prev) return;
+    isSwitchingContext.value = true;
+    content.value = undefined;
+    editorKey.value = next
+      ? `editor-new-${next}`
+      : `editor-new-root-${Date.now()}`;
+  }
+);
+
+watch(
+  () => folder.value,
+  () => {
+    if (isSwitchingContext.value) {
+      isSwitchingContext.value = false;
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <template>

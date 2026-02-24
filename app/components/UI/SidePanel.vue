@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { useElementBounding, useEventListener, useMouse } from '@vueuse/core';
-
 defineOptions({ inheritAttrs: false });
 
 export interface SidePanelProps {

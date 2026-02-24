@@ -1,0 +1,196 @@
+@reference "./main.css";
+
+@layer components {
+  /* RACINE */
+  .ProseMirror {
+    @apply min-h-64 outline-none px-1 py-2;
+  }
+
+  .ProseMirror:focus,
+  .ProseMirror:focus-visible,
+  [contenteditable='true']:focus {
+    @apply outline-none shadow-none;
+  }
+
+  /* PLACEHOLDER */
+  .ProseMirror p.is-editor-empty:first-child::before {
+    @apply text-dimmed float-left h-0 pointer-events-none;
+    content: attr(data-placeholder);
+  }
+
+  /* ESPACEMENT VERTICAL ENTRE BLOCS */
+  .ProseMirror > * + * {
+    @apply mt-2;
+  }
+
+  .ProseMirror > * + h1,
+  .ProseMirror > * + h2,
+  .ProseMirror > * + h3 {
+    @apply mt-6;
+  }
+
+  .ProseMirror > * + h4,
+  .ProseMirror > * + h5,
+  .ProseMirror > * + h6 {
+    @apply mt-4;
+  }
+
+  /* TITRES */
+  .ProseMirror h1 {
+    @apply text-2xl font-bold leading-tight tracking-tight;
+  }
+
+  .ProseMirror h2 {
+    @apply text-xl font-bold leading-snug;
+  }
+
+  .ProseMirror h3 {
+    @apply text-lg font-semibold leading-snug;
+  }
+
+  .ProseMirror h4 {
+    @apply text-base font-semibold leading-normal;
+  }
+
+  .ProseMirror h5 {
+    @apply text-sm font-semibold leading-normal uppercase tracking-wide;
+  }
+
+  .ProseMirror h6 {
+    @apply text-xs font-semibold leading-normal uppercase tracking-wider text-muted;
+  }
+
+  /* PARAGRAPHE */
+  .ProseMirror p {
+    @apply text-base leading-relaxed;
+  }
+
+  /* MARKS INLINE */
+  .ProseMirror strong {
+    @apply font-bold;
+  }
+
+  .ProseMirror em {
+    @apply italic;
+  }
+
+  .ProseMirror u {
+    @apply underline underline-offset-2;
+  }
+
+  .ProseMirror del,
+  .ProseMirror s {
+    @apply line-through text-muted;
+  }
+
+  /* CODE INLINE */
+  .ProseMirror code {
+    @apply font-mono text-sm bg-accented px-1.5 py-0.5 rounded-md;
+  }
+
+  /* CODE BLOCK */
+  .ProseMirror pre {
+    @apply bg-accented rounded-lg p-4 overflow-x-auto my-3;
+  }
+
+  .ProseMirror pre code {
+    @apply bg-transparent p-0 rounded-none text-sm leading-relaxed;
+  }
+
+  /* LIENS */
+  .ProseMirror a {
+    @apply text-primary-500 no-underline cursor-pointer;
+  }
+
+  .ProseMirror a:hover {
+    @apply underline underline-offset-2;
+  }
+
+  .ProseMirror a:focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary-500 rounded-sm;
+  }
+
+  /* LISTES (bullet + ordered) */
+  .ProseMirror ul {
+    @apply list-disc pl-6;
+  }
+
+  .ProseMirror ol {
+    @apply list-decimal pl-6;
+  }
+
+  .ProseMirror li {
+    @apply leading-relaxed;
+  }
+
+  .ProseMirror li p {
+    @apply my-0;
+  }
+
+  .ProseMirror li > ul,
+  .ProseMirror li > ol {
+    @apply mt-1;
+  }
+
+  /* TASK LIST */
+  .ProseMirror ul[data-type='taskList'] {
+    @apply list-none pl-0;
+  }
+
+  .ProseMirror ul[data-type='taskList'] li {
+    @apply flex items-start gap-2;
+  }
+
+  .ProseMirror ul[data-type='taskList'] li > label {
+    @apply shrink-0 mt-1;
+  }
+
+  .ProseMirror ul[data-type='taskList'] li > label input[type='checkbox'] {
+    @apply size-4 rounded cursor-pointer accent-primary-500;
+    border: 2px solid var(--ui-border-accented);
+  }
+
+  .ProseMirror ul[data-type='taskList'] li > div {
+    @apply flex-1 min-w-0;
+  }
+
+  .ProseMirror ul[data-type='taskList'] li[data-checked='true'] > div {
+    @apply line-through text-dimmed;
+  }
+
+  .ProseMirror ul[data-type='taskList'] ul[data-type='taskList'] {
+    @apply pl-6 mt-1;
+  }
+
+  /* BLOCKQUOTE */
+  .ProseMirror blockquote {
+    @apply pl-4 italic my-3;
+    border-left: 3px solid var(--ui-border-accented);
+  }
+
+  .ProseMirror blockquote p {
+    @apply text-muted;
+  }
+
+  /* HORIZONTAL RULE */
+  .ProseMirror hr {
+    @apply my-6 border-none;
+    border-top: 1px solid var(--ui-border);
+  }
+
+  /* HIGHLIGHT */
+  .ProseMirror mark {
+    @apply rounded-sm px-0.5;
+    background-color: var(--color-warning-200);
+  }
+
+  /* SELECTION */
+  .ProseMirror ::selection {
+    @apply bg-primary-100;
+  }
+
+  /* GAPCURSOR */
+  .ProseMirror .ProseMirror-gapcursor::after {
+    border-top-color: var(--ui-text);
+  }
+}

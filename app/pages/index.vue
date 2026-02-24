@@ -21,7 +21,7 @@ definePageMeta({
     </div>
     <hgroup class="text-center space-y-6">
       <h1 class="text-4xl font-bold text-default">
-        {{ $t('pages.home.title') }}
+        {{ $t('app.name') }}
       </h1>
       <h3 class="text-lg text-muted max-w-md mx-auto">
         {{ $t('pages.home.description') }}
@@ -32,7 +32,7 @@ definePageMeta({
         :label="$t('button.open_graph')"
         color="neutral"
         :icon="icons.branch"
-        size="lg"
+        size="xl"
         :to="NAVIGATION.graph"
         variant="soft"
       />
@@ -40,7 +40,7 @@ definePageMeta({
         :label="$t('button.open_editor')"
         color="primary"
         :icon="icons.note"
-        size="lg"
+        size="xl"
         :to="NAVIGATION.notes"
       />
     </div>

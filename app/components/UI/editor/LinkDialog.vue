@@ -13,6 +13,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>();
 
+const { t } = useI18n();
 const { icons } = useIcons();
 const isEditing = computed(() => !!props.href);
 
@@ -44,46 +45,46 @@ const handleCancel = () => {
 <template>
   <UModal
     :open="true"
-    :title="isEditing ? 'Modifier le lien' : 'Ajouter un lien'"
     @update:open="
       (val: boolean) => {
         if (!val) handleCancel();
       }
     "
   >
-    <template #body>
-      <form @submit.prevent="handleSubmit">
+    <template #content>
+      <div class="flex justify-between items-center gap-2 p-4">
         <UInput
           v-model="url"
           autofocus
-          placeholder="https://exemple.com"
+          :placeholder="t('editor.link.placeholder')"
           :icon="icons.link"
-          size="lg"
+          class="grow"
+          @keydown.enter="handleSubmit"
         />
-      </form>
-    </template>
 
-    <template #footer>
-      <div class="flex items-center gap-2 w-full">
-        <UButton
-          v-if="isEditing"
-          color="error"
-          variant="soft"
-          :icon="icons.unlink"
-          @click="handleRemove"
-        >
-          Supprimer
-        </UButton>
+        <div class="flex gap-2">
+          <UButton
+            v-if="isEditing"
+            color="error"
+            variant="soft"
+            :icon="icons.unlink"
+            @click="handleRemove"
+          >
+            {{ t('editor.link.remove') }}
+          </UButton>
 
-        <div class="grow" />
+          <UButton color="neutral" variant="ghost" @click="handleCancel">
+            {{ t('editor.link.cancel') }}
+          </UButton>
 
-        <UButton color="neutral" variant="ghost" @click="handleCancel">
-          Annuler
-        </UButton>
-
-        <UButton color="primary" :disabled="!isValidUrl" @click="handleSubmit">
-          Valider
-        </UButton>
+          <UButton
+            color="primary"
+            :disabled="!isValidUrl"
+            @click="handleSubmit"
+          >
+            {{ t('editor.link.submit') }}
+          </UButton>
+        </div>
       </div>
     </template>
   </UModal>

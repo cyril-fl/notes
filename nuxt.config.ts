@@ -26,6 +26,7 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@nuxt/icon',
     '@nuxtjs/google-fonts',
+    '@vueuse/nuxt',
   ],
 
   // UI
@@ -59,6 +60,9 @@ export default defineNuxtConfig({
   },
   nitro: {
     imports: {},
+    externals: {
+      inline: ['vue'],
+    },
     storage: {
       mongodb: {
         driver: 'mongodb',

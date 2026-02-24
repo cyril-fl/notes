@@ -77,6 +77,16 @@ const details = computed(() => {
 
 const isRenaming = computed(() => route.query.rename === '1');
 
+const actions = computed<ContextMenuItem[][]>(() => [
+  [
+    folderActions.addFolder((newId) => {
+      emitFolderCardUpdate(newId);
+    }),
+    folderActions.addNote(),
+  ],
+  [folderActions.updateFolderCard()],
+]);
+
 function handleRename(newTitle: string) {
   update(id.value, { title: newTitle });
   cleanRenameQuery();
@@ -86,18 +96,6 @@ function cleanRenameQuery() {
   const { rename, ...rest } = route.query;
   router.replace({ query: rest });
 }
-
-const actions = computed<ContextMenuItem[][]>(() => [
-  [
-    folderActions.addFolder((newId) => {
-      emitFolderCardUpdate(newId);
-    }),
-    folderActions.addNote(),
-  ],
-  [
-    folderActions.updateFolderCard(),
-  ],
-]);
 </script>
 
 <template>
@@ -127,8 +125,6 @@ const actions = computed<ContextMenuItem[][]>(() => [
     </ul>
   </UIPageSection>
   <UIPageSection v-else>
-    <!-- <p>Item not found</p> -->
-    <!-- <NuxtLink to="/notes"> Retour </NuxtLink> -->
     <UEmpty
       :icon="icons.folderempty"
       :title="t('pages.folder.not_found')"

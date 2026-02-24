@@ -33,6 +33,13 @@ const content = computed({
 
 let hasInitializedContent = !!_content.value;
 
+const { onUpdate: onUpdateMentions } = useMentions();
+
+const handleSubmit = async () => {
+  if (!(note.value?.id && content.value)) return;
+  await update(note.value.id, { content: content.value });
+};
+
 watch(
   () => note.value?.content,
   (noteContent) => {
@@ -42,14 +49,6 @@ watch(
   },
   { immediate: true }
 );
-
-// const { onUpdate: onUpdateHashtags } = useHashtags();
-const { onUpdate: onUpdateMentions } = useMentions();
-
-const handleSubmit = async () => {
-  if (!(note.value?.id && content.value)) return;
-  await update(note.value.id, { content: content.value });
-};
 
 watch(
   () => ({ note: note.value, hasLoaded: hasLoaded.value }),

@@ -17,14 +17,6 @@ const isOpen = ref(false);
     :loop="true"
     class="flex gap-2 items-center shrink-0"
   >
-    <UButton
-      :icon="getListStateIcon(isOpen, 'horizontal')"
-      color="neutral"
-      variant="soft"
-      size="xs"
-      square
-      @click="isOpen = !isOpen"
-    />
     <div v-show="isOpen" class="flex gap-2 items-center overflow-x-auto">
       <template v-for="(group, g_index) in items" :key="`group-${g_index}`">
         <ToolbarSeparator
@@ -47,5 +39,13 @@ const isOpen = ref(false);
         </ToolbarToggleGroup>
       </template>
     </div>
+    <UButton
+      :icon="getListStateIcon(isOpen, 'horizontal')"
+      color="neutral"
+      variant="soft"
+      size="xs"
+      square
+      @click="isOpen = !isOpen"
+    />
   </ToolbarRoot>
 </template>

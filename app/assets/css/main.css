@@ -2,6 +2,7 @@
 @import 'tailwind-squircle2/css';
 @import '@nuxt/ui';
 @import './variables.css';
+@import './editor.css';
 
 @source '../components';
 
