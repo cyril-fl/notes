@@ -47,6 +47,7 @@ watch(isEditing, async (editing) => {
       class="w-full justify-start"
       color="neutral"
       variant="ghost"
+      block
     >
       <EditableRoot
         ref="editable"

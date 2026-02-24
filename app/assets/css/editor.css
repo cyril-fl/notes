@@ -1,5 +1,3 @@
-@reference "./main.css";
-
 @layer components {
   /* RACINE */
   .ProseMirror {

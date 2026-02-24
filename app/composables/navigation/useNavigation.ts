@@ -13,12 +13,12 @@ export function useNavigation() {
       id: 'main',
       label: 'menu.navigation.title',
       children: [
-        {
-          id: 'graph',
-          label: 'pages.graph.title',
-          icon: icons.branch,
-          to: NAVIGATION.graph,
-        },
+        // {
+        //   id: 'graph',
+        //   label: 'pages.graph.title',
+        //   icon: icons.branch,
+        //   to: NAVIGATION.graph,
+        // },
         {
           id: 'notes',
           label: 'pages.editor.title',
