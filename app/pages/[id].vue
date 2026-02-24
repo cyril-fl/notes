@@ -6,7 +6,7 @@ const router = useRouter();
 const { t } = useI18n();
 const { icons } = useIcons();
 const { update } = useDataActions();
-const { emitFolderCardUpdate } = useUIEvents();
+const { emitFolderCardUpdate, onFolderCardUpdate } = useUIEvents();
 
 const id = computed<string>(() => {
   const pathParams = route.params.id;
@@ -21,6 +21,12 @@ const { getById } = useDataUtils();
 const folderIdRef = computed<string | null>(() => id.value || null);
 const folderActions = useActions(folderIdRef, {
   requestEdit: () => {},
+});
+
+onFolderCardUpdate((_id) => {
+  if (_id === id.value) {
+    router.push({ query: { ...route.query, rename: '1' } });
+  }
 });
 
 const item = computed(() => getById(id.value, { types: ItemType.FOLDER }));
@@ -87,6 +93,9 @@ const actions = computed<ContextMenuItem[][]>(() => [
       emitFolderCardUpdate(newId);
     }),
     folderActions.addNote(),
+  ],
+  [
+    folderActions.updateFolderCard(),
   ],
 ]);
 </script>
