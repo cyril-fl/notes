@@ -5,13 +5,19 @@ interface NotesCardProps {
   item: Note;
 }
 
-defineProps<NotesCardProps>();
-// const { deleteItem } = useActions();
+const props = defineProps<NotesCardProps>();
+const { deleteById } = useDataActions();
+const { t } = useI18n();
+const { icons } = useIcons();
 
-const actions = ref<ContextMenuItem[][]>([
+const actions = computed<ContextMenuItem[][]>(() => [
   [
-    // CRUD
-    // deleteItem(props.item.id),
+    {
+      label: t('menu.context.delete'),
+      icon: icons.delete,
+      color: 'error' as const,
+      onSelect: () => deleteById(props.item.id),
+    },
   ],
 ]);
 </script>

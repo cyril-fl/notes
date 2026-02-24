@@ -1,0 +1,17 @@
+node_modules
+.pnpm-store
+.output
+.nuxt
+.nitro
+.cache
+.data
+dist
+.git
+.husky
+.idea
+.fleet
+.DS_Store
+*.log
+logs
+.env
+.env.*

@@ -11,29 +11,27 @@ interface FolderCardProps {
   item: Folder;
 }
 
-const { icons } = useIcons();
 const props = defineProps<FolderCardProps>();
 const { update } = useDataActions();
 const { onFolderCardUpdate } = useUIEvents();
+const { getChildrenCountByType } = useDataUtils();
+
+const itemIdRef = computed(() => props.item.id);
+const folderActions = useActions(itemIdRef, { requestEdit: () => {} });
 
 const model = ref(props.item.title);
 const editable = useTemplateRef('editable');
 const inputRef = useTemplateRef('inputRef');
-const { getChildrenCountByType } = useDataUtils();
 
-// const { addNote, deleteItem, updateFolderCard } = useActions();
+const { icons } = useIcons();
 
 const notesChild = computed(() =>
   getChildrenCountByType(props.item.id, { types: ItemType.NOTE })
 );
 
-const actions = ref<ContextMenuItem[][]>([
-  // [addNote],
-  // [
-  //   // CRUD Folder
-  //   updateFolderCard(props.item.id),
-  //   deleteItem(props.item.id),
-  // ],
+const actions = computed<ContextMenuItem[][]>(() => [
+  [folderActions.addNote()],
+  [folderActions.updateFolderCard(), folderActions.deleteItem()],
 ]);
 
 async function handleEdit(id: string) {
@@ -81,7 +79,7 @@ onMounted(() => {
     >
       <UIcon :name="icons.folder" class="size-10" />
     </NuxtLink>
-    <ul class="text-xs text-muted text-center truncate text-ellipsis">
+    <ul class="">
       <EditableRoot
         ref="editable"
         v-slot="{ submit }"
@@ -91,7 +89,10 @@ onMounted(() => {
         as="li"
         @submit="handleSubmit"
       >
-        <EditableArea class="rounded-md" @keydown.enter.prevent="submit">
+        <EditableArea
+          class="rounded-md text-xs text-muted text-center truncate text-ellipsis"
+          @keydown.enter.prevent="submit"
+        >
           <EditablePreview />
           <EditableInput as-child>
             <input
