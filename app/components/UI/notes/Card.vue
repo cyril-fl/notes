@@ -25,7 +25,7 @@ const actions = computed<ContextMenuItem[][]>(() => [
 <template>
   <UContextMenu :items="actions" class="flex flex-col gap-2">
     <NuxtLink
-      :to="`${NAVIGATION.notes}${item.id}`"
+      :to="`${NAVIGATION.editor}${item.id}`"
       as="p"
       class="bg-muted text-xs text-default p-4 rounded-md aspect-square size-30 overflow-hidden"
     >

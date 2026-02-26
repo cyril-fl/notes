@@ -31,6 +31,7 @@ export default defineEventHandler(
     guard(updated.data, 'Invalid data.', 400);
 
     await mongo.setItem(id, updated.data);
+    await updateInIndex(updated.data);
 
     return {
       message: `${updated.data.type} updated successfully.`,

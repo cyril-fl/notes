@@ -16,11 +16,19 @@
       "not_found": "Dossier non trouvé",
       "empty": "Ce dossier est vide"
     },
+    "notes": {
+      "title": "Notes"
+    },
     "editor": {
-      "title": "Notes",
       "new": {
         "title": "Nouvelle note"
       }
+    },
+    "search": {
+      "title": "Recherche",
+      "placeholder": "Rechercher...",
+      "empty": "Aucun résultat",
+      "loading": "Recherche en cours..."
     }
   },
   "button": {

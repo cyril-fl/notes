@@ -1,7 +1,8 @@
 export enum NAVIGATION {
   home = '/',
   graph = '/graph/',
-  notes = '/editor/',
+  notes = '/notes/',
+  editor = '/editor/',
   newNote = '/editor/new/',
 }
 
@@ -21,7 +22,7 @@ export function useNavigation() {
         // },
         {
           id: 'notes',
-          label: 'pages.editor.title',
+          label: 'pages.notes.title',
           icon: icons.unorderedlist,
           to: NAVIGATION.notes,
         },

@@ -45,6 +45,7 @@
     "graphology": "^0.26.0",
     "graphology-layout-forceatlas2": "^0.10.1",
     "js-sha256": "^0.11.1",
+    "minisearch": "^7.2.0",
     "mongodb": "^7.0.0",
     "nuxt": "^4.2.2",
     "reka-ui": "^2.8.0",

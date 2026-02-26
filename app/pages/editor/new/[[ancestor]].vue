@@ -4,6 +4,8 @@ import type { EditorProps } from '~/composables/editor/useEditor';
 const route = useRoute();
 const props = defineProps<Partial<EditorProps>>();
 
+usePageSection({ searchable: false });
+
 const { getById } = useDataUtils();
 const { createNoteInFolder, createNote } = useDataActions();
 
@@ -70,15 +72,13 @@ watch(
 </script>
 
 <template>
-  <UIPageSection>
-    <UIEditor
-      :key="editorKey"
-      v-model:content="content"
-      v-bind="props"
-      @submit="handleSubmit"
-      @update:mentions="onUpdateMentions"
-    />
-  </UIPageSection>
+  <UIEditor
+    :key="editorKey"
+    v-model:content="content"
+    v-bind="props"
+    @submit="handleSubmit"
+    @update:mentions="onUpdateMentions"
+  />
 </template>
 
 <style scoped></style>

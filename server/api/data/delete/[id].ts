@@ -17,6 +17,7 @@ export default defineEventHandler(
         guard(parsed.data, 'Note not found.', 404);
 
         await mongo.removeItem(id);
+        await removeFromIndex(id);
       })
     );
 

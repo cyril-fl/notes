@@ -20,6 +20,7 @@ export default defineEventHandler(
     };
 
     await mongo.setItem(id, item);
+    await addToIndex(item);
 
     setResponseStatus(event, 201);
 

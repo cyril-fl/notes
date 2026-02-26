@@ -4,6 +4,8 @@ import type { EditorProps } from '~/composables/editor/useEditor';
 const route = useRoute();
 const props = defineProps<Partial<EditorProps>>();
 
+usePageSection({ searchable: false });
+
 const { getById } = useDataUtils();
 const { update } = useDataActions();
 
@@ -61,12 +63,10 @@ watch(
 </script>
 
 <template>
-  <UIPageSection>
-    <UIEditor
-      v-bind="props"
-      v-model:content="content"
-      @update:mentions="onUpdateMentions"
-      @submit="handleSubmit"
-    />
-  </UIPageSection>
+  <UIEditor
+    v-bind="props"
+    v-model:content="content"
+    @update:mentions="onUpdateMentions"
+    @submit="handleSubmit"
+  />
 </template>

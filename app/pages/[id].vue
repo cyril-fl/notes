@@ -96,18 +96,21 @@ function cleanRenameQuery() {
   const { rename, ...rest } = route.query;
   router.replace({ query: rest });
 }
+
+const sectionConfig = computed(() => ({
+  title: item.value?.title,
+  description: item.value ? details.value : undefined,
+  editable: item.value ? isRenaming.value : false,
+  contextActions: item.value ? actions.value : undefined,
+  onSubmit: handleRename,
+  onCancel: cleanRenameQuery,
+}));
+
+usePageSection(sectionConfig);
 </script>
 
 <template>
-  <UIPageSection
-    v-if="item"
-    :title="item.title"
-    :description="details"
-    :editable="isRenaming"
-    :context-actions="actions"
-    @submit="handleRename"
-    @cancel="cleanRenameQuery"
-  >
+  <template v-if="item">
     <UEmpty
       v-if="!children.folders.length && !children.notes.length"
       :icon="icons.folderempty"
@@ -123,15 +126,12 @@ function cleanRenameQuery() {
         <UINotesCard :item="note" />
       </li>
     </ul>
-  </UIPageSection>
-  <UIPageSection v-else>
-    <UEmpty
-      :icon="icons.folderempty"
-      :title="t('pages.folder.not_found')"
-      class="size-full"
-      variant="naked"
-    />
-  </UIPageSection>
+  </template>
+  <UEmpty
+    v-else
+    :icon="icons.folderempty"
+    :title="t('pages.folder.not_found')"
+    class="size-full"
+    variant="naked"
+  />
 </template>
-
-<style scoped></style>
