@@ -23,6 +23,8 @@ export abstract class Item {
 
   abstract draft: unknown;
 
+  public deletedAt: Date | null;
+
   private _path: string[];
 
   constructor(data: ItemSchema) {
@@ -31,10 +33,15 @@ export abstract class Item {
     this.id = data.id;
     this.createdAt = now;
     this.updatedAt = now;
+    this.deletedAt = data.deletedAt ?? null;
     this._path = data.path;
   }
 
   // Getters
+  public get isDeleted(): boolean {
+    return this.deletedAt !== null;
+  }
+
   public get ancestor(): string | null {
     return this._path.at(-1) ?? null;
   }

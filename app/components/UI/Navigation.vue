@@ -1,5 +1,14 @@
 <script lang="ts" setup>
 provideCurrentFolder();
+
+const { icons } = useIcons();
+const { createFolder } = useDataActions();
+
+async function onCreateFolder() {
+  const result = await createFolder();
+  if (!result) return;
+  navigateTo(`/${result.id}/?rename=1`);
+}
 </script>
 
 <template>
@@ -23,8 +32,30 @@ provideCurrentFolder();
       <UINavigationTreeMenu />
       <UINavigationHashtags />
     </div>
-    <!-- <div class="pt-2"> -->
-    <!-- <UButton :icon="icons.folderadd" color="neutral" variant="ghost" square /> -->
-    <!-- </div> -->
+    <div class="pt-2 border-t border-muted">
+      <UTooltip :text="$t('pages.new_folder')">
+        <UButton
+          :icon="icons.folderadd"
+          color="neutral"
+          variant="soft"
+          size="xs"
+          class="ml-auto"
+          square
+          @click="onCreateFolder"
+        />
+      </UTooltip>
+
+      <UTooltip :text="$t('pages.trash.title')">
+        <UButton
+          :icon="icons.trash"
+          :to="NAVIGATION.trash"
+          color="neutral"
+          variant="soft"
+          size="xs"
+          class="ml-auto"
+          square
+        />
+      </UTooltip>
+    </div>
   </nav>
 </template>

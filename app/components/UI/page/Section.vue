@@ -4,6 +4,7 @@ import type { Contextualizable } from '~/types/data';
 
 interface SectionProps extends Partial<PageTitleProps & Contextualizable> {
   searchable?: boolean;
+  ancestors?: string[];
 }
 const props = withDefaults(defineProps<SectionProps>(), {
   searchable: false,
@@ -19,6 +20,12 @@ const slots = useSlots();
 const isContextMenuActive = computed(
   () => props.contextActions && props.contextActions.length > 0
 );
+
+const hasBreadcrumb = computed(
+  () =>
+    props.ancestors &&
+    props.ancestors.filter((id) => id !== 'root').length > 0
+);
 </script>
 
 <template>
@@ -27,18 +34,20 @@ const isContextMenuActive = computed(
       class="space-y-4 grow flex flex-col bg-default rounded-2xl p-4"
       v-bind="$attrs"
     >
-      <UICoreToolbar v-if="slots.header || props.title || searchable">
+      <UICoreToolbar
+        v-if="slots.header || props.title || searchable"
+        as="header"
+      >
         <template #left>
           <slot name="header">
-            <header v-if="props.title">
-              <UIPageTitle
-                :title="props.title"
-                :description="props.description"
-                :editable="props.editable"
-                @submit="emit('submit', $event)"
-                @cancel="emit('cancel')"
-              />
-            </header>
+            <UIPageTitle
+              v-if="props.title"
+              :title="props.title"
+              :description="props.description"
+              :editable="props.editable"
+              @submit="emit('submit', $event)"
+              @cancel="emit('cancel')"
+            />
           </slot>
         </template>
         <template #right>
@@ -47,6 +56,12 @@ const isContextMenuActive = computed(
       </UICoreToolbar>
 
       <slot />
+
+      <UICoreToolbar v-if="hasBreadcrumb" position="footer" class="mt-auto">
+        <template #left>
+          <UIPageBreadcrumb :ancestors="props.ancestors!" />
+        </template>
+      </UICoreToolbar>
     </section>
   </UContextMenu>
 </template>

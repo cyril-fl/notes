@@ -7,6 +7,7 @@ export interface PageSectionConfig {
   searchable?: boolean;
   contextActions?: ContextMenuItem[][];
   sectionClass?: string;
+  ancestors?: string[];
   onSubmit?: (value: string) => void;
   onCancel?: () => void;
 }
@@ -18,16 +19,14 @@ const defaultConfig: PageSectionConfig = {
   searchable: true,
   contextActions: undefined,
   sectionClass: undefined,
+  ancestors: undefined,
   onSubmit: undefined,
   onCancel: undefined,
 };
 
-export function usePageSection(config?: MaybeRef<PageSectionConfig>) {
-  const sectionConfig = useState<PageSectionConfig>(
-    'page-section',
-    () => defaultConfig
-  );
+const sectionConfig = shallowRef<PageSectionConfig>(defaultConfig);
 
+export function usePageSection(config?: MaybeRef<PageSectionConfig>) {
   if (config) {
     // Set config immediately
     sectionConfig.value = { ...defaultConfig, ...toValue(config) };

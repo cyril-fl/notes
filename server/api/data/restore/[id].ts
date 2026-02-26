@@ -2,12 +2,11 @@ export default defineEventHandler(
   async (event): Promise<ServerResponse<null>> => {
     const id = getRouterParam(event, 'id');
 
-    guard(id, 'Note ID required.', 400);
+    guard(id, 'Item ID required.', 400);
 
     const ids = id.split(',');
 
     const mongo = useStorage('mongodb');
-    const now = new Date();
 
     await Promise.all(
       ids.map(async (id) => {
@@ -15,15 +14,14 @@ export default defineEventHandler(
 
         const parsed = dataParams.safeParse(existing);
 
-        guard(parsed.data, 'Note not found.', 404);
+        guard(parsed.data, 'Item not found.', 404);
 
-        if (parsed.data.deletedAt) return;
-
-        await mongo.setItem(id, { ...parsed.data, deletedAt: now });
-        await removeFromIndex(id);
+        const updated = { ...parsed.data, deletedAt: null };
+        await mongo.setItem(id, updated);
+        await addToIndex(updated);
       })
     );
 
-    return { message: 'Item(s) moved to trash.', data: null };
+    return { message: 'Item(s) restored.', data: null };
   }
 );

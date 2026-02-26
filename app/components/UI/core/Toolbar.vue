@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Primitive } from 'reka-ui';
 import { tv } from 'tailwind-variants';
 
 const theme = tv({
@@ -27,12 +28,14 @@ interface Props {
   ui: Partial<typeof theme.slots>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   class: any;
+  as: string | object;
 }
 
 const props = withDefaults(defineProps<Partial<Props>>(), {
   position: 'header',
   ui: () => ({}),
   class: '',
+  as: 'div',
 });
 
 const SLOT_ORDER = ['left', 'center', 'right'] as const;
@@ -41,7 +44,8 @@ const ui = computed(() => theme({ position: props.position }));
 </script>
 
 <template>
-  <div
+  <Primitive
+    :as="as"
     :class="ui.root({ class: [props.class, props.ui.root] })"
     v-bind="$attrs"
   >
@@ -52,5 +56,5 @@ const ui = computed(() => theme({ position: props.position }));
     >
       <slot :name="name" />
     </div>
-  </div>
+  </Primitive>
 </template>

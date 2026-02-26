@@ -4,6 +4,7 @@ export enum NAVIGATION {
   notes = '/notes/',
   editor = '/editor/',
   newNote = '/editor/new/',
+  trash = '/trash/',
 }
 
 export function useNavigation() {

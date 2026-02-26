@@ -63,10 +63,12 @@ export function useDataUtils() {
     const includeSelf = !!options?.includeSelf;
 
     const crawlChildren = (id: string) => {
-      const relatedIds = [id];
       const result = map.value.get(id);
+      if (!result) return [];
 
-      if (result && result.type === ItemType.FOLDER) {
+      const relatedIds = [id];
+
+      if (result.type === ItemType.FOLDER) {
         for (const child of result.childrenIds) {
           relatedIds.push(...crawlChildren(child));
         }
@@ -272,51 +274,144 @@ export function useDataActions() {
       return false;
     }
 
-    const relatedIds = getRelatedIds(id, { includeSelf: true });
-
-    const batchedId: string[][] = [];
-    let currentBatch: string[] = [];
-    let currentLength = 0;
-    const maxLength = 20;
-
-    for (const id of relatedIds) {
-      // +1 accounts for the comma separator when joining ids.
-      const nextLength =
-        currentLength + id.length + (currentBatch.length ? 1 : 0);
-
-      if (currentBatch.length && nextLength > maxLength) {
-        batchedId.push(currentBatch);
-        currentBatch = [];
-        currentLength = 0;
+    // Remove from parent's childrenIds
+    const item = getById(id);
+    const parentId = item?.ancestor;
+    if (parentId && parentId !== 'root') {
+      const parent = getById(parentId, { types: ItemType.FOLDER });
+      if (parent) {
+        const newChildren = parent.childrenIds.filter((cid) => cid !== id);
+        await handleUpdate(parentId, { childrenIds: newChildren });
       }
-
-      currentBatch.push(id);
-      currentLength += id.length + (currentBatch.length > 1 ? 1 : 0);
     }
 
-    if (currentBatch.length) batchedId.push(currentBatch);
+    const relatedIds = getRelatedIds(id, { includeSelf: true });
 
-    console.debug(
-      `[DataStore] Deleting ids in ${batchedId.length} batches:`,
-      batchedId
-    );
-
-    await Promise.all(batchedId.map((batch) => store.deleteById(batch)));
+    // Optimistic soft delete
+    store.softDelete(relatedIds);
 
     const result = await _fetch<boolean>({
       ctx: `${CRUD.DELETE} ${id}`,
       url: `data/delete/${relatedIds.join(',')}`,
       method: HTTPMethod.DELETE,
     }).onError((_err) => {
-      store.readById(snapshot);
+      store.restore(relatedIds);
       notify.error('Failed to delete');
     });
 
     if (!result.ok) return false;
 
+    // Navigate away if currently viewing the deleted item
+    const route = useRoute();
+    const currentId = route.params.id;
+    if (currentId && relatedIds.includes(String(currentId))) {
+      navigateTo(NAVIGATION.notes);
+    }
+
     await nextTick();
 
-    return result.response.data;
+    return true;
+  }
+
+  function getRelatedIdsFromTrash(id: string): string[] {
+    const allDeleted = store.trashAll;
+    const result = [id];
+
+    function crawl(parentId: string) {
+      for (const item of allDeleted) {
+        if (item.path.at(-1) === parentId) {
+          result.push(item.id);
+          if (item.type === ItemType.FOLDER) {
+            crawl(item.id);
+          }
+        }
+      }
+    }
+
+    const item = allDeleted.find((i) => i.id === id);
+    if (item?.type === ItemType.FOLDER) {
+      crawl(id);
+    }
+
+    return result;
+  }
+
+  async function handleRestoreById(id: string): Promise<boolean> {
+    const relatedIds = getRelatedIdsFromTrash(id);
+
+    // Check if parent still exists
+    const item = store.trashAll.find((i) => i.id === id);
+    const parentId = item?.path.at(-1);
+    const parentExists = parentId ? store.map.has(parentId) : false;
+
+    // Optimistic restore
+    store.restore(relatedIds);
+
+    const result = await _fetch<boolean>({
+      ctx: `RESTORE ${id}`,
+      url: `data/restore/${relatedIds.join(',')}`,
+      method: HTTPMethod.PATCH,
+    }).onError((_err) => {
+      store.softDelete(relatedIds);
+      notify.error('Failed to restore');
+    });
+
+    if (!result.ok) return false;
+
+    // If parent no longer exists, reparent to root
+    if (!parentExists && item && parentId) {
+      await handleUpdate(id, { path: ['root'] });
+      // Add to root's childrenIds
+      const root = getById('root', { types: ItemType.FOLDER });
+      if (root) {
+        await handleUpdate('root', {
+          childrenIds: [...root.childrenIds, id],
+        });
+      }
+    }
+
+    await nextTick();
+    return true;
+  }
+
+  async function handlePurgeById(id: string): Promise<boolean> {
+    const relatedIds = getRelatedIdsFromTrash(id);
+
+    store.purge(relatedIds);
+
+    const result = await _fetch<boolean>({
+      ctx: `PURGE ${id}`,
+      url: `data/purge/${relatedIds.join(',')}`,
+      method: HTTPMethod.DELETE,
+    }).onError((_err) => {
+      handleRead();
+      notify.error('Failed to permanently delete');
+    });
+
+    if (!result.ok) return false;
+
+    await nextTick();
+    return true;
+  }
+
+  async function handleEmptyTrash(): Promise<boolean> {
+    const trashIds = store.trashAll.map((i) => i.id);
+
+    store.purge(trashIds);
+
+    const result = await _fetch<boolean>({
+      ctx: 'EMPTY_TRASH',
+      url: 'data/purge',
+      method: HTTPMethod.DELETE,
+    }).onError((_err) => {
+      handleRead();
+      notify.error('Failed to empty trash');
+    });
+
+    if (!result.ok) return false;
+
+    await nextTick();
+    return true;
   }
 
   // CRUD Advanced Operations
@@ -398,5 +493,8 @@ export function useDataActions() {
     update: handleUpdate,
     delete: handleDelete,
     deleteById: handleDeleteId,
+    restoreById: handleRestoreById,
+    purgeById: handlePurgeById,
+    emptyTrash: handleEmptyTrash,
   };
 }

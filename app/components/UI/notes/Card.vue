@@ -7,6 +7,7 @@ interface NotesCardProps {
 
 const props = defineProps<NotesCardProps>();
 const { deleteById } = useDataActions();
+const { requestConfirm } = useConfirmDelete();
 const { t } = useI18n();
 const { icons } = useIcons();
 
@@ -16,7 +17,10 @@ const actions = computed<ContextMenuItem[][]>(() => [
       label: t('menu.context.delete'),
       icon: icons.delete,
       color: 'error' as const,
-      onSelect: () => deleteById(props.item.id),
+      onSelect: async () => {
+        const confirmed = await requestConfirm(props.item.id, 'note');
+        if (confirmed) deleteById(props.item.id);
+      },
     },
   ],
 ]);

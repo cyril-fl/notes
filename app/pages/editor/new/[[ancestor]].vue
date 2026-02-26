@@ -4,8 +4,6 @@ import type { EditorProps } from '~/composables/editor/useEditor';
 const route = useRoute();
 const props = defineProps<Partial<EditorProps>>();
 
-usePageSection({ searchable: false });
-
 const { getById } = useDataUtils();
 const { createNoteInFolder, createNote } = useDataActions();
 
@@ -19,6 +17,13 @@ const folder = computed<Folder | undefined>(() => {
   if (!ancestorId.value) return undefined;
   return getById(ancestorId.value, { types: ItemType.FOLDER });
 });
+
+usePageSection(
+  computed(() => ({
+    searchable: false,
+    ancestors: folder.value?.path,
+  }))
+);
 
 const content = ref<string | undefined>();
 const editorKey = ref<string>(

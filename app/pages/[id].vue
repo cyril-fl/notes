@@ -102,6 +102,7 @@ const sectionConfig = computed(() => ({
   description: item.value ? details.value : undefined,
   editable: item.value ? isRenaming.value : false,
   contextActions: item.value ? actions.value : undefined,
+  ancestors: item.value?.path,
   onSubmit: handleRename,
   onCancel: cleanRenameQuery,
 }));

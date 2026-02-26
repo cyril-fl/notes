@@ -4,8 +4,6 @@ import type { EditorProps } from '~/composables/editor/useEditor';
 const route = useRoute();
 const props = defineProps<Partial<EditorProps>>();
 
-usePageSection({ searchable: false });
-
 const { getById } = useDataUtils();
 const { update } = useDataActions();
 
@@ -22,6 +20,13 @@ const note = computed(() => {
       })
     : null;
 });
+
+usePageSection(
+  computed(() => ({
+    searchable: false,
+    ancestors: note.value?.ancestors,
+  }))
+);
 
 const _content = ref<string | undefined>(note.value?.content);
 const content = computed({

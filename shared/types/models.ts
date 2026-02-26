@@ -11,6 +11,7 @@ const serverParams = z.object({
   id: z.string(),
   createdAt: z.coerce.date(), // Accepte string ou Date, convertit en Date
   updatedAt: z.coerce.date(), // Accepte string ou Date, convertit en Date
+  deletedAt: z.coerce.date().nullable().default(null),
 });
 
 const baseItemParams = serverParams.extend({
@@ -40,6 +41,7 @@ const serverGeneratedFields = {
   id: true,
   createdAt: true,
   updatedAt: true,
+  deletedAt: true,
 } as const;
 
 export const folderDraftParams = folderParams.omit(serverGeneratedFields);
@@ -57,6 +59,7 @@ export const dataDraftPartial = z
     content: z.string(),
     title: z.string(),
     childrenIds: z.array(z.string()),
+    deletedAt: z.coerce.date().nullable(),
   })
   .partial();
 // Schema types = data received from API (server → client), includes all DB fields

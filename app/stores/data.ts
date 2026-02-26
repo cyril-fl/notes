@@ -11,6 +11,10 @@ export const useDataStore = defineStore('data', () => {
   const data = computed(() => _derived.value.data);
   const tags = computed(() => _derived.value.tags);
 
+  const trash = computed(() => _derived.value.trash);
+  const trashAll = computed(() => _derived.value.trashAll);
+  const trashCount = computed(() => _derived.value.trash.length);
+
   const popularTags = computed(() =>
     Array.from(tags.value.values())
       .sort((a, b) => b.count - a.count)
@@ -64,13 +68,40 @@ export const useDataStore = defineStore('data', () => {
     return _raw.value;
   }
 
+  function handleSoftDelete(ids: string[]) {
+    const now = new Date();
+    _raw.value = _raw.value.map((item) =>
+      ids.includes(item.id) && !item.deletedAt
+        ? { ...item, deletedAt: now }
+        : item
+    );
+    return _raw.value;
+  }
+
+  function handleRestore(ids: string[]) {
+    _raw.value = _raw.value.map((item) =>
+      ids.includes(item.id) ? { ...item, deletedAt: null } : item
+    );
+    return _raw.value;
+  }
+
+  function handlePurge(ids: string[]) {
+    _raw.value = _raw.value.filter((item) => !ids.includes(item.id));
+    return _raw.value;
+  }
+
   function handleStoreUpdate(items: DataSchema[]) {
+    // Separate active from soft-deleted items
+    const activeItems = items.filter((item) => !item.deletedAt);
+    const deletedItems = items.filter((item) => !!item.deletedAt);
+
     const newMap: Lookup = new Map();
     const newTags: MappedTags = new Map();
     const rootFolder = new Folder({
       id: 'root',
       createdAt: new Date(),
       updatedAt: new Date(),
+      deletedAt: null,
       path: [],
       type: ItemType.FOLDER,
       title: 'Root',
@@ -83,7 +114,7 @@ export const useDataStore = defineStore('data', () => {
       folders: [rootFolder],
     };
 
-    for (const item of items) {
+    for (const item of activeItems) {
       const handlers = {
         [ItemType.FOLDER]: () => {
           const props = folderParams.parse(item);
@@ -119,7 +150,28 @@ export const useDataStore = defineStore('data', () => {
 
     const newTree = rebuildTree(newData.folders);
 
-    return { map: newMap, data: newData, tags: newTags, tree: newTree };
+    // Build trash: show root-level deleted items
+    // An item is a trash root if its parent is NOT deleted,
+    // or if it was deleted BEFORE its parent (independent deletion)
+    const deletedMap = new Map(deletedItems.map((d) => [d.id, d]));
+    const trashRoots = deletedItems.filter((item) => {
+      const parentId = item.path.at(-1);
+      if (!parentId || !deletedMap.has(parentId)) return true;
+      const parent = deletedMap.get(parentId)!;
+      return (
+        new Date(item.deletedAt!).getTime() <
+        new Date(parent.deletedAt!).getTime()
+      );
+    });
+
+    return {
+      map: newMap,
+      data: newData,
+      tags: newTags,
+      tree: newTree,
+      trash: trashRoots,
+      trashAll: deletedItems,
+    };
   }
 
   function getSnapshot(): DataSchema[];
@@ -134,6 +186,9 @@ export const useDataStore = defineStore('data', () => {
     data,
     tags,
     popularTags,
+    trash,
+    trashAll,
+    trashCount,
     hasLoaded,
     getSnapshot,
     loadData: handleRead,
@@ -143,5 +198,8 @@ export const useDataStore = defineStore('data', () => {
     updateById: handleUpdateId,
     delete: handleDelete,
     deleteById: handleDeleteId,
+    softDelete: handleSoftDelete,
+    restore: handleRestore,
+    purge: handlePurge,
   };
 });

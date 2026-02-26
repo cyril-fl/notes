@@ -44,10 +44,20 @@ export const useActions = (
     icon: icons.delete,
     color: 'error',
     disabled: isRoot.value,
-    onSelect: () => {
+    onSelect: async () => {
       const id = folderId.value;
       if (!id) return;
-      deleteById(id);
+
+      const item = getById(id);
+      if (!item) return;
+
+      const itemType = item.type === ItemType.FOLDER ? 'folder' : 'note';
+      const { requestConfirm } = useConfirmDelete();
+      const confirmed = await requestConfirm(id, itemType);
+
+      if (confirmed) {
+        deleteById(id);
+      }
     },
   });
 

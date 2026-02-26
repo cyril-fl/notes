@@ -29,11 +29,24 @@
       "placeholder": "Rechercher...",
       "empty": "Aucun résultat",
       "loading": "Recherche en cours..."
+    },
+    "error": {
+      "title": "Page introuvable",
+      "description": "Cette page n'existe pas ou a été déplacée."
+    },
+    "trash": {
+      "title": "Corbeille",
+      "empty": "La corbeille est vide",
+      "empty_action": "Vider la corbeille",
+      "days_remaining": "{days} jour restant | {days} jours restants",
+      "confirm_empty": "Vider la corbeille ? Tous les éléments seront définitivement supprimés."
     }
   },
   "button": {
     "open_graph": "Ouvrir le graphe",
-    "open_editor": "Ouvrir l'éditeur"
+    "open_editor": "Ouvrir l'éditeur",
+    "back": "Retour",
+    "go_home": "Accueil"
   },
   "menu": {
     "navigation": {
@@ -54,7 +67,9 @@
       "delete": "Supprimer",
       "rename": "Renommer",
       "add_note": "Ajouter une note",
-      "add_folder": "Ajouter un dossier"
+      "add_folder": "Ajouter un dossier",
+      "restore": "Restaurer",
+      "purge": "Supprimer définitivement"
     }
   },
   "notes": {
@@ -70,6 +85,12 @@
       "title": "Nouveau dossier",
       "cancel": "Annuler",
       "submit": "Créer"
+    },
+    "confirm_delete": {
+      "note": "Supprimer cette note ?",
+      "folder": "Supprimer ce dossier et son contenu ?",
+      "cancel": "Annuler",
+      "confirm": "Supprimer"
     }
   },
   "editor": {

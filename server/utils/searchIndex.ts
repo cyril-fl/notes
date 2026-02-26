@@ -67,6 +67,8 @@ async function initIndex(): Promise<void> {
     if (!parsed.success) continue;
 
     const doc = parsed.data;
+    if (doc.deletedAt) continue; // Skip soft-deleted items
+
     _documents.set(doc.id, doc);
     _miniSearch.add(toSearchDocument(doc));
   }
