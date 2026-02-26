@@ -37,10 +37,19 @@ let hasInitializedContent = !!_content.value;
 
 const { onUpdate: onUpdateMentions } = useMentions();
 
-const handleSubmit = async () => {
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+async function handleSubmit() {
+  handleDebounce();
   if (!(note.value?.id && content.value)) return;
   await update(note.value.id, { content: content.value });
-};
+}
+
+function handleDebounce() {
+  if (!debounceTimer) return;
+  clearTimeout(debounceTimer);
+  debounceTimer = null;
+}
 
 watch(
   () => note.value?.content,
@@ -52,6 +61,15 @@ watch(
   { immediate: true }
 );
 
+watch(content, () => {
+  if (!note.value?.id || !content.value) return;
+
+  if (debounceTimer) clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(async () => {
+    await update(note.value!.id, { content: content.value! });
+  }, 1500);
+});
+
 watch(
   () => ({ note: note.value, hasLoaded: hasLoaded.value }),
   ({ note, hasLoaded }) => {
@@ -60,6 +78,13 @@ watch(
   },
   { immediate: true }
 );
+
+onBeforeUnmount(() => {
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+    debounceTimer = null;
+  }
+});
 </script>
 
 <template>

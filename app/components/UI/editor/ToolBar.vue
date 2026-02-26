@@ -43,7 +43,7 @@ const isOpen = ref(false);
       :icon="getListStateIcon(isOpen, 'horizontal')"
       color="neutral"
       variant="soft"
-      size="xs"
+      size="sm"
       square
       @click="isOpen = !isOpen"
     />

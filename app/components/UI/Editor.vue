@@ -36,15 +36,12 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', handleSubmit));
   <div
     class="editor-content relative bg-muted grow rounded-2xl p-4 overflow-x-hidden overflow-y-auto"
   >
-    <div
-      class="flex items-center gap-2 sticky top-0 z-10 py-2 bg-muted/80 backdrop-blur-sm"
-    >
-      <UIPageTitle
-        :title="props.title ?? $t('notes.default_title')"
-        class="grow min-w-0"
-      />
-      <UIEditorToolBar />
-    </div>
+    <UICoreToolbar>
+      <template #right>
+        <UIEditorToolBar />
+      </template>
+    </UICoreToolbar>
+
     <EditorContent :editor="editor" class="size-full" />
   </div>
   <ul v-if="preview.some((item) => item.condition)" class="mt-4">

@@ -29,6 +29,7 @@ export const useIcons = () => {
     unlink: 'mingcute:unlink-2-line',
     undo: 'mingcute:back-2-fill',
     unorderedlist: 'mingcute:list-check-fill',
+    warning: 'mingcute:warning-fill',
   };
 
   function getListStateIcon(

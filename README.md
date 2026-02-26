@@ -55,11 +55,11 @@ Construite avec Nuxt 4, Vue 3, TipTap, MongoDB et Docker.
 | #   | Fonctionnalité | Justification | Complexité | État |
 | --- | -------------- | ------------- | ---------- | ---- |
 
-| C2 | **Auto-save fiable avec indicateur** | Sauvegarde sur navigation/fermeture existe, mais pas de debounce en temps réel ni d'indicateur visuel | Faible | Partiel |
+| C2 | ~~**Auto-save fiable avec indicateur**~~ | ~~Sauvegarde sur navigation/fermeture existe, mais pas de debounce en temps réel ni d'indicateur visuel~~ | ~~Faible~~ | **Fait** (v0.5) |
 | C3 | **Confirmation avant suppression** | La suppression d'un dossier détruit tous les descendants sans confirmation — perte de données irréversible | Faible | Non |
 | C4 | **Drag & drop pour réorganiser** | Déplacer une note/dossier nécessite actuellement de supprimer et recréer. Essentiel pour l'organisation | Haute | Non |
 | C5 | **Page 404 / gestion des routes invalides** | Redirections gracieuses in-app (editor → `/editor/new/`, dossier → `UEmpty`), mais pas de page 404 custom | Faible | Partiel |
-| C6 | **Gestion d'erreurs utilisateur** | Pas de toast/notification en cas d'échec API. Rollback optimiste silencieux | Faible | Non |
+| C6 | ~~**Gestion d'erreurs utilisateur**~~ | ~~Pas de toast/notification en cas d'échec API. Rollback optimiste silencieux~~ | ~~Faible~~ | **Fait** (v0.5) |
 
 #### AMÉLIORATION UX (qualité perçue, rétention)
 

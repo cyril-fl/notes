@@ -151,6 +151,7 @@ export function useDataActions() {
   const store = useDataStore();
   const { fetch: _fetch } = useDataApi();
   const { getById, getRelatedIds, checkPathValidity } = useDataUtils();
+  const notify = useNotify();
 
   // CRUD Basic Operations
   async function handleCreate(
@@ -177,6 +178,7 @@ export function useDataActions() {
       })
       .onError((_err) => {
         store.deleteById(mock.id);
+        notify.error('Failed to create');
       });
 
     if (!result.ok || !result.response.data) return;
@@ -230,6 +232,7 @@ export function useDataActions() {
       })
       .onError(() => {
         store.updateById(id, snapshot);
+        notify.error('Failed to save');
       });
 
     if (!result.ok) return;
@@ -251,6 +254,7 @@ export function useDataActions() {
     }).onError((_err) => {
       logApi.warn(CRUD.DELETE, 'Error occurred, restoring previous state');
       store.read(snapshot);
+      notify.error('Failed to delete');
     });
 
     if (!result.ok) return false;
@@ -305,6 +309,7 @@ export function useDataActions() {
       method: HTTPMethod.DELETE,
     }).onError((_err) => {
       store.readById(snapshot);
+      notify.error('Failed to delete');
     });
 
     if (!result.ok) return false;
