@@ -60,9 +60,6 @@ export default defineNuxtConfig({
   },
   nitro: {
     imports: {},
-    externals: {
-      inline: ['vue'],
-    },
     storage: {
       mongodb: {
         driver: 'mongodb',
