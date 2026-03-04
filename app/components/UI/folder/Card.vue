@@ -6,6 +6,7 @@ import {
   EditablePreview,
   EditableRoot,
 } from 'reka-ui';
+import UIDndGhost from '~/components/UI/dnd/Ghost.vue';
 
 interface FolderCardProps {
   item: Folder;
@@ -15,6 +16,7 @@ const props = defineProps<FolderCardProps>();
 const { update } = useDataActions();
 const { onFolderCardUpdate } = useUIEvents();
 const { getChildrenCountByType } = useDataUtils();
+const { isSelected, select, toggleSelect } = useSelection();
 
 const itemIdRef = computed(() => props.item.id);
 const folderActions = useActions(itemIdRef, { requestEdit: () => {} });
@@ -22,8 +24,37 @@ const folderActions = useActions(itemIdRef, { requestEdit: () => {} });
 const model = ref(props.item.title);
 const editable = useTemplateRef('editable');
 const inputRef = useTemplateRef('inputRef');
+const cardRef = useTemplateRef('cardRef');
 
 const { icons } = useIcons();
+
+const itemRef = computed<Data>(() => props.item);
+
+const { isDragging } = useDraggable({
+  elementRef: cardRef,
+  item: itemRef,
+  ghostComponent: UIDndGhost,
+});
+
+const folderIdRef = computed(() => props.item.id);
+const { isOver } = useDropZone({
+  elementRef: cardRef,
+  folderId: folderIdRef,
+});
+
+const selected = computed(() => isSelected(props.item.id));
+
+function handleClick(e: MouseEvent) {
+  if (e.metaKey || e.ctrlKey) {
+    toggleSelect(props.item.id);
+  } else {
+    select(props.item.id);
+  }
+}
+
+function handleDblClick() {
+  navigateTo(`/${props.item.id}`);
+}
 
 const notesChild = computed(() =>
   getChildrenCountByType(props.item.id, { types: ItemType.NOTE })
@@ -72,13 +103,19 @@ onMounted(() => {
     :items="actions"
     class="flex flex-col gap-2 max-w-30 overflow-hidden"
   >
-    <NuxtLink
-      :to="`/${item.id}`"
-      as="div"
-      class="bg-muted text-xs text-default p-4 rounded-md aspect-square size-30 overflow-hidden flex items-center justify-center"
+    <div
+      ref="cardRef"
+      class="bg-muted text-xs text-default p-4 rounded-md aspect-square size-30 overflow-hidden flex items-center justify-center cursor-pointer select-none transition-all"
+      :class="{
+        'ring-2 ring-primary/50': selected,
+        'opacity-40': isDragging,
+        'bg-primary/10 ring-2 ring-primary': isOver,
+      }"
+      @click="handleClick"
+      @dblclick="handleDblClick"
     >
       <UIcon :name="icons.folder" class="size-10" />
-    </NuxtLink>
+    </div>
     <ul class="">
       <EditableRoot
         ref="editable"
@@ -108,5 +145,3 @@ onMounted(() => {
     </ul>
   </UContextMenu>
 </template>
-
-<style scoped></style>

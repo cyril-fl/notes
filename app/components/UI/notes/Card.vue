@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ContextMenuItem } from '@nuxt/ui';
+import UIDndGhost from '~/components/UI/dnd/Ghost.vue';
 
 interface NotesCardProps {
   item: Note;
@@ -10,6 +11,30 @@ const { deleteById, update } = useDataActions();
 const { requestConfirm } = useConfirmDelete();
 const { t } = useI18n();
 const { icons } = useIcons();
+const { isSelected, select, toggleSelect } = useSelection();
+
+const cardRef = useTemplateRef('cardRef');
+const itemRef = computed<Data>(() => props.item);
+
+const { isDragging } = useDraggable({
+  elementRef: cardRef,
+  item: itemRef,
+  ghostComponent: UIDndGhost,
+});
+
+const selected = computed(() => isSelected(props.item.id));
+
+function handleClick(e: MouseEvent) {
+  if (e.metaKey || e.ctrlKey) {
+    toggleSelect(props.item.id);
+  } else {
+    select(props.item.id);
+  }
+}
+
+function handleDblClick() {
+  navigateTo(`${NAVIGATION.editor}${props.item.id}`);
+}
 
 const actions = computed<ContextMenuItem[][]>(() => [
   [
@@ -44,10 +69,15 @@ const actions = computed<ContextMenuItem[][]>(() => [
 
 <template>
   <UContextMenu :items="actions" class="flex flex-col gap-2">
-    <NuxtLink
-      :to="`${NAVIGATION.editor}${item.id}`"
-      as="p"
-      class="relative bg-muted text-xs text-default p-4 rounded-md aspect-square size-30 overflow-hidden"
+    <div
+      ref="cardRef"
+      class="relative bg-muted text-xs text-default p-4 rounded-md aspect-square size-30 overflow-hidden cursor-pointer select-none transition-all"
+      :class="{
+        'ring-2 ring-primary/50': selected,
+        'opacity-40': isDragging,
+      }"
+      @click="handleClick"
+      @dblclick="handleDblClick"
     >
       <span v-if="item.isPinned || item.isReadonly" class="absolute top-1 right-1 flex gap-1 text-dimmed">
         <UIcon v-if="item.isPinned" :name="icons.pin" class="size-3.5" />
@@ -56,7 +86,7 @@ const actions = computed<ContextMenuItem[][]>(() => [
       <span class="line-clamp-5">
         {{ item.content }}
       </span>
-    </NuxtLink>
+    </div>
     <ul class="text-xs text-muted text-center">
       <li>{{ item.updatedAt }}</li>
     </ul>

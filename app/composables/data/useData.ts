@@ -62,7 +62,10 @@ export function useDataUtils() {
   ): string[] {
     const includeSelf = !!options?.includeSelf;
 
-    const crawlChildren = (id: string) => {
+    const crawlChildren = (id: string, visited = new Set<string>()) => {
+      if (visited.has(id)) return [];
+      visited.add(id);
+
       const result = map.value.get(id);
       if (!result) return [];
 
@@ -70,7 +73,7 @@ export function useDataUtils() {
 
       if (result.type === ItemType.FOLDER) {
         for (const child of result.childrenIds) {
-          relatedIds.push(...crawlChildren(child));
+          relatedIds.push(...crawlChildren(child, visited));
         }
       }
       return relatedIds;
@@ -416,7 +419,7 @@ export function useDataActions() {
 
   // CRUD Advanced Operations
   async function handleCreateFolder({
-    path = [],
+    path = ['root'],
     title = 'New Folder', //i18n
     childrenIds = [],
   }: Partial<CreateFolder> = {}): Promise<DataSchema | undefined> {
@@ -483,6 +486,91 @@ export function useDataActions() {
     });
   }
 
+  async function handleMoveItems(
+    ids: string[],
+    targetFolderId: string | null
+  ): Promise<boolean> {
+    const targetId = targetFolderId ?? 'root';
+    const target = getById(targetId, { types: ItemType.FOLDER });
+    if (!target) {
+      notify.error('Target folder not found');
+      return false;
+    }
+
+    // Filter valid items (individually, not as a batch)
+    const movableItems = ids
+      .map((id) => getById(id))
+      .filter((item): item is Data => {
+        if (!item) return false;
+        if (item.isDeleted) return false;
+        if (item.id === 'root') return false;
+        // Already in target folder
+        if (item.ancestor === targetId) return false;
+        // Circular move: folder into its own descendant
+        if (item.type === ItemType.FOLDER) {
+          const descendants = getRelatedIds(item.id, { includeSelf: true });
+          if (descendants.includes(targetId)) return false;
+        }
+        return true;
+      });
+
+    if (!movableItems.length) {
+      notify.error('Cannot move: invalid target');
+      return false;
+    }
+
+    const targetPath = [...target.ancestors, target.id];
+
+    for (const item of movableItems) {
+      // Remove from source parent's childrenIds (skip root — virtual, rebuilt by handleStoreUpdate)
+      const sourceParentId = item.ancestor;
+      if (sourceParentId && sourceParentId !== 'root') {
+        const sourceParent = getById(sourceParentId, {
+          types: ItemType.FOLDER,
+        });
+        if (sourceParent) {
+          const newChildren = sourceParent.childrenIds.filter(
+            (cid) => cid !== item.id
+          );
+          await handleUpdate(sourceParentId, { childrenIds: newChildren });
+        }
+      }
+
+      // Update item's path
+      await handleUpdate(item.id, { path: targetPath });
+
+      // If folder, recursively update descendants' paths
+      if (item.type === ItemType.FOLDER) {
+        const descendantIds = getRelatedIds(item.id);
+        for (const descId of descendantIds) {
+          const desc = getById(descId);
+          if (!desc) continue;
+          // Rebuild path: target path + item id + relative path from item to descendant
+          const itemPath = [...targetPath, item.id];
+          const oldDescPath = desc.ancestors;
+          const itemIdx = oldDescPath.indexOf(item.id);
+          const relativePath =
+            itemIdx >= 0 ? oldDescPath.slice(itemIdx + 1) : [];
+          const newDescPath = [...itemPath, ...relativePath];
+          await handleUpdate(descId, { path: newDescPath });
+        }
+      }
+
+      // Add to target's childrenIds (skip root — virtual, rebuilt by handleStoreUpdate)
+      if (targetId !== 'root') {
+        const updatedTarget = getById(targetId, { types: ItemType.FOLDER });
+        if (updatedTarget) {
+          const newChildren = new Set([...updatedTarget.childrenIds, item.id]);
+          await handleUpdate(targetId, {
+            childrenIds: Array.from(newChildren),
+          });
+        }
+      }
+    }
+
+    return true;
+  }
+
   return {
     create: handleCreate,
     createFolder: handleCreateFolder,
@@ -496,5 +584,6 @@ export function useDataActions() {
     restoreById: handleRestoreById,
     purgeById: handlePurgeById,
     emptyTrash: handleEmptyTrash,
+    moveItems: handleMoveItems,
   };
 }

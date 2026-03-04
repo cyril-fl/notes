@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 const sectionConfig = usePageSection();
 const { state: confirmState, confirm, cancel } = useConfirmDelete();
+provideSelection();
 </script>
 
 <template>

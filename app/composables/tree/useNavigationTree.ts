@@ -3,29 +3,46 @@ import type { NavigationTreeItem } from '~/types/ui';
 export function useNavigationTree() {
   const store = useDataStore();
   const { icons } = useIcons();
-  const { tree, data: _data } = storeToRefs(store);
-  const { getById } = useDataUtils();
+  const { tree, map } = storeToRefs(store);
 
-  const data = computed<NavigationTreeItem[]>(() => [
-    {
-      id: 'folders',
-      label: 'menu.navigation.folders.title',
-      children: makeNavigationTreeItem(tree.value),
-    },
-  ]);
+  const data = computed<NavigationTreeItem[]>(() => {
+    const lookup = map.value;
+    const rootChildren = makeNavigationTreeItem(
+      tree.value['root'] ?? {},
+      lookup
+    );
+    return [
+      {
+        id: 'root',
+        label: lookup.get('root')?.title ?? 'Root',
+        icon: icons.folder,
+        to: '/root/',
+        children: rootChildren.length > 0 ? rootChildren : undefined,
+      },
+    ];
+  });
 
-  function makeNavigationTreeItem(node: Tree): NavigationTreeItem[] {
+  function makeNavigationTreeItem(
+    node: Tree,
+    lookup: Lookup,
+    visited = new Set<string>()
+  ): NavigationTreeItem[] {
     const navItems: NavigationTreeItem[] = [];
 
     for (const id of Object.keys(node)) {
-      const item = getById(id, { types: ItemType.FOLDER });
+      const item = lookup.get(id);
 
-      if (!item) continue;
+      if (!item || item.type !== ItemType.FOLDER) continue;
+      if (visited.has(id)) continue;
+      visited.add(id);
+
       const subtree = node[id] ?? {};
       const childKeys = Object.keys(subtree);
 
       const children =
-        childKeys.length > 0 ? makeNavigationTreeItem(subtree) : undefined;
+        childKeys.length > 0
+          ? makeNavigationTreeItem(subtree, lookup, visited)
+          : undefined;
 
       navItems.push({
         id: item.id,

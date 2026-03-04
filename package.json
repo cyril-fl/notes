@@ -21,6 +21,7 @@
     ]
   },
   "dependencies": {
+    "@atlaskit/pragmatic-drag-and-drop": "^1.7.7",
     "@internationalized/date": "^3.10.1",
     "@nuxt/icon": "^2.2.0",
     "@nuxt/image": "2.0.0",
@@ -46,6 +47,7 @@
     "graphology-layout-forceatlas2": "^0.10.1",
     "js-sha256": "^0.11.1",
     "minisearch": "^7.2.0",
+    "mobile-drag-drop": "3.0.0-rc.0",
     "mongodb": "^7.0.0",
     "nuxt": "^4.2.2",
     "reka-ui": "^2.8.0",

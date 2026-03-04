@@ -43,7 +43,7 @@ export const useDataStore = defineStore('data', () => {
     if (index === -1) return;
 
     const current = _raw.value[index];
-    const unchecked = defuDedupArrays(data, current);
+    const unchecked = { ...current, ...data };
 
     const updated = dataParams.safeParse(unchecked);
     if (!updated.success) return;
@@ -115,9 +115,17 @@ export const useDataStore = defineStore('data', () => {
     };
 
     for (const item of activeItems) {
+      if (item.id === 'root') continue;
+
       const handlers = {
         [ItemType.FOLDER]: () => {
           const props = folderParams.parse(item);
+          props.childrenIds = [
+            ...new Set(props.childrenIds.filter((id) => id !== 'root')),
+          ];
+          if (props.id !== 'root' && props.path[0] !== 'root') {
+            props.path = ['root', ...props.path];
+          }
           const folder = new Folder(props);
           newData.folders.push(folder);
           return folder;
@@ -127,7 +135,7 @@ export const useDataStore = defineStore('data', () => {
           const note = new Note(props);
           newData.notes.push(note);
 
-          if (note.ancestor === null) {
+          if (note.ancestors.length === 0 || note.ancestors[0] !== 'root') {
             note.path = ['root'];
           }
 

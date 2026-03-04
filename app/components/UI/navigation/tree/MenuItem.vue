@@ -1,12 +1,27 @@
 <script setup lang="ts">
 import type { NavigationTreeProps } from '~/types/ui';
 import { EditableArea, EditableInput, EditableRoot } from 'reka-ui';
+import UIDndGhost from '~/components/UI/dnd/Ghost.vue';
 
 const props = defineProps<NavigationTreeProps>();
 const { set, editingId, clearEdit } = useCurrentFolder();
 const { update } = useDataActions();
+const { getById } = useDataUtils();
 
 const isEditing = computed(() => editingId.value === props.item.id);
+
+const dropRef = useTemplateRef('dropRef');
+const folderIdRef = computed(() => props.item.id);
+const { isOver } = useDropZone({ elementRef: dropRef, folderId: folderIdRef });
+
+// Make navbar folders draggable (blocked during editing)
+const folderData = computed<Data>(() => getById(props.item.id)!);
+const { isDragging } = useDraggable({
+  elementRef: dropRef,
+  item: folderData,
+  ghostComponent: UIDndGhost,
+  canDragCheck: () => !isEditing.value,
+});
 const model = ref(props.item.label);
 const editable = useTemplateRef('editable');
 
@@ -40,10 +55,11 @@ watch(isEditing, async (editing) => {
 </script>
 
 <template>
-  <li @mouseenter="set(props.item.id)" class="select-none">
+  <li ref="dropRef" @mouseenter="set(props.item.id)" class="select-none transition-colors" :class="{ 'bg-primary/10 rounded-md': isOver, 'opacity-40': isDragging }">
     <UButton
       :icon="item.icon"
       :to="item.to"
+      draggable="false"
       class="w-full justify-start"
       color="neutral"
       variant="ghost"

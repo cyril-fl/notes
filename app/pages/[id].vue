@@ -7,6 +7,12 @@ const { t } = useI18n();
 const { icons } = useIcons();
 const { update } = useDataActions();
 const { emitFolderCardUpdate, onFolderCardUpdate } = useUIEvents();
+const { clearSelection } = useSelection();
+
+// Main view as drop zone for current folder
+const contentRef = useTemplateRef('contentRef');
+const dropFolderId = computed<string | null>(() => id.value || null);
+const { isOver: isDropOver } = useDropZone({ elementRef: contentRef, folderId: dropFolderId });
 
 const id = computed<string>(() => {
   const pathParams = route.params.id;
@@ -118,7 +124,12 @@ usePageSection(sectionConfig);
 </script>
 
 <template>
-  <template v-if="item">
+  <div
+    v-if="item"
+    ref="contentRef"
+    class="grow transition-all"
+    :class="{ 'ring-2 ring-primary/30 rounded-lg': isDropOver }"
+  >
     <UEmpty
       v-if="!children.folders.length && !children.notes.length"
       :icon="icons.folderempty"
@@ -126,7 +137,7 @@ usePageSection(sectionConfig);
       class="grow"
       variant="naked"
     />
-    <ul v-else class="flex flex-wrap gap-4">
+    <ul v-else class="flex flex-wrap gap-4" @click.self="clearSelection()">
       <li v-for="folder in children.folders" :key="folder.id">
         <UIFolderCard :item="folder" />
       </li>
@@ -134,7 +145,7 @@ usePageSection(sectionConfig);
         <UINotesCard :item="note" />
       </li>
     </ul>
-  </template>
+  </div>
   <UEmpty
     v-else
     :icon="icons.folderempty"

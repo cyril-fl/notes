@@ -1,5 +1,3 @@
-import { defu } from 'defu';
-
 export default defineEventHandler(
   async (event): Promise<ServerResponse<DraftData>> => {
     const id = getRouterParam(event, 'id');
@@ -18,14 +16,11 @@ export default defineEventHandler(
 
     const now = new Date();
 
-    // TODO check defu  voir si les children sont bien merge
-    const raw = defu(
-      {
-        ...parsedBody.data,
-        lastEdited: now,
-      },
-      parsedExisting.data
-    );
+    const raw = {
+      ...parsedExisting.data,
+      ...parsedBody.data,
+      updatedAt: now,
+    };
 
     const updated = dataParams.safeParse(raw);
     guard(updated.data, 'Invalid data.', 400);
