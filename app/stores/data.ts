@@ -123,7 +123,11 @@ export const useDataStore = defineStore('data', () => {
           props.childrenIds = [
             ...new Set(props.childrenIds.filter((id) => id !== 'root')),
           ];
-          if (props.id !== 'root' && props.path[0] !== 'root') {
+          if (
+            props.id !== 'root' &&
+            props.path.length > 0 &&
+            props.path[0] !== 'root'
+          ) {
             props.path = ['root', ...props.path];
           }
           const folder = new Folder(props);
@@ -135,8 +139,8 @@ export const useDataStore = defineStore('data', () => {
           const note = new Note(props);
           newData.notes.push(note);
 
-          if (note.ancestors.length === 0 || note.ancestors[0] !== 'root') {
-            note.path = ['root'];
+          if (note.ancestors.length > 0 && note.ancestors[0] !== 'root') {
+            note.path = ['root', ...note.ancestors];
           }
 
           extractTags({ note, tags: newTags });

@@ -6,6 +6,14 @@ const { folders } = useNavigationTree();
 const { emitFolderNavOpen } = useUIEvents();
 const { actions, editingId, clearEdit, reset } = useCurrentFolder();
 
+const treeRef = useTemplateRef('treeRef');
+const topLevelTarget = ref<string | null>(null);
+const { isOver: isTreeDropOver } = useDropZone({
+  elementRef: treeRef,
+  folderId: topLevelTarget,
+  shallow: true,
+});
+
 const isMenuOpen = ref(false);
 
 function whenMenuClosed(): Promise<void> {
@@ -49,7 +57,12 @@ function handleOpenChange(open: boolean) {
 </script>
 
 <template>
-  <div @mouseleave="handleMouseLeave">
+  <div
+    ref="treeRef"
+    class="transition-all"
+    :class="{ 'ring-2 ring-primary/30 rounded-lg': isTreeDropOver }"
+    @mouseleave="handleMouseLeave"
+  >
     <UContextMenu
       :items="items"
       :content="{ onCloseAutoFocus: handleCloseAutoFocus }"

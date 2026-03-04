@@ -4,9 +4,14 @@ import type { DragData } from './useDraggable';
 interface UseDropZoneOptions {
   elementRef: Ref<HTMLElement | null>;
   folderId: Ref<string | null>;
+  shallow?: boolean;
 }
 
-export function useDropZone({ elementRef, folderId }: UseDropZoneOptions) {
+export function useDropZone({
+  elementRef,
+  folderId,
+  shallow,
+}: UseDropZoneOptions) {
   const { moveItems } = useDataActions();
   const { getRelatedIds, getById } = useDataUtils();
   const isOver = ref(false);
@@ -20,25 +25,20 @@ export function useDropZone({ elementRef, folderId }: UseDropZoneOptions) {
   function canAcceptDrop(data: Record<string, unknown>): boolean {
     if (!isDragData(data)) return false;
 
-    const targetId = folderId.value ?? 'root';
+    const targetId = folderId.value;
 
-    // Check if at least one item can be moved to the target
     let hasValidItem = false;
 
     for (const id of data.ids) {
-      // Cannot drop on itself
-      if (id === targetId) return false;
-      // Root is not movable
+      if (targetId !== null && id === targetId) return false;
       if (id === 'root') continue;
 
       const item = getById(id);
       if (!item) continue;
 
-      // Already in target folder (no-op)
       if (item.ancestor === targetId) continue;
 
-      // Cannot drop a folder into its own descendant (circular)
-      if (item.type === ItemType.FOLDER) {
+      if (item.type === ItemType.FOLDER && targetId !== null) {
         const descendants = getRelatedIds(id, { includeSelf: true });
         if (descendants.includes(targetId)) return false;
       }
@@ -66,9 +66,10 @@ export function useDropZone({ elementRef, folderId }: UseDropZoneOptions) {
       onDragLeave() {
         isOver.value = false;
       },
-      onDrop({ source }) {
+      onDrop({ source, location }) {
         isOver.value = false;
         if (!isDragData(source.data)) return;
+        if (shallow && location.current.dropTargets.length > 1) return;
         moveItems(source.data.ids, folderId.value);
       },
     });

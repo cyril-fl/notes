@@ -419,7 +419,7 @@ export function useDataActions() {
 
   // CRUD Advanced Operations
   async function handleCreateFolder({
-    path = ['root'],
+    path = [],
     title = 'New Folder', //i18n
     childrenIds = [],
   }: Partial<CreateFolder> = {}): Promise<DataSchema | undefined> {
@@ -490,26 +490,26 @@ export function useDataActions() {
     ids: string[],
     targetFolderId: string | null
   ): Promise<boolean> {
-    const targetId = targetFolderId ?? 'root';
-    const target = getById(targetId, { types: ItemType.FOLDER });
-    if (!target) {
+    const target =
+      targetFolderId !== null
+        ? getById(targetFolderId, { types: ItemType.FOLDER })
+        : null;
+
+    if (targetFolderId !== null && !target) {
       notify.error('Target folder not found');
       return false;
     }
 
-    // Filter valid items (individually, not as a batch)
     const movableItems = ids
       .map((id) => getById(id))
       .filter((item): item is Data => {
         if (!item) return false;
         if (item.isDeleted) return false;
         if (item.id === 'root') return false;
-        // Already in target folder
-        if (item.ancestor === targetId) return false;
-        // Circular move: folder into its own descendant
-        if (item.type === ItemType.FOLDER) {
+        if (item.ancestor === targetFolderId) return false;
+        if (item.type === ItemType.FOLDER && targetFolderId !== null) {
           const descendants = getRelatedIds(item.id, { includeSelf: true });
-          if (descendants.includes(targetId)) return false;
+          if (descendants.includes(targetFolderId)) return false;
         }
         return true;
       });
@@ -519,10 +519,9 @@ export function useDataActions() {
       return false;
     }
 
-    const targetPath = [...target.ancestors, target.id];
+    const targetPath = target ? [...target.ancestors, target.id] : [];
 
     for (const item of movableItems) {
-      // Remove from source parent's childrenIds (skip root — virtual, rebuilt by handleStoreUpdate)
       const sourceParentId = item.ancestor;
       if (sourceParentId && sourceParentId !== 'root') {
         const sourceParent = getById(sourceParentId, {
@@ -536,16 +535,13 @@ export function useDataActions() {
         }
       }
 
-      // Update item's path
       await handleUpdate(item.id, { path: targetPath });
 
-      // If folder, recursively update descendants' paths
       if (item.type === ItemType.FOLDER) {
         const descendantIds = getRelatedIds(item.id);
         for (const descId of descendantIds) {
           const desc = getById(descId);
           if (!desc) continue;
-          // Rebuild path: target path + item id + relative path from item to descendant
           const itemPath = [...targetPath, item.id];
           const oldDescPath = desc.ancestors;
           const itemIdx = oldDescPath.indexOf(item.id);
@@ -556,12 +552,13 @@ export function useDataActions() {
         }
       }
 
-      // Add to target's childrenIds (skip root — virtual, rebuilt by handleStoreUpdate)
-      if (targetId !== 'root') {
-        const updatedTarget = getById(targetId, { types: ItemType.FOLDER });
+      if (targetFolderId !== null && targetFolderId !== 'root') {
+        const updatedTarget = getById(targetFolderId, {
+          types: ItemType.FOLDER,
+        });
         if (updatedTarget) {
           const newChildren = new Set([...updatedTarget.childrenIds, item.id]);
-          await handleUpdate(targetId, {
+          await handleUpdate(targetFolderId, {
             childrenIds: Array.from(newChildren),
           });
         }

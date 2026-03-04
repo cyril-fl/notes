@@ -7,19 +7,26 @@ export function useNavigationTree() {
 
   const data = computed<NavigationTreeItem[]>(() => {
     const lookup = map.value;
-    const rootChildren = makeNavigationTreeItem(
-      tree.value['root'] ?? {},
-      lookup
-    );
-    return [
-      {
-        id: 'root',
-        label: lookup.get('root')?.title ?? 'Root',
+    const treeValue = tree.value;
+    const items: NavigationTreeItem[] = [];
+
+    for (const id of Object.keys(treeValue)) {
+      const item = lookup.get(id);
+      if (!item || item.type !== ItemType.FOLDER) continue;
+
+      const subtree = treeValue[id] ?? {};
+      const children = makeNavigationTreeItem(subtree, lookup);
+
+      items.push({
+        id: item.id,
+        label: item.title,
         icon: icons.folder,
-        to: '/root/',
-        children: rootChildren.length > 0 ? rootChildren : undefined,
-      },
-    ];
+        to: `/${item.id}/`,
+        children: children.length > 0 ? children : undefined,
+      });
+    }
+
+    return items;
   });
 
   function makeNavigationTreeItem(
