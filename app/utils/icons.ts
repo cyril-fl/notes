@@ -32,6 +32,8 @@ export const useIcons = () => {
     notFound: 'mingcute:file-search-line',
     restore: 'mingcute:refresh-3-line',
     trash: 'mingcute:delete-3-line',
+    pin: 'mingcute:pin-2-fill',
+    lock: 'mingcute:lock-fill',
     warning: 'mingcute:warning-fill',
   };
 

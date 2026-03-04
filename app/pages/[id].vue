@@ -107,6 +107,13 @@ const sectionConfig = computed(() => ({
   onCancel: cleanRenameQuery,
 }));
 
+const sortedNotes = computed(() =>
+  [...children.value.notes].sort((a, b) => {
+    if (a.isPinned === b.isPinned) return 0;
+    return a.isPinned ? -1 : 1;
+  })
+);
+
 usePageSection(sectionConfig);
 </script>
 
@@ -123,7 +130,7 @@ usePageSection(sectionConfig);
       <li v-for="folder in children.folders" :key="folder.id">
         <UIFolderCard :item="folder" />
       </li>
-      <li v-for="note in children.notes" :key="note.id">
+      <li v-for="note in sortedNotes" :key="note.id">
         <UINotesCard :item="note" />
       </li>
     </ul>

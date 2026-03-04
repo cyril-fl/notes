@@ -64,15 +64,15 @@ Construite avec Nuxt 4, Vue 3, TipTap, MongoDB et Docker.
 
 #### AMÉLIORATION UX (qualité perçue, rétention)
 
-| #   | Fonctionnalité                                   | Justification                                                                                            | Complexité | État        |
-| --- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------- | ---------- | ----------- | --- | --- | ------ | --- |
-| U1  | **Recherche par hashtag** (clic → filtre)        | Hashtags affichés en texte brut, non cliquables. L'API search supporte le filtrage par tags côté serveur | Faible     | Placeholder |
-| U2  | **Tri et filtres** (date, titre, récents)        | Aucun moyen de trier les notes dans un dossier                                                           | Faible     | Non         |
-| U3  | **Note épinglée / favoris**                      | Pattern standard pour accès rapide aux notes fréquentes                                                  | Moyenne    | Non         |
-| U4  | **Breadcrumb de navigation**                     | Le `path` existe dans le modèle mais n'est pas affiché. L'utilisateur se perd dans l'arbre               | Faible     | Non         |
-| U5  | **Raccourcis clavier globaux**                   | Cmd+N (nouvelle note), Cmd+K (recherche), Cmd+S (save explicite)                                         | Moyenne    | Non         |     |     | Faible | Non |
-| U7  | **Responsive / Mobile**                          | Toolbar responsive basique (`sm:grid-cols`), mais pas de layout mobile dédié (hamburger, drawer)         | Moyenne    | Minimal     |
-| U8  | **Persistance de l'état sidebar** (localStorage) | La largeur du panel est en mémoire uniquement, perdue au rechargement                                    | Faible     | Non         |
+| #   | Fonctionnalité                                   | Justification                                                                                            | Complexité                                                                                 | État        |
+| --- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ----------- | --- | --- | ------ | --- |
+| U1  | **Recherche par hashtag** (clic → filtre)        | Hashtags affichés en texte brut, non cliquables. L'API search supporte le filtrage par tags côté serveur | Faible                                                                                     | Placeholder |
+| U2  | **Tri et filtres** (date, titre, récents)        | Aucun moyen de trier les notes dans un dossier                                                           | Faible                                                                                     | Non         |
+| U3  | **Note épinglée / favoris**                      | Pattern standard pour accès rapide aux notes fréquentes                                                  | Moyenne                                                                                    | Non         |
+| ~~  | U4                                               | **Breadcrumb de navigation**                                                                             | Le `path` existe dans le modèle mais n'est pas affiché. L'utilisateur se perd dans l'arbre | Faible      | Non | ~~  |
+| U5  | **Raccourcis clavier globaux**                   | Cmd+N (nouvelle note), Cmd+K (recherche), Cmd+S (save explicite)                                         | Moyenne                                                                                    | Non         |     |     | Faible | Non |
+| U7  | **Responsive / Mobile**                          | Toolbar responsive basique (`sm:grid-cols`), mais pas de layout mobile dédié (hamburger, drawer)         | Moyenne                                                                                    | Minimal     |
+| U8  | **Persistance de l'état sidebar** (localStorage) | La largeur du panel est en mémoire uniquement, perdue au rechargement                                    | Faible                                                                                     | Non         |
 
 #### FONCTIONNALITÉS AVANCÉES (différenciation, v1+)
 

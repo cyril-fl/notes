@@ -6,7 +6,7 @@ interface NotesCardProps {
 }
 
 const props = defineProps<NotesCardProps>();
-const { deleteById } = useDataActions();
+const { deleteById, update } = useDataActions();
 const { requestConfirm } = useConfirmDelete();
 const { t } = useI18n();
 const { icons } = useIcons();
@@ -23,6 +23,22 @@ const actions = computed<ContextMenuItem[][]>(() => [
       },
     },
   ],
+  [
+    {
+      label: t(props.item.isPinned ? 'menu.context.unpin' : 'menu.context.pin'),
+      icon: icons.pin,
+      onSelect: () => {
+        update(props.item.id, { isPinned: !props.item.isPinned });
+      },
+    },
+    {
+      label: t(props.item.isReadonly ? 'menu.context.unlock' : 'menu.context.lock'),
+      icon: icons.lock,
+      onSelect: () => {
+        update(props.item.id, { isReadonly: !props.item.isReadonly });
+      },
+    },
+  ],
 ]);
 </script>
 
@@ -31,8 +47,12 @@ const actions = computed<ContextMenuItem[][]>(() => [
     <NuxtLink
       :to="`${NAVIGATION.editor}${item.id}`"
       as="p"
-      class="bg-muted text-xs text-default p-4 rounded-md aspect-square size-30 overflow-hidden"
+      class="relative bg-muted text-xs text-default p-4 rounded-md aspect-square size-30 overflow-hidden"
     >
+      <span v-if="item.isPinned || item.isReadonly" class="absolute top-1 right-1 flex gap-1 text-dimmed">
+        <UIcon v-if="item.isPinned" :name="icons.pin" class="size-3.5" />
+        <UIcon v-if="item.isReadonly" :name="icons.lock" class="size-3.5" />
+      </span>
       <span class="line-clamp-5">
         {{ item.content }}
       </span>

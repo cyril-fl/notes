@@ -22,21 +22,26 @@ const model = defineModel<string | undefined>('content');
 const { editor, preview } = useProvideEditorContext(props, model);
 
 const handleSubmit = () => {
+  if (props.readonly) return;
   emit('submit');
 };
 
 onBeforeRouteLeave(handleSubmit);
 
-onMounted(() => window.addEventListener('beforeunload', handleSubmit));
+onMounted(() => {
+  if (!props.readonly) window.addEventListener('beforeunload', handleSubmit);
+});
 
-onBeforeUnmount(() => window.removeEventListener('beforeunload', handleSubmit));
+onBeforeUnmount(() => {
+  if (!props.readonly) window.removeEventListener('beforeunload', handleSubmit);
+});
 </script>
 
 <template>
   <div
     class="editor-content relative bg-muted grow rounded-2xl p-4 overflow-x-hidden overflow-y-auto"
   >
-    <UICoreToolbar>
+    <UICoreToolbar v-if="!props.readonly">
       <template #right>
         <UIEditorToolBar />
       </template>

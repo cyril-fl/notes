@@ -37,7 +37,8 @@ export function useProvideEditorContext(
 ) {
   const editor = useEditor({
     content: content.value,
-    autofocus: 'end',
+    editable: !props.readonly,
+    autofocus: props.readonly ? false : 'end',
     contentType: 'markdown',
     extensions: [
       StarterKit.configure({

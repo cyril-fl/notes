@@ -6,6 +6,7 @@ const props = defineProps<Partial<EditorProps>>();
 
 const { getById } = useDataUtils();
 const { update } = useDataActions();
+const { t } = useI18n();
 
 const store = useDataStore();
 const { hasLoaded } = storeToRefs(store);
@@ -21,10 +22,13 @@ const note = computed(() => {
     : null;
 });
 
+const isReadonly = computed(() => note.value?.isReadonly ?? false);
+
 usePageSection(
   computed(() => ({
     searchable: false,
     ancestors: note.value?.ancestors,
+    description: isReadonly.value ? t('pages.editor.readonly') : undefined,
   }))
 );
 
@@ -67,7 +71,7 @@ watch(
 );
 
 watch(content, () => {
-  if (!note.value?.id || !content.value) return;
+  if (!note.value?.id || !content.value || isReadonly.value) return;
 
   if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = setTimeout(async () => {
@@ -95,6 +99,7 @@ onBeforeUnmount(() => {
 <template>
   <UIEditor
     v-bind="props"
+    :readonly="isReadonly"
     v-model:content="content"
     @update:mentions="onUpdateMentions"
     @submit="handleSubmit"

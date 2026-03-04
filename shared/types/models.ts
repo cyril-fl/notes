@@ -22,6 +22,8 @@ const baseItemParams = serverParams.extend({
 export const noteParams = baseItemParams.extend({
   type: z.literal(ItemType.NOTE),
   content: z.string(),
+  isPinned: z.boolean().optional().default(false),
+  isReadonly: z.boolean().optional().default(false),
 });
 
 /** Zod schema for {@link Folder} class constructor props */
@@ -60,6 +62,8 @@ export const dataDraftPartial = z
     title: z.string(),
     childrenIds: z.array(z.string()),
     deletedAt: z.coerce.date().nullable(),
+    isPinned: z.boolean(),
+    isReadonly: z.boolean(),
   })
   .partial();
 // Schema types = data received from API (server → client), includes all DB fields

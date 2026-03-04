@@ -87,10 +87,14 @@ export class Note extends Item {
   public readonly type = ItemType.NOTE;
 
   public content: string;
+  public isPinned: boolean;
+  public isReadonly: boolean;
 
   constructor(data: NoteSchema) {
     super(data);
     this.content = data.content;
+    this.isPinned = data.isPinned ?? false;
+    this.isReadonly = data.isReadonly ?? false;
   }
 
   // Getters
@@ -111,6 +115,8 @@ export class Note extends Item {
       type: this.type,
       content: this.content,
       path: this.ancestors,
+      isPinned: this.isPinned,
+      isReadonly: this.isReadonly,
     };
   }
 }

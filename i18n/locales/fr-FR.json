@@ -22,7 +22,8 @@
     "editor": {
       "new": {
         "title": "Nouvelle note"
-      }
+      },
+      "readonly": "Lecture seule"
     },
     "search": {
       "title": "Recherche",
@@ -69,7 +70,11 @@
       "add_note": "Ajouter une note",
       "add_folder": "Ajouter un dossier",
       "restore": "Restaurer",
-      "purge": "Supprimer définitivement"
+      "purge": "Supprimer définitivement",
+      "pin": "Épingler",
+      "unpin": "Désépingler",
+      "lock": "Verrouiller",
+      "unlock": "Déverrouiller"
     }
   },
   "notes": {
