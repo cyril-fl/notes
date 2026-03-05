@@ -4,6 +4,9 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
+  experimental: {
+    externalVue: false,
+  },
   typescript: {
     // NOTE: help resolve await errors in .vue files
     tsConfig: {
@@ -57,15 +60,19 @@ export default defineNuxtConfig({
   // Server
   vite: {
     plugins: [tailwindcss()],
+    ssr: {
+      noExternal: [
+        'vue',
+        'vue-router',
+        '@vue/runtime-dom',
+        '@vue/runtime-core',
+        '@vue/reactivity',
+        '@vue/shared',
+      ],
+    },
   },
   nitro: {
     imports: {},
-    externals: {
-      inline: ['vue'],
-    },
-    rollupConfig: {
-      shimMissingExports: true,
-    },
     storage: {
       mongodb: {
         driver: 'mongodb',
