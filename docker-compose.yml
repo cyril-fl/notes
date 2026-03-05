@@ -11,7 +11,7 @@ services:
     restart: unless-stopped
 
   mongo:
-    image: mongo:latest
+    image: docker.io/library/mongo:latest
     container_name: mongo-notes
     volumes:
       - data:/data/db

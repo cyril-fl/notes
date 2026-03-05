@@ -60,6 +60,12 @@ export default defineNuxtConfig({
   },
   nitro: {
     imports: {},
+    externals: {
+      inline: ['vue'],
+    },
+    rollupConfig: {
+      shimMissingExports: true,
+    },
     storage: {
       mongodb: {
         driver: 'mongodb',
