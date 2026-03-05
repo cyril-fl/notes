@@ -18,6 +18,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+ARG MONGODB_URI=mongodb://mongo:27017/
+ENV MONGODB_URI=${MONGODB_URI}
 RUN pnpm run build
 
 # --- Stage 3: Production ---
