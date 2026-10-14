@@ -1,7 +1,8 @@
 # Go modules
 
 ## CLI
-cfr [CLI.md](./cli.md)
+- cfr [cli](./cli.md)
+- cfr [api](./api.md)
 
 ## Data
-cfr data
+- cfr [data structure](/notes-go/.readme/data/schema-Notes.md)
