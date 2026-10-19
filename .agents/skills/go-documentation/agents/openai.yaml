@@ -1,0 +1,7 @@
+interface:
+  display_name: "Go documentation"
+  short_description: "Document Go APIs without changing behavior"
+  default_prompt: "Use $go-documentation to review and document this Go codebase without changing its behavior."
+
+policy:
+  allow_implicit_invocation: false

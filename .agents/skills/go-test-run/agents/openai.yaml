@@ -1,0 +1,4 @@
+interface:
+  display_name: "Go test runner"
+  short_description: "Run Go tests through the Makefile"
+  default_prompt: "Use $go-test-run to run the project's Go tests through the Makefile."

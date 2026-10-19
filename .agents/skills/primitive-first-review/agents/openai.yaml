@@ -1,0 +1,4 @@
+interface:
+  display_name: "Primitive-first review"
+  short_description: "Reuse shared Go primitives safely"
+  default_prompt: "Use $primitive-first-review before adding reusable state or cross-cutting behavior to this Go project."

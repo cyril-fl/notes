@@ -1,0 +1,4 @@
+interface:
+  display_name: "Go tests"
+  short_description: "Create, update, and run Go tests"
+  default_prompt: "Use $go-tests to create, update, or run focused Go unit tests for this project."
