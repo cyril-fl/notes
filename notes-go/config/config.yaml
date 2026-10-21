@@ -1,0 +1,46 @@
+name: "notes"
+commands:
+  create:
+    use: "add"
+    short: "Add a new note, folder, or tag"
+    example: "notes add [--note | --folder | --tag] [options]"
+    args:
+      - name: "note"
+        short: "Add a new note"
+        long: "Add a new note to the notes system, with optional title and content"
+        example: "notes add --note --title 'My Note' --content 'This is the content of my note.'"
+      - name: "folder"
+        short: "Add a new folder"
+        long: "Add a new folder to the notes system, with optional title"
+        example: "notes add --folder --title 'My Folder'"
+      - name: "tag"
+        short: "Add a new tag"
+        long: "Add a new tag to the notes system, with optional name"
+        example: "notes add --tag 'My Tag'"
+      - name: "title"
+        short: "Title of the  element"
+      - name: "content"
+        short: "Content of the note"
+      - name: "path"
+        short: "Path to the note or folder"
+    read:
+      use: "show"
+      short: "Show an existing note, folder, or tag"
+    update:
+      use: "edit"
+      short: "Edit an existing note, folder, or tag"
+    delete:
+      use: "remove"
+      short: "Delete an existing note, folder, or tag"
+    move:
+      use: "move"
+      short: "Move an existing note or folder to a new location"
+    finder:
+      use: "finder"
+      short: "Show a file explorer"
+    graph:
+      use: "graph"
+      short: "Show a graph of the notes linked by their relationships"
+  root:
+    short: "The root of the notes system"
+    long: "The root of the notes system, used to access the main functionality"
