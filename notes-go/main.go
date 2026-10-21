@@ -1,8 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"main.go/cmd"
+)
 
 func main() {
-	// Your code here
-	fmt.Println("Work in progress...")
+	cmd.Execute()
 }
