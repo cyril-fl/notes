@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plum process"
+  short_description: "Write a multi-step fallible workflow with plum Process"
+  default_prompt: "Use $plum-process to implement this workflow as a plum Process."
