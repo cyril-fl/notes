@@ -1,4 +1,4 @@
-package cmdgraph
+package cmdreadgraph
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func Graph(cobra *cobra.Command, args []string) error {
+func Read(cobra *cobra.Command, args []string) error {
 	fmt.Println("Graph command executed")
 	return nil
 }

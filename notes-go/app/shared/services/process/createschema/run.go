@@ -55,17 +55,13 @@ func (p *run) createIndexes() {
 
 // runInTx runs the queued steps: bun commits, or rolls back if a step recorded an error.
 func (p *run) runInTx() {
-	err := p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
-		for _, step := range p.cache.steps {
-			step(tx)
-		}
-		return p.GetErr()
-	})
+	p.ClearErr()
 
-	// Step errors are already recorded, only begin/commit errors are new.
-	if !p.HasErr() {
-		p.SetErr(err)
-	}
+	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
+		p.runStep(tx)
+		return p.GetErr()
+	}))
+
 }
 
 // execQueries stops at the first error: Postgres aborts the transaction, later statements would only add noise.
@@ -74,18 +70,19 @@ func (p *run) execQueries[T query[T]](queries []T) {
 		if p.HasErr() {
 			return
 		}
+
 		_, err := q.IfNotExists().Exec(p.ctx)
 		p.SetErr(err)
 	}
 }
 
-// Helpers
-
-// query is satisfied by both *bun.CreateTableQuery and *bun.CreateIndexQuery.
-type query[T any] interface {
-	IfNotExists() T
-	Exec(ctx context.Context, dest ...any) (sql.Result, error)
+func (p *run) runStep(tx bun.Tx) {
+	for _, step := range p.cache.steps {
+		step(tx)
+	}
 }
+
+// Helpers
 
 // Order matters for foreign keys.
 // FKs are declared here rather than via WithForeignKeys: several are composite (id, kind)
@@ -119,4 +116,12 @@ func getIndexes(tx bun.Tx) []*bun.CreateIndexQuery {
 		tx.NewCreateIndex().Model((*domain.NoteTag)(nil)).Index("idx_notes_on_tags_note_id").Column("note_id"),
 		tx.NewCreateIndex().Model((*domain.Tag)(nil)).Index("ux_tags_value_lower").Unique().ColumnExpr("lower(value)"),
 	}
+}
+
+// Interface
+
+// query is satisfied by both *bun.CreateTableQuery and *bun.CreateIndexQuery.
+type query[T any] interface {
+	IfNotExists() T
+	Exec(ctx context.Context, dest ...any) (sql.Result, error)
 }

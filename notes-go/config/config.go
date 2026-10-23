@@ -18,14 +18,27 @@ type config struct {
 }
 
 type commands struct {
-	Create plumcliconfig.Cmdparams `yaml:"create"`
-	Read   plumcliconfig.Cmdparams `yaml:"read"`
-	Update plumcliconfig.Cmdparams `yaml:"update"`
-	Delete plumcliconfig.Cmdparams `yaml:"delete"`
-	Move   plumcliconfig.Cmdparams `yaml:"move"`
-	Finder plumcliconfig.Cmdparams `yaml:"finder"`
-	Graph  plumcliconfig.Cmdparams `yaml:"graph"`
-	Root   plumcliconfig.Cmdparams `yaml:"root"`
+	Create       plumcliconfig.Cmdparams `yaml:"create"`
+	CreateNote   plumcliconfig.Cmdparams `yaml:"create-note"`
+	CreateFolder plumcliconfig.Cmdparams `yaml:"create-folder"`
+	CreateTag    plumcliconfig.Cmdparams `yaml:"create-tag"`
+	Read         plumcliconfig.Cmdparams `yaml:"read"`
+	ReadNote     plumcliconfig.Cmdparams `yaml:"read-note"`
+	ReadFolder   plumcliconfig.Cmdparams `yaml:"read-folder"`
+	ReadTag      plumcliconfig.Cmdparams `yaml:"read-tag"`
+	Edit         plumcliconfig.Cmdparams `yaml:"edit"`
+	EditNote     plumcliconfig.Cmdparams `yaml:"edit-note"`
+	EditFolder   plumcliconfig.Cmdparams `yaml:"edit-folder"`
+	EditTag      plumcliconfig.Cmdparams `yaml:"edit-tag"`
+	Delete       plumcliconfig.Cmdparams `yaml:"delete"`
+	DeleteNote   plumcliconfig.Cmdparams `yaml:"delete-note"`
+	DeleteFolder plumcliconfig.Cmdparams `yaml:"delete-folder"`
+	DeleteTag    plumcliconfig.Cmdparams `yaml:"delete-tag"`
+	Move         plumcliconfig.Cmdparams `yaml:"move"`
+	Show         plumcliconfig.Cmdparams `yaml:"show"`
+	ShowFinder   plumcliconfig.Cmdparams `yaml:"show-finder"`
+	ShowGraph    plumcliconfig.Cmdparams `yaml:"show-graph"`
+	Root         plumcliconfig.Cmdparams `yaml:"root"`
 }
 
 func load() (*config, error) {

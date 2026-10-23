@@ -1,4 +1,4 @@
-package cmdread
+package cmdreadtag
 
 import (
 	"fmt"
@@ -7,6 +7,6 @@ import (
 )
 
 func Read(cobra *cobra.Command, args []string) error {
-	fmt.Println("Read command executed")
+	fmt.Println("Tag command executed")
 	return nil
 }

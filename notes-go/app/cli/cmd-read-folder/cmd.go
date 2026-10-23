@@ -1,4 +1,4 @@
-package cmdfinder
+package cmdreadfolder
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func Finder(cobra *cobra.Command, args []string) error {
+func Read(cobra *cobra.Command, args []string) error {
 	fmt.Println("Finder command executed")
 	return nil
 }

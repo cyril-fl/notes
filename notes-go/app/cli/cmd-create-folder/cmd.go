@@ -1,4 +1,4 @@
-package cmdcreate
+package cmdcreatefolder
 
 import (
 	"fmt"

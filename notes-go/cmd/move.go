@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	src "main.go/app/cmdmove"
+	cmdmove "main.go/app/cli/cmd-move"
 )
 
 var cmdMove = &cobra.Command{
@@ -10,7 +10,7 @@ var cmdMove = &cobra.Command{
 	Short:   cmd.Move.Short,
 	Long:    cmd.Move.Long,
 	Example: cmd.Move.Example,
-	RunE:    src.Move,
+	RunE:    cmdmove.Move,
 }
 
 func init() {
