@@ -3,10 +3,10 @@ package domain
 import "github.com/uptrace/bun"
 
 type Tag struct {
-	bun.BaseModel `bun:"table:tags,alias:t"`
+	bun.BaseModel `bun:"table:tags,alias:t" json:"-" yaml:"-"`
 
-	ID    string `bun:",pk,type:uuid,default:gen_random_uuid()"`
-	Value string `bun:",notnull"` // unique case-insensitive, see CreateTables
+	ID    string `bun:",pk,type:uuid,default:gen_random_uuid()" json:"id" yaml:"id"`
+	Value string `bun:",notnull" json:"value" yaml:"value"` // unique case-insensitive, see CreateTables
 }
 
 type NoteTag struct {

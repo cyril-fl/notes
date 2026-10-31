@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
 
 	cmdreadfolder "main.go/app/cli/cmd-read-folder"
@@ -56,6 +57,9 @@ var cmdReadGraph = &cobra.Command{
 }
 
 func init() {
+	plumcliutilsargs.Makeflags(cmdReadTag, cmd.ReadTag.Flags)
+	cmdReadTag.MarkFlagsMutuallyExclusive("yaml", "json")
+
 	cmdRead.AddCommand(cmdReadNote, cmdReadFloder, cmdReadTag, cmdReadFinder, cmdReadGraph)
 	cmdRoot.AddCommand(cmdRead)
 }

@@ -16,6 +16,32 @@ commands:
   read:
     use: "show"
     short: "Show an existing note, folder, or tag"
+  read-note:
+    use: "note"
+    short: "Show an existing note"
+  read-folder:
+    use: "folder"
+    short: "Show an existing folder"
+  read-tag:
+    use: "tag"
+    short: "Show an existing tag"
+    example: "notes show tag --list --json"
+    args:
+      - name: "list"
+        shorthand: "l"
+        value: ""
+        usage: "List all tags"
+        type: "bool"
+      - name: "yaml"
+        shorthand: ""
+        value: ""
+        usage: "Display the result as YAML"
+        type: "bool"
+      - name: "json"
+        shorthand: ""
+        value: ""
+        usage: "Display the result as JSON"
+        type: "bool"
   edit:
     use: "edit"
     short: "Edit an existing note, folder, or tag"
