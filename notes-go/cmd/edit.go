@@ -36,6 +36,7 @@ var cmdEditTag = &cobra.Command{
 	Short:   cmd.EditTag.Short,
 	Long:    cmd.EditTag.Long,
 	Example: cmd.EditTag.Example,
+	Args:    cobra.ExactArgs(2),
 	RunE:    cmdedittag.Edit,
 }
 
