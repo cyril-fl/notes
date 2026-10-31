@@ -20,6 +20,7 @@ var cmdDeleteNote = &cobra.Command{
 	Short:   cmd.DeleteNote.Short,
 	Long:    cmd.DeleteNote.Long,
 	Example: cmd.DeleteNote.Example,
+	Args:    cobra.MinimumNArgs(1),
 	RunE:    cmddeletenote.Delete,
 }
 
@@ -28,6 +29,7 @@ var cmdDeleteFloder = &cobra.Command{
 	Short:   cmd.DeleteFolder.Short,
 	Long:    cmd.DeleteFolder.Long,
 	Example: cmd.DeleteFolder.Example,
+	Args:    cobra.MinimumNArgs(1),
 	RunE:    cmddeletefolder.Delete,
 }
 

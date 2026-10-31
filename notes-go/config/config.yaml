@@ -1,4 +1,7 @@
 name: "notes"
+trash:
+  # Deleted notes and folders are purged for good after this many days (0 = never).
+  retention-days: 30
 commands:
   create:
     use: "add"
@@ -115,10 +118,14 @@ commands:
     short: "Delete an existing note, folder, or tag"
   delete-note:
     use: "note"
-    short: "Delete an existing note"
+    short: "Move notes to the trash"
+    long: "Move notes to the trash. They are purged for good after trash.retention-days."
+    example: "notes remove note <uuid> [<uuid>...]"
   delete-folder:
     use: "folder"
-    short: "Delete an existing folder"
+    short: "Move folders and their content to the trash"
+    long: "Move folders, their subfolders and notes to the trash. They are purged for good after trash.retention-days."
+    example: "notes remove folder <uuid> [<uuid>...]"
   delete-tag:
     use: "tag"
     short: "Delete an existing tag"

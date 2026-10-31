@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/createschema"
+	"main.go/app/shared/services/process/purgeitems"
 	"main.go/config"
 )
 
@@ -27,9 +28,16 @@ var cmdRoot = &cobra.Command{
 		env.ReadEnv()
 		postgrey.SetDb(env.Connect())
 
-		process := createschema.Process(cobra.Context(), postgrey.GetDb())
-		process.Run()
-		return process.GetErr()
+		schema := createschema.Process(cobra.Context(), postgrey.GetDb())
+		schema.Run()
+		if schema.HasErr() {
+			return schema.GetErr()
+		}
+
+		// Startup is the "cron": no daemon, the trash is emptied whenever the CLI runs.
+		purge := purgeitems.Process(cobra.Context(), postgrey.GetDb(), c.Trash.RetentionDays)
+		purge.Run()
+		return purge.GetErr()
 	},
 	PersistentPostRunE: func(cobra *cobra.Command, args []string) error {
 		if db := postgrey.GetDb(); db != nil {
