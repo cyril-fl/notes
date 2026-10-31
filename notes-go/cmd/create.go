@@ -30,6 +30,7 @@ var cmdCreateFloder = &cobra.Command{
 	Short:   cmd.CreateFolder.Short,
 	Long:    cmd.CreateFolder.Long,
 	Example: cmd.CreateFolder.Example,
+	Args:    cobra.NoArgs,
 	RunE:    cmdcreatefolder.Create,
 }
 
@@ -47,6 +48,9 @@ func init() {
 	cmdCreateNote.MarkFlagsMutuallyExclusive("title", "no-title")
 	cmdCreateNote.MarkFlagsMutuallyExclusive("tag", "tag-from-list")
 	cmdCreateNote.MarkFlagsMutuallyExclusive("parent", "parent-from-list")
+
+	plumcliutilsargs.Makeflags(cmdCreateFloder, cmd.CreateFolder.Flags)
+	cmdCreateFloder.MarkFlagsMutuallyExclusive("parent", "parent-from-list")
 
 	cmdCreate.AddCommand(cmdCreateNote, cmdCreateFloder, cmdCreateTag)
 	cmdRoot.AddCommand(cmdCreate)
