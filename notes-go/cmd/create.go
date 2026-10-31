@@ -36,6 +36,7 @@ var cmdCreateTag = &cobra.Command{
 	Short:   cmd.CreateTag.Short,
 	Long:    cmd.CreateTag.Long,
 	Example: cmd.CreateTag.Example,
+	Args:    cobra.MinimumNArgs(1),
 	RunE:    cmdcreatetag.Create,
 }
 
