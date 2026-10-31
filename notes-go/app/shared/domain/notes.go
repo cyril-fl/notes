@@ -23,7 +23,7 @@ type Item struct {
 	UpdatedAt time.Time `bun:",nullzero"`
 	DeletedAt time.Time `bun:",soft_delete,nullzero"`
 	Kind      Kind      `bun:",notnull"`
-	Title     string    `bun:"-"`
+	Title     string    `bun:",nullzero"` // NULL = untitled note (--no-title)
 }
 
 type Metadata struct {

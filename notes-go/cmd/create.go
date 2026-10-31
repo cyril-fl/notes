@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
 
 	cmdcreatefolder "main.go/app/cli/cmd-create-folder"
@@ -20,6 +21,7 @@ var cmdCreateNote = &cobra.Command{
 	Short:   cmd.CreateNote.Short,
 	Long:    cmd.CreateNote.Long,
 	Example: cmd.CreateNote.Example,
+	Args:    cobra.NoArgs,
 	RunE:    cmdcreatenote.Create,
 }
 
@@ -41,6 +43,11 @@ var cmdCreateTag = &cobra.Command{
 }
 
 func init() {
+	plumcliutilsargs.Makeflags(cmdCreateNote, cmd.CreateNote.Flags)
+	cmdCreateNote.MarkFlagsMutuallyExclusive("title", "no-title")
+	cmdCreateNote.MarkFlagsMutuallyExclusive("tag", "tag-from-list")
+	cmdCreateNote.MarkFlagsMutuallyExclusive("parent", "parent-from-list")
+
 	cmdCreate.AddCommand(cmdCreateNote, cmdCreateFloder, cmdCreateTag)
 	cmdRoot.AddCommand(cmdCreate)
 }
