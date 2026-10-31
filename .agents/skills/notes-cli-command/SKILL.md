@@ -57,6 +57,7 @@ func (p *run) Run() {
 - **Not found**: `Scan` into a struct returns `sql.ErrNoRows` on 0 rows; into a slice it returns nil.
 - **Unique violation**: let the index fail (no SELECT first, it races), then `errors.As(err, &pgErr) && pgErr.Field('C') == "23505"`.
 - **List**: `Model(&result).OrderExpr("lower(value)").Scan(ctx)`.
+- **Soft delete (items)**: `Item.DeletedAt` has `soft_delete`, so bun adds `deleted_at IS NULL` to every Item select/update; use `WhereDeleted()` / `WhereAllWithDeleted()` to see the trash, `ForceDelete()` to really delete. `deleteitems` marks a subtree with one recursive `UPDATE` (same timestamp), `purgeitems` empties the trash at startup after `trash.retention-days`.
 - Deleting a parent relies on the `ON DELETE CASCADE` FKs from `createschema`: no code needed.
 
 ## 5. CLI entry
