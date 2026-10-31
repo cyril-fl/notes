@@ -36,6 +36,7 @@ var cmdDeleteTag = &cobra.Command{
 	Short:   cmd.DeleteTag.Short,
 	Long:    cmd.DeleteTag.Long,
 	Example: cmd.DeleteTag.Example,
+	Args:    cobra.MinimumNArgs(1),
 	RunE:    cmddeletetag.Delete,
 }
 
