@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
+	"charm.land/huh/v2"
 	"github.com/spf13/cobra"
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/createschema"
@@ -21,6 +23,9 @@ var cmdRoot = &cobra.Command{
 	Long:  cmd.Root.Long,
 	/* Version: config.Version, 	// TODO link ca correctement */
 	Example: cmd.Root.Example,
+	// Errors are printed by Execute so a form abort (Ctrl+C / Esc) stays silent.
+	SilenceUsage:  true,
+	SilenceErrors: true,
 
 	// Runs before every subcommand: schema creation is idempotent (IF NOT EXISTS).
 	PersistentPreRunE: func(cobra *cobra.Command, args []string) error {
@@ -51,8 +56,12 @@ var cmdRoot = &cobra.Command{
 }
 
 func Execute() {
-	if err := cmdRoot.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+	err := cmdRoot.Execute()
+	if errors.Is(err, huh.ErrUserAborted) {
+		return
+	}
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error:", err)
 		os.Exit(1)
 	}
 }

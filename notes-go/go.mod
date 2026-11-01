@@ -5,6 +5,7 @@ go 1.27.2
 require (
 	charm.land/bubbles/v2 v2.0.0
 	charm.land/huh/v2 v2.0.3
+	charm.land/lipgloss/v2 v2.0.6
 	github.com/cyril-fl/plum v0.0.0-20240611143000-1f3c5d7a9b8c
 	github.com/joho/godotenv v1.5.1
 	github.com/spf13/cobra v1.10.2
@@ -12,6 +13,7 @@ require (
 	github.com/uptrace/bun v1.3.0
 	github.com/uptrace/bun/dialect/pgdialect v1.3.0
 	github.com/uptrace/bun/driver/pgdriver v1.3.0
+	golang.org/x/term v0.46.0
 )
 
 tool github.com/evilmartians/lefthook/v2
@@ -19,7 +21,6 @@ tool github.com/evilmartians/lefthook/v2
 require (
 	al.essio.dev/pkg/shellescape v1.6.1 // indirect
 	charm.land/bubbletea/v2 v2.0.2 // indirect
-	charm.land/lipgloss/v2 v2.0.6 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/bmatcuk/doublestar/v4 v4.10.2 // indirect
 	github.com/briandowns/spinner v1.23.2 // indirect
@@ -85,7 +86,6 @@ require (
 	golang.org/x/net v0.59.0 // indirect
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
-	golang.org/x/term v0.46.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	mellium.im/sasl v0.3.2 // indirect
