@@ -1,6 +1,7 @@
 package screen
 
 import (
+	"errors"
 	"os"
 	"strings"
 
@@ -11,17 +12,22 @@ import (
 	"golang.org/x/term"
 )
 
+// ErrQuit is returned when the user quits everything (ctrl+q), not just this view (esc):
+// a caller showing it from another screen stops too; cmd.Execute keeps it silent.
+var ErrQuit = errors.New("user quit")
+
 // footerHeight is the blank line and the shortcut line under the content.
 const footerHeight = 2
 
 type view struct {
 	content  viewport.Model
 	edit     bool
+	quit     bool
 	quitting bool
 }
 
-// Show displays output as tall as the terminal, scrollable, until the user quits.
-// It reports true when the user asked to edit the item (ctrl+e); a pipe or file just gets the output.
+// Show displays output as tall as the terminal, scrollable, until the user leaves it.
+// It reports true when the user asked to edit the item (ctrl+e), ErrQuit on ctrl+q; a pipe or file just gets the output.
 func Show(output string) (bool, error) {
 	if !term.IsTerminal(int(os.Stdout.Fd())) {
 		Print(output)
@@ -33,6 +39,9 @@ func Show(output string) (bool, error) {
 	model, err := tea.NewProgram(&view{content: content}).Run()
 	if err != nil {
 		return false, err
+	}
+	if model.(*view).quit {
+		return false, ErrQuit
 	}
 	return model.(*view).edit, nil
 }
@@ -53,8 +62,11 @@ func (v *view) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case plumtypes.SHORT_CTRL_E:
 			v.edit, v.quitting = true, true
 			return v, tea.Quit
-		case plumtypes.KEY_ESC, plumtypes.SHORT_CTRL_C, "q":
+		case plumtypes.KEY_ESC:
 			v.quitting = true
+			return v, tea.Quit
+		case plumtypes.SHORT_CTRL_Q, plumtypes.SHORT_CTRL_C:
+			v.quit, v.quitting = true, true
 			return v, tea.Quit
 		}
 	}
@@ -75,11 +87,22 @@ func (v *view) View() tea.View {
 	return tea.NewView(v.content.View() + "\n\n" + footer())
 }
 
-// footer renders the shortcuts like the forms' help line: bold key, muted label, " · " between.
-func footer() string {
+// Hint is one shortcut of a footer line.
+type Hint struct {
+	Key   plumtypes.Key
+	Label string
+}
+
+// Footer renders shortcuts like the forms' help line: bold key glyph, muted label, " · " between.
+func Footer(hints ...Hint) string {
 	key, label := lipgloss.NewStyle().Bold(true), lipgloss.NewStyle().Faint(true)
-	return strings.Join([]string{
-		key.Render(plumtypes.SHORT_CTRL_E.Symbol()) + " " + label.Render("Edit"),
-		key.Render(plumtypes.KEY_ESC.Symbol()) + " " + label.Render("Quit"),
-	}, label.Render(" · "))
+	parts := make([]string, len(hints))
+	for i, hint := range hints {
+		parts[i] = key.Render(hint.Key.Symbol()) + " " + label.Render(hint.Label)
+	}
+	return strings.Join(parts, label.Render(" · "))
+}
+
+func footer() string {
+	return Footer(Hint{plumtypes.SHORT_CTRL_E, "Edit"}, Hint{plumtypes.KEY_ESC, "Back"}, Hint{plumtypes.SHORT_CTRL_Q, "Quit"})
 }

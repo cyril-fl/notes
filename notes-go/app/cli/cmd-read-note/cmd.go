@@ -19,8 +19,13 @@ import (
 
 // Read shows the note path, then its content rendered as markdown; ctrl+e edits it, then shows it again.
 func Read(cobra *cobra.Command, args []string) error {
+	return View(cobra.Context(), args[0])
+}
+
+// View is the show note screen: ctrl+e edits the note, then shows it again, until the user quits.
+func View(ctx context.Context, id string) error {
 	for {
-		output, err := load(cobra.Context(), args[0])
+		output, err := load(ctx, id)
 		if err != nil {
 			return err
 		}
@@ -30,7 +35,7 @@ func Read(cobra *cobra.Command, args []string) error {
 			return err
 		}
 		// An aborted form goes back to the view unchanged.
-		if err := cmdeditnote.Interactive(cobra.Context(), args[0]); err != nil && !errors.Is(err, huh.ErrUserAborted) {
+		if err := cmdeditnote.Interactive(ctx, id); err != nil && !errors.Is(err, huh.ErrUserAborted) {
 			return err
 		}
 	}

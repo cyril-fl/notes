@@ -43,14 +43,6 @@ var cmdReadTag = &cobra.Command{
 	RunE:    cmdreadtag.Read,
 }
 
-var cmdReadFinder = &cobra.Command{
-	Use:     cmd.ReadFolder.Use,
-	Short:   cmd.ReadFolder.Short,
-	Long:    cmd.ReadFolder.Long,
-	Example: cmd.ReadFolder.Example,
-	RunE:    cmdreadfolder.Read,
-}
-
 var cmdReadGraph = &cobra.Command{
 	Use:     cmd.ReadTag.Use,
 	Short:   cmd.ReadTag.Short,
@@ -63,6 +55,6 @@ func init() {
 	plumcliutilsargs.Makeflags(cmdReadTag, cmd.ReadTag.Flags)
 	cmdReadTag.MarkFlagsMutuallyExclusive("yaml", "json")
 
-	cmdRead.AddCommand(cmdReadNote, cmdReadFloder, cmdReadTag, cmdReadFinder, cmdReadGraph)
+	cmdRead.AddCommand(cmdReadNote, cmdReadFloder, cmdReadTag, cmdReadGraph)
 	cmdRoot.AddCommand(cmdRead)
 }

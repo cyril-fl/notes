@@ -44,26 +44,74 @@ func load(ctx context.Context, id string) (string, error) {
 	}
 
 	folder := process.GetResult()
+	return Output(folder, folder.Children, -1, EmptyFolder), nil
+}
+
+// EmptyFolder is the message of a folder without children.
+const EmptyFolder = "This folder is empty"
+
+// Output renders a folder like `show folder`: the header from the whole folder, then rows (the finder
+// passes its filtered, scrolled window); cursor >= 0 marks that row as selected, empty shows when no row.
+func Output(folder readitem.Result, rows []domain.Item, cursor int, empty string) string {
 	var output strings.Builder
 	output.WriteString(lipgloss.NewStyle().Bold(true).Render(folder.Item.Title) + "\n")
 	output.WriteString(lipgloss.NewStyle().Faint(true).Render(folder.Path) + "\n")
+	output.WriteString(lipgloss.NewStyle().Faint(true).Render(info(folder)) + "\n")
 
 	output.WriteString("\n")
-	if len(folder.Children) == 0 {
-		output.WriteString(lipgloss.NewStyle().Faint(true).Italic(true).Render("This folder is empty"))
+	if len(rows) == 0 {
+		output.WriteString(lipgloss.NewStyle().Faint(true).Italic(true).Render(empty))
 	} else {
-		table := tabwriter.NewWriter(&output, 0, 0, 2, ' ', 0)
-		for _, child := range folder.Children {
+		var lines strings.Builder
+		table := tabwriter.NewWriter(&lines, 0, 0, 2, ' ', 0)
+		for _, child := range rows {
 			title := child.Title
 			if title == "" {
 				title = "untitled"
 			}
 			fmt.Fprintf(table, "%s\t%s\t%s\n", child.Kind, title, child.ID)
 		}
-		if err := table.Flush(); err != nil {
-			return "", err
+		table.Flush() // writes to a strings.Builder: cannot fail
+
+		// Styled after the tabwriter: escape codes would break its column widths.
+		for i, row := range strings.Split(strings.TrimRight(lines.String(), "\n"), "\n") {
+			switch {
+			case cursor < 0:
+				output.WriteString(row + "\n")
+			case i == cursor:
+				output.WriteString(lipgloss.NewStyle().Bold(true).Render("> "+row) + "\n")
+			default:
+				output.WriteString("  " + row + "\n")
+			}
 		}
 	}
 
-	return output.String(), nil
+	return output.String()
+}
+
+// info counts the children, and dates the folder when it is a real one (the root has no row).
+func info(folder readitem.Result) string {
+	folders := 0
+	for _, child := range folder.Children {
+		if child.Kind == domain.FOLDER {
+			folders++
+		}
+	}
+	parts := []string{count(folders, "folder"), count(len(folder.Children)-folders, "note")}
+
+	updated := folder.Item.UpdatedAt
+	if updated.IsZero() {
+		updated = folder.Item.CreatedAt
+	}
+	if !updated.IsZero() {
+		parts = append(parts, "updated "+updated.Format("2 Jan 2006"))
+	}
+	return strings.Join(parts, " · ")
+}
+
+func count(n int, noun string) string {
+	if n == 1 {
+		return "1 " + noun
+	}
+	return fmt.Sprintf("%d %ss", n, noun)
 }

@@ -10,6 +10,7 @@ import (
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/createschema"
 	"main.go/app/shared/services/process/purgeitems"
+	"main.go/app/shared/services/screen"
 	"main.go/config"
 )
 
@@ -57,7 +58,7 @@ var cmdRoot = &cobra.Command{
 
 func Execute() {
 	err := cmdRoot.Execute()
-	if errors.Is(err, huh.ErrUserAborted) {
+	if errors.Is(err, huh.ErrUserAborted) || errors.Is(err, screen.ErrQuit) {
 		return
 	}
 	if err != nil {

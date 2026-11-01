@@ -186,9 +186,11 @@ commands:
         value: ""
         usage: "Pick the destination folder from a list (not implemented yet)"
         type: "bool"
-  finder:
-    use: "finder"
-    short: "Show a file explorer"
+  show-finder:
+    use: "finder [<uuid>]"
+    short: "Browse folders and notes"
+    long: "Browse folders and notes from a folder (the root by default): open, edit, create, delete and filter them."
+    example: "notes finder\nnotes finder <uuid>"
   graph:
     use: "graph"
     short: "Show a graph of the notes linked by their relationships"

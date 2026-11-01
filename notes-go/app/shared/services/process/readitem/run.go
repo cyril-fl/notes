@@ -11,6 +11,7 @@ import (
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"main.go/app/shared/domain"
+	"main.go/app/shared/services/process/listitems"
 )
 
 // invalidText is the Postgres SQLSTATE raised when the id is not a uuid.
@@ -133,18 +134,15 @@ func (p *run) loadPath() {
 	p.SetErr(p.db.NewRaw(PathsCTE+"SELECT path FROM paths WHERE id = ?", p.cache.id).Scan(p.ctx, &p.cache.result.Path))
 }
 
-// loadChildren lists folders first, then notes, by title; soft_delete hides the trashed ones.
 func (p *run) loadChildren() {
 	if p.HasErr() || p.kind != domain.FOLDER {
 		return
 	}
 
-	p.SetErr(p.db.NewSelect().
-		Model(&p.cache.result.Children).
-		Column("id", "parent_id", "created_at", "updated_at", "kind", "title").
-		Where("parent_id = ?", p.cache.id).
-		OrderExpr("kind = ? DESC, lower(title)", domain.FOLDER).
-		Scan(p.ctx))
+	process := listitems.Process(p.ctx, p.db, p.cache.id)
+	process.Run()
+	p.cache.result.Children = process.GetResult()
+	p.SetErr(process.GetErr())
 }
 
 // Helpers
