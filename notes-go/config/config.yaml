@@ -191,9 +191,11 @@ commands:
     short: "Browse folders and notes"
     long: "Browse folders and notes from a folder (the root by default): open, edit, create, delete and filter them."
     example: "notes finder\nnotes finder <uuid>"
-  graph:
-    use: "graph"
-    short: "Show a graph of the notes linked by their relationships"
+  show-graph:
+    use: "graph [<uuid>]"
+    short: "Walk the notes linked by the tags they share"
+    long: "Center on a note to see the notes sharing its tags, most shared first, and move from note to note. Without a note, start from the tag list."
+    example: "notes graph\nnotes graph <uuid>"
   root:
     short: "The root of the notes system"
     long: "The root of the notes system, used to access the main functionality"
