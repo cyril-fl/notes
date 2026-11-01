@@ -166,8 +166,21 @@ commands:
     use: "tag"
     short: "Delete an existing tag"
   move:
-    use: "move"
-    short: "Move an existing note or folder to a new location"
+    use: "move <uuid>..."
+    short: "Move existing notes or folders to a new location"
+    long: "Move notes and folders into the folder given by --parent, or to the root without it."
+    example: "notes move <uuid> [<uuid>...] --parent <uuid>"
+    args:
+      - name: "parent"
+        shorthand: "p"
+        value: ""
+        usage: "UUID of the destination folder (root when not given)"
+        type: "string"
+      - name: "parent-from-list"
+        shorthand: ""
+        value: ""
+        usage: "Pick the destination folder from a list (not implemented yet)"
+        type: "bool"
   finder:
     use: "finder"
     short: "Show a file explorer"
