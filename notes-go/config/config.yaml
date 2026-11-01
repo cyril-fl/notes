@@ -76,15 +76,20 @@ commands:
     use: "show"
     short: "Show an existing note, folder, or tag"
   read-note:
-    use: "note"
+    use: "note <uuid>"
     short: "Show an existing note"
+    long: "Show the path of a note, then its content rendered as markdown."
+    example: "notes show note <uuid>"
   read-folder:
-    use: "folder"
+    use: "folder <uuid>"
     short: "Show an existing folder"
+    long: "Show the title and path of a folder, then its subfolders and notes."
+    example: "notes show folder <uuid>"
   read-tag:
-    use: "tag"
+    use: "tag [<value>]"
     short: "Show an existing tag"
-    example: "notes show tag --list --json"
+    long: "Show a tag and the notes carrying it, or every tag with --list (--yaml/--json apply to --list)."
+    example: "notes show tag go\nnotes show tag --list --json"
     args:
       - name: "list"
         shorthand: "l"

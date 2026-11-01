@@ -21,6 +21,7 @@ var cmdReadNote = &cobra.Command{
 	Short:   cmd.ReadNote.Short,
 	Long:    cmd.ReadNote.Long,
 	Example: cmd.ReadNote.Example,
+	Args:    cobra.ExactArgs(1),
 	RunE:    cmdreadnote.Read,
 }
 
@@ -29,6 +30,7 @@ var cmdReadFloder = &cobra.Command{
 	Short:   cmd.ReadFolder.Short,
 	Long:    cmd.ReadFolder.Long,
 	Example: cmd.ReadFolder.Example,
+	Args:    cobra.ExactArgs(1),
 	RunE:    cmdreadfolder.Read,
 }
 
@@ -37,6 +39,7 @@ var cmdReadTag = &cobra.Command{
 	Short:   cmd.ReadTag.Short,
 	Long:    cmd.ReadTag.Long,
 	Example: cmd.ReadTag.Example,
+	Args:    cobra.MaximumNArgs(1),
 	RunE:    cmdreadtag.Read,
 }
 

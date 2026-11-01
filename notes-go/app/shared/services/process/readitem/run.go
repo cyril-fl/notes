@@ -16,16 +16,26 @@ import (
 // invalidText is the Postgres SQLSTATE raised when the id is not a uuid.
 const invalidText = "22P02"
 
+// PathsCTE gives every live item its path from the root (/Projects/Go/Ideas): append a query on "paths".
+// It walks down from the roots, so a trashed folder hides its whole subtree.
+const PathsCTE = `WITH RECURSIVE paths AS (
+	SELECT id, '/' || coalesce(title, 'untitled') AS path FROM items WHERE parent_id IS NULL AND deleted_at IS NULL
+	UNION ALL SELECT child.id, paths.path || '/' || coalesce(child.title, 'untitled')
+	FROM items AS child JOIN paths ON child.parent_id = paths.id WHERE child.deleted_at IS NULL
+) `
+
 var (
 	ErrNoValue  = errors.New("no id given")
 	ErrNotFound = errors.New("item not found")
 )
 
-// Result is the item with, for a note, its content and tag values.
+// Result is the item and its path, with its content and tag values for a note, its direct children for a folder.
 type Result struct {
-	Item    domain.Item
-	Content string
-	Tags    []string
+	Item     domain.Item
+	Path     string
+	Content  string
+	Tags     []string
+	Children []domain.Item
 }
 
 type run struct {
@@ -56,7 +66,9 @@ func Process(ctx context.Context, db bun.IDB, kind domain.Kind, id string) *run 
 func (p *run) Run() {
 	p.makeID()
 	p.loadItem()
+	p.loadPath()
 	p.loadNote()
+	p.loadChildren()
 }
 
 // Getters & Setters
@@ -111,6 +123,28 @@ func (p *run) loadNote() {
 		Where("nt.note_id = ?", p.cache.id).
 		OrderExpr("lower(t.value)").
 		Scan(p.ctx, &p.cache.result.Tags))
+}
+
+func (p *run) loadPath() {
+	if p.HasErr() {
+		return
+	}
+
+	p.SetErr(p.db.NewRaw(PathsCTE+"SELECT path FROM paths WHERE id = ?", p.cache.id).Scan(p.ctx, &p.cache.result.Path))
+}
+
+// loadChildren lists folders first, then notes, by title; soft_delete hides the trashed ones.
+func (p *run) loadChildren() {
+	if p.HasErr() || p.kind != domain.FOLDER {
+		return
+	}
+
+	p.SetErr(p.db.NewSelect().
+		Model(&p.cache.result.Children).
+		Column("id", "parent_id", "created_at", "updated_at", "kind", "title").
+		Where("parent_id = ?", p.cache.id).
+		OrderExpr("kind = ? DESC, lower(title)", domain.FOLDER).
+		Scan(p.ctx))
 }
 
 // Helpers
