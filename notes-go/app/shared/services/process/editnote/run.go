@@ -1,0 +1,168 @@
+package editnote
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+	"strings"
+
+	plumprimitive "github.com/cyril-fl/plum/primitive"
+	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/pgdialect"
+	"github.com/uptrace/bun/driver/pgdriver"
+	"main.go/app/shared/domain"
+	"main.go/app/shared/services/process/createtag"
+)
+
+// invalidText is the Postgres SQLSTATE raised when the id is not a uuid.
+const invalidText = "22P02"
+
+var (
+	ErrNoValue   = errors.New("no id given")
+	ErrNoContent = errors.New("no note content given")
+	ErrNotFound  = errors.New("note not found")
+)
+
+// Input is the whole new state of the note: an empty Title makes it untitled, Tags replace the current ones.
+type Input struct {
+	ID      string
+	Title   string
+	Content string
+	Tags    []string
+}
+
+type run struct {
+	plumprimitive.Process
+	cache
+
+	ctx   context.Context
+	db    bun.IDB // *bun.DB or bun.Tx: tests run inside a rolled-back transaction
+	input Input
+}
+
+type cache struct {
+	input Input
+	item  domain.Item
+	tags  []domain.Tag
+}
+
+func Process(ctx context.Context, db bun.IDB, input Input) *run {
+	return &run{
+		ctx:   ctx,
+		db:    db,
+		input: input,
+	}
+}
+
+func (p *run) Run() {
+	p.makeNote()
+	p.saveNote()
+}
+
+// Getters & Setters
+
+// GetResult returns the updated item.
+func (p *run) GetResult() domain.Item {
+	return p.cache.item
+}
+
+// Methods
+
+func (p *run) makeNote() {
+	p.cache.input = Input{
+		ID:      strings.TrimSpace(p.input.ID),
+		Title:   strings.TrimSpace(p.input.Title),
+		Content: strings.TrimSpace(p.input.Content),
+	}
+	for _, tag := range p.input.Tags {
+		if tag = strings.TrimSpace(tag); tag != "" {
+			p.cache.input.Tags = append(p.cache.input.Tags, tag)
+		}
+	}
+
+	switch {
+	case p.cache.input.ID == "":
+		p.SetErr(ErrNoValue)
+	case p.cache.input.Content == "":
+		p.SetErr(ErrNoContent)
+	}
+}
+
+// saveNote updates item, metadata and tag links in one transaction: a failure changes nothing.
+func (p *run) saveNote() {
+	if p.HasErr() {
+		return
+	}
+
+	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
+		for _, step := range []func(context.Context, bun.Tx) error{p.updateItem, p.updateMetadata, p.replaceTags} {
+			if err := step(ctx, tx); err != nil {
+				return err
+			}
+		}
+		return nil
+	}))
+}
+
+// updateItem matches a note not in the trash (soft_delete adds deleted_at IS NULL): anything else is not found.
+func (p *run) updateItem(ctx context.Context, tx bun.Tx) error {
+	err := tx.NewUpdate().
+		Model(&p.cache.item).
+		Set("title = NULLIF(?, '')", p.cache.input.Title). // NULL = untitled, like createnote's nullzero
+		Set("updated_at = current_timestamp").
+		Where("id = ? AND kind = ?", p.cache.input.ID, domain.NOTE).
+		Returning("id, parent_id, created_at, updated_at, kind, title").
+		Scan(ctx)
+	return toDomainErr(err, p.cache.input.ID)
+}
+
+func (p *run) updateMetadata(ctx context.Context, tx bun.Tx) error {
+	_, err := tx.NewUpdate().
+		Model((*domain.MetadataNote)(nil)).
+		Set("content = ?", p.cache.input.Content).
+		Where("item_id = ?", p.cache.item.ID).
+		Exec(ctx)
+	return err
+}
+
+// replaceTags drops every link, creates the unknown tags, then links the given ones.
+func (p *run) replaceTags(ctx context.Context, tx bun.Tx) error {
+	_, err := tx.NewDelete().Model((*domain.NoteTag)(nil)).Where("note_id = ?", p.cache.item.ID).Exec(ctx)
+	if err != nil || len(p.cache.input.Tags) == 0 {
+		return err
+	}
+
+	create := createtag.Process(ctx, tx, p.cache.input.Tags)
+	create.Run()
+	if create.HasErr() {
+		return create.GetErr()
+	}
+
+	// createtag only returns new tags: select again to get the ids of existing ones too.
+	err = tx.NewSelect().
+		Model(&p.cache.tags).
+		Where("lower(value) IN (SELECT lower(v) FROM unnest(?::text[]) AS v)", pgdialect.Array(p.cache.input.Tags)).
+		Scan(ctx)
+	if err != nil {
+		return err
+	}
+
+	links := make([]domain.NoteTag, len(p.cache.tags))
+	for i, tag := range p.cache.tags {
+		links[i] = domain.NoteTag{TagID: tag.ID, NoteID: p.cache.item.ID}
+	}
+	_, err = tx.NewInsert().Model(&links).Exec(ctx)
+	return err
+}
+
+// Helpers
+
+// toDomainErr turns no row, or an id that is not a uuid, into ErrNotFound.
+func toDomainErr(err error, id string) error {
+	var pgErr pgdriver.Error
+	if errors.Is(err, sql.ErrNoRows) || errors.As(err, &pgErr) && pgErr.Field('C') == invalidText {
+		return fmt.Errorf("%w: %q", ErrNotFound, id)
+	}
+	return err
+}

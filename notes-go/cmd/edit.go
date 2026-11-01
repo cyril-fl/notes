@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
 
 	cmdeditfolder "main.go/app/cli/cmd-edit-folder"
@@ -20,6 +21,7 @@ var cmdEditNote = &cobra.Command{
 	Short:   cmd.EditNote.Short,
 	Long:    cmd.EditNote.Long,
 	Example: cmd.EditNote.Example,
+	Args:    cobra.ExactArgs(1),
 	RunE:    cmdeditnote.Edit,
 }
 
@@ -28,6 +30,7 @@ var cmdEditFloder = &cobra.Command{
 	Short:   cmd.EditFolder.Short,
 	Long:    cmd.EditFolder.Long,
 	Example: cmd.EditFolder.Example,
+	Args:    cobra.ExactArgs(1),
 	RunE:    cmdeditfolder.Edit,
 }
 
@@ -41,6 +44,9 @@ var cmdEditTag = &cobra.Command{
 }
 
 func init() {
+	plumcliutilsargs.Makeflags(cmdEditNote, cmd.EditNote.Flags)
+	plumcliutilsargs.Makeflags(cmdEditFloder, cmd.EditFolder.Flags)
+
 	cmdEdit.AddCommand(cmdEditNote, cmdEditFloder, cmdEditTag)
 	cmdRoot.AddCommand(cmdEdit)
 }
