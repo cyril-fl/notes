@@ -1,20 +1,50 @@
 package cmdedittag
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"strings"
 
+	"charm.land/huh/v2"
 	"github.com/spf13/cobra"
+	"main.go/app/shared/services/huhform"
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/edittag"
 )
 
+var errRequired = errors.New("required")
+
 func Edit(cobra *cobra.Command, args []string) error {
-	process := edittag.Process(cobra.Context(), postgrey.GetDb(), args[0], args[1])
+	_, err := rename(cobra.Context(), args[0], args[1])
+	return err
+}
+
+// Interactive renames the tag through a form pre-filled with its value, and returns the new value.
+func Interactive(ctx context.Context, value string) (string, error) {
+	to := value
+	if err := huhform.New(huh.NewInput().Title("Tag").Value(&to).Validate(notBlank)).Run(); err != nil {
+		return value, err
+	}
+	return rename(ctx, value, to)
+}
+
+func rename(ctx context.Context, from string, to string) (string, error) {
+	process := edittag.Process(ctx, postgrey.GetDb(), from, to)
 	process.Run()
 
-	if !process.HasErr() {
-		fmt.Printf("Successfully renamed %q to %q\n", args[0], process.GetResult().Value)
+	if process.HasErr() {
+		return from, process.GetErr()
 	}
 
-	return process.GetErr()
+	fmt.Printf("Successfully renamed %q to %q\n", from, process.GetResult().Value)
+	return process.GetResult().Value, nil
+}
+
+func notBlank(value string) error {
+	if strings.TrimSpace(value) == "" {
+		return errRequired
+	}
+
+	return nil
 }
