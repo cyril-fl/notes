@@ -1,19 +1,23 @@
 package millflagsmove
 
 import (
+	"context"
 	"errors"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/spf13/pflag"
+	"github.com/uptrace/bun"
+	"main.go/app/shared/services/huhform"
+	"main.go/app/shared/services/process/listfolders"
 	"main.go/app/shared/services/process/moveitems"
 )
-
-var ErrNotImplemented = errors.New("--parent-from-list is not implemented yet: use --parent <uuid>")
 
 type mill struct {
 	plumprimitive.Mill
 	cache
 
+	ctx   context.Context
+	db    bun.IDB
 	flags *pflag.FlagSet
 	ids   []string
 }
@@ -24,12 +28,16 @@ type cache struct {
 }
 
 type Template struct {
+	Ctx   context.Context
+	Db    bun.IDB
 	Flags *pflag.FlagSet
 	IDs   []string
 }
 
 func New(params Template) *mill {
 	return &mill{
+		ctx:   params.Ctx,
+		db:    params.Db,
 		flags: params.Flags,
 		ids:   params.IDs,
 	}
@@ -38,7 +46,7 @@ func New(params Template) *mill {
 // Resolve turns the args and flags into the move; no --parent means the root.
 func (m *mill) Resolve() moveitems.Input {
 	m.readFlags()
-	m.checkParentFromList()
+	m.pickParent()
 	return m.cache.input
 }
 
@@ -52,12 +60,20 @@ func (m *mill) readFlags() {
 	m.SetErr(errors.Join(errs[:]...))
 }
 
-func (m *mill) checkParentFromList() {
-	if m.HasErr() {
+// pickParent asks for the parent in the folder list with --parent-from-list.
+func (m *mill) pickParent() {
+	if m.HasErr() || !m.cache.parentFromList {
 		return
 	}
 
-	if m.cache.parentFromList {
-		m.SetErr(ErrNotImplemented)
+	process := listfolders.Process(m.ctx, m.db)
+	process.Run()
+	if process.HasErr() {
+		m.SetErr(process.GetErr())
+		return
 	}
+
+	id, err := huhform.PickFolder(process.GetResult())
+	m.cache.input.ParentID = id
+	m.SetErr(err)
 }

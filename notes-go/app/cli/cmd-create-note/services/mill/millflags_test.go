@@ -2,7 +2,6 @@ package millflagscreatenote
 
 import (
 	"context"
-	"errors"
 	"slices"
 	"testing"
 
@@ -41,12 +40,5 @@ func TestResolveNoTitle(t *testing.T) {
 	resolver, input := resolve(t, "--no-title", "--content", "C")
 	if resolver.HasErr() || input.Title != "" || input.Content != "C" {
 		t.Errorf("input = %+v, err = %v; want untitled C", input, resolver.GetErr())
-	}
-}
-
-func TestResolveParentFromList(t *testing.T) {
-	resolver, _ := resolve(t, "--title", "T", "--content", "C", "--parent-from-list")
-	if !errors.Is(resolver.GetErr(), ErrNotImplemented) {
-		t.Errorf("err = %v, want %v", resolver.GetErr(), ErrNotImplemented)
 	}
 }

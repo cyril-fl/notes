@@ -1,7 +1,6 @@
 package millflagsmove
 
 import (
-	"errors"
 	"slices"
 	"testing"
 
@@ -35,13 +34,5 @@ func TestResolveRoot(t *testing.T) {
 	resolver := resolve(t, "a")
 	if input := resolver.Resolve(); resolver.HasErr() || input.ParentID != "" {
 		t.Errorf("input = %+v, err = %v; want the root", input, resolver.GetErr())
-	}
-}
-
-func TestResolveParentFromList(t *testing.T) {
-	resolver := resolve(t, "a", "--parent-from-list")
-	resolver.Resolve()
-	if !errors.Is(resolver.GetErr(), ErrNotImplemented) {
-		t.Errorf("err = %v, want %v", resolver.GetErr(), ErrNotImplemented)
 	}
 }

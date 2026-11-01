@@ -21,6 +21,7 @@ import (
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/deleteitems"
 	"main.go/app/shared/services/process/listitems"
+	"main.go/app/shared/services/process/moveitems"
 	"main.go/app/shared/services/process/readitem"
 	"main.go/app/shared/services/screen"
 )
@@ -43,9 +44,10 @@ func Finder(cobra *cobra.Command, args []string) error {
 		return nil
 	}
 
-	cursor := 0
+	cursor, status, failed := 0, "", false
+	var clipboard *domain.Item
 	for {
-		final, err := tea.NewProgram(newModel(load, folder, cursor)).Run()
+		final, err := tea.NewProgram(newModel(load, folder, cursor, clipboard, status, failed)).Run()
 		if err != nil {
 			return err
 		}
@@ -54,8 +56,16 @@ func Finder(cobra *cobra.Command, args []string) error {
 			return m.err
 		}
 
-		// An aborted form comes back to the finder unchanged.
-		if err := do(ctx, m.action, m.folder.Item.ID); err != nil && !errors.Is(err, huh.ErrUserAborted) {
+		clipboard, status, failed = m.clipboard, "", false
+		if m.action.kind == actionMove {
+			// A refused move (into its own subfolder…) is shown in the finder, which stays open.
+			if err := move(ctx, m.action.item, m.folder.Item.ID); err != nil {
+				status, failed = err.Error(), true
+			} else {
+				clipboard, status = nil, fmt.Sprintf("Moved %q here", untitled(m.action.item.Title))
+			}
+		} else if err := do(ctx, m.action, m.folder.Item.ID); err != nil && !errors.Is(err, huh.ErrUserAborted) {
+			// An aborted form comes back to the finder unchanged.
 			return err
 		}
 		if folder, err = load(m.folder.Item.ID); err != nil {
@@ -63,6 +73,13 @@ func Finder(cobra *cobra.Command, args []string) error {
 		}
 		cursor = m.cursor
 	}
+}
+
+// move puts the item in the folder; moveitems refuses a folder going into itself or its subfolders.
+func move(ctx context.Context, item domain.Item, folderID string) error {
+	process := moveitems.Process(ctx, postgrey.GetDb(), moveitems.Input{IDs: []string{item.ID}, ParentID: folderID})
+	process.Run()
+	return process.GetErr()
 }
 
 func do(ctx context.Context, action action, folderID string) error {

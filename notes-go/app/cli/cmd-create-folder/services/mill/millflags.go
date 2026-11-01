@@ -7,10 +7,10 @@ import (
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/spf13/pflag"
 	"github.com/uptrace/bun"
+	"main.go/app/shared/services/huhform"
 	"main.go/app/shared/services/process/createfolder"
+	"main.go/app/shared/services/process/listfolders"
 )
-
-var ErrNotImplemented = errors.New("--parent-from-list is not implemented yet: use --parent <uuid>")
 
 type mill struct {
 	plumprimitive.Mill
@@ -43,7 +43,7 @@ func New(params Template) *mill {
 // Resolve turns the flags into a complete folder, asking in a form for what is missing.
 func (m *mill) Resolve() createfolder.Input {
 	m.readFlags()
-	m.checkParentFromList()
+	m.pickParent()
 	m.askMissing()
 
 	return m.cache.input
@@ -61,12 +61,20 @@ func (m *mill) readFlags() {
 	m.SetErr(errors.Join(errs[:]...))
 }
 
-func (m *mill) checkParentFromList() {
-	if m.HasErr() {
+// pickParent asks for the parent in the folder list with --parent-from-list.
+func (m *mill) pickParent() {
+	if m.HasErr() || !m.cache.parentFromList {
 		return
 	}
 
-	if m.cache.parentFromList {
-		m.SetErr(ErrNotImplemented)
+	process := listfolders.Process(m.ctx, m.db)
+	process.Run()
+	if process.HasErr() {
+		m.SetErr(process.GetErr())
+		return
 	}
+
+	id, err := huhform.PickFolder(process.GetResult())
+	m.cache.input.ParentID = id
+	m.SetErr(err)
 }

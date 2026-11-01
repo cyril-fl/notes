@@ -43,6 +43,9 @@ type commands struct {
 	Show         plumcliconfig.Cmdparams `yaml:"show"`
 	ShowFinder   plumcliconfig.Cmdparams `yaml:"show-finder"`
 	ShowGraph    plumcliconfig.Cmdparams `yaml:"show-graph"`
+	Trash        plumcliconfig.Cmdparams `yaml:"trash"`
+	Restore      plumcliconfig.Cmdparams `yaml:"restore"`
+	Search       plumcliconfig.Cmdparams `yaml:"search"`
 	Root         plumcliconfig.Cmdparams `yaml:"root"`
 }
 

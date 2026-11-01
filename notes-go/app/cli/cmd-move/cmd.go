@@ -11,7 +11,7 @@ import (
 
 // Move puts notes and folders into the --parent folder, or at the root without it.
 func Move(cobra *cobra.Command, args []string) error {
-	resolver := millflagsmove.New(millflagsmove.Template{Flags: cobra.Flags(), IDs: args})
+	resolver := millflagsmove.New(millflagsmove.Template{Ctx: cobra.Context(), Db: postgrey.GetDb(), Flags: cobra.Flags(), IDs: args})
 	input := resolver.Resolve()
 	if resolver.HasErr() {
 		return resolver.GetErr()

@@ -2,7 +2,6 @@ package millflagscreatefolder
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
@@ -29,12 +28,5 @@ func TestResolveFromFlags(t *testing.T) {
 	resolver, input := resolve(t, "--title", "T", "--parent", "uuid")
 	if resolver.HasErr() || input.Title != "T" || input.ParentID != "uuid" {
 		t.Errorf("input = %+v, err = %v; want T in uuid", input, resolver.GetErr())
-	}
-}
-
-func TestResolveParentFromList(t *testing.T) {
-	resolver, _ := resolve(t, "--title", "T", "--parent-from-list")
-	if !errors.Is(resolver.GetErr(), ErrNotImplemented) {
-		t.Errorf("err = %v, want %v", resolver.GetErr(), ErrNotImplemented)
 	}
 }

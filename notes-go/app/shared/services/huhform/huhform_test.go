@@ -5,6 +5,7 @@ import (
 
 	"charm.land/huh/v2"
 	"charm.land/lipgloss/v2"
+	"main.go/app/shared/services/process/listfolders"
 )
 
 func TestFitFillsHeight(t *testing.T) {
@@ -20,5 +21,12 @@ func TestFitFillsHeight(t *testing.T) {
 		if got := lipgloss.Height(form.View()); got != 30 {
 			t.Errorf("%s: height = %d, want 30", name, got)
 		}
+	}
+}
+
+func TestFolderOptions(t *testing.T) {
+	options := folderOptions([]listfolders.Folder{{ID: "a", Path: "/A"}, {ID: "b", Path: "/A/B"}})
+	if len(options) != 3 || options[0].Key != "/" || options[0].Value != "" || options[2].Key != "/A/B" || options[2].Value != "b" {
+		t.Errorf("options = %+v, want / then the paths", options)
 	}
 }

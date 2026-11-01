@@ -1,6 +1,7 @@
 package cmdfinder
 
 import (
+	"fmt"
 	"strings"
 
 	"charm.land/bubbles/v2/textinput"
@@ -28,6 +29,7 @@ const (
 	actionEdit
 	actionCreate
 	actionDelete
+	actionMove
 )
 
 type action struct {
@@ -53,12 +55,15 @@ type model struct {
 	height    int
 	filter    textinput.Model
 	filtering bool
+	clipboard *domain.Item // cut with ^X, pasted with ^V; kept by cmd.go across screens
+	status    string       // result of the last action, shown above the footer
+	failed    bool         // status is an error
 	action    action
 	err       error
 }
 
-func newModel(load loader, folder readitem.Result, cursor int) *model {
-	m := &model{load: load, folder: folder, filter: textinput.New()}
+func newModel(load loader, folder readitem.Result, cursor int, clipboard *domain.Item, status string, failed bool) *model {
+	m := &model{load: load, folder: folder, clipboard: clipboard, status: status, failed: failed, filter: textinput.New()}
 	m.filter.Prompt = "/"
 	m.cursor = min(max(0, cursor), max(0, len(m.visible())-1))
 	return m
@@ -138,14 +143,26 @@ func (m *model) updateKeys(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		if hasSelected {
 			return m.quit(actionDelete, selected)
 		}
+	case plumtypes.SHORT_CTRL_X:
+		if hasSelected {
+			m.clipboard, m.status, m.failed = &selected, "", false
+		}
+	case plumtypes.SHORT_CTRL_V:
+		if m.clipboard != nil {
+			return m.quit(actionMove, *m.clipboard)
+		}
 	case "/":
 		m.filtering = true
 		return m, m.filter.Focus()
 	case plumtypes.KEY_ESC:
-		// Esc steps back like in the note view: clears an active filter, then goes up, then quits at the root.
+		// Esc steps back like in the note view: clears an active filter, then the clipboard, then goes up, then quits at the root.
 		if m.filter.Value() != "" {
 			m.filter.SetValue("")
 			m.cursor, m.offset = 0, 0
+			return m, nil
+		}
+		if m.clipboard != nil {
+			m.clipboard = nil
 			return m, nil
 		}
 		if m.folder.Item.ID != "" {
@@ -176,10 +193,13 @@ func (m *model) View() tea.View {
 	if m.filtering || m.filter.Value() != "" {
 		body += "\n" + m.filter.View()
 	}
+	if line := m.statusLine(); line != "" {
+		body += "\n\n" + line
+	}
 
 	// Pad so the footer sits on the last line but one: the last stays for the shell prompt.
 	padding := max(0, m.height-1-footerHeight-lipgloss.Height(body))
-	return tea.NewView(body + strings.Repeat("\n", padding) + "\n\n" + footer())
+	return tea.NewView(body + strings.Repeat("\n", padding) + "\n\n" + m.footer())
 }
 
 // Helpers
@@ -213,11 +233,14 @@ func (m *model) rows() int {
 	if m.height == 0 {
 		return len(m.folder.Children) + 1 // no size yet: show everything
 	}
-	filterHeight := 0
+	extra := 0
 	if m.filtering || m.filter.Value() != "" {
-		filterHeight = 1
+		extra++
 	}
-	return max(1, m.height-1-headerHeight-footerHeight-filterHeight)
+	if m.statusLine() != "" {
+		extra += 2
+	}
+	return max(1, m.height-1-headerHeight-footerHeight-extra)
 }
 
 func (m *model) open(id string, selectID string) tea.Cmd {
@@ -244,14 +267,38 @@ func (m *model) quit(kind actionKind, item domain.Item) (tea.Model, tea.Cmd) {
 	return m, tea.Quit
 }
 
-func footer() string {
-	return screen.Footer(
-		screen.Hint{Key: plumtypes.KEY_ENTER, Label: "Open"},
-		screen.Hint{Key: plumtypes.KEY_ESC, Label: "Back"},
-		screen.Hint{Key: plumtypes.SHORT_CTRL_E, Label: "Edit"},
-		screen.Hint{Key: plumtypes.SHORT_CTRL_N, Label: "New"},
-		screen.Hint{Key: plumtypes.SHORT_CTRL_D, Label: "Delete"},
-		screen.Hint{Key: "/", Label: "Filter"},
-		screen.Hint{Key: plumtypes.SHORT_CTRL_Q, Label: "Quit"},
-	)
+// statusLine shows a refused action first (the cut item stays, the footer still offers ^V),
+// then the cut item waiting to be pasted, then the result of the last action.
+func (m *model) statusLine() string {
+	switch {
+	case m.failed:
+		return lipgloss.NewStyle().Foreground(lipgloss.Red).Render(m.status)
+	case m.clipboard != nil:
+		return lipgloss.NewStyle().Faint(true).Render(fmt.Sprintf("✂ %s · ^V pastes it here, ⎋ cancels", untitled(m.clipboard.Title)))
+	case m.status != "":
+		return lipgloss.NewStyle().Faint(true).Render(m.status)
+	}
+	return ""
+}
+
+func (m *model) footer() string {
+	hints := []screen.Hint{
+		{Key: plumtypes.KEY_ENTER, Label: "Open"},
+		{Key: plumtypes.KEY_ESC, Label: "Back"},
+		{Key: plumtypes.SHORT_CTRL_E, Label: "Edit"},
+		{Key: plumtypes.SHORT_CTRL_N, Label: "New"},
+		{Key: plumtypes.SHORT_CTRL_D, Label: "Delete"},
+		{Key: plumtypes.SHORT_CTRL_X, Label: "Cut"},
+	}
+	if m.clipboard != nil {
+		hints = append(hints, screen.Hint{Key: plumtypes.SHORT_CTRL_V, Label: "Paste"})
+	}
+	return screen.Footer(append(hints, screen.Hint{Key: "/", Label: "Filter"}, screen.Hint{Key: plumtypes.SHORT_CTRL_Q, Label: "Quit"})...)
+}
+
+func untitled(title string) string {
+	if title == "" {
+		return "untitled"
+	}
+	return title
 }

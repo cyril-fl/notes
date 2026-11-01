@@ -48,7 +48,7 @@ var (
 )
 
 func TestNavigate(t *testing.T) {
-	m := newModel(fakeLoad, root, 0)
+	m := newModel(fakeLoad, root, 0, nil, "", false)
 
 	press(m, up)
 	press(m, down)
@@ -94,7 +94,7 @@ func TestActions(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		m := newModel(fakeLoad, root, test.cursor)
+		m := newModel(fakeLoad, root, test.cursor, nil, "", false)
 		if cmd := press(m, test.key); cmd == nil {
 			t.Errorf("%s: no quit command", name)
 		}
@@ -105,7 +105,7 @@ func TestActions(t *testing.T) {
 }
 
 func TestFilter(t *testing.T) {
-	m := newModel(fakeLoad, root, 0)
+	m := newModel(fakeLoad, root, 0, nil, "", false)
 
 	press(m, text('/'))
 	for _, r := range "READ" {
@@ -134,7 +134,7 @@ func TestScroll(t *testing.T) {
 	for i := 0; i < 20; i++ {
 		folder.Children = append(folder.Children, domain.Item{ID: string(rune('a' + i)), Kind: domain.NOTE, Title: string(rune('a' + i))})
 	}
-	m := newModel(fakeLoad, folder, 0)
+	m := newModel(fakeLoad, folder, 0, nil, "", false)
 	m.Update(tea.WindowSizeMsg{Width: 80, Height: 12}) // 12 - 1 - 3 - 2 = 6 rows
 
 	for i := 0; i < 10; i++ {
@@ -148,7 +148,7 @@ func TestScroll(t *testing.T) {
 
 // Regression: down in an empty folder set the cursor to -1 and View panicked on children[-1:].
 func TestEmptyFolder(t *testing.T) {
-	m := newModel(fakeLoad, readitem.Result{Path: "/"}, 0)
+	m := newModel(fakeLoad, readitem.Result{Path: "/"}, 0, nil, "", false)
 	m.Update(tea.WindowSizeMsg{Width: 80, Height: 12})
 
 	press(m, down)
@@ -160,5 +160,30 @@ func TestEmptyFolder(t *testing.T) {
 
 	if press(m, enter); m.action.kind != actionQuit {
 		t.Errorf("enter on nothing: action = %v, want none", m.action.kind)
+	}
+}
+
+func TestCutPaste(t *testing.T) {
+	m := newModel(fakeLoad, root, 1, nil, "", false)
+
+	if press(m, ctrl('v')); m.action.kind != actionQuit {
+		t.Fatalf("paste with nothing cut: action = %v, want none", m.action.kind)
+	}
+
+	press(m, ctrl('x')) // cut Readme
+	if m.clipboard == nil || m.clipboard.ID != noteR.ID {
+		t.Fatalf("clipboard = %+v, want Readme", m.clipboard)
+	}
+
+	press(m, esc) // cancels the cut, does not quit
+	if m.clipboard != nil || m.action.kind != actionQuit {
+		t.Fatalf("after esc: clipboard = %+v, action = %v", m.clipboard, m.action.kind)
+	}
+
+	press(m, ctrl('x'))
+	press(m, up)
+	press(m, enter) // into A, the clipboard follows
+	if cmd := press(m, ctrl('v')); cmd == nil || m.action.kind != actionMove || m.action.item.ID != noteR.ID || m.folder.Path != "/A" {
+		t.Errorf("paste: action = %+v, folder = %q; want move Readme into /A", m.action, m.folder.Path)
 	}
 }
