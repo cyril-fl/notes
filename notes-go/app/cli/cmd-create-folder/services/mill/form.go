@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"charm.land/huh/v2"
+	"main.go/app/shared/services/huhform"
 )
 
 var errRequired = errors.New("required")
@@ -15,7 +16,7 @@ func (m *mill) askMissing() {
 		return
 	}
 
-	m.SetErr(huh.NewInput().Title("Title").Value(&m.cache.input.Title).Validate(notBlank).Run())
+	m.SetErr(huhform.New(huh.NewInput().Title("Title").Value(&m.cache.input.Title).Validate(notBlank)).Run())
 }
 
 // Helpers
