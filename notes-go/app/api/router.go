@@ -5,11 +5,12 @@ import (
 	"net/http"
 
 	"github.com/uptrace/bun"
+	"main.go/app/api/services/guard"
 )
 
 // New gives the API, reachable by web pages from origin only (none when empty).
 func New(db bun.IDB, origin string) http.Handler {
 	mux := http.NewServeMux()
 
-	return mux
+	return guard.New(origin, mux)
 }

@@ -12,6 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"main.go/app/api"
+	"main.go/app/api/services/guard"
 	"main.go/app/shared/services/postgrey"
 )
 
@@ -27,6 +28,9 @@ func Serve(cobra *cobra.Command, args []string) error {
 	}
 	origin, err := cobra.Flags().GetString("origin")
 	if err != nil {
+		return err
+	}
+	if err := guard.CheckOrigin(origin); err != nil {
 		return err
 	}
 

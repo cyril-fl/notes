@@ -17,7 +17,7 @@ services:
     container_name: note-postgres
     hostname: note-postgres
     ports:
-      - "${PORT:-5432}:5432"
+      - "127.0.0.1:${PORT:-5432}:5432"
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-app}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
@@ -36,7 +36,7 @@ services:
     container_name: note-libredb
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       ADMIN_EMAIL: ${LIBREDB_ADMIN_EMAIL:-admin@libredb.org}
       ADMIN_PASSWORD: ${LIBREDB_ADMIN_PASSWORD}
