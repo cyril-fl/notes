@@ -1,14 +1,22 @@
 package config
 
 import (
+	_ "embed"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	plumcliconfig "github.com/cyril-fl/plum/cli/config"
 	plummillload "github.com/cyril-fl/plum/services/factory/millload"
 	"github.com/joho/godotenv"
+	"gopkg.in/yaml.v3"
 )
+
+// embedded is the config built into the binary, so it runs from any folder; CONFIG_FILE overrides it.
+//
+//go:embed config.yaml
+var embedded []byte
 
 var Current config
 
@@ -51,6 +59,13 @@ type commands struct {
 
 func load() (*config, error) {
 	file := strings.TrimSpace(os.Getenv("CONFIG_FILE"))
+	if file == "" {
+		var current config
+		if err := yaml.Unmarshal(embedded, &current); err != nil {
+			return nil, fmt.Errorf("embedded config: %w", err)
+		}
+		return &current, nil
+	}
 
 	loader := plummillload.New(file)
 	current := loader.LoadFromFile[config]()
@@ -62,8 +77,17 @@ func load() (*config, error) {
 	return current, nil
 }
 
-func init() {
+// loadEnv reads the user file first: godotenv never overwrites a value, so the .env of whatever
+// project the CLI runs from cannot point it at another database.
+func loadEnv() {
+	if home, err := os.UserHomeDir(); err == nil {
+		godotenv.Load(filepath.Join(home, ".config", "notes", ".env"))
+	}
 	godotenv.Load()
+}
+
+func init() {
+	loadEnv()
 	loaded, err := load()
 	if err != nil {
 		panic(err)
