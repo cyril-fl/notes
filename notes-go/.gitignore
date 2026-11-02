@@ -3,6 +3,9 @@
 .env.*
 !.env.example
 
+# Sauvegardes : elles contiennent toutes les notes
+backups/
+
 # Binaires compilés
 scne
 *.exe
