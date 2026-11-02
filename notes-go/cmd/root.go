@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime/debug"
 
 	"charm.land/huh/v2"
 	"github.com/spf13/cobra"
@@ -22,7 +23,7 @@ var cmdRoot = &cobra.Command{
 	Use:     c.Name,
 	Short:   cmd.Root.Short,
 	Long:    cmd.Root.Long,
-	/* Version: config.Version, 	// TODO link ca correctement */
+	Version: version(),
 	Example: cmd.Root.Example,
 	// Errors are printed by Execute so a form abort (Ctrl+C / Esc) stays silent.
 	SilenceUsage:  true,
@@ -72,6 +73,20 @@ func needsDb(command *cobra.Command) bool {
 		}
 	}
 	return true
+}
+
+// version comes from the build (git commit, or module version without one): nothing to keep in sync by hand.
+func version() string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "unknown"
+	}
+	for _, setting := range info.Settings {
+		if setting.Key == "vcs.revision" {
+			return setting.Value
+		}
+	}
+	return info.Main.Version
 }
 
 func Execute() {
