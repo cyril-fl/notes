@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"charm.land/lipgloss/v2"
+	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/listtrash"
@@ -17,10 +18,20 @@ import (
 
 // Trash lists what was removed, each removal once with how many items went with it, and when it is purged.
 func Trash(cobra *cobra.Command, args []string) error {
+	var asJSON bool
+	if err := plumcliutilsargs.GetBoolFlags(cobra, map[string]*bool{"json": &asJSON}); err != nil {
+		return err
+	}
+
 	process := listtrash.Process(cobra.Context(), postgrey.GetDb())
 	process.Run()
 	if process.HasErr() {
 		return process.GetErr()
+	}
+
+	if asJSON {
+		screen.PrintJSON(process.GetResult())
+		return nil
 	}
 
 	screen.Print(output(process.GetResult(), config.Current.Trash.RetentionDays, time.Now()))

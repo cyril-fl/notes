@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2"
+	plumdebug "github.com/cyril-fl/plum/utils/debug"
 	"golang.org/x/term"
 )
 
@@ -16,6 +17,11 @@ func Print(output string) {
 		output = pad(output, height)
 	}
 	lipgloss.Println(output)
+}
+
+// PrintJSON writes a list for scripts: an empty one is [], not null.
+func PrintJSON[T any](items []T) {
+	plumdebug.Json(append([]T{}, items...))
 }
 
 // pad keeps the last line for the shell prompt; longer output is left as is.

@@ -32,11 +32,11 @@ var (
 
 // Result is the item and its path, with its content and tag values for a note, its direct children for a folder.
 type Result struct {
-	Item     domain.Item
-	Path     string
-	Content  string
-	Tags     []string
-	Children []domain.Item
+	Item     domain.Item   `json:"item"`
+	Path     string        `json:"path"`
+	Content  string        `json:"content,omitempty"`
+	Tags     []string      `json:"tags,omitempty"`
+	Children []domain.Item `json:"children"`
 }
 
 type run struct {

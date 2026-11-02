@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
 	cmdsearch "main.go/app/cli/cmd-search"
 )
@@ -15,5 +16,7 @@ var cmdSearch = &cobra.Command{
 }
 
 func init() {
+	plumcliutilsargs.Makeflags(cmdSearch, cmd.Search.Flags)
+
 	cmdRoot.AddCommand(cmdSearch)
 }

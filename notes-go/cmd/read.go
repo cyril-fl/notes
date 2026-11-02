@@ -47,6 +47,7 @@ var cmdReadTag = &cobra.Command{
 func init() {
 	plumcliutilsargs.Makeflags(cmdReadTag, cmd.ReadTag.Flags)
 	cmdReadTag.MarkFlagsMutuallyExclusive("yaml", "json")
+	plumcliutilsargs.Makeflags(cmdReadFloder, cmd.ReadFolder.Flags)
 
 	cmdRead.AddCommand(cmdReadNote, cmdReadFloder, cmdReadTag)
 	cmdRoot.AddCommand(cmdRead)

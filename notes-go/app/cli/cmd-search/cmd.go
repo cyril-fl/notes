@@ -5,18 +5,33 @@ import (
 	"fmt"
 	"strings"
 
+	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
 	cmdeditnote "main.go/app/cli/cmd-edit-note"
 	cmdreadnote "main.go/app/cli/cmd-read-note"
 	"main.go/app/shared/services/navigator"
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/searchnotes"
+	"main.go/app/shared/services/screen"
 )
 
-// Search lists the notes containing the text in their title or content; ↳ opens one, ^E edits it.
+// Search lists the notes containing the text in their title or content; ↳ opens one, ^E edits it, --json prints them for scripts.
 func Search(cobra *cobra.Command, args []string) error {
 	ctx := cobra.Context()
 	text := strings.Join(args, " ")
+
+	var asJSON bool
+	if err := plumcliutilsargs.GetBoolFlags(cobra, map[string]*bool{"json": &asJSON}); err != nil {
+		return err
+	}
+	if asJSON {
+		process := searchnotes.Process(ctx, postgrey.GetDb(), text)
+		process.Run()
+		if !process.HasErr() {
+			screen.PrintJSON(process.GetResult())
+		}
+		return process.GetErr()
+	}
 
 	load := func(navigator.Target) (navigator.Page, error) { return searchPage(ctx, text) }
 	return navigator.Run(load, navigator.Target{}, navigator.Options{EnterOpens: true}, func(action navigator.Action, note navigator.Target) error {

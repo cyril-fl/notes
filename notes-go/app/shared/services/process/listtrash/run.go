@@ -11,11 +11,11 @@ import (
 
 // Trashed is what was removed in one go: the item and how many items went with it.
 type Trashed struct {
-	ID        string
-	Kind      domain.Kind
-	Title     string
-	DeletedAt time.Time
-	Inside    int
+	ID        string      `json:"id"`
+	Kind      domain.Kind `json:"kind"`
+	Title     string      `json:"title"`
+	DeletedAt time.Time   `json:"deleted_at"`
+	Inside    int         `json:"inside"`
 }
 
 type run struct {

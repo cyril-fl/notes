@@ -84,7 +84,13 @@ commands:
     use: "folder <uuid|path>"
     short: "Show an existing folder"
     long: "Show the title and path of a folder, then its subfolders and notes."
-    example: "notes show folder <uuid>\nnotes show folder /Projects"
+    example: "notes show folder <uuid>\nnotes show folder /Projects --json"
+    args:
+      - name: "json"
+        shorthand: ""
+        value: ""
+        usage: "Display the result as JSON"
+        type: "bool"
   read-tag:
     use: "tag [<value>]"
     short: "Show an existing tag"
@@ -200,7 +206,13 @@ commands:
     use: "trash"
     short: "List the removed notes and folders"
     long: "List what was removed, each removal once with what went with it, and when it is purged (trash.retention-days)."
-    example: "notes trash"
+    example: "notes trash\nnotes trash --json"
+    args:
+      - name: "json"
+        shorthand: ""
+        value: ""
+        usage: "Display the result as JSON"
+        type: "bool"
   restore:
     use: "restore <uuid>..."
     short: "Take notes and folders out of the trash"
@@ -210,7 +222,13 @@ commands:
     use: "search <text>"
     short: "Find notes by their title or content"
     long: "List the notes whose title or content contains the text (case-insensitive), title matches first. Enter opens a note."
-    example: "notes search recette\nnotes search \"pâte brisée\""
+    example: "notes search recette\nnotes search \"pâte brisée\"\nnotes search recette --json"
+    args:
+      - name: "json"
+        shorthand: ""
+        value: ""
+        usage: "Display the result as JSON"
+        type: "bool"
   root:
     short: "The root of the notes system"
     long: "The root of the notes system, used to access the main functionality"

@@ -14,16 +14,16 @@ const (
 )
 
 type Item struct {
-	bun.BaseModel `bun:"table:items,alias:i"`
+	bun.BaseModel `bun:"table:items,alias:i" json:"-"`
 
-	ID        string    `bun:",pk,type:uuid,default:gen_random_uuid()"`
-	ParentID  *string   `bun:",type:uuid,nullzero"`
-	Parent    *Item     `bun:"rel:belongs-to,join:parent_id=id"`
-	CreatedAt time.Time `bun:",notnull,default:current_timestamp"`
-	UpdatedAt time.Time `bun:",nullzero"`
-	DeletedAt time.Time `bun:",soft_delete,nullzero"`
-	Kind      Kind      `bun:",notnull"`
-	Title     string    `bun:",nullzero"` // NULL = untitled note (--no-title)
+	ID        string    `bun:",pk,type:uuid,default:gen_random_uuid()" json:"id"`
+	ParentID  *string   `bun:",type:uuid,nullzero" json:"parent_id"`
+	Parent    *Item     `bun:"rel:belongs-to,join:parent_id=id" json:"-"`
+	CreatedAt time.Time `bun:",notnull,default:current_timestamp" json:"created_at"`
+	UpdatedAt time.Time `bun:",nullzero" json:"updated_at,omitzero"`
+	DeletedAt time.Time `bun:",soft_delete,nullzero" json:"-"`
+	Kind      Kind      `bun:",notnull" json:"kind"`
+	Title     string    `bun:",nullzero" json:"title"` // NULL = untitled note (--no-title)
 }
 
 type Metadata struct {

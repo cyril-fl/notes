@@ -9,6 +9,8 @@ import (
 
 	"charm.land/huh/v2"
 	"charm.land/lipgloss/v2"
+	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
+	plumdebug "github.com/cyril-fl/plum/utils/debug"
 	"github.com/spf13/cobra"
 	cmdeditfolder "main.go/app/cli/cmd-edit-folder"
 	"main.go/app/shared/domain"
@@ -17,8 +19,16 @@ import (
 	"main.go/app/shared/services/screen"
 )
 
-// Read shows the folder title and path, then one line per direct child with its uuid; ctrl+e edits it.
+// Read shows the folder title and path, then one line per direct child with its uuid; ctrl+e edits it; --json prints it for scripts.
 func Read(cobra *cobra.Command, args []string) error {
+	var asJSON bool
+	if err := plumcliutilsargs.GetBoolFlags(cobra, map[string]*bool{"json": &asJSON}); err != nil {
+		return err
+	}
+	if asJSON {
+		return printJSON(cobra.Context(), args[0])
+	}
+
 	for {
 		output, err := load(cobra.Context(), args[0])
 		if err != nil {
@@ -34,6 +44,20 @@ func Read(cobra *cobra.Command, args []string) error {
 			return err
 		}
 	}
+}
+
+// printJSON gives an empty folder "children": [], not null.
+func printJSON(ctx context.Context, id string) error {
+	process := readitem.Process(ctx, postgrey.GetDb(), domain.FOLDER, id)
+	process.Run()
+	if process.HasErr() {
+		return process.GetErr()
+	}
+
+	folder := process.GetResult()
+	folder.Children = append([]domain.Item{}, folder.Children...)
+	plumdebug.Json(folder)
+	return nil
 }
 
 func load(ctx context.Context, id string) (string, error) {

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
 	cmdrestore "main.go/app/cli/cmd-restore"
 	cmdtrash "main.go/app/cli/cmd-trash"
@@ -25,5 +26,7 @@ var cmdRestore = &cobra.Command{
 }
 
 func init() {
+	plumcliutilsargs.Makeflags(cmdTrash, cmd.Trash.Flags)
+
 	cmdRoot.AddCommand(cmdTrash, cmdRestore)
 }

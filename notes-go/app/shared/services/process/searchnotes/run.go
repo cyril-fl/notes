@@ -18,10 +18,10 @@ var ErrNoValue = errors.New("no text to search")
 
 // Match is a note containing the text, with the content line where it was found.
 type Match struct {
-	ID      string
-	Title   string
-	Path    string
-	Snippet string
+	ID      string `json:"id"`
+	Title   string `json:"title"`
+	Path    string `json:"path"`
+	Snippet string `json:"snippet"`
 }
 
 type run struct {
