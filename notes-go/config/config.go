@@ -54,6 +54,7 @@ type commands struct {
 	Trash        plumcliconfig.Cmdparams `yaml:"trash"`
 	Restore      plumcliconfig.Cmdparams `yaml:"restore"`
 	Search       plumcliconfig.Cmdparams `yaml:"search"`
+	Recent       plumcliconfig.Cmdparams `yaml:"recent"`
 	Root         plumcliconfig.Cmdparams `yaml:"root"`
 }
 

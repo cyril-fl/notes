@@ -229,6 +229,17 @@ commands:
         value: ""
         usage: "Display the result as JSON"
         type: "bool"
+  recent:
+    use: "recent"
+    short: "List the last changed notes"
+    long: "List the last changed notes, most recent first. Enter opens a note."
+    example: "notes recent\nnotes recent --json"
+    args:
+      - name: "json"
+        shorthand: ""
+        value: ""
+        usage: "Display the result as JSON"
+        type: "bool"
   root:
     short: "The root of the notes system"
     long: "The root of the notes system, used to access the main functionality"
