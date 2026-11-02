@@ -17,8 +17,11 @@ import (
 	apimove "main.go/app/api/move"
 	apireadfinder "main.go/app/api/read-finder"
 	apireadfolder "main.go/app/api/read-folder"
+	apireadgraph "main.go/app/api/read-graph"
 	apireadnote "main.go/app/api/read-note"
+	apireadrecent "main.go/app/api/read-recent"
 	apireadtag "main.go/app/api/read-tag"
+	apisearch "main.go/app/api/search"
 	"main.go/app/api/services/guard"
 )
 
@@ -30,6 +33,7 @@ func New(db bun.IDB, origin string) http.Handler {
 	mux.Handle("GET /api/notes/{id}", apireadnote.Handler(db))
 	mux.Handle("PATCH /api/notes/{id}", apieditnote.Handler(db))
 	mux.Handle("DELETE /api/notes/{id}", apideletenote.Handler(db))
+	mux.Handle("GET /api/notes/{id}/neighbors", apireadgraph.Neighbors(db))
 
 	mux.Handle("GET /api/folders", apireadfolder.List(db))
 	mux.Handle("POST /api/folders", apicreatefolder.Handler(db))
@@ -45,6 +49,10 @@ func New(db bun.IDB, origin string) http.Handler {
 	mux.Handle("GET /api/tags/{value}", apireadtag.Handler(db))
 	mux.Handle("PATCH /api/tags/{value}", apiedittag.Handler(db))
 	mux.Handle("DELETE /api/tags/{value}", apideletetag.Handler(db))
+
+	mux.Handle("GET /api/graph", apireadgraph.Handler(db))
+	mux.Handle("GET /api/search", apisearch.Handler(db))
+	mux.Handle("GET /api/recent", apireadrecent.Handler(db))
 
 	return guard.New(origin, mux)
 }
