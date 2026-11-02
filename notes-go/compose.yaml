@@ -12,6 +12,25 @@ services:
       - .env.docker
     command: sleep infinity
 
+  # Not started by `make up`: run it with `make api`.
+  api:
+    profiles: [api]
+    build: .
+    container_name: note-api
+    env_file:
+      - .env.docker
+    environment:
+      # The file of .env.docker does not exist in the image: use the config built into the binary.
+      CONFIG_FILE: ""
+    command: serve --addr :8080 --origin=${WEB_ORIGIN:-}
+    # No authentication: this port must stay on the loopback.
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
   postgres:
     image: postgres:18
     container_name: note-postgres

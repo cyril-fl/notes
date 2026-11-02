@@ -21,6 +21,7 @@ __debug_bin*
 
 # Dépendances vendorisées (si tu n'utilises pas vendor/)
 vendor/
+.docker-vendor/
 
 # Go workspace files
 go.work
