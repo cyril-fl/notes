@@ -1,10 +1,13 @@
 .PHONY: setup test backup api
 
+# Not `go tool lefthook install`: the hook would call a build cache path that expires, then skip its checks without failing.
 setup:
-	go tool lefthook install
+	go install github.com/evilmartians/lefthook/v2
+	"$$(go env GOBIN | grep . || echo "$$(go env GOPATH)/bin")/lefthook" install --force
 
+# -p 1: the tests of every package share one database, and deadlock when they create the schema and tags at the same time.
 test:
-	set -a && . ./.env && set +a && CONFIG_FILE=$(CURDIR)/config/config.yaml go test $(or $(ARGS),./...)
+	set -a && . ./.env && set +a && CONFIG_FILE=$(CURDIR)/config/config.yaml go test -p 1 $(or $(ARGS),./...)
 
 # Restore: docker compose exec -T postgres sh -c 'psql -U "$$POSTGRES_USER" "$$POSTGRES_DB"' < backups/<file>.sql
 backup:
