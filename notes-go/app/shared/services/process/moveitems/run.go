@@ -142,7 +142,7 @@ func (p *run) updateItems(ctx context.Context, tx bun.Tx) error {
 		Set("parent_id = ?", parentID).
 		Set("updated_at = current_timestamp").
 		Where("id IN (?)", bun.In(p.cache.input.IDs)).
-		Returning("id, parent_id, kind, title").
+		Returning("id, parent_id, created_at, updated_at, kind, title").
 		Scan(ctx, &p.cache.result)
 }
 

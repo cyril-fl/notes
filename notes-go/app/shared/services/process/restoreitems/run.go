@@ -112,7 +112,7 @@ func (p *run) updateItems(ctx context.Context, tx bun.Tx) error {
 				UNION SELECT child.id, child.deleted_at FROM items AS child JOIN tree ON child.parent_id = tree.id
 				WHERE child.deleted_at = tree.deleted_at
 			) SELECT id FROM tree)
-		RETURNING id, kind, title`, bun.In(p.cache.ids)).
+		RETURNING id, parent_id, created_at, updated_at, kind, title`, bun.In(p.cache.ids)).
 		Scan(ctx, &p.cache.result)
 }
 
