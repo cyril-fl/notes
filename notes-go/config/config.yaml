@@ -240,6 +240,22 @@ commands:
         value: ""
         usage: "Display the result as JSON"
         type: "bool"
+  serve:
+    use: "serve"
+    short: "Run the HTTP API"
+    long: "Run the HTTP API. It has no authentication: keep it on the loopback. Web pages can only call it from --origin."
+    example: "notes serve --origin http://localhost:3001"
+    args:
+      - name: "addr"
+        shorthand: ""
+        value: "127.0.0.1:8080"
+        usage: "Address to listen on"
+        type: "string"
+      - name: "origin"
+        shorthand: ""
+        value: ""
+        usage: "Origin of the web app allowed to call the API (none when empty)"
+        type: "string"
   root:
     short: "The root of the notes system"
     long: "The root of the notes system, used to access the main functionality"

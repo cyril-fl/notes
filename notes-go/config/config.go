@@ -55,6 +55,7 @@ type commands struct {
 	Restore      plumcliconfig.Cmdparams `yaml:"restore"`
 	Search       plumcliconfig.Cmdparams `yaml:"search"`
 	Recent       plumcliconfig.Cmdparams `yaml:"recent"`
+	Serve        plumcliconfig.Cmdparams `yaml:"serve"`
 	Root         plumcliconfig.Cmdparams `yaml:"root"`
 }
 
