@@ -7,6 +7,7 @@ import (
 	cmdeditfolder "main.go/app/cli/cmd-edit-folder"
 	cmdeditnote "main.go/app/cli/cmd-edit-note"
 	cmdedittag "main.go/app/cli/cmd-edit-tag"
+	"main.go/app/shared/domain"
 )
 
 var cmdEdit = &cobra.Command{
@@ -22,7 +23,7 @@ var cmdEditNote = &cobra.Command{
 	Long:    cmd.EditNote.Long,
 	Example: cmd.EditNote.Example,
 	Args:    cobra.ExactArgs(1),
-	RunE:    cmdeditnote.Edit,
+	RunE:    resolved(domain.NOTE, cmdeditnote.Edit),
 }
 
 var cmdEditFloder = &cobra.Command{
@@ -31,7 +32,7 @@ var cmdEditFloder = &cobra.Command{
 	Long:    cmd.EditFolder.Long,
 	Example: cmd.EditFolder.Example,
 	Args:    cobra.ExactArgs(1),
-	RunE:    cmdeditfolder.Edit,
+	RunE:    resolved(domain.FOLDER, cmdeditfolder.Edit),
 }
 
 var cmdEditTag = &cobra.Command{

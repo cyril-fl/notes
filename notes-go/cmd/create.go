@@ -7,6 +7,7 @@ import (
 	cmdcreatefolder "main.go/app/cli/cmd-create-folder"
 	cmdcreatenote "main.go/app/cli/cmd-create-note"
 	cmdcreatetag "main.go/app/cli/cmd-create-tag"
+	"main.go/app/shared/domain"
 )
 
 var cmdCreate = &cobra.Command{
@@ -22,7 +23,7 @@ var cmdCreateNote = &cobra.Command{
 	Long:    cmd.CreateNote.Long,
 	Example: cmd.CreateNote.Example,
 	Args:    cobra.NoArgs,
-	RunE:    cmdcreatenote.Create,
+	RunE:    resolved(domain.NOTE, cmdcreatenote.Create),
 }
 
 var cmdCreateFloder = &cobra.Command{
@@ -31,7 +32,7 @@ var cmdCreateFloder = &cobra.Command{
 	Long:    cmd.CreateFolder.Long,
 	Example: cmd.CreateFolder.Example,
 	Args:    cobra.NoArgs,
-	RunE:    cmdcreatefolder.Create,
+	RunE:    resolved(domain.FOLDER, cmdcreatefolder.Create),
 }
 
 var cmdCreateTag = &cobra.Command{

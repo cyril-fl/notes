@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	cmdfinder "main.go/app/cli/cmd-finder"
+	"main.go/app/shared/domain"
 )
 
 var cmdFinder = &cobra.Command{
@@ -11,7 +12,7 @@ var cmdFinder = &cobra.Command{
 	Long:    cmd.ShowFinder.Long,
 	Example: cmd.ShowFinder.Example,
 	Args:    cobra.MaximumNArgs(1),
-	RunE:    cmdfinder.Finder,
+	RunE:    resolved(domain.FOLDER, cmdfinder.Finder),
 }
 
 func init() {

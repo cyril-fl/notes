@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	cmdgraph "main.go/app/cli/cmd-graph"
+	"main.go/app/shared/domain"
 )
 
 var cmdGraph = &cobra.Command{
@@ -11,7 +12,7 @@ var cmdGraph = &cobra.Command{
 	Long:    cmd.ShowGraph.Long,
 	Example: cmd.ShowGraph.Example,
 	Args:    cobra.MaximumNArgs(1),
-	RunE:    cmdgraph.Graph,
+	RunE:    resolved(domain.NOTE, cmdgraph.Graph),
 }
 
 func init() {
