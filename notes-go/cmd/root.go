@@ -19,9 +19,9 @@ var cmd = c.Commands
 
 // TODO appliquer ca a solopg
 var cmdRoot = &cobra.Command{
-	Use:   c.Name,
-	Short: cmd.Root.Short,
-	Long:  cmd.Root.Long,
+	Use:     c.Name,
+	Short:   cmd.Root.Short,
+	Long:    cmd.Root.Long,
 	/* Version: config.Version, 	// TODO link ca correctement */
 	Example: cmd.Root.Example,
 	// Errors are printed by Execute so a form abort (Ctrl+C / Esc) stays silent.
@@ -30,6 +30,10 @@ var cmdRoot = &cobra.Command{
 
 	// Runs before every subcommand: schema creation is idempotent (IF NOT EXISTS).
 	PersistentPreRunE: func(cobra *cobra.Command, args []string) error {
+		if !needsDb(cobra) {
+			return nil
+		}
+
 		env := postgrey.NewEnvironment()
 		env.ReadEnv()
 		postgrey.SetDb(env.Connect())
@@ -54,6 +58,20 @@ var cmdRoot = &cobra.Command{
 	RunE: func(cobra *cobra.Command, args []string) error {
 		return cobra.Help()
 	},
+}
+
+// needsDb is false for what only prints help or shell completion: those must work with the database down.
+func needsDb(command *cobra.Command) bool {
+	if !command.HasParent() {
+		return false
+	}
+	for ; command != nil; command = command.Parent() {
+		switch command.Name() {
+		case "completion", cobra.ShellCompRequestCmd, cobra.ShellCompNoDescRequestCmd:
+			return false
+		}
+	}
+	return true
 }
 
 func Execute() {
