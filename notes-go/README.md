@@ -103,6 +103,37 @@ notes search recette --json | jq -r '.[].id'
 
 Le détail de chaque commande est dans `notes <commande> --help`.
 
+## API
+
+```sh
+make api                                     # dans Docker, avec WEB_ORIGIN défini dans .env
+notes serve --origin http://localhost:3001   # ou directement sur la machine
+```
+
+`--addr` choisit l'adresse d'écoute (`127.0.0.1:8080` par défaut) et `--origin` l'origine de l'app web autorisée.
+
+| Ressource | Routes (préfixe `/api`) | Corps JSON |
+|---|---|---|
+| Notes | `POST /notes`, `GET`, `PATCH`, `DELETE /notes/{id}`, `GET /notes/{id}/neighbors` | `title`, `content`, `tags`, `parent_id` (création) |
+| Dossiers | `GET`, `POST /folders`, `GET`, `PATCH`, `DELETE /folders/{id}` | `title`, `parent_id` (création) |
+| Parcourir | `GET /items?parent=<uuid>` (racine sans `parent`), `POST /move` | `ids`, `parent_id` (racine sans `parent_id`) |
+| Tags | `GET`, `POST /tags`, `GET`, `PATCH`, `DELETE /tags/{value}` | `values` (création), `value` (renommage) |
+| Graphe | `GET /graph` | |
+| Recherche | `GET /search?q=<texte>`, `GET /recent` | |
+| Corbeille | `GET /trash`, `POST /restore` | `ids` |
+
+- `PATCH /notes/{id}` ne change que les champs envoyés : sans `tags`, les tags sont conservés, et avec `"tags": []`, ils sont retirés.
+- Les erreurs ont la forme `{"error": "..."}`, avec le statut 400, 403, 404, 409, 413 ou 500.
+- Les éléments supprimés passent par la corbeille. Le serveur la purge toutes les heures.
+
+### Sécurité
+
+L'API n'a pas d'authentification : **ne la publie jamais ailleurs que sur `127.0.0.1`**.
+
+- Une requête dont l'en-tête `Origin` diffère de `--origin` est refusée (403). Sans `--origin`, aucune page web ne peut l'appeler.
+- Une requête sans `Origin` (`curl`, scripts) est acceptée : tout programme local peut donc appeler l'API.
+- L'en-tête `Host` doit valoir `localhost`, `127.0.0.1`, `[::1]` ou l'hôte de `--origin`, ce qui bloque le DNS rebinding.
+
 ## Configuration
 
 | Variable | Rôle | Défaut |
@@ -112,6 +143,7 @@ Le détail de chaque commande est dans `notes <commande> --help`.
 | `POSTGRES_HOST` | Hôte | `localhost` |
 | `PORT` | Port PostgreSQL | `5432` |
 | `CONFIG_FILE` | Remplace la configuration embarquée | `config/config.yaml`, intégré au binaire |
+| `WEB_ORIGIN` | Origine de l'app web pour `make api` | aucune |
 
 Les commandes, leurs textes d'aide et leurs flags sont définis dans `config/config.yaml`. Ce fichier est intégré à la compilation : recompile après l'avoir modifié, ou pointe `CONFIG_FILE` vers ton fichier.
 
@@ -146,7 +178,7 @@ LibreDB Studio, une interface pour explorer la base, est sur <http://localhost:3
 | `app/cli/` | Point d'entrée et affichage de chaque commande |
 | `app/shared/services/process/` | Logique métier et requêtes, réutilisables par l'API |
 | `app/shared/domain/` | Modèles de données |
-| `app/api/` | Routes de l'API (à venir) |
+| `app/api/` | Routes de l'API, une par dossier |
 | `config/` | Configuration et textes des commandes |
 
 ## Licence
