@@ -7,14 +7,18 @@ import (
 	"github.com/uptrace/bun"
 	apicreatefolder "main.go/app/api/create-folder"
 	apicreatenote "main.go/app/api/create-note"
+	apicreatetag "main.go/app/api/create-tag"
 	apideletefolder "main.go/app/api/delete-folder"
 	apideletenote "main.go/app/api/delete-note"
+	apideletetag "main.go/app/api/delete-tag"
 	apieditfolder "main.go/app/api/edit-folder"
 	apieditnote "main.go/app/api/edit-note"
+	apiedittag "main.go/app/api/edit-tag"
 	apimove "main.go/app/api/move"
 	apireadfinder "main.go/app/api/read-finder"
 	apireadfolder "main.go/app/api/read-folder"
 	apireadnote "main.go/app/api/read-note"
+	apireadtag "main.go/app/api/read-tag"
 	"main.go/app/api/services/guard"
 )
 
@@ -35,6 +39,12 @@ func New(db bun.IDB, origin string) http.Handler {
 
 	mux.Handle("GET /api/items", apireadfinder.Handler(db))
 	mux.Handle("POST /api/move", apimove.Handler(db))
+
+	mux.Handle("GET /api/tags", apireadtag.List(db))
+	mux.Handle("POST /api/tags", apicreatetag.Handler(db))
+	mux.Handle("GET /api/tags/{value}", apireadtag.Handler(db))
+	mux.Handle("PATCH /api/tags/{value}", apiedittag.Handler(db))
+	mux.Handle("DELETE /api/tags/{value}", apideletetag.Handler(db))
 
 	return guard.New(origin, mux)
 }
