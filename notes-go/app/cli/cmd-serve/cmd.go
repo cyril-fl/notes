@@ -14,9 +14,12 @@ import (
 	"main.go/app/api"
 	"main.go/app/api/services/guard"
 	"main.go/app/shared/services/postgrey"
+	"main.go/app/shared/services/process/purgeitems"
+	"main.go/config"
 )
 
 const (
+	purgeInterval   = time.Hour
 	shutdownTimeout = 10 * time.Second
 )
 
@@ -38,6 +41,14 @@ func Serve(cobra *cobra.Command, args []string) error {
 	defer stop()
 
 	db := postgrey.GetDb()
+	go every(ctx, purgeInterval, func() {
+		purge := purgeitems.Process(ctx, db, config.Current.Trash.RetentionDays)
+		purge.Run()
+		if purge.HasErr() && ctx.Err() == nil {
+			log.Printf("purge: %v", purge.GetErr())
+		}
+	})
+
 	server := &http.Server{
 		Addr:              addr,
 		Handler:           api.New(db, origin),
@@ -65,4 +76,19 @@ func Serve(cobra *cobra.Command, args []string) error {
 	}
 	log.Print("stopped")
 	return nil
+}
+
+// every runs task at each interval until ctx ends: the root command only purges at startup, a server runs for weeks.
+func every(ctx context.Context, interval time.Duration, task func()) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			task()
+		}
+	}
 }
