@@ -11,17 +11,17 @@ import (
 
 // Neighbor is a note sharing at least one tag with the center, with the shared tags.
 type Neighbor struct {
-	ID     string
-	Title  string
-	Path   string
-	Tags   []string `bun:",array"`
-	Shared int
+	ID     string   `json:"id"`
+	Title  string   `json:"title"`
+	Path   string   `json:"path"`
+	Tags   []string `bun:",array" json:"tags"`
+	Shared int      `json:"shared"`
 }
 
 // Result is the center note (path, content, tags) and its neighbors, most shared tags first.
 type Result struct {
-	Note      readitem.Result
-	Neighbors []Neighbor
+	Note      readitem.Result `json:"note"`
+	Neighbors []Neighbor      `json:"neighbors"`
 }
 
 type run struct {

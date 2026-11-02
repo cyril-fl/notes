@@ -35,8 +35,8 @@ type Result struct {
 	Item     domain.Item   `json:"item"`
 	Path     string        `json:"path"`
 	Content  string        `json:"content,omitempty"`
-	Tags     []string      `json:"tags,omitempty"`
-	Children []domain.Item `json:"children"`
+	Tags     []string      `json:"tags,omitzero"`
+	Children []domain.Item `json:"children,omitzero"`
 }
 
 type run struct {

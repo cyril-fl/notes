@@ -22,8 +22,8 @@ const foreignKeyViolation = "23503"
 
 // Input is a folder as the user gave it: an empty ParentID puts it at the root.
 type Input struct {
-	Title    string
-	ParentID string
+	Title    string `json:"title"`
+	ParentID string `json:"parent_id"`
 }
 
 type run struct {

@@ -20,15 +20,15 @@ var (
 
 // Note is a note carrying the tag, with its path.
 type Note struct {
-	ID    string
-	Title string
-	Path  string
+	ID    string `json:"id"`
+	Title string `json:"title"`
+	Path  string `json:"path"`
 }
 
 // Result is the tag and its live notes, by path.
 type Result struct {
-	Tag   domain.Tag
-	Notes []Note
+	Tag   domain.Tag `json:"tag"`
+	Notes []Note     `json:"notes"`
 }
 
 type run struct {

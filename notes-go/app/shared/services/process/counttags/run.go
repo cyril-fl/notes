@@ -9,8 +9,8 @@ import (
 
 // TagCount is a tag with the number of live notes carrying it.
 type TagCount struct {
-	Value string
-	Notes int
+	Value string `json:"value"`
+	Notes int    `json:"notes"`
 }
 
 type run struct {

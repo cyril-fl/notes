@@ -11,8 +11,8 @@ import (
 
 // Folder is a live folder with its path from the root.
 type Folder struct {
-	ID   string
-	Path string
+	ID   string `json:"id"`
+	Path string `json:"path"`
 }
 
 type run struct {

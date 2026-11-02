@@ -24,8 +24,8 @@ var (
 
 // Input is the new state of the folder.
 type Input struct {
-	ID    string
-	Title string
+	ID    string `json:"-"`
+	Title string `json:"title"`
 }
 
 type run struct {

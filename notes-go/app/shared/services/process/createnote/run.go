@@ -24,10 +24,10 @@ const foreignKeyViolation = "23503"
 
 // Input is a note as the user gave it: an empty Title is an untitled note, Tags are tag values.
 type Input struct {
-	Title    string
-	Content  string
-	ParentID string
-	Tags     []string
+	Title    string   `json:"title"`
+	Content  string   `json:"content"`
+	ParentID string   `json:"parent_id"`
+	Tags     []string `json:"tags"`
 }
 
 type run struct {
