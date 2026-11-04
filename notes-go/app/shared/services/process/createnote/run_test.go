@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"main.go/app/shared/domain"
+	"main.go/app/shared/services/hashtag"
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/createschema"
 	"main.go/app/shared/services/process/createtag"
@@ -69,8 +70,24 @@ func TestCreateNote(t *testing.T) {
 
 	var content string
 	err = tx.NewSelect().Model((*domain.MetadataNote)(nil)).Column("content").Where("item_id = ?", item.ID).Scan(ctx, &content)
-	if err != nil || content != "content" {
-		t.Errorf("content = %q, %v; want content", content, err)
+	if err != nil || !strings.HasPrefix(content, "content\n\n#") {
+		t.Errorf("content = %q, %v; want content then its tags", content, err)
+	}
+
+	parsed := Process(ctx, tx, Input{Content: "avec #" + "testparsed"})
+	parsed.Run()
+	if parsed.HasErr() {
+		t.Fatalf("parsed: %v", parsed.GetErr())
+	}
+	links, err = tx.NewSelect().Model((*domain.NoteTag)(nil)).Where("note_id = ?", parsed.GetResult().ID).Count(ctx)
+	if err != nil || links != 1 {
+		t.Errorf("links of a #tag = %d, %v; want 1", links, err)
+	}
+
+	invalid := Process(ctx, tx, Input{Content: "c", Tags: []string{"a b"}})
+	invalid.Run()
+	if !errors.Is(invalid.GetErr(), hashtag.ErrInvalid) {
+		t.Errorf("invalid tag: err = %v, want %v", invalid.GetErr(), hashtag.ErrInvalid)
 	}
 
 	untitled := Process(ctx, tx, Input{Content: "content"})

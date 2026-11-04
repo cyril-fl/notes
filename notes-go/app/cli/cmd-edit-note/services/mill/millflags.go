@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/uptrace/bun"
 	"main.go/app/shared/domain"
+	"main.go/app/shared/services/hashtag"
 	"main.go/app/shared/services/process/editnote"
 	"main.go/app/shared/services/process/listtag"
 	"main.go/app/shared/services/process/readitem"
@@ -97,7 +98,7 @@ func (m *mill) applyFlags() {
 	if m.flags.Changed("content") {
 		m.cache.input.Content = m.cache.content
 	}
-	m.cache.input.Tags = mergeTags(m.cache.input.Tags, m.cache.addTags, m.cache.removeTags)
+	m.cache.input.Tags = mergeTags(hashtag.Parse(m.cache.input.Content), m.cache.addTags, m.cache.removeTags)
 }
 
 func (m *mill) loadTags() {

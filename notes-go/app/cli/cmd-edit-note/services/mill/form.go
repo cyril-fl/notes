@@ -6,6 +6,7 @@ import (
 
 	"charm.land/huh/v2"
 	"main.go/app/shared/domain"
+	"main.go/app/shared/services/hashtag"
 	"main.go/app/shared/services/huhform"
 )
 
@@ -37,6 +38,9 @@ func (m *mill) askMissing() {
 	}
 
 	m.SetErr(huhform.New(fields...).Run())
+	if !m.cache.tagFromList {
+		m.cache.input.Tags = hashtag.Parse(m.cache.input.Content) // The form may have changed the text.
+	}
 }
 
 // Helpers

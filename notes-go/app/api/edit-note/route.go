@@ -6,6 +6,7 @@ import (
 	"github.com/uptrace/bun"
 	"main.go/app/api/services/respond"
 	"main.go/app/shared/domain"
+	"main.go/app/shared/services/hashtag"
 	"main.go/app/shared/services/process/editnote"
 	"main.go/app/shared/services/process/readitem"
 )
@@ -18,7 +19,7 @@ type Body struct {
 	Tags    *[]string `json:"tags" binding:"optional"`
 }
 
-// Handler changes the fields given: PATCH /api/notes/{id}.
+// Handler changes the fields given: PATCH /api/notes/{id}. The #tags of the content are the tags of the note.
 // shortcut: reads then writes outside a transaction, a concurrent edit can be lost, fine for one user; use a tx if that changes.
 // @Summary  Change the fields given
 // @Tags     notes
@@ -58,6 +59,8 @@ func Handler(db bun.IDB) http.HandlerFunc {
 		if changes.Content != nil {
 			input.Content = *changes.Content
 		}
+		// The text decides, unless the tags were asked for: they then rewrite it.
+		input.Tags = hashtag.Parse(input.Content)
 		if changes.Tags != nil {
 			input.Tags = *changes.Tags
 		}

@@ -82,6 +82,8 @@ notes edit tag go golang
 notes remove tag sql
 ```
 
+Les tags d'une note sont les `#mots` de son texte, code et liens exclus : `#idée` dans le contenu crée le tag et le lie à la note, et l'effacer l'en retire. `--tag` écrit `#tag` à la fin du texte et `--untag` l'efface. Renommer ou supprimer un tag corrige le texte de toutes ses notes, et une note qui se retrouve vide part à la corbeille. Un tag sans plus aucune note disparaît. Un tag contient des lettres, chiffres, `_` ou `-`, avec au moins une lettre.
+
 ### Corbeille
 
 ```sh
@@ -122,7 +124,7 @@ notes serve --origin http://localhost:3000   # ou directement sur la machine
 | Recherche | `GET /search?q=<texte>`, `GET /recent` | |
 | Corbeille | `GET`, `DELETE /trash`, `POST /restore` | `ids` (restauration) |
 
-- `PATCH /notes/{id}` ne change que les champs envoyés : sans `tags`, les tags sont conservés, et avec `"tags": []`, ils sont retirés.
+- `PATCH /notes/{id}` ne change que les champs envoyés. Sans `tags`, les tags sont les `#mots` du contenu. Avec `tags`, cette liste réécrit le contenu : `"tags": []` efface tous ses `#mots`.
 - Les erreurs ont la forme `{"error": "..."}`, avec le statut 400, 403, 404, 409, 413 ou 500.
   Seuls une route inconnue (404) et une méthode non gérée (405) répondent en texte brut, car c'est le routeur qui les écrit.
 - Les éléments supprimés passent par la corbeille. Le serveur la purge toutes les heures. `DELETE /trash` la vide tout de suite et définitivement.

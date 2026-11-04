@@ -57,8 +57,8 @@ func TestResolveFromFlags(t *testing.T) {
 	if resolver.HasErr() {
 		t.Fatalf("Resolve() error = %v", resolver.GetErr())
 	}
-	// --title "" untitles, content is kept, tags are merged.
-	if input.Title != "" || input.Content != "old" || !slices.Equal(input.Tags, []string{"test-edit-b", "test-edit-c"}) {
+	// --title "" untitles, content is kept (editnote writes the tags into it), tags are merged.
+	if input.Title != "" || input.Content != "old\n\n#test-edit-a #test-edit-b" || !slices.Equal(input.Tags, []string{"test-edit-b", "test-edit-c"}) {
 		t.Errorf("input = %+v", input)
 	}
 }

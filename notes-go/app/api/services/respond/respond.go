@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"regexp"
 
+	"main.go/app/shared/services/hashtag"
 	"main.go/app/shared/services/process/createfolder"
 	"main.go/app/shared/services/process/createnote"
 	"main.go/app/shared/services/process/createtag"
@@ -42,6 +43,7 @@ var statuses = []struct {
 		editfolder.ErrNoValue, editfolder.ErrNoTitle,
 		editnote.ErrNoValue, editnote.ErrNoContent,
 		edittag.ErrNoValue,
+		hashtag.ErrInvalid,
 		listitems.ErrInvalidID,
 		moveitems.ErrNoValue, moveitems.ErrInvalidID, moveitems.ErrParentNotFound,
 		readitem.ErrNoValue,

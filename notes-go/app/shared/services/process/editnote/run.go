@@ -12,6 +12,7 @@ import (
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"main.go/app/shared/domain"
+	"main.go/app/shared/services/hashtag"
 	"main.go/app/shared/services/process/createtag"
 )
 
@@ -24,7 +25,8 @@ var (
 	ErrNotFound  = errors.New("note not found")
 )
 
-// Input is the whole new state of the note: an empty Title makes it untitled, Tags replace the current ones.
+// Input is the whole new state of the note: an empty Title makes it untitled. Content ends up holding
+// exactly Tags as #tags, so callers give hashtag.Parse(Content) when only the content changes.
 type Input struct {
 	ID      string
 	Title   string
@@ -45,6 +47,8 @@ type cache struct {
 	input Input
 	item  domain.Item
 	tags  []domain.Tag
+	// unlinked are the tags the note had before this edit.
+	unlinked []string
 }
 
 func Process(ctx context.Context, db bun.IDB, input Input) *run {
@@ -75,11 +79,20 @@ func (p *run) makeNote() {
 		Title:   strings.TrimSpace(p.input.Title),
 		Content: strings.TrimSpace(p.input.Content),
 	}
+	var tags []string
 	for _, tag := range p.input.Tags {
-		if tag = strings.TrimSpace(tag); tag != "" {
-			p.cache.input.Tags = append(p.cache.input.Tags, tag)
+		if tag = strings.TrimSpace(tag); tag == "" {
+			continue
 		}
+		if !hashtag.Valid(tag) {
+			p.SetErr(fmt.Errorf("%w: %q", hashtag.ErrInvalid, tag))
+			return
+		}
+		tags = append(tags, tag)
 	}
+
+	p.cache.input.Content = hashtag.Sync(p.cache.input.Content, tags)
+	p.cache.input.Tags = hashtag.Parse(p.cache.input.Content)
 
 	switch {
 	case p.cache.input.ID == "":
@@ -96,7 +109,7 @@ func (p *run) saveNote() {
 	}
 
 	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
-		for _, step := range []func(context.Context, bun.Tx) error{p.updateItem, p.updateMetadata, p.replaceTags} {
+		for _, step := range []func(context.Context, bun.Tx) error{p.updateItem, p.updateMetadata, p.replaceTags, p.dropUnusedTags} {
 			if err := step(ctx, tx); err != nil {
 				return err
 			}
@@ -128,7 +141,7 @@ func (p *run) updateMetadata(ctx context.Context, tx bun.Tx) error {
 
 // replaceTags drops every link, creates the unknown tags, then links the given ones.
 func (p *run) replaceTags(ctx context.Context, tx bun.Tx) error {
-	_, err := tx.NewDelete().Model((*domain.NoteTag)(nil)).Where("note_id = ?", p.cache.item.ID).Exec(ctx)
+	err := tx.NewDelete().Model((*domain.NoteTag)(nil)).Where("note_id = ?", p.cache.item.ID).Returning("tag_id").Scan(ctx, &p.cache.unlinked)
 	if err != nil || len(p.cache.input.Tags) == 0 {
 		return err
 	}
@@ -153,6 +166,21 @@ func (p *run) replaceTags(ctx context.Context, tx bun.Tx) error {
 		links[i] = domain.NoteTag{TagID: tag.ID, NoteID: p.cache.item.ID}
 	}
 	_, err = tx.NewInsert().Model(&links).Exec(ctx)
+	return err
+}
+
+// dropUnusedTags deletes the tags this edit left without any note, or each pause while typing #golang would
+// leave #g and #go behind. A tag created on its own stays: it was never linked here.
+func (p *run) dropUnusedTags(ctx context.Context, tx bun.Tx) error {
+	if len(p.cache.unlinked) == 0 {
+		return nil
+	}
+
+	_, err := tx.NewDelete().
+		Model((*domain.Tag)(nil)).
+		Where("t.id IN (?)", bun.In(p.cache.unlinked)).
+		Where("NOT EXISTS (SELECT 1 FROM notes_on_tags AS nt WHERE nt.tag_id = t.id)").
+		Exec(ctx)
 	return err
 }
 

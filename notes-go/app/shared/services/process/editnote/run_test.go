@@ -75,8 +75,22 @@ func TestEditNote(t *testing.T) {
 	read := readitem.Process(ctx, tx, domain.NOTE, id)
 	read.Run()
 	got := read.GetResult()
-	if read.HasErr() || got.Content != "new" || !slices.Equal(got.Tags, []string{tag, tag + "-new"}) {
+	want := "new\n\n#" + tag + " #" + tag + "-new"
+	if read.HasErr() || got.Content != want || !slices.Equal(got.Tags, []string{tag, tag + "-new"}) {
 		t.Errorf("read = %+v, %v; want new content and tags replaced", got, read.GetErr())
+	}
+
+	// The tag this edit unlinked had no other note.
+	left, err := tx.NewSelect().Model((*domain.Tag)(nil)).Where("value = ?", tag+"-old").Count(ctx)
+	if err != nil || left != 0 {
+		t.Errorf("unused tag left = %d, %v; want 0", left, err)
+	}
+
+	// Removing the tags from the text of a note holding nothing else leaves it empty: refused.
+	bare := Process(ctx, tx, Input{ID: id, Content: "#" + tag})
+	bare.Run()
+	if !errors.Is(bare.GetErr(), ErrNoContent) {
+		t.Errorf("empty once synced: err = %v, want %v", bare.GetErr(), ErrNoContent)
 	}
 
 	folder := createfolder.Process(ctx, tx, createfolder.Input{Title: "Folder"})

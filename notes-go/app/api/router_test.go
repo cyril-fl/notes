@@ -109,23 +109,31 @@ func TestNotes(t *testing.T) {
 
 	var read detail
 	c.do("GET", path, "", http.StatusOK, &read)
-	if read.Content != "hello" || read.Path != "/"+title || strings.Join(read.Tags, ",") != "go,sql" {
+	if read.Content != "hello\n\n#go #sql" || read.Path != "/"+title || strings.Join(read.Tags, ",") != "go,sql" {
 		t.Errorf("read = %+v", read)
 	}
 	if strings.Contains(c.raw(path), "children") {
 		t.Errorf("a note has no children field: %s", c.raw(path))
 	}
 
-	// One field changed, the others kept: tags above all, editnote would clear them.
-	c.do("PATCH", path, `{"content":"changed"}`, http.StatusOK, nil)
+	// One field changed, the others kept; the tags are those of the text.
+	c.do("PATCH", path, `{"content":"changed #go"}`, http.StatusOK, nil)
 	c.do("GET", path, "", http.StatusOK, &read)
-	if read.Content != "changed" || read.Item.Title != title || strings.Join(read.Tags, ",") != "go,sql" {
+	if read.Content != "changed #go" || read.Item.Title != title || strings.Join(read.Tags, ",") != "go" {
 		t.Errorf("after content patch: %+v", read)
 	}
 
+	c.do("PATCH", path, `{"tags":["go","sql"]}`, http.StatusOK, nil)
+	c.do("GET", path, "", http.StatusOK, &read)
+	if read.Content != "changed #go\n\n#sql" || strings.Join(read.Tags, ",") != "go,sql" {
+		t.Errorf("tags are written into the text: %+v", read)
+	}
+
+	c.do("PATCH", path, `{"tags":["a b"]}`, http.StatusBadRequest, nil)
+
 	c.do("PATCH", path, `{"tags":[]}`, http.StatusOK, nil)
-	if !strings.Contains(c.raw(path), `"tags":[]`) {
-		t.Errorf("an explicit empty list clears the tags: %s", c.raw(path))
+	if !strings.Contains(c.raw(path), `"tags":[]`) || strings.Contains(c.raw(path), "#") {
+		t.Errorf("an explicit empty list clears the tags and their text: %s", c.raw(path))
 	}
 
 	c.do("PATCH", path, `{"title":""}`, http.StatusOK, nil)
