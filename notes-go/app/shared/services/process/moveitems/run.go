@@ -25,7 +25,7 @@ var (
 // Input lists the items to move: an empty ParentID moves them to the root.
 type Input struct {
 	IDs      []string `json:"ids"`
-	ParentID string   `json:"parent_id"`
+	ParentID string   `json:"parent_id" binding:"optional"`
 }
 
 type run struct {

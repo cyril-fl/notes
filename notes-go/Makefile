@@ -23,8 +23,9 @@ api:
 	@docker compose up -d --build api; status=$$?; rm -rf .docker-vendor; exit $$status
 
 # Generates docs/swagger.yaml from the @ comments of app/api; no docs.go, the binary stays out of it.
+# Every field is required unless tagged binding:"optional".
 openapi:
-	go tool swag init --v3.1 -d app/api,app/shared -g router.go -o docs --outputTypes yaml
+	go tool swag init --v3.1 --requiredByDefault -d app/api,app/shared -g router.go -o docs --outputTypes yaml
 
 up:
 	@colima start && docker compose up -d

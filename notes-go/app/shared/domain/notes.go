@@ -17,10 +17,10 @@ type Item struct {
 	bun.BaseModel `bun:"table:items,alias:i" json:"-"`
 
 	ID        string    `bun:",pk,type:uuid,default:gen_random_uuid()" json:"id"`
-	ParentID  *string   `bun:",type:uuid,nullzero" json:"parent_id"`
+	ParentID  *string   `bun:",type:uuid,nullzero" json:"parent_id" binding:"optional"`
 	Parent    *Item     `bun:"rel:belongs-to,join:parent_id=id" json:"-"`
 	CreatedAt time.Time `bun:",notnull,default:current_timestamp" json:"created_at"`
-	UpdatedAt time.Time `bun:",nullzero" json:"updated_at,omitzero"`
+	UpdatedAt time.Time `bun:",nullzero" json:"updated_at,omitzero" binding:"optional"`
 	DeletedAt time.Time `bun:",soft_delete,nullzero" json:"-"`
 	Kind      Kind      `bun:",notnull" json:"kind"`
 	Title     string    `bun:",nullzero" json:"title"` // NULL = untitled note (--no-title)

@@ -13,9 +13,9 @@ import (
 // Body has pointers to tell a field left out from an empty one: editnote replaces everything,
 // so a request without tags must keep them, not clear them.
 type Body struct {
-	Title   *string   `json:"title"`
-	Content *string   `json:"content"`
-	Tags    *[]string `json:"tags"`
+	Title   *string   `json:"title" binding:"optional"`
+	Content *string   `json:"content" binding:"optional"`
+	Tags    *[]string `json:"tags" binding:"optional"`
 }
 
 // Handler changes the fields given: PATCH /api/notes/{id}.

@@ -6,6 +6,9 @@ components:
           type: integer
         value:
           type: string
+      required:
+      - notes
+      - value
       type: object
     createfolder.Input:
       properties:
@@ -13,6 +16,8 @@ components:
           type: string
         title:
           type: string
+      required:
+      - title
       type: object
     createnote.Input:
       properties:
@@ -27,6 +32,8 @@ components:
           uniqueItems: false
         title:
           type: string
+      required:
+      - content
       type: object
     createtag.Body:
       properties:
@@ -35,6 +42,8 @@ components:
             type: string
           type: array
           uniqueItems: false
+      required:
+      - values
       type: object
     domain.Item:
       properties:
@@ -51,6 +60,11 @@ components:
           type: string
         updated_at:
           type: string
+      required:
+      - created_at
+      - id
+      - kind
+      - title
       type: object
     domain.Kind:
       enum:
@@ -67,11 +81,16 @@ components:
         value:
           description: unique case-insensitive, see CreateTables
           type: string
+      required:
+      - id
+      - value
       type: object
     editfolder.Input:
       properties:
         title:
           type: string
+      required:
+      - title
       type: object
     editnote.Body:
       properties:
@@ -89,6 +108,8 @@ components:
       properties:
         value:
           type: string
+      required:
+      - value
       type: object
     listfolders.Folder:
       properties:
@@ -96,6 +117,9 @@ components:
           type: string
         path:
           type: string
+      required:
+      - id
+      - path
       type: object
     listrecent.Recent:
       properties:
@@ -107,6 +131,11 @@ components:
           type: string
         updated_at:
           type: string
+      required:
+      - id
+      - path
+      - title
+      - updated_at
       type: object
     listtrash.Trashed:
       properties:
@@ -120,6 +149,12 @@ components:
           $ref: '#/components/schemas/domain.Kind'
         title:
           type: string
+      required:
+      - deleted_at
+      - id
+      - inside
+      - kind
+      - title
       type: object
     moveitems.Input:
       properties:
@@ -130,6 +165,8 @@ components:
           uniqueItems: false
         parent_id:
           type: string
+      required:
+      - ids
       type: object
     readitem.Result:
       properties:
@@ -149,6 +186,9 @@ components:
             type: string
           type: array
           uniqueItems: false
+      required:
+      - item
+      - path
       type: object
     readneighbors.Neighbor:
       properties:
@@ -165,6 +205,12 @@ components:
           uniqueItems: false
         title:
           type: string
+      required:
+      - id
+      - path
+      - shared
+      - tags
+      - title
       type: object
     readneighbors.Result:
       properties:
@@ -175,6 +221,9 @@ components:
           uniqueItems: false
         note:
           $ref: '#/components/schemas/readitem.Result'
+      required:
+      - neighbors
+      - note
       type: object
     readtag.Note:
       properties:
@@ -184,6 +233,10 @@ components:
           type: string
         title:
           type: string
+      required:
+      - id
+      - path
+      - title
       type: object
     readtag.Result:
       properties:
@@ -194,11 +247,16 @@ components:
           uniqueItems: false
         tag:
           $ref: '#/components/schemas/domain.Tag'
+      required:
+      - notes
+      - tag
       type: object
     respond.Failure:
       properties:
         error:
           type: string
+      required:
+      - error
       type: object
     restore.Body:
       properties:
@@ -207,6 +265,8 @@ components:
             type: string
           type: array
           uniqueItems: false
+      required:
+      - ids
       type: object
     searchnotes.Match:
       properties:
@@ -218,6 +278,11 @@ components:
           type: string
         title:
           type: string
+      required:
+      - id
+      - path
+      - snippet
+      - title
       type: object
 externalDocs:
   description: ""
