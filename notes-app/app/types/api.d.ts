@@ -306,6 +306,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/graph/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read every note and the links between those sharing tags */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["readgraph.Result"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/items": {
         parameters: {
             query?: never;
@@ -1310,6 +1355,20 @@ export interface components {
         "moveitems.Input": {
             ids: string[];
             parent_id?: string;
+        };
+        "readgraph.Link": {
+            source: string;
+            tags: string[];
+            target: string;
+        };
+        "readgraph.Note": {
+            id: string;
+            path: string;
+            title: string;
+        };
+        "readgraph.Result": {
+            links: components["schemas"]["readgraph.Link"][];
+            notes: components["schemas"]["readgraph.Note"][];
         };
         "readitem.Result": {
             children?: components["schemas"]["domain.Item"][];

@@ -41,6 +41,11 @@ const isOverRoot = useDropFolder(rootLink, () => null);
         <FolderTree />
       </section>
 
+      <NuxtLink to="/graph" class="row font-medium" :class="{ 'row-active': route.path === '/graph' }">
+        <UIcon name="i-lucide-waypoints" class="size-4 shrink-0" />
+        Graphe
+      </NuxtLink>
+
       <section v-if="tags.length">
         <h2 class="px-2 pb-1 text-xs font-medium text-muted">Tags</h2>
         <NuxtLink

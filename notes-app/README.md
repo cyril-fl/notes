@@ -24,7 +24,7 @@ Ouvre bien `localhost`, pas `127.0.0.1` : l'API compare l'origine exactement. `N
 ## Commandes
 
 ```sh
-pnpm test        # file de sauvegarde
+pnpm test        # file de sauvegarde et disposition du graphe
 pnpm typecheck
 pnpm types       # régénère app/types/api.d.ts depuis ../notes-go/docs/swagger.yaml
 pnpm generate    # site statique dans .output/public

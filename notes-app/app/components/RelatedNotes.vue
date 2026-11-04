@@ -11,7 +11,10 @@ const { data } = useLazyAsyncData(`neighbors:${props.noteId}`, () =>
 
 <template>
   <section v-if="data?.neighbors.length" class="mt-10 border-t border-default pt-4">
-    <h2 class="mb-2 text-xs font-medium text-muted">Notes liées</h2>
+    <div class="mb-2 flex items-center justify-between">
+      <h2 class="text-xs font-medium text-muted">Notes liées</h2>
+      <NuxtLink :to="{ path: '/graph', query: { note: noteId } }" class="text-xs text-primary">Voir le graphe</NuxtLink>
+    </div>
     <NoteList :notes="data.neighbors" />
   </section>
 </template>
