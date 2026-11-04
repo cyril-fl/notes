@@ -4,6 +4,10 @@ Web app de `notes-go`, en Nuxt et Nuxt UI, sans serveur : le navigateur appelle 
 
 ## Lancer
 
+Toute la stack, depuis la racine du repo : `make up`, puis `make down` pour l'arrêter (Colima reste démarré, d'autres projets peuvent l'utiliser). `make up` lance la web app en arrière-plan, avec ses logs dans `.build/notes-app.log`.
+
+Ou pièce par pièce :
+
 Dans `notes-go/.env`, autorise l'app :
 
 ```sh
