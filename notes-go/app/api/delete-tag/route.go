@@ -11,7 +11,7 @@ import (
 )
 
 // Handler deletes a tag, not the notes carrying it: DELETE /api/tags/{value}.
-// @Summary  Delete a tag, not the notes carrying it
+// @Summary  Delete a tag and erase it from the text of its notes
 // @Tags     tags
 // @Produce  json
 // @Param    value path string true "tag"

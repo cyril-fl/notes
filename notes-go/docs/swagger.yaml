@@ -919,7 +919,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/respond.Failure'
           description: Internal Server Error
-      summary: Delete a tag, not the notes carrying it
+      summary: Delete a tag and erase it from the text of its notes
       tags:
       - tags
     get:

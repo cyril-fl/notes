@@ -7,9 +7,12 @@ import (
 	"testing"
 	"time"
 
+	"main.go/app/shared/domain"
 	"main.go/app/shared/services/postgrey"
+	"main.go/app/shared/services/process/createnote"
 	"main.go/app/shared/services/process/createschema"
 	"main.go/app/shared/services/process/createtag"
+	"main.go/app/shared/services/process/readitem"
 )
 
 // No DB needed: makeValues fails first and deleteTags is guarded, so a nil db is never touched.
@@ -67,6 +70,31 @@ func TestDeleteIgnoresCaseAndUnknown(t *testing.T) {
 	}
 	if len(second.GetResult()) != 0 {
 		t.Errorf("second result = %+v, want empty", second.GetResult())
+	}
+
+	// The text of its notes loses the tag; a note left empty goes to the trash.
+	gone := value + "-gone"
+	kept := createnote.Process(ctx, tx, createnote.Input{Content: "du #" + gone + " ici"})
+	kept.Run()
+	bare := createnote.Process(ctx, tx, createnote.Input{Content: "#" + gone})
+	bare.Run()
+	if kept.HasErr() || bare.HasErr() {
+		t.Fatalf("seed: %v, %v", kept.GetErr(), bare.GetErr())
+	}
+	inText := Process(ctx, tx, []string{gone})
+	inText.Run()
+	if inText.HasErr() {
+		t.Fatalf("delete in text: %v", inText.GetErr())
+	}
+	read := readitem.Process(ctx, tx, domain.NOTE, kept.GetResult().ID)
+	read.Run()
+	if got := read.GetResult(); got.Content != "du ici" || len(got.Tags) != 0 {
+		t.Errorf("after delete: %+v, %v", got, read.GetErr())
+	}
+	trashed := readitem.Process(ctx, tx, domain.NOTE, bare.GetResult().ID)
+	trashed.Run()
+	if !errors.Is(trashed.GetErr(), readitem.ErrNotFound) {
+		t.Errorf("empty note: err = %v, want it in the trash", trashed.GetErr())
 	}
 
 	// The other tag must survive.
