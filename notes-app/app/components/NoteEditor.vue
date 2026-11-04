@@ -27,6 +27,7 @@ const notFound = ref(false);
 
 const failed = ref(false);
 const saving = ref(false);
+const isEmpty = ref(!props.noteId);
 // The editor can change its document while loading: only what follows a user interaction is an edit,
 // or merely opening a note would rewrite the markdown written with the CLI. Pointerdown too: a task checkbox takes no focus.
 const touched = ref(false);
@@ -81,6 +82,7 @@ async function load() {
     tags.value = note.tags ?? [];
     path.value = note.path.slice(0, note.path.lastIndexOf('/')) || '/';
     parent.value = note.item.parent_id ?? undefined;
+    isEmpty.value = false;
   } catch {
     notFound.value = true;
   } finally {
@@ -93,11 +95,17 @@ function onContent(markdown: string) {
   if (!touched.value) return;
   // The editor writes blank lines as non-breaking spaces.
   const content = markdown.replace(/&nbsp;/gi, ' ').replace(/ /g, ' ').trim();
+  isEmpty.value = !content;
   saver.push({ content: content || undefined });
 }
 
 // shortcut: a keepalive body is limited to 64 KiB, a longer note loses its last 1.5 s when the tab closes; beacon has the same limit.
 function saveOnClose() {
+  if (id.value && isEmpty.value) {
+    saver.take();
+    fetch(`${baseURL}/api/notes/${id.value}`, { method: 'DELETE', keepalive: true });
+    return;
+  }
   if (saver.isBusy() && !id.value) return; // The note is being created: a second POST would duplicate it.
   const changes = saver.take();
   if (!changes || (!id.value && !changes.content)) return;
@@ -110,6 +118,10 @@ useEventListener(window, 'pagehide', saveOnClose);
 
 async function beforeLeave(to: RouteLocationNormalized) {
   if (to.params.id === id.value) return true; // The new note getting its address.
+  if (isEmpty.value) {
+    saver.take();
+    return true;
+  }
   await saver.flush();
   if (!failed.value) return true;
   const leave = await confirm({
@@ -122,11 +134,18 @@ async function beforeLeave(to: RouteLocationNormalized) {
 onBeforeRouteLeave(beforeLeave);
 onBeforeRouteUpdate(beforeLeave);
 
+// A note left empty goes to the trash, with its last saved content. Not while typing: clearing it to rewrite it must not close it.
+onBeforeUnmount(async () => {
+  if (!id.value || !isEmpty.value) return;
+  await saver.flush(); // A save in progress would fail on a removed note.
+  await removeItem({ id: id.value, kind: 'note' });
+});
+
 async function remove() {
   saver.take();
   // Leave first: the views read again after a removal, and this one would ask for a note that is gone.
   await navigateTo(parent.value ? `/folders/${parent.value}` : '/');
-  if (id.value) await removeItem({ id: id.value, kind: 'note' });
+  if (id.value && !isEmpty.value) await removeItem({ id: id.value, kind: 'note' }); // An empty one removes itself.
 }
 
 async function askLink(editor: Editor) {
@@ -182,6 +201,7 @@ const extensions = [TaskList, TaskItem.configure({ nested: true })];
 
 const status = computed(() => {
   if (failed.value) return 'Non enregistré';
+  if (isEmpty.value && id.value) return 'Vide : ira à la corbeille en la quittant';
   if (saving.value) return 'Enregistrement…';
   return '';
 });
