@@ -11,6 +11,14 @@ import (
 )
 
 // Handler shows a folder and its direct children: GET /api/folders/{id}.
+// @Summary  Read a folder and its direct children
+// @Tags     folders
+// @Produce  json
+// @Param    id path string true "uuid"
+// @Success  200 {object} readitem.Result
+// @Failure  404 {object} respond.Failure
+// @Failure  500 {object} respond.Failure
+// @Router   /api/folders/{id} [get]
 func Handler(db bun.IDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, ok := respond.ID(w, r)
@@ -31,6 +39,12 @@ func Handler(db bun.IDB) http.HandlerFunc {
 }
 
 // List gives every folder with its path: GET /api/folders.
+// @Summary  List every folder with its path
+// @Tags     folders
+// @Produce  json
+// @Success  200 {array} listfolders.Folder
+// @Failure  500 {object} respond.Failure
+// @Router   /api/folders [get]
 func List(db bun.IDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		process := listfolders.Process(r.Context(), db)

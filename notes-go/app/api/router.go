@@ -28,6 +28,9 @@ import (
 	"main.go/app/api/services/guard"
 )
 
+// @title    Notes API
+// @version  1.0
+
 // New gives the API, reachable by web pages from origin only (none when empty).
 func New(db bun.IDB, origin string) http.Handler {
 	mux := http.NewServeMux()

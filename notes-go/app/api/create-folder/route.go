@@ -9,6 +9,16 @@ import (
 )
 
 // Handler creates a folder: POST /api/folders.
+// @Summary  Create a folder
+// @Tags     folders
+// @Accept   json
+// @Produce  json
+// @Param    body body createfolder.Input true "body"
+// @Success  201 {object} domain.Item
+// @Failure  400 {object} respond.Failure
+// @Failure  413 {object} respond.Failure
+// @Failure  500 {object} respond.Failure
+// @Router   /api/folders [post]
 func Handler(db bun.IDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var input createfolder.Input

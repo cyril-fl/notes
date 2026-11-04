@@ -10,9 +10,9 @@ import (
 	"main.go/app/shared/services/process/readitem"
 )
 
-// body has pointers to tell a field left out from an empty one: editnote replaces everything,
+// Body has pointers to tell a field left out from an empty one: editnote replaces everything,
 // so a request without tags must keep them, not clear them.
-type body struct {
+type Body struct {
 	Title   *string   `json:"title"`
 	Content *string   `json:"content"`
 	Tags    *[]string `json:"tags"`
@@ -20,6 +20,18 @@ type body struct {
 
 // Handler changes the fields given: PATCH /api/notes/{id}.
 // shortcut: reads then writes outside a transaction, a concurrent edit can be lost, fine for one user; use a tx if that changes.
+// @Summary  Change the fields given
+// @Tags     notes
+// @Accept   json
+// @Produce  json
+// @Param    id path string true "uuid"
+// @Param    body body Body true "body"
+// @Success  200 {object} domain.Item
+// @Failure  400 {object} respond.Failure
+// @Failure  404 {object} respond.Failure
+// @Failure  413 {object} respond.Failure
+// @Failure  500 {object} respond.Failure
+// @Router   /api/notes/{id} [patch]
 func Handler(db bun.IDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, ok := respond.ID(w, r)
@@ -27,7 +39,7 @@ func Handler(db bun.IDB) http.HandlerFunc {
 			return
 		}
 
-		var changes body
+		var changes Body
 		if !respond.Decode(w, r, &changes) {
 			return
 		}

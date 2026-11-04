@@ -12,6 +12,14 @@ import (
 )
 
 // Handler moves the note to the trash: DELETE /api/notes/{id}.
+// @Summary  Move a note to the trash
+// @Tags     notes
+// @Produce  json
+// @Param    id path string true "uuid"
+// @Success  204
+// @Failure  404 {object} respond.Failure
+// @Failure  500 {object} respond.Failure
+// @Router   /api/notes/{id} [delete]
 func Handler(db bun.IDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, ok := respond.ID(w, r)

@@ -128,6 +128,11 @@ func ValidIDs(w http.ResponseWriter, ids ...string) bool {
 	return true
 }
 
+// Failure is the body of every error.
+type Failure struct {
+	Error string `json:"error"`
+}
+
 func fail(w http.ResponseWriter, status int, message string) {
-	JSON(w, status, map[string]string{"error": message})
+	JSON(w, status, Failure{Error: message})
 }

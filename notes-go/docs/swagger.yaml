@@ -1,0 +1,979 @@
+components:
+  schemas:
+    counttags.TagCount:
+      properties:
+        notes:
+          type: integer
+        value:
+          type: string
+      type: object
+    createfolder.Input:
+      properties:
+        parent_id:
+          type: string
+        title:
+          type: string
+      type: object
+    createnote.Input:
+      properties:
+        content:
+          type: string
+        parent_id:
+          type: string
+        tags:
+          items:
+            type: string
+          type: array
+          uniqueItems: false
+        title:
+          type: string
+      type: object
+    createtag.Body:
+      properties:
+        values:
+          items:
+            type: string
+          type: array
+          uniqueItems: false
+      type: object
+    domain.Item:
+      properties:
+        created_at:
+          type: string
+        id:
+          type: string
+        kind:
+          $ref: '#/components/schemas/domain.Kind'
+        parent_id:
+          type: string
+        title:
+          description: NULL = untitled note (--no-title)
+          type: string
+        updated_at:
+          type: string
+      type: object
+    domain.Kind:
+      enum:
+      - folder
+      - note
+      type: string
+      x-enum-varnames:
+      - FOLDER
+      - NOTE
+    domain.Tag:
+      properties:
+        id:
+          type: string
+        value:
+          description: unique case-insensitive, see CreateTables
+          type: string
+      type: object
+    editfolder.Input:
+      properties:
+        title:
+          type: string
+      type: object
+    editnote.Body:
+      properties:
+        content:
+          type: string
+        tags:
+          items:
+            type: string
+          type: array
+          uniqueItems: false
+        title:
+          type: string
+      type: object
+    edittag.Body:
+      properties:
+        value:
+          type: string
+      type: object
+    listfolders.Folder:
+      properties:
+        id:
+          type: string
+        path:
+          type: string
+      type: object
+    listrecent.Recent:
+      properties:
+        id:
+          type: string
+        path:
+          type: string
+        title:
+          type: string
+        updated_at:
+          type: string
+      type: object
+    listtrash.Trashed:
+      properties:
+        deleted_at:
+          type: string
+        id:
+          type: string
+        inside:
+          type: integer
+        kind:
+          $ref: '#/components/schemas/domain.Kind'
+        title:
+          type: string
+      type: object
+    moveitems.Input:
+      properties:
+        ids:
+          items:
+            type: string
+          type: array
+          uniqueItems: false
+        parent_id:
+          type: string
+      type: object
+    readitem.Result:
+      properties:
+        children:
+          items:
+            $ref: '#/components/schemas/domain.Item'
+          type: array
+          uniqueItems: false
+        content:
+          type: string
+        item:
+          $ref: '#/components/schemas/domain.Item'
+        path:
+          type: string
+        tags:
+          items:
+            type: string
+          type: array
+          uniqueItems: false
+      type: object
+    readneighbors.Neighbor:
+      properties:
+        id:
+          type: string
+        path:
+          type: string
+        shared:
+          type: integer
+        tags:
+          items:
+            type: string
+          type: array
+          uniqueItems: false
+        title:
+          type: string
+      type: object
+    readneighbors.Result:
+      properties:
+        neighbors:
+          items:
+            $ref: '#/components/schemas/readneighbors.Neighbor'
+          type: array
+          uniqueItems: false
+        note:
+          $ref: '#/components/schemas/readitem.Result'
+      type: object
+    readtag.Note:
+      properties:
+        id:
+          type: string
+        path:
+          type: string
+        title:
+          type: string
+      type: object
+    readtag.Result:
+      properties:
+        notes:
+          items:
+            $ref: '#/components/schemas/readtag.Note'
+          type: array
+          uniqueItems: false
+        tag:
+          $ref: '#/components/schemas/domain.Tag'
+      type: object
+    respond.Failure:
+      properties:
+        error:
+          type: string
+      type: object
+    restore.Body:
+      properties:
+        ids:
+          items:
+            type: string
+          type: array
+          uniqueItems: false
+      type: object
+    searchnotes.Match:
+      properties:
+        id:
+          type: string
+        path:
+          type: string
+        snippet:
+          type: string
+        title:
+          type: string
+      type: object
+externalDocs:
+  description: ""
+  url: ""
+info:
+  title: Notes API
+  version: "1.0"
+openapi: 3.1.0
+paths:
+  /api/folders:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/listfolders.Folder'
+                type: array
+          description: OK
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: List every folder with its path
+      tags:
+      - folders
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createfolder.Input'
+              description: body
+              summary: body
+        description: body
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/domain.Item'
+          description: Created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "413":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Request Entity Too Large
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Create a folder
+      tags:
+      - folders
+  /api/folders/{id}:
+    delete:
+      parameters:
+      - description: uuid
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Move a folder and its content to the trash
+      tags:
+      - folders
+    get:
+      parameters:
+      - description: uuid
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/readitem.Result'
+          description: OK
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Read a folder and its direct children
+      tags:
+      - folders
+    patch:
+      parameters:
+      - description: uuid
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/editfolder.Input'
+              description: body
+              summary: body
+        description: body
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/domain.Item'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+        "413":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Request Entity Too Large
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Rename a folder
+      tags:
+      - folders
+  /api/graph:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/counttags.TagCount'
+                type: array
+          description: OK
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Count the notes of every tag, most used first
+      tags:
+      - graph
+  /api/items:
+    get:
+      parameters:
+      - description: folder uuid, the root when left out
+        in: query
+        name: parent
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/domain.Item'
+                type: array
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: List the direct children of a folder, or of the root
+      tags:
+      - items
+  /api/move:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/moveitems.Input'
+              description: body
+              summary: body
+        description: body
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/domain.Item'
+                type: array
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Conflict
+        "413":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Request Entity Too Large
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Move items into a folder, or to the root without parent_id
+      tags:
+      - items
+  /api/notes:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createnote.Input'
+              description: body
+              summary: body
+        description: body
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/domain.Item'
+          description: Created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "413":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Request Entity Too Large
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Create a note
+      tags:
+      - notes
+  /api/notes/{id}:
+    delete:
+      parameters:
+      - description: uuid
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Move a note to the trash
+      tags:
+      - notes
+    get:
+      parameters:
+      - description: uuid
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/readitem.Result'
+          description: OK
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Read a note
+      tags:
+      - notes
+    patch:
+      parameters:
+      - description: uuid
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/editnote.Body'
+              description: body
+              summary: body
+        description: body
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/domain.Item'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+        "413":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Request Entity Too Large
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Change the fields given
+      tags:
+      - notes
+  /api/notes/{id}/neighbors:
+    get:
+      parameters:
+      - description: uuid
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/readneighbors.Result'
+          description: OK
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Read a note and the notes sharing its tags
+      tags:
+      - notes
+  /api/recent:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/listrecent.Recent'
+                type: array
+          description: OK
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: List the last changed notes
+      tags:
+      - search
+  /api/restore:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/restore.Body'
+              description: body
+              summary: body
+        description: body
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/domain.Item'
+                type: array
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Conflict
+        "413":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Request Entity Too Large
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Take items out of the trash
+      tags:
+      - trash
+  /api/search:
+    get:
+      parameters:
+      - description: text to find
+        in: query
+        name: q
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/searchnotes.Match'
+                type: array
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Find notes by title or content
+      tags:
+      - search
+  /api/tags:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/domain.Tag'
+                type: array
+          description: OK
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: List every tag
+      tags:
+      - tags
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createtag.Body'
+              description: body
+              summary: body
+        description: body
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/domain.Tag'
+                type: array
+          description: Created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "413":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Request Entity Too Large
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Create tags, skipping existing ones
+      tags:
+      - tags
+  /api/tags/{value}:
+    delete:
+      parameters:
+      - description: tag
+        in: path
+        name: value
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Delete a tag, not the notes carrying it
+      tags:
+      - tags
+    get:
+      parameters:
+      - description: tag
+        in: path
+        name: value
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/readtag.Result'
+          description: OK
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Read a tag and the notes carrying it
+      tags:
+      - tags
+    patch:
+      parameters:
+      - description: tag
+        in: path
+        name: value
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/edittag.Body'
+              description: body
+              summary: body
+        description: body
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/domain.Tag'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Conflict
+        "413":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Request Entity Too Large
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Rename a tag
+      tags:
+      - tags
+  /api/trash:
+    delete:
+      responses:
+        "204":
+          description: No Content
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Empty the trash for good
+      tags:
+      - trash
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/listtrash.Trashed'
+                type: array
+          description: OK
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: List what was removed
+      tags:
+      - trash

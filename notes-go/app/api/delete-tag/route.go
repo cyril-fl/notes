@@ -11,6 +11,14 @@ import (
 )
 
 // Handler deletes a tag, not the notes carrying it: DELETE /api/tags/{value}.
+// @Summary  Delete a tag, not the notes carrying it
+// @Tags     tags
+// @Produce  json
+// @Param    value path string true "tag"
+// @Success  204
+// @Failure  404 {object} respond.Failure
+// @Failure  500 {object} respond.Failure
+// @Router   /api/tags/{value} [delete]
 func Handler(db bun.IDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		value := r.PathValue("value")

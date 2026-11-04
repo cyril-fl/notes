@@ -9,6 +9,12 @@ import (
 )
 
 // Handler empties the trash for good: DELETE /api/trash.
+// @Summary  Empty the trash for good
+// @Tags     trash
+// @Produce  json
+// @Success  204
+// @Failure  500 {object} respond.Failure
+// @Router   /api/trash [delete]
 func Handler(db bun.IDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		process := emptytrash.Process(r.Context(), db)

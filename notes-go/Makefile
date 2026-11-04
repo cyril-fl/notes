@@ -1,4 +1,4 @@
-.PHONY: setup test backup api
+.PHONY: setup test backup api openapi
 
 # Not `go tool lefthook install`: the hook would call a build cache path that expires, then skip its checks without failing.
 setup:
@@ -21,6 +21,10 @@ backup:
 api:
 	@go mod vendor -o .docker-vendor
 	@docker compose up -d --build api; status=$$?; rm -rf .docker-vendor; exit $$status
+
+# Generates docs/swagger.yaml from the @ comments of app/api; no docs.go, the binary stays out of it.
+openapi:
+	go tool swag init --v3.1 -d app/api,app/shared -g router.go -o docs --outputTypes yaml
 
 up:
 	@colima start && docker compose up -d

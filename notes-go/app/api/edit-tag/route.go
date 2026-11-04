@@ -8,14 +8,27 @@ import (
 	"main.go/app/shared/services/process/edittag"
 )
 
-type body struct {
+type Body struct {
 	Value string `json:"value"`
 }
 
 // Handler renames a tag: PATCH /api/tags/{value}.
+// @Summary  Rename a tag
+// @Tags     tags
+// @Accept   json
+// @Produce  json
+// @Param    value path string true "tag"
+// @Param    body body Body true "body"
+// @Success  200 {object} domain.Tag
+// @Failure  400 {object} respond.Failure
+// @Failure  404 {object} respond.Failure
+// @Failure  409 {object} respond.Failure
+// @Failure  413 {object} respond.Failure
+// @Failure  500 {object} respond.Failure
+// @Router   /api/tags/{value} [patch]
 func Handler(db bun.IDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var input body
+		var input Body
 		if !respond.Decode(w, r, &input) {
 			return
 		}

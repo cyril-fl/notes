@@ -9,6 +9,12 @@ import (
 )
 
 // Handler lists the last changed notes: GET /api/recent.
+// @Summary  List the last changed notes
+// @Tags     search
+// @Produce  json
+// @Success  200 {array} listrecent.Recent
+// @Failure  500 {object} respond.Failure
+// @Router   /api/recent [get]
 func Handler(db bun.IDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		process := listrecent.Process(r.Context(), db)

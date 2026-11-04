@@ -125,6 +125,7 @@ notes serve --origin http://localhost:3001   # ou directement sur la machine
 - `PATCH /notes/{id}` ne change que les champs envoyés : sans `tags`, les tags sont conservés, et avec `"tags": []`, ils sont retirés.
 - Les erreurs ont la forme `{"error": "..."}`, avec le statut 400, 403, 404, 409, 413 ou 500.
 - Les éléments supprimés passent par la corbeille. Le serveur la purge toutes les heures. `DELETE /trash` la vide tout de suite et définitivement.
+- `make openapi` génère le contrat OpenAPI dans `docs/swagger.yaml`, à partir des commentaires `@` des routes.
 
 ### Sécurité
 

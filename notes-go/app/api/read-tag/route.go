@@ -10,6 +10,14 @@ import (
 )
 
 // Handler shows a tag and the notes carrying it: GET /api/tags/{value}.
+// @Summary  Read a tag and the notes carrying it
+// @Tags     tags
+// @Produce  json
+// @Param    value path string true "tag"
+// @Success  200 {object} readtag.Result
+// @Failure  404 {object} respond.Failure
+// @Failure  500 {object} respond.Failure
+// @Router   /api/tags/{value} [get]
 func Handler(db bun.IDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		process := readtag.Process(r.Context(), db, r.PathValue("value"))
@@ -25,6 +33,12 @@ func Handler(db bun.IDB) http.HandlerFunc {
 }
 
 // List gives every tag: GET /api/tags.
+// @Summary  List every tag
+// @Tags     tags
+// @Produce  json
+// @Success  200 {array} domain.Tag
+// @Failure  500 {object} respond.Failure
+// @Router   /api/tags [get]
 func List(db bun.IDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		process := listtag.Process(r.Context(), db)

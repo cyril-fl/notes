@@ -10,6 +10,12 @@ import (
 )
 
 // Handler gives every tag with how many notes carry it, most used first: GET /api/graph.
+// @Summary  Count the notes of every tag, most used first
+// @Tags     graph
+// @Produce  json
+// @Success  200 {array} counttags.TagCount
+// @Failure  500 {object} respond.Failure
+// @Router   /api/graph [get]
 func Handler(db bun.IDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		process := counttags.Process(r.Context(), db)
@@ -23,6 +29,14 @@ func Handler(db bun.IDB) http.HandlerFunc {
 }
 
 // Neighbors gives a note and the notes sharing its tags: GET /api/notes/{id}/neighbors.
+// @Summary  Read a note and the notes sharing its tags
+// @Tags     notes
+// @Produce  json
+// @Param    id path string true "uuid"
+// @Success  200 {object} readneighbors.Result
+// @Failure  404 {object} respond.Failure
+// @Failure  500 {object} respond.Failure
+// @Router   /api/notes/{id}/neighbors [get]
 func Neighbors(db bun.IDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, ok := respond.ID(w, r)

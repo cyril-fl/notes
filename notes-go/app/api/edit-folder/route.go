@@ -9,6 +9,18 @@ import (
 )
 
 // Handler renames a folder: PATCH /api/folders/{id}.
+// @Summary  Rename a folder
+// @Tags     folders
+// @Accept   json
+// @Produce  json
+// @Param    id path string true "uuid"
+// @Param    body body editfolder.Input true "body"
+// @Success  200 {object} domain.Item
+// @Failure  400 {object} respond.Failure
+// @Failure  404 {object} respond.Failure
+// @Failure  413 {object} respond.Failure
+// @Failure  500 {object} respond.Failure
+// @Router   /api/folders/{id} [patch]
 func Handler(db bun.IDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, ok := respond.ID(w, r)
