@@ -261,6 +261,33 @@ func TestFoldersAndMove(t *testing.T) {
 	}
 }
 
+func TestEmptyTrash(t *testing.T) {
+	c := newClient(t)
+
+	var folder, inside, removed, live item
+	c.do("POST", "/api/folders", fmt.Sprintf(`{"title":%q}`, unique("folder")), http.StatusCreated, &folder)
+	c.do("POST", "/api/notes", fmt.Sprintf(`{"content":"C","parent_id":%q}`, folder.ID), http.StatusCreated, &inside)
+	c.do("POST", "/api/notes", `{"content":"C"}`, http.StatusCreated, &removed)
+	c.do("POST", "/api/notes", `{"content":"C"}`, http.StatusCreated, &live)
+	c.do("DELETE", "/api/folders/"+folder.ID, "", http.StatusNoContent, nil)
+	c.do("DELETE", "/api/notes/"+removed.ID, "", http.StatusNoContent, nil)
+
+	c.do("DELETE", "/api/trash", "", http.StatusNoContent, nil)
+
+	if got := c.raw("/api/trash"); strings.TrimSpace(got) != "[]" {
+		t.Errorf("trash = %q, want []", got)
+	}
+	c.do("GET", "/api/notes/"+live.ID, "", http.StatusOK, nil)
+	// Gone for good: nothing left to restore, the folder's content included.
+	var restored []item
+	c.do("POST", "/api/restore", fmt.Sprintf(`{"ids":[%q,%q,%q]}`, folder.ID, inside.ID, removed.ID), http.StatusOK, &restored)
+	if len(restored) != 0 {
+		t.Errorf("restored = %+v", restored)
+	}
+
+	c.do("DELETE", "/api/trash", "", http.StatusNoContent, nil)
+}
+
 func TestTagsAndGraph(t *testing.T) {
 	c := newClient(t)
 	first, second := unique("first"), unique("second")

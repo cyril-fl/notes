@@ -120,11 +120,11 @@ notes serve --origin http://localhost:3001   # ou directement sur la machine
 | Tags | `GET`, `POST /tags`, `GET`, `PATCH`, `DELETE /tags/{value}` | `values` (création), `value` (renommage) |
 | Graphe | `GET /graph` | |
 | Recherche | `GET /search?q=<texte>`, `GET /recent` | |
-| Corbeille | `GET /trash`, `POST /restore` | `ids` |
+| Corbeille | `GET`, `DELETE /trash`, `POST /restore` | `ids` (restauration) |
 
 - `PATCH /notes/{id}` ne change que les champs envoyés : sans `tags`, les tags sont conservés, et avec `"tags": []`, ils sont retirés.
 - Les erreurs ont la forme `{"error": "..."}`, avec le statut 400, 403, 404, 409, 413 ou 500.
-- Les éléments supprimés passent par la corbeille. Le serveur la purge toutes les heures.
+- Les éléments supprimés passent par la corbeille. Le serveur la purge toutes les heures. `DELETE /trash` la vide tout de suite et définitivement.
 
 ### Sécurité
 
