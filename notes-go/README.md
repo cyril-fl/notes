@@ -122,7 +122,7 @@ notes serve --origin http://localhost:3000   # ou directement sur la machine
 | Dossiers | `GET`, `POST /folders`, `GET`, `PATCH`, `DELETE /folders/{id}` | `title`, `parent_id` (création) |
 | Parcourir | `GET /items?parent=<uuid>` (racine sans `parent`), `POST /move` | `ids`, `parent_id` (racine sans `parent_id`) |
 | Tags | `GET`, `POST /tags`, `GET`, `PATCH`, `DELETE /tags/{value}` | `values` (création), `value` (renommage) |
-| Graphe | `GET /graph` | |
+| Graphe | `GET /graph` (tags comptés), `GET /graph/notes` (notes et tags qui les relient) | |
 | Recherche | `GET /search?q=<texte>`, `GET /recent` | |
 | Corbeille | `GET`, `DELETE /trash`, `POST /restore` | `ids` (restauration) |
 

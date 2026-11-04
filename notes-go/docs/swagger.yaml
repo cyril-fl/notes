@@ -168,6 +168,51 @@ components:
       required:
       - ids
       type: object
+    readgraph.Link:
+      properties:
+        source:
+          type: string
+        tags:
+          items:
+            type: string
+          type: array
+          uniqueItems: false
+        target:
+          type: string
+      required:
+      - source
+      - tags
+      - target
+      type: object
+    readgraph.Note:
+      properties:
+        id:
+          type: string
+        path:
+          type: string
+        title:
+          type: string
+      required:
+      - id
+      - path
+      - title
+      type: object
+    readgraph.Result:
+      properties:
+        links:
+          items:
+            $ref: '#/components/schemas/readgraph.Link'
+          type: array
+          uniqueItems: false
+        notes:
+          items:
+            $ref: '#/components/schemas/readgraph.Note'
+          type: array
+          uniqueItems: false
+      required:
+      - links
+      - notes
+      type: object
     readitem.Result:
       properties:
         children:
@@ -476,6 +521,24 @@ paths:
                 $ref: '#/components/schemas/respond.Failure'
           description: Internal Server Error
       summary: Count the notes of every tag, most used first
+      tags:
+      - graph
+  /api/graph/notes:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/readgraph.Result'
+          description: OK
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Read every note and the links between those sharing tags
       tags:
       - graph
   /api/items:

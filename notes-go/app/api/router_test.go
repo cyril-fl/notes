@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -361,6 +362,25 @@ func TestTagsAndGraph(t *testing.T) {
 	}
 	if !found {
 		t.Errorf("graph has no %s with 2 notes: %+v", first, graph)
+	}
+
+	var notes struct {
+		Notes []struct {
+			ID string `json:"id"`
+		} `json:"notes"`
+		Links []struct {
+			Source string   `json:"source"`
+			Target string   `json:"target"`
+			Tags   []string `json:"tags"`
+		} `json:"links"`
+	}
+	c.do("GET", "/api/graph/notes", "", http.StatusOK, &notes)
+	linked := false
+	for _, link := range notes.Links {
+		linked = linked || (link.Source == a.ID && link.Target == b.ID || link.Source == b.ID && link.Target == a.ID) && slices.Equal(link.Tags, []string{first})
+	}
+	if !linked {
+		t.Errorf("graph notes have no link between a and b on %s: %+v", first, notes.Links)
 	}
 
 	var all []struct {

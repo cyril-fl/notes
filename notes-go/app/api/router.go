@@ -57,6 +57,7 @@ func New(db bun.IDB, origin string) http.Handler {
 	mux.Handle("DELETE /api/tags/{value}", apideletetag.Handler(db))
 
 	mux.Handle("GET /api/graph", apireadgraph.Handler(db))
+	mux.Handle("GET /api/graph/notes", apireadgraph.Notes(db))
 	mux.Handle("GET /api/search", apisearch.Handler(db))
 	mux.Handle("GET /api/recent", apireadrecent.Handler(db))
 	mux.Handle("GET /api/trash", apireadtrash.Handler(db))

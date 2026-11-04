@@ -6,6 +6,7 @@ import (
 	"github.com/uptrace/bun"
 	"main.go/app/api/services/respond"
 	"main.go/app/shared/services/process/counttags"
+	"main.go/app/shared/services/process/readgraph"
 	"main.go/app/shared/services/process/readneighbors"
 )
 
@@ -25,6 +26,28 @@ func Handler(db bun.IDB) http.HandlerFunc {
 			return
 		}
 		respond.List(w, http.StatusOK, process.GetResult())
+	}
+}
+
+// Notes gives every live note and the links between those sharing tags: GET /api/graph/notes.
+// @Summary  Read every note and the links between those sharing tags
+// @Tags     graph
+// @Produce  json
+// @Success  200 {object} readgraph.Result
+// @Failure  500 {object} respond.Failure
+// @Router   /api/graph/notes [get]
+func Notes(db bun.IDB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		process := readgraph.Process(r.Context(), db)
+		process.Run()
+		if process.HasErr() {
+			respond.Error(w, process.GetErr())
+			return
+		}
+		result := process.GetResult()
+		result.Notes = append([]readgraph.Note{}, result.Notes...)
+		result.Links = append([]readgraph.Link{}, result.Links...)
+		respond.JSON(w, http.StatusOK, result)
 	}
 }
 
