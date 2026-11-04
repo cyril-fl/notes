@@ -107,7 +107,7 @@ Le détail de chaque commande est dans `notes <commande> --help`.
 
 ```sh
 make api                                     # dans Docker, avec WEB_ORIGIN défini dans .env
-notes serve --origin http://localhost:3001   # ou directement sur la machine
+notes serve --origin http://localhost:3000   # ou directement sur la machine
 ```
 
 `--addr` choisit l'adresse d'écoute (`127.0.0.1:8080` par défaut) et `--origin` l'origine de l'app web autorisée.
@@ -172,7 +172,7 @@ make test ARGS="./app/shared/services/process/..."
 make down     # arrête les conteneurs et Colima
 ```
 
-LibreDB Studio, une interface pour explorer la base, est sur <http://localhost:3000>.
+LibreDB Studio, une interface pour explorer la base, est sur <http://localhost:3001>.
 
 | Dossier | Contenu |
 |---|---|

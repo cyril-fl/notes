@@ -244,7 +244,7 @@ commands:
     use: "serve"
     short: "Run the HTTP API"
     long: "Run the HTTP API. It has no authentication: keep it on the loopback. Web pages can only call it from --origin."
-    example: "notes serve --origin http://localhost:3001"
+    example: "notes serve --origin http://localhost:3000"
     args:
       - name: "addr"
         shorthand: ""

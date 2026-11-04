@@ -55,7 +55,7 @@ services:
     container_name: note-libredb
     restart: unless-stopped
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:3001:3000"
     environment:
       ADMIN_EMAIL: ${LIBREDB_ADMIN_EMAIL:-admin@libredb.org}
       ADMIN_PASSWORD: ${LIBREDB_ADMIN_PASSWORD}

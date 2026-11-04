@@ -11,7 +11,7 @@ import (
 	"main.go/app/api/services/respond"
 )
 
-var ErrInvalidOrigin = errors.New("origin must look like http://localhost:3001, with no path")
+var ErrInvalidOrigin = errors.New("origin must look like http://localhost:3000, with no path")
 
 // CheckOrigin refuses what could never match a browser Origin header: a trailing slash would silently block the web app.
 func CheckOrigin(origin string) error {
