@@ -3,11 +3,13 @@ package createtag
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 	"main.go/app/shared/domain"
+	"main.go/app/shared/services/hashtag"
 )
 
 var ErrNoValue = errors.New("no tag value given")
@@ -49,9 +51,14 @@ func (p *run) GetResult() []domain.Tag {
 // Methods
 func (p *run) makeTags() {
 	for _, value := range p.values {
-		if value = strings.TrimSpace(value); value != "" {
-			p.cache.tags = append(p.cache.tags, domain.Tag{Value: value})
+		if value = strings.TrimSpace(value); value == "" {
+			continue
 		}
+		if !hashtag.Valid(value) {
+			p.SetErr(fmt.Errorf("%w: %q", hashtag.ErrInvalid, value))
+			return
+		}
+		p.cache.tags = append(p.cache.tags, domain.Tag{Value: value})
 	}
 
 	if len(p.cache.tags) == 0 {
