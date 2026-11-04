@@ -84,6 +84,8 @@ notes remove tag sql
 
 Les tags d'une note sont les `#mots` de son texte, code et liens exclus : `#idée` dans le contenu crée le tag et le lie à la note, et l'effacer l'en retire. `--tag` écrit `#tag` à la fin du texte et `--untag` l'efface. Renommer ou supprimer un tag corrige le texte de toutes ses notes, et une note qui se retrouve vide part à la corbeille. Un tag sans plus aucune note disparaît. Un tag contient des lettres, chiffres, `_` ou `-`, avec au moins une lettre.
 
+Pour une base créée avant cette règle, `notes sync-tags` aligne une fois pour toutes les tags et le texte des notes.
+
 ### Corbeille
 
 ```sh

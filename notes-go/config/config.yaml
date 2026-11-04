@@ -240,6 +240,11 @@ commands:
         value: ""
         usage: "Display the result as JSON"
         type: "bool"
+  sync-tags:
+    use: "sync-tags"
+    short: "Make the tags of every note match the #tags of its text"
+    long: "Make the tags of every note match the #tags of its text: a tag missing from the text is written at its end, a #tag with no link gets one. Only needed once, for notes made before tags came from the text."
+    example: "notes sync-tags"
   serve:
     use: "serve"
     short: "Run the HTTP API"
