@@ -248,5 +248,7 @@ const status = computed(() => {
         class="sticky top-0 z-10 -mx-1 border-b border-muted bg-default py-1"
       />
     </UEditor>
+
+    <RelatedNotes v-if="id" :key="id" :note-id="id" />
   </article>
 </template>
