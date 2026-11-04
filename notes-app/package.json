@@ -1,0 +1,33 @@
+{
+  "name": "notes-app",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "types": "openapi-typescript ../notes-go/docs/swagger.yaml -o app/types/api.d.ts",
+    "test": "node --test test/*.test.ts",
+    "typecheck": "nuxt typecheck"
+  },
+  "dependencies": {
+    "@atlaskit/pragmatic-drag-and-drop": "^4.0.0",
+    "@iconify-json/lucide": "^1.2.151",
+    "@nuxt/ui": "^4.12.0",
+    "@tiptap/extension-list": "^3.32.2",
+    "@vueuse/core": "^15.0.0",
+    "@vueuse/nuxt": "^15.0.0",
+    "nuxt": "^4.6.4",
+    "tailwindcss": "^4.3.4",
+    "vue": "^3.5.44",
+    "vue-router": "^5.4.0"
+  },
+  "devDependencies": {
+    "@tiptap/vue-3": "^3.32.2",
+    "openapi-typescript": "^7.13.0",
+    "typescript": "^5.9.3",
+    "vue-tsc": "^3.3.14"
+  }
+}
