@@ -11,6 +11,7 @@ import (
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"main.go/app/shared/domain"
+	"main.go/app/shared/services/hashtag"
 )
 
 var (
@@ -49,7 +50,7 @@ func Process(ctx context.Context, db bun.IDB, from string, to string) *run {
 
 func (p *run) Run() {
 	p.makeValues()
-	p.updateTag()
+	p.renameInTx()
 }
 
 // Getters & Setters
@@ -64,26 +65,61 @@ func (p *run) makeValues() {
 	p.cache.from = strings.TrimSpace(p.from)
 	p.cache.to = strings.TrimSpace(p.to)
 
-	if p.cache.from == "" || p.cache.to == "" {
+	switch {
+	case p.cache.from == "" || p.cache.to == "":
 		p.SetErr(ErrNoValue)
+	case !hashtag.Valid(p.cache.to):
+		p.SetErr(fmt.Errorf("%w: %q", hashtag.ErrInvalid, p.cache.to))
 	}
 }
 
-// updateTag matches with the same lower() as ux_tags_value_lower.
-// A case-only rename (go -> Go) passes: the row does not conflict with itself.
-func (p *run) updateTag() {
+// renameInTx renames the tag and its notes' text together: a failure changes neither.
+func (p *run) renameInTx() {
 	if p.HasErr() {
 		return
 	}
 
-	err := p.db.NewUpdate().
+	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
+		if err := p.updateTag(ctx, tx); err != nil {
+			return err
+		}
+		return p.rewriteNotes(ctx, tx)
+	}))
+}
+
+// updateTag matches with the same lower() as ux_tags_value_lower.
+// A case-only rename (go -> Go) passes: the row does not conflict with itself.
+func (p *run) updateTag(ctx context.Context, tx bun.Tx) error {
+	err := tx.NewUpdate().
 		Model((*domain.Tag)(nil)).
 		Set("value = ?", p.cache.to).
 		Where("lower(value) = lower(?)", p.cache.from).
 		Returning("*").
-		Scan(p.ctx, &p.cache.result)
+		Scan(ctx, &p.cache.result)
 
-	p.SetErr(toDomainErr(err, p.cache.from, p.cache.to))
+	return toDomainErr(err, p.cache.from, p.cache.to)
+}
+
+// rewriteNotes also reaches the trash: a note restored later must not bring the old tag back.
+func (p *run) rewriteNotes(ctx context.Context, tx bun.Tx) error {
+	var notes []domain.MetadataNote
+	err := tx.NewSelect().
+		Model(&notes).
+		Column("item_id", "content").
+		Join("JOIN notes_on_tags AS nt ON nt.note_id = mn.item_id").
+		Where("nt.tag_id = ?", p.cache.result.ID).
+		Scan(ctx)
+	if err != nil {
+		return err
+	}
+
+	for i := range notes {
+		notes[i].Content = hashtag.Rename(notes[i].Content, p.cache.from, p.cache.to)
+		if _, err := tx.NewUpdate().Model(&notes[i]).Column("content").WherePK().Exec(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Helpers

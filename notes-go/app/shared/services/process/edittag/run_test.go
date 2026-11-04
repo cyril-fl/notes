@@ -4,12 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"testing"
 	"time"
 
+	"main.go/app/shared/domain"
+	"main.go/app/shared/services/hashtag"
 	"main.go/app/shared/services/postgrey"
+	"main.go/app/shared/services/process/createnote"
 	"main.go/app/shared/services/process/createschema"
 	"main.go/app/shared/services/process/createtag"
+	"main.go/app/shared/services/process/readitem"
 )
 
 // No DB needed: makeValues fails first and updateTag is guarded, so a nil db is never touched.
@@ -62,6 +67,30 @@ func TestRename(t *testing.T) {
 	}
 	if got := rename.GetResult(); got.Value != upper || got.ID == "" {
 		t.Errorf("rename result = %+v, want value %s with ID", got, upper)
+	}
+
+	note := createnote.Process(ctx, tx, createnote.Input{Content: "du #" + other + " ici"})
+	note.Run()
+	if note.HasErr() {
+		t.Fatalf("note: %v", note.GetErr())
+	}
+	renamedTo := other + "-renamed"
+	inText := Process(ctx, tx, other, renamedTo)
+	inText.Run()
+	if inText.HasErr() {
+		t.Fatalf("rename in text: %v", inText.GetErr())
+	}
+	read := readitem.Process(ctx, tx, domain.NOTE, note.GetResult().ID)
+	read.Run()
+	if got := read.GetResult(); got.Content != "du #"+renamedTo+" ici" || !slices.Equal(got.Tags, []string{renamedTo}) {
+		t.Errorf("after rename: %+v, %v", got, read.GetErr())
+	}
+	other = renamedTo
+
+	invalid := Process(ctx, tx, value, "a b")
+	invalid.Run()
+	if !errors.Is(invalid.GetErr(), hashtag.ErrInvalid) {
+		t.Errorf("invalid: err = %v, want %v", invalid.GetErr(), hashtag.ErrInvalid)
 	}
 
 	unknown := Process(ctx, tx, value+"-unknown", "x")

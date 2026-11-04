@@ -13,7 +13,7 @@ type Body struct {
 }
 
 // Handler renames a tag: PATCH /api/tags/{value}.
-// @Summary  Rename a tag
+// @Summary  Rename a tag, in the text of its notes too
 // @Tags     tags
 // @Accept   json
 // @Produce  json

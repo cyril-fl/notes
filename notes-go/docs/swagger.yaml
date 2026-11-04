@@ -1006,7 +1006,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/respond.Failure'
           description: Internal Server Error
-      summary: Rename a tag
+      summary: Rename a tag, in the text of its notes too
       tags:
       - tags
   /api/trash:
