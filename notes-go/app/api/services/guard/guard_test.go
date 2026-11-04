@@ -1,10 +1,13 @@
 package guard
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"main.go/app/api/services/respond"
 )
 
 const web = "http://localhost:3001"
@@ -49,6 +52,12 @@ func TestNew(t *testing.T) {
 		}
 		if got := w.Header().Get("Access-Control-Allow-Origin") != ""; got != test.cors {
 			t.Errorf("%s: cors header = %v, want %v", name, got, test.cors)
+		}
+		if test.status == http.StatusForbidden {
+			var failure respond.Failure
+			if err := json.Unmarshal(w.Body.Bytes(), &failure); err != nil || failure.Error == "" {
+				t.Errorf("%s: body = %q, want a JSON error", name, w.Body)
+			}
 		}
 	}
 }

@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"main.go/app/api/services/respond"
 )
 
 var ErrInvalidOrigin = errors.New("origin must look like http://localhost:3001, with no path")
@@ -35,7 +37,7 @@ func New(origin string, next http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !hosts[hostname(r.Host)] {
-			http.Error(w, "forbidden host", http.StatusForbidden)
+			respond.JSON(w, http.StatusForbidden, respond.Failure{Error: "forbidden host"})
 			return
 		}
 
@@ -45,7 +47,7 @@ func New(origin string, next http.Handler) http.Handler {
 		case from == "":
 			next.ServeHTTP(w, r)
 		case from != origin:
-			http.Error(w, "forbidden origin", http.StatusForbidden)
+			respond.JSON(w, http.StatusForbidden, respond.Failure{Error: "forbidden origin"})
 		case r.Method == http.MethodOptions:
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE")
