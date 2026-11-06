@@ -4,6 +4,7 @@ import type { Item } from '~/types/items';
 const props = defineProps<{ folderId?: string; title: string; subtitle?: string; items: Item[] }>();
 
 const { createFolder } = useItems();
+const view = useView();
 
 const panel = useTemplateRef('panel');
 const isOver = useDropFolder(panel, () => props.folderId ?? null);
@@ -14,6 +15,7 @@ const isOver = useDropFolder(panel, () => props.folderId ?? null);
     <div class="mx-auto max-w-3xl">
       <PageHeader :title="title" :subtitle="subtitle">
         <slot name="actions" />
+        <ViewToggle />
         <UTooltip text="Nouveau dossier">
           <UButton icon="i-lucide-folder-plus" color="neutral" variant="ghost" aria-label="Nouveau dossier" @click="createFolder(folderId)" />
         </UTooltip>
@@ -21,9 +23,9 @@ const isOver = useDropFolder(panel, () => props.folderId ?? null);
           <UButton icon="i-lucide-square-pen" color="neutral" variant="ghost" aria-label="Nouvelle note" :to="newNotePath(folderId)" />
         </UTooltip>
       </PageHeader>
-      <ul v-if="items.length">
-        <li v-for="item in items" :key="item.id" class="border-b border-muted last:border-0">
-          <ItemRow :item="item" />
+      <ul v-if="items.length" :class="{ mosaic: view === 'grid' }">
+        <li v-for="item in items" :key="item.id" :class="{ 'border-b border-muted last:border-0': view === 'list' }">
+          <ItemRow :item="item" :grid="view === 'grid'" />
         </li>
       </ul>
       <p v-else class="py-16 text-center text-sm text-muted">Ce dossier est vide.</p>

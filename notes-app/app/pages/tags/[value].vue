@@ -4,6 +4,7 @@ import type { TagDetail } from '~/types/items';
 const route = useRoute();
 const api = useApi();
 const { prompt } = useDialogs();
+const view = useView();
 
 const value = route.params.value as string;
 const url = `/api/tags/${encodeURIComponent(value)}`;
@@ -35,6 +36,7 @@ async function remove() {
 <template>
   <div class="mx-auto max-w-3xl p-8">
     <PageHeader :title="`#${value}`" :subtitle="tag ? `${tag.notes.length} note${tag.notes.length > 1 ? 's' : ''}` : undefined">
+      <ViewToggle />
       <UTooltip text="Renommer">
         <UButton icon="i-lucide-pencil" color="neutral" variant="ghost" aria-label="Renommer le tag" @click="rename" />
       </UTooltip>
@@ -42,7 +44,7 @@ async function remove() {
         <UButton icon="i-lucide-trash-2" color="neutral" variant="ghost" aria-label="Supprimer le tag" @click="remove" />
       </UTooltip>
     </PageHeader>
-    <NoteList v-if="tag?.notes.length" :notes="tag.notes" />
+    <NoteList v-if="tag?.notes.length" :notes="tag.notes" :grid="view === 'grid'" />
     <p v-else-if="error" class="py-16 text-center text-sm text-muted">Ce tag n'existe pas.</p>
     <p v-else-if="tag" class="py-16 text-center text-sm text-muted">Aucune note avec ce tag.</p>
   </div>

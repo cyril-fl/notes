@@ -3,6 +3,7 @@ import type { Match } from '~/types/items';
 
 const route = useRoute();
 const api = useApi();
+const view = useView();
 
 const q = computed(() => (typeof route.query.q === 'string' ? route.query.q : ''));
 
@@ -15,8 +16,10 @@ const { data: matches, status } = useLazyAsyncData(
 
 <template>
   <div class="mx-auto max-w-3xl p-8">
-    <PageHeader title="Recherche" :subtitle="q" />
-    <NoteList v-if="matches.length" :notes="matches" />
+    <PageHeader title="Recherche" :subtitle="q">
+      <ViewToggle />
+    </PageHeader>
+    <NoteList v-if="matches.length" :notes="matches" :grid="view === 'grid'" />
     <p v-else-if="status !== 'pending'" class="py-16 text-center text-sm text-muted">Aucun résultat.</p>
   </div>
 </template>
