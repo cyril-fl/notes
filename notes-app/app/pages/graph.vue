@@ -8,10 +8,10 @@ const { data: graph } = useLazyAsyncData('graph', () => api<NotesGraph>('/api/gr
 </script>
 
 <template>
-  <div class="mx-auto max-w-5xl p-8">
-    <PageHeader title="Graphe" />
+  <div class="flex h-full flex-col p-8">
+    <PageHeader title="Graphe" subtitle="Glissez pour vous déplacer" />
     <template v-if="graph">
-      <GraphView v-if="graph.notes.length" :graph="graph" :selected="route.query.note as string | undefined" />
+      <GraphView v-if="graph.notes.length" class="min-h-0 flex-1" :graph="graph" :selected="route.query.note as string | undefined" />
       <UEmpty
         v-else
         icon="i-lucide-waypoints"
