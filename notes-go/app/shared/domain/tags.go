@@ -17,3 +17,11 @@ type NoteTag struct {
 	NoteID string        `bun:",pk,type:uuid"`
 	Note   *MetadataNote `bun:"rel:belongs-to,join:note_id=item_id"`
 }
+
+// NoteLink is a [[link]] of a note's text that names another note, resolved to its id.
+type NoteLink struct {
+	bun.BaseModel `bun:"table:notes_on_links,alias:nl"`
+
+	SourceID string `bun:",pk,type:uuid"`
+	TargetID string `bun:",pk,type:uuid"`
+}

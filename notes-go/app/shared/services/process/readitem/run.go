@@ -17,13 +17,8 @@ import (
 // invalidText is the Postgres SQLSTATE raised when the id is not a uuid.
 const invalidText = "22P02"
 
-// PathsCTE gives every live item its path from the root (/Projects/Go/Ideas): append a query on "paths".
-// It walks down from the roots, so a trashed folder hides its whole subtree.
-const PathsCTE = `WITH RECURSIVE paths AS (
-	SELECT id, '/' || coalesce(title, 'untitled') AS path FROM items WHERE parent_id IS NULL AND deleted_at IS NULL
-	UNION ALL SELECT child.id, paths.path || '/' || coalesce(child.title, 'untitled')
-	FROM items AS child JOIN paths ON child.parent_id = paths.id WHERE child.deleted_at IS NULL
-) `
+// PathsCTE is domain.PathsCTE, kept here for the queries that already read it from readitem.
+const PathsCTE = domain.PathsCTE
 
 var (
 	ErrNoValue  = errors.New("no id given")

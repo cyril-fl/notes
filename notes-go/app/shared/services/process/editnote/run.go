@@ -15,6 +15,8 @@ import (
 	"main.go/app/shared/services/hashtag"
 	"main.go/app/shared/services/notetitle"
 	"main.go/app/shared/services/process/createtag"
+	"main.go/app/shared/services/process/linknotes"
+	"main.go/app/shared/services/wikilink"
 )
 
 // invalidText is the Postgres SQLSTATE raised when the id is not a uuid.
@@ -46,7 +48,9 @@ type run struct {
 type cache struct {
 	input Input
 	item  domain.Item
-	tags  []domain.Tag
+	// oldTitle is the title before this edit: the [[links]] naming it follow the new one.
+	oldTitle string
+	tags     []domain.Tag
 	// unlinked are the tags the note had before this edit.
 	unlinked []string
 }
@@ -101,20 +105,29 @@ func (p *run) makeNote() {
 	}
 }
 
-// saveNote updates item, metadata and tag links in one transaction: a failure changes nothing.
+// saveNote updates item, metadata, tag and note links in one transaction: a failure changes nothing.
 func (p *run) saveNote() {
 	if p.HasErr() {
 		return
 	}
 
 	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
-		for _, step := range []func(context.Context, bun.Tx) error{p.updateItem, p.updateMetadata, p.replaceTags, p.dropUnusedTags} {
+		for _, step := range []func(context.Context, bun.Tx) error{p.readOldTitle, p.updateItem, p.updateMetadata, p.replaceTags, p.dropUnusedTags, p.renameLinks, p.linkNotes} {
 			if err := step(ctx, tx); err != nil {
 				return err
 			}
 		}
 		return nil
 	}))
+}
+
+// readOldTitle finds nothing for an unknown id: updateItem then reports it.
+func (p *run) readOldTitle(ctx context.Context, tx bun.Tx) error {
+	err := tx.NewRaw("SELECT coalesce(title, '') FROM items WHERE id::text = ? AND kind = ?", p.cache.input.ID, domain.NOTE).Scan(ctx, &p.cache.oldTitle)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil
+	}
+	return err
 }
 
 // updateItem matches a note not in the trash (soft_delete adds deleted_at IS NULL): anything else is not found.
@@ -181,6 +194,55 @@ func (p *run) dropUnusedTags(ctx context.Context, tx bun.Tx) error {
 		Where("NOT EXISTS (SELECT 1 FROM notes_on_tags AS nt WHERE nt.tag_id = t.id)").
 		Exec(ctx)
 	return err
+}
+
+// renameLinks rewrites [[old title]] as [[new title]] in the notes linked to this one, and their title
+// when it held the link. An untitled note renames nothing: its links stay as written.
+// shortcut: a source whose title changes this way does not rename the links to it in turn; recurse if headings made of links get common.
+func (p *run) renameLinks(ctx context.Context, tx bun.Tx) error {
+	from, to := p.cache.oldTitle, p.cache.item.Title
+	if from == "" || to == "" || from == to {
+		return nil
+	}
+
+	var sources []struct {
+		ID      string `bun:"item_id"`
+		Content string `bun:"content"`
+	}
+	err := tx.NewRaw(`
+		SELECT mn.item_id, mn.content FROM notes_on_links AS nl
+		JOIN metadata_notes AS mn ON mn.item_id = nl.source_id
+		WHERE nl.target_id = ? AND nl.source_id <> nl.target_id`, p.cache.item.ID).
+		Scan(ctx, &sources)
+	if err != nil {
+		return err
+	}
+
+	for _, source := range sources {
+		content := wikilink.Rename(source.Content, from, to)
+		if content == source.Content {
+			continue
+		}
+		if _, err := tx.NewUpdate().Model((*domain.MetadataNote)(nil)).Set("content = ?", content).Where("item_id = ?", source.ID).Exec(ctx); err != nil {
+			return err
+		}
+		// updated_at stays: the user did not write this change. WhereAllWithDeleted: a trashed note keeps its links too.
+		if _, err := tx.NewUpdate().Model((*domain.Item)(nil)).Set("title = NULLIF(?, '')", notetitle.From(content)).Where("id = ?", source.ID).WhereAllWithDeleted().Exec(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// linkNotes links the note to the notes its [[links]] name, and the notes naming it to it.
+func (p *run) linkNotes(ctx context.Context, tx bun.Tx) error {
+	input := linknotes.Input{ID: p.cache.item.ID, Content: p.cache.input.Content, Title: p.cache.item.Title}
+	if !strings.EqualFold(p.cache.oldTitle, input.Title) {
+		input.OldTitle = p.cache.oldTitle
+	}
+	link := linknotes.Process(ctx, tx, input)
+	link.Run()
+	return link.GetErr()
 }
 
 // Helpers

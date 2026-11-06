@@ -106,6 +106,9 @@ func getTables(tx bun.Tx) []*bun.CreateTableQuery {
 		tx.NewCreateTable().Model((*domain.NoteTag)(nil)).
 			ForeignKey(`("tag_id") REFERENCES "tags" ("id") ON DELETE CASCADE`).
 			ForeignKey(`("note_id") REFERENCES "metadata_notes" ("item_id") ON DELETE CASCADE`),
+		tx.NewCreateTable().Model((*domain.NoteLink)(nil)).
+			ForeignKey(`("source_id") REFERENCES "metadata_notes" ("item_id") ON DELETE CASCADE`).
+			ForeignKey(`("target_id") REFERENCES "metadata_notes" ("item_id") ON DELETE CASCADE`),
 	}
 }
 
@@ -115,6 +118,8 @@ func getIndexes(tx bun.Tx) []*bun.CreateIndexQuery {
 		tx.NewCreateIndex().Model((*domain.Item)(nil)).Index("idx_items_parent_id").Column("parent_id"),
 		tx.NewCreateIndex().Model((*domain.NoteTag)(nil)).Index("idx_notes_on_tags_note_id").Column("note_id"),
 		tx.NewCreateIndex().Model((*domain.Tag)(nil)).Index("ux_tags_value_lower").Unique().ColumnExpr("lower(value)"),
+		// The primary key (source_id, target_id) only covers the links of a note, not its backlinks.
+		tx.NewCreateIndex().Model((*domain.NoteLink)(nil)).Index("idx_notes_on_links_target_id").Column("target_id"),
 	}
 }
 

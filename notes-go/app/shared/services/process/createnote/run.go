@@ -14,6 +14,7 @@ import (
 	"main.go/app/shared/services/hashtag"
 	"main.go/app/shared/services/notetitle"
 	"main.go/app/shared/services/process/createtag"
+	"main.go/app/shared/services/process/linknotes"
 )
 
 var (
@@ -97,14 +98,14 @@ func (p *run) makeNote() {
 	p.cache.title = notetitle.From(p.cache.input.Content)
 }
 
-// saveNote writes item, metadata and tag links in one transaction: a failure leaves no half note.
+// saveNote writes item, metadata, tag and note links in one transaction: a failure leaves no half note.
 func (p *run) saveNote() {
 	if p.HasErr() {
 		return
 	}
 
 	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
-		for _, step := range []func(context.Context, bun.Tx) error{p.insertItem, p.insertMetadata, p.linkTags} {
+		for _, step := range []func(context.Context, bun.Tx) error{p.insertItem, p.insertMetadata, p.linkTags, p.linkNotes} {
 			if err := step(ctx, tx); err != nil {
 				return err
 			}
@@ -162,6 +163,13 @@ func (p *run) linkTags(ctx context.Context, tx bun.Tx) error {
 
 	_, err = tx.NewInsert().Model(&links).Exec(ctx)
 	return err
+}
+
+// linkNotes links the note to the notes its [[links]] name, and the notes naming it to it.
+func (p *run) linkNotes(ctx context.Context, tx bun.Tx) error {
+	link := linknotes.Process(ctx, tx, linknotes.Input{ID: p.cache.item.ID, Content: p.cache.input.Content, Title: p.cache.title})
+	link.Run()
+	return link.GetErr()
 }
 
 // Helpers
