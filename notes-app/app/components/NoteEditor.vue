@@ -216,7 +216,7 @@ const status = computed(() => {
     :actions="[{ label: 'Retour aux notes', icon: 'i-lucide-arrow-left', color: 'neutral', variant: 'subtle', to: '/' }]"
   />
 
-  <article v-else-if="!loading" class="mx-auto max-w-3xl p-8" @focusin="touched = true" @pointerdown.capture="touched = true">
+  <article v-else-if="!loading" class="p-8" @focusin="touched = true" @pointerdown.capture="touched = true">
     <div class="mb-2 flex h-6 items-center gap-2 text-xs text-muted">
       <span class="truncate">{{ path }}</span>
       <span class="ml-auto shrink-0" :class="{ 'text-error': failed }" role="status">{{ status }}</span>

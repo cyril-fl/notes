@@ -24,7 +24,7 @@ function deletedOn(item: Trashed) {
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl p-8">
+  <div class="p-8">
     <PageHeader title="Corbeille">
       <UButton v-if="items.length" label="Vider" color="error" variant="ghost" @click="askEmpty" />
     </PageHeader>

@@ -15,7 +15,7 @@ const { data: matches, status } = useLazyAsyncData(
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl p-8">
+  <div class="p-8">
     <PageHeader title="Recherche" :subtitle="q">
       <ViewToggle />
     </PageHeader>
