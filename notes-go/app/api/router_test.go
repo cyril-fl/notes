@@ -195,6 +195,7 @@ func TestFoldersAndMove(t *testing.T) {
 	c.do("POST", "/api/folders", fmt.Sprintf(`{"title":"sub","parent_id":%q}`, folder.ID), http.StatusCreated, &sub)
 	c.do("POST", "/api/notes", `{"content":"# loose"}`, http.StatusCreated, &note)
 	c.do("POST", "/api/folders", `{"title":" "}`, http.StatusBadRequest, nil)
+	c.do("POST", "/api/folders", fmt.Sprintf(`{"title":"SUB","parent_id":%q}`, folder.ID), http.StatusConflict, nil)
 
 	// A note and a folder are not interchangeable.
 	c.do("GET", "/api/notes/"+folder.ID, "", http.StatusNotFound, nil)

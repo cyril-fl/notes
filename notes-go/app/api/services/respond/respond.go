@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"regexp"
 
+	"main.go/app/shared/domain"
 	"main.go/app/shared/services/hashtag"
 	"main.go/app/shared/services/process/createfolder"
 	"main.go/app/shared/services/process/createnote"
@@ -56,7 +57,7 @@ var statuses = []struct {
 		editfolder.ErrNotFound, editnote.ErrNotFound, edittag.ErrNotFound, pinnote.ErrNotFound, readitem.ErrNotFound, readtag.ErrNotFound,
 	}},
 	{http.StatusConflict, []error{
-		edittag.ErrAlreadyExists, moveitems.ErrCycle, restoreitems.ErrParentInTrash,
+		domain.ErrFolderExists, edittag.ErrAlreadyExists, moveitems.ErrCycle, restoreitems.ErrParentInTrash,
 	}},
 }
 

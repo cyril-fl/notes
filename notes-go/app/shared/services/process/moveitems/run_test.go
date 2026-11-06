@@ -3,7 +3,9 @@ package moveitems
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/uptrace/bun"
 	"main.go/app/shared/services/postgrey"
@@ -42,8 +44,10 @@ func TestMoveItems(t *testing.T) {
 	}
 	defer tx.Rollback()
 
-	a := folder(t, tx, "A", "")
-	b := folder(t, tx, "B", "")
+	// Unique per run: real root folders could have these names, and a folder name is unique in its folder.
+	u := fmt.Sprintf("test-%d", time.Now().UnixNano())
+	a := folder(t, tx, u+"-A", "")
+	b := folder(t, tx, u+"-B", "")
 	child := folder(t, tx, "Child", b)
 	note := createnote.Process(ctx, tx, createnote.Input{Content: "C"})
 	note.Run()

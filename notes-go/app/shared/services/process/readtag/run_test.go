@@ -46,7 +46,7 @@ func TestReadTag(t *testing.T) {
 
 	// Unique per run so real data in the DB cannot collide.
 	tag := fmt.Sprintf("test-%d", time.Now().UnixNano())
-	folder := createfolder.Process(ctx, tx, createfolder.Input{Title: "F"})
+	folder := createfolder.Process(ctx, tx, createfolder.Input{Title: "F-" + tag})
 	folder.Run()
 	if folder.HasErr() {
 		t.Fatalf("folder: %v", folder.GetErr())
@@ -73,7 +73,7 @@ func TestReadTag(t *testing.T) {
 	read := Process(ctx, tx, strings.ToUpper(tag))
 	read.Run()
 	got := read.GetResult()
-	if read.HasErr() || got.Tag.Value != tag || len(got.Notes) != 2 || got.Notes[0].Path != "/F/Inside" || got.Notes[1].Path != "/Root" {
+	if read.HasErr() || got.Tag.Value != tag || len(got.Notes) != 2 || got.Notes[0].Path != "/F-"+tag+"/Inside" || got.Notes[1].Path != "/Root" {
 		t.Errorf("result = %+v, %v; want %s with /F/Inside, /Root", got, read.GetErr(), tag)
 	}
 

@@ -120,6 +120,9 @@ func (p *run) updateItems(ctx context.Context, tx bun.Tx) error {
 
 // toDomainErr turns a value that is not a uuid into ErrInvalidID.
 func toDomainErr(err error) error {
+	if domain.FolderNameTaken(err) {
+		return domain.ErrFolderExists
+	}
 	var pgErr pgdriver.Error
 	if errors.As(err, &pgErr) && pgErr.Field('C') == invalidText {
 		return fmt.Errorf("%w: %s", ErrInvalidID, pgErr.Field('M'))

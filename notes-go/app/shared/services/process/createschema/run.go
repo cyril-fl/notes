@@ -31,6 +31,7 @@ func Process(ctx context.Context, db *bun.DB) *run {
 func (p *run) Run() {
 	p.registerModels()
 	p.createTables()
+	p.renameDuplicateFolders()
 	p.createIndexes()
 	p.runInTx()
 }
@@ -44,6 +45,26 @@ func (p *run) registerModels() {
 func (p *run) createTables() {
 	p.cache.steps = append(p.cache.steps, func(tx bun.Tx) {
 		p.execQueries(getTables(tx))
+	})
+}
+
+// renameDuplicateFolders makes room for domain.FolderNameIndex in a base made before it: the second folder of
+// a name becomes "Name (2)", the third "Name (3)"… by creation date. A no-op once the index exists.
+// shortcut: a "Name (2)" already there makes the index fail and the schema with it; loop on the suffix if it ever happens.
+func (p *run) renameDuplicateFolders() {
+	p.cache.steps = append(p.cache.steps, func(tx bun.Tx) {
+		if p.HasErr() {
+			return
+		}
+		_, err := tx.NewRaw(`
+			WITH ranked AS (
+				SELECT id, row_number() OVER (PARTITION BY parent_id, lower(title) ORDER BY created_at, id) AS n
+				FROM items WHERE kind = ? AND deleted_at IS NULL
+			)
+			UPDATE items SET title = items.title || ' (' || ranked.n || ')'
+			FROM ranked WHERE ranked.id = items.id AND ranked.n > 1`, domain.FOLDER).
+			Exec(p.ctx)
+		p.SetErr(err)
 	})
 }
 
@@ -118,6 +139,10 @@ func getIndexes(tx bun.Tx) []*bun.CreateIndexQuery {
 		tx.NewCreateIndex().Model((*domain.Item)(nil)).Index("idx_items_parent_id").Column("parent_id"),
 		tx.NewCreateIndex().Model((*domain.NoteTag)(nil)).Index("idx_notes_on_tags_note_id").Column("note_id"),
 		tx.NewCreateIndex().Model((*domain.Tag)(nil)).Index("ux_tags_value_lower").Unique().ColumnExpr("lower(value)"),
+		// A root folder has no parent_id: coalesce gives the root one, so its folders are unique too.
+		tx.NewCreateIndex().Model((*domain.Item)(nil)).Index(domain.FolderNameIndex).Unique().
+			ColumnExpr("coalesce(parent_id, '00000000-0000-0000-0000-000000000000'), lower(title)").
+			Where("kind = ? AND deleted_at IS NULL", domain.FOLDER),
 		// The primary key (source_id, target_id) only covers the links of a note, not its backlinks.
 		tx.NewCreateIndex().Model((*domain.NoteLink)(nil)).Index("idx_notes_on_links_target_id").Column("target_id"),
 	}

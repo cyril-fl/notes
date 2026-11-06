@@ -111,6 +111,9 @@ func (p *run) insertMetadata(ctx context.Context, tx bun.Tx) error {
 
 // toDomainErr turns the parent FK violation into ErrParentNotFound: a missing id, or one that is not a folder.
 func toDomainErr(err error, parentID string) error {
+	if domain.FolderNameTaken(err) {
+		return domain.ErrFolderExists
+	}
 	var pgErr pgdriver.Error
 
 	if errors.As(err, &pgErr) && pgErr.Field('C') == foreignKeyViolation {

@@ -16,6 +16,7 @@ import (
 // @Param    body body createfolder.Input true "body"
 // @Success  201 {object} domain.Item
 // @Failure  400 {object} respond.Failure
+// @Failure  409 {object} respond.Failure
 // @Failure  413 {object} respond.Failure
 // @Failure  500 {object} respond.Failure
 // @Router   /api/folders [post]

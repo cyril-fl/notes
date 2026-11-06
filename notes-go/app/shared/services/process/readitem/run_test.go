@@ -3,7 +3,9 @@ package readitem
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/uptrace/bun"
 	"main.go/app/shared/domain"
@@ -58,7 +60,9 @@ func TestPathAndChildren(t *testing.T) {
 	}
 	defer tx.Rollback()
 
-	a := folder(t, tx, "A", "")
+	// Unique per run: a real root folder could be called A, and a folder name is unique in its folder.
+	root := fmt.Sprintf("test-%d", time.Now().UnixNano())
+	a := folder(t, tx, root, "")
 	b := folder(t, tx, "B", a)
 	note := createnote.Process(ctx, tx, createnote.Input{Content: "# N", ParentID: a})
 	note.Run()
@@ -73,16 +77,16 @@ func TestPathAndChildren(t *testing.T) {
 
 	read := Process(ctx, tx, domain.NOTE, untitled.GetResult().ID)
 	read.Run()
-	if read.HasErr() || read.GetResult().Path != "/A/B/untitled" {
-		t.Errorf("path = %q, %v; want /A/B/untitled", read.GetResult().Path, read.GetErr())
+	if read.HasErr() || read.GetResult().Path != "/"+root+"/B/untitled" {
+		t.Errorf("path = %q, %v; want /<root>/B/untitled", read.GetResult().Path, read.GetErr())
 	}
 
 	// Folders first, then notes; the trashed folder is gone.
 	read = Process(ctx, tx, domain.FOLDER, a)
 	read.Run()
 	got := read.GetResult()
-	if read.HasErr() || got.Path != "/A" || len(got.Children) != 2 || got.Children[0].ID != b || got.Children[1].ID != note.GetResult().ID {
-		t.Errorf("folder = %+v, %v; want /A with [B, N]", got, read.GetErr())
+	if read.HasErr() || got.Path != "/"+root || len(got.Children) != 2 || got.Children[0].ID != b || got.Children[1].ID != note.GetResult().ID {
+		t.Errorf("folder = %+v, %v; want /<root> with [B, N]", got, read.GetErr())
 	}
 }
 

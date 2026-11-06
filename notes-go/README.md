@@ -64,6 +64,8 @@ notes move /Projets/Idées --parent /Archives
 
 Si une valeur manque, un formulaire s'ouvre. Sans terminal (cron, CI), passe tout par les flags.
 
+Deux dossiers d'un même dossier ne peuvent pas porter le même nom, majuscules comprises : créer, renommer, déplacer ou restaurer un dossier à côté d'un homonyme est refusé (409 dans l'API). Une base créée avant cette règle voit ses doublons renommés au démarrage, `Nom (2)`, `Nom (3)`… Les notes, elles, peuvent partager un titre.
+
 Une note n'a pas de titre à part : c'est son premier titre markdown (`#`, `##`…, quel que soit le niveau), sinon les 50 premiers caractères de sa première ligne de texte, sans la mise en forme, le code ni les lignes faites seulement de `#tags`. Une note sans texte reste sans titre. Le titre suit le contenu à chaque modification, et le chemin d'une note (`/Projets/Idées`) avec lui.
 
 Pour une base créée avant cette règle, `notes sync-titles` écrit une fois pour toutes en tête de chaque note le titre qu'elle avait, sous la forme `# Titre`, s'il n'est pas déjà son premier titre, et nomme les notes sans titre d'après leur texte.

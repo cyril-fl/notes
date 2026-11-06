@@ -98,6 +98,9 @@ func (p *run) updateFolder() {
 
 // toDomainErr turns no row, or an id that is not a uuid, into ErrNotFound.
 func toDomainErr(err error, id string) error {
+	if domain.FolderNameTaken(err) {
+		return domain.ErrFolderExists
+	}
 	var pgErr pgdriver.Error
 	if errors.Is(err, sql.ErrNoRows) || errors.As(err, &pgErr) && pgErr.Field('C') == invalidText {
 		return fmt.Errorf("%w: %q", ErrNotFound, id)
