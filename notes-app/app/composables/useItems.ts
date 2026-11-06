@@ -3,6 +3,9 @@ import type { Item, Pinned } from '~/types/items';
 
 const CYCLE = 'Un dossier ne peut pas aller dans lui-même ou ses sous-dossiers.';
 const PARENT_IN_TRASH = "Le dossier parent est dans la corbeille : restaure-le d'abord.";
+const NAME_TAKEN = 'Un dossier porte déjà ce nom à cet endroit.';
+// The part of the API's message saying a folder name is taken (domain.ErrFolderExists).
+const TAKEN = 'already exists here';
 
 /** Every change to the items: the views read again what they show afterwards. */
 export function useItems() {
@@ -24,13 +27,13 @@ export function useItems() {
     const title = await prompt({ title: 'Nouveau dossier', placeholder: 'Nom du dossier', action: 'Créer' });
     if (!title) return;
     const body = { title, parent_id: parentId };
-    return act(() => api<Item>('/api/folders', { method: 'POST', body }));
+    return act(() => api<Item>('/api/folders', { method: 'POST', body, conflict: NAME_TAKEN }));
   }
 
   async function renameFolder(folder: Item) {
     const title = await prompt({ title: 'Renommer le dossier', value: folder.title, action: 'Renommer' });
     if (!title || title === folder.title) return;
-    return act(() => api<Item>(`/api/folders/${folder.id}`, { method: 'PATCH', body: { title } }));
+    return act(() => api<Item>(`/api/folders/${folder.id}`, { method: 'PATCH', body: { title }, conflict: NAME_TAKEN }));
   }
 
   function removeItem(item: Pick<Item, 'id' | 'kind'>) {
@@ -41,11 +44,11 @@ export function useItems() {
   /** A null parent is the root. */
   function moveItem(id: string, parentId: string | null) {
     const body = { ids: [id], parent_id: parentId ?? undefined };
-    return act(() => api<Item[]>('/api/move', { method: 'POST', body, conflict: CYCLE }));
+    return act(() => api<Item[]>('/api/move', { method: 'POST', body, conflict: { [TAKEN]: NAME_TAKEN, 'into itself': CYCLE } }));
   }
 
   function restoreItem(id: string) {
-    return act(() => api<Item[]>('/api/restore', { method: 'POST', body: { ids: [id] }, conflict: PARENT_IN_TRASH }));
+    return act(() => api<Item[]>('/api/restore', { method: 'POST', body: { ids: [id] }, conflict: { [TAKEN]: NAME_TAKEN, 'in the trash': PARENT_IN_TRASH } }));
   }
 
   function pinNote(id: string, pinned: boolean) {
