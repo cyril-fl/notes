@@ -242,7 +242,8 @@ const status = computed(() => {
     :actions="[{ label: 'Retour aux notes', icon: 'i-lucide-arrow-left', color: 'neutral', variant: 'subtle', to: '/' }]"
   />
 
-  <article v-else-if="!loading" class="p-8" @focusin="touched = true" @pointerdown.capture="touched = true">
+  <!-- UEditor hands its listeners to TipTap, not to the page: clicks on links are caught here. -->
+  <article v-else-if="!loading" class="p-8" @focusin="touched = true" @pointerdown.capture="touched = true" @click="openLink">
     <div class="mb-2 flex h-6 items-center gap-2 text-xs text-muted">
       <span class="truncate">{{ path }}</span>
       <span class="ml-auto shrink-0" :class="{ 'text-error': failed }" role="status">{{ status }}</span>
@@ -265,7 +266,6 @@ const status = computed(() => {
       class="mt-2 w-full"
       :ui="{ base: 'sm:px-0 px-0' }"
       @update:model-value="onContent"
-      @click="openLink"
     >
       <UEditorToolbar
         :editor="editor"
