@@ -37,6 +37,11 @@ function deletedOn(item: Trashed) {
         <UButton label="Restaurer" color="neutral" variant="ghost" size="xs" @click="restoreItem(item.id)" />
       </li>
     </ul>
-    <p v-else-if="status !== 'pending'" class="py-16 text-center text-sm text-muted">La corbeille est vide.</p>
+    <UEmpty
+      v-else-if="status !== 'pending'"
+      icon="i-lucide-trash-2"
+      title="La corbeille est vide"
+      description="Les notes et les dossiers supprimés arrivent ici, et peuvent en être restaurés."
+    />
   </div>
 </template>

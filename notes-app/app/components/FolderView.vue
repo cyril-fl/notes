@@ -28,7 +28,16 @@ const isOver = useDropFolder(panel, () => props.folderId ?? null);
           <ItemRow :item="item" :grid="view === 'grid'" />
         </li>
       </ul>
-      <p v-else class="py-16 text-center text-sm text-muted">Ce dossier est vide.</p>
+      <UEmpty
+        v-else
+        icon="i-lucide-folder-open"
+        title="Ce dossier est vide"
+        description="Créez une note ou glissez-y des éléments depuis la barre latérale."
+        :actions="[
+          { label: 'Nouvelle note', icon: 'i-lucide-square-pen', to: newNotePath(folderId) },
+          { label: 'Nouveau dossier', icon: 'i-lucide-folder-plus', color: 'neutral', variant: 'subtle', onClick: () => createFolder(folderId) },
+        ]"
+      />
     </div>
   </div>
 </template>

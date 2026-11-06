@@ -45,7 +45,7 @@ async function remove() {
       </UTooltip>
     </PageHeader>
     <NoteList v-if="tag?.notes.length" :notes="tag.notes" :grid="view === 'grid'" />
-    <p v-else-if="error" class="py-16 text-center text-sm text-muted">Ce tag n'existe pas.</p>
-    <p v-else-if="tag" class="py-16 text-center text-sm text-muted">Aucune note avec ce tag.</p>
+    <UEmpty v-else-if="error" icon="i-lucide-hash" title="Ce tag n'existe pas" description="Il a peut-être été renommé ou supprimé." :actions="[{ label: 'Retour aux notes', icon: 'i-lucide-arrow-left', color: 'neutral', variant: 'subtle', to: '/' }]" />
+    <UEmpty v-else-if="tag" icon="i-lucide-hash" title="Aucune note avec ce tag" :description="`Écrivez #${value} dans une note pour l'y retrouver.`" />
   </div>
 </template>

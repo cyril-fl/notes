@@ -208,7 +208,13 @@ const status = computed(() => {
 </script>
 
 <template>
-  <div v-if="notFound" class="py-24 text-center text-sm text-muted">Cette note n'existe pas ou est dans la corbeille.</div>
+  <UEmpty
+    v-if="notFound"
+    icon="i-lucide-file-x"
+    title="Cette note est introuvable"
+    description="Elle n'existe pas ou elle est dans la corbeille."
+    :actions="[{ label: 'Retour aux notes', icon: 'i-lucide-arrow-left', color: 'neutral', variant: 'subtle', to: '/' }]"
+  />
 
   <article v-else-if="!loading" class="mx-auto max-w-3xl p-8" @focusin="touched = true" @pointerdown.capture="touched = true">
     <div class="mb-2 flex h-6 items-center gap-2 text-xs text-muted">

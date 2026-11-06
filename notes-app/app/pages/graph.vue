@@ -12,7 +12,13 @@ const { data: graph } = useLazyAsyncData('graph', () => api<NotesGraph>('/api/gr
     <PageHeader title="Graphe" />
     <template v-if="graph">
       <GraphView v-if="graph.notes.length" :graph="graph" :selected="route.query.note as string | undefined" />
-      <p v-else class="py-16 text-center text-sm text-muted">Aucune note pour le moment.</p>
+      <UEmpty
+        v-else
+        icon="i-lucide-waypoints"
+        title="Aucune note pour le moment"
+        description="Ajoutez des #tags à vos notes : celles qui en partagent un sont reliées ici."
+        :actions="[{ label: 'Nouvelle note', icon: 'i-lucide-square-pen', to: newNotePath() }]"
+      />
     </template>
   </div>
 </template>

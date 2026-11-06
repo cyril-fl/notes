@@ -28,5 +28,11 @@ async function remove() {
       </UTooltip>
     </template>
   </FolderView>
-  <p v-else-if="error" class="py-24 text-center text-sm text-muted">Ce dossier n'existe pas ou est dans la corbeille.</p>
+  <UEmpty
+    v-else-if="error"
+    icon="i-lucide-folder-x"
+    title="Ce dossier est introuvable"
+    description="Il n'existe pas ou il est dans la corbeille."
+    :actions="[{ label: 'Retour aux notes', icon: 'i-lucide-arrow-left', color: 'neutral', variant: 'subtle', to: '/' }]"
+  />
 </template>

@@ -20,6 +20,11 @@ const { data: matches, status } = useLazyAsyncData(
       <ViewToggle />
     </PageHeader>
     <NoteList v-if="matches.length" :notes="matches" :grid="view === 'grid'" />
-    <p v-else-if="status !== 'pending'" class="py-16 text-center text-sm text-muted">Aucun résultat.</p>
+    <UEmpty
+      v-else-if="status !== 'pending'"
+      icon="i-lucide-search-x"
+      :title="q.trim() ? 'Aucun résultat' : 'Rechercher dans les notes'"
+      :description="q.trim() ? `Aucune note ne contient « ${q} ».` : 'Tapez un mot dans la barre de recherche.'"
+    />
   </div>
 </template>
