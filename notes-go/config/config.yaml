@@ -230,6 +230,11 @@ commands:
     short: "Make the tags of every note match the #tags of its text"
     long: "Make the tags of every note match the #tags of its text: a tag missing from the text is written at its end, a #tag with no link gets one. Only needed once, for notes made before tags came from the text."
     example: "notes sync-tags"
+  sync-titles:
+    use: "sync-titles"
+    short: "Make the title of every note come from its text"
+    long: "Make the title of every note come from its text: a title missing from the text is written at its top as a heading, an untitled note takes its first words. Only needed once, for notes made before titles came from the text."
+    example: "notes sync-titles"
   serve:
     use: "serve"
     short: "Run the HTTP API"

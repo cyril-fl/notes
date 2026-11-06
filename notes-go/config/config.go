@@ -56,6 +56,7 @@ type commands struct {
 	Search       plumcliconfig.Cmdparams `yaml:"search"`
 	Recent       plumcliconfig.Cmdparams `yaml:"recent"`
 	SyncTags     plumcliconfig.Cmdparams `yaml:"sync-tags"`
+	SyncTitles   plumcliconfig.Cmdparams `yaml:"sync-titles"`
 	Serve        plumcliconfig.Cmdparams `yaml:"serve"`
 	Root         plumcliconfig.Cmdparams `yaml:"root"`
 }
