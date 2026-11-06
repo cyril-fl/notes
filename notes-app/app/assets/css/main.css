@@ -9,38 +9,23 @@
   --font-mono: 'Geist Mono', ui-monospace, monospace;
 }
 
-/* Neutral greys and blue, taken from the previous design. */
-:root {
-  --ui-primary: #2563eb;
-  --ui-radius: 0.25rem;
-  --ui-bg: #ffffff;
-  --ui-bg-muted: #f6f6f6;
-  --ui-bg-elevated: #f6f6f6;
-  --ui-bg-accented: #e7e7e7;
-  --ui-text: #232323;
-  --ui-text-highlighted: #232323;
-  --ui-text-toned: #4f4f4f;
-  --ui-text-muted: #6d6d6d;
-  --ui-text-dimmed: #888888;
-  --ui-border: #e7e7e7;
-  --ui-border-muted: #f0f0f0;
-  --ui-border-accented: #d1d1d1;
+/* The greys of the previous design, used as the neutral color in app.config.ts. */
+@theme static {
+  --color-plain-50: #f6f6f6;
+  --color-plain-100: #e7e7e7;
+  --color-plain-200: #d1d1d1;
+  --color-plain-300: #b0b0b0;
+  --color-plain-400: #888888;
+  --color-plain-500: #6d6d6d;
+  --color-plain-600: #5d5d5d;
+  --color-plain-700: #4f4f4f;
+  --color-plain-800: #454545;
+  --color-plain-900: #3d3d3d;
+  --color-plain-950: #232323;
 }
 
-.dark {
-  --ui-primary: #60a5fa;
-  --ui-bg: #232323;
-  --ui-bg-muted: #1a1a1a;
-  --ui-bg-elevated: #3d3d3d;
-  --ui-bg-accented: #4f4f4f;
-  --ui-text: #d1d1d1;
-  --ui-text-highlighted: #ffffff;
-  --ui-text-toned: #b0b0b0;
-  --ui-text-muted: #888888;
-  --ui-text-dimmed: #6d6d6d;
-  --ui-border: #3d3d3d;
-  --ui-border-muted: #313131;
-  --ui-border-accented: #4f4f4f;
+:root {
+  --ui-radius: 0.25rem;
 }
 
 @layer base {
