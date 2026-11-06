@@ -45,22 +45,28 @@ const isOverRoot = useDropFolder(rootLink, () => null);
         <UIcon name="i-lucide-waypoints" class="size-4 shrink-0" />
         Graphe
       </NuxtLink>
+    </div>
 
-      <section v-if="tags.length">
-        <h2 class="px-2 pb-1 text-xs font-medium text-muted">Tags</h2>
-        <NuxtLink
+    <section v-if="tags.length" class="border-t border-default pt-3">
+      <h2 class="px-2 pb-2 text-xs font-medium text-muted">Tags</h2>
+      <!-- Capped so a long tag list never pushes the folders out of the sidebar. -->
+      <div class="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto px-2">
+        <UButton
           v-for="tag in tags"
           :key="tag.value"
           :to="`/tags/${encodeURIComponent(tag.value)}`"
-          class="row"
-          :class="{ 'row-active': route.params.value === tag.value }"
-        >
-          <span class="text-muted">#</span>
-          <span class="truncate">{{ tag.value }}</span>
-          <span class="ml-auto text-xs text-muted">{{ tag.notes }}</span>
-        </NuxtLink>
-      </section>
-    </div>
+          :label="tag.value"
+          icon="i-lucide-hash"
+          size="xs"
+          color="neutral"
+          variant="subtle"
+          active-color="primary"
+          active-variant="soft"
+          class="max-w-full rounded-full"
+          :ui="{ label: 'truncate', leadingIcon: 'size-3' }"
+        />
+      </div>
+    </section>
 
     <div class="flex items-center justify-between border-t border-default pt-2">
       <NuxtLink to="/trash" class="row flex-1" :class="{ 'row-active': route.path === '/trash' }">

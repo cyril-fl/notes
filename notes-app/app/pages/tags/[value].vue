@@ -34,7 +34,7 @@ async function remove() {
 
 <template>
   <div class="mx-auto max-w-3xl p-8">
-    <PageHeader :title="`#${value}`">
+    <PageHeader :title="`#${value}`" :subtitle="tag ? `${tag.notes.length} note${tag.notes.length > 1 ? 's' : ''}` : undefined">
       <UTooltip text="Renommer">
         <UButton icon="i-lucide-pencil" color="neutral" variant="ghost" aria-label="Renommer le tag" @click="rename" />
       </UTooltip>
