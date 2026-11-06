@@ -1303,7 +1303,6 @@ export interface components {
             content: string;
             parent_id?: string;
             tags?: string[];
-            title?: string;
         };
         "createtag.Body": {
             values: string[];
@@ -1330,7 +1329,6 @@ export interface components {
         "editnote.Body": {
             content?: string;
             tags?: string[];
-            title?: string;
         };
         "edittag.Body": {
             value: string;

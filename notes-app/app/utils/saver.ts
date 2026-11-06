@@ -1,4 +1,4 @@
-export type Changes = { title?: string; content?: string };
+export type Changes = { content?: string };
 
 // send returns false when the changes cannot go yet: they wait for the next ones.
 export type Send = (changes: Changes) => Promise<boolean | void>;

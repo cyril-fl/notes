@@ -19,7 +19,6 @@ const baseURL = useRuntimeConfig().public.apiBase;
 const id = ref(props.noteId);
 const parent = ref(props.parentId);
 const path = ref('');
-const title = ref('');
 const tags = ref<string[]>([]);
 const initialContent = ref('');
 const loading = ref(!!props.noteId);
@@ -77,7 +76,6 @@ async function load() {
   if (!props.noteId) return;
   try {
     const note = await api<ItemDetail>(`/api/notes/${props.noteId}`, { quiet: true });
-    title.value = note.item.title;
     initialContent.value = note.content ?? '';
     tags.value = note.tags ?? [];
     path.value = note.path.slice(0, note.path.lastIndexOf('/')) || '/';
@@ -225,20 +223,12 @@ const status = computed(() => {
       </UTooltip>
     </div>
 
-    <input
-      v-model="title"
-      class="w-full bg-transparent text-3xl font-semibold tracking-tight outline-none placeholder:text-dimmed"
-      placeholder="Sans titre"
-      aria-label="Titre"
-      :autofocus="!noteId"
-      @input="saver.push({ title })"
-    >
-
     <UEditor
       v-slot="{ editor }"
       :model-value="initialContent"
       content-type="markdown"
-      placeholder="Commencez à écrire…"
+      placeholder="Commencez par un titre…"
+      :autofocus="!noteId"
       :image="false"
       :mention="false"
       :starter-kit="starterKit"

@@ -28,7 +28,7 @@ test('edits during a POST give one POST then one PATCH', async () => {
   const done = saver.flush();
 
   saver.push({ content: 'ab' });
-  saver.push({ title: 'T', content: 'abc' });
+  saver.push({ content: 'abc' });
   saver.flush();
 
   await release();
@@ -37,7 +37,7 @@ test('edits during a POST give one POST then one PATCH', async () => {
 
   assert.deepEqual(calls, [
     { method: 'POST', changes: { content: 'a' } },
-    { method: 'PATCH', changes: { title: 'T', content: 'abc' } },
+    { method: 'PATCH', changes: { content: 'abc' } },
   ]);
 });
 
@@ -59,7 +59,7 @@ test('a failure keeps the changes, newer ones win', async () => {
     sent.push(changes);
   }, 60_000);
 
-  saver.push({ title: 'old', content: 'a' });
+  saver.push({ content: 'a' });
   await saver.flush();
   assert.deepEqual(sent, []);
 
@@ -67,7 +67,7 @@ test('a failure keeps the changes, newer ones win', async () => {
   saver.push({ content: 'ab' });
   await saver.flush();
 
-  assert.deepEqual(sent, [{ title: 'old', content: 'ab' }]);
+  assert.deepEqual(sent, [{ content: 'ab' }]);
 });
 
 test('send returning false keeps the changes without retrying in a loop', async () => {
@@ -77,11 +77,11 @@ test('send returning false keeps the changes without retrying in a loop', async 
     return false;
   }, 60_000);
 
-  saver.push({ title: 'T' });
+  saver.push({ content: 'a' });
   await saver.flush();
 
   assert.equal(calls, 1);
-  assert.deepEqual(saver.take(), { title: 'T' });
+  assert.deepEqual(saver.take(), { content: 'a' });
 });
 
 test('take empties the queue', async () => {
