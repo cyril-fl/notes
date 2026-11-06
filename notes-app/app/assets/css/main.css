@@ -68,6 +68,11 @@
     @apply cursor-pointer rounded-sm px-0.5 text-primary underline decoration-primary/40 underline-offset-2 hover:bg-primary/10;
   }
 
+  /* Not pointing to a note yet: no note, or several, have its title. */
+  .ProseMirror a.wikilink-waiting {
+    @apply text-muted decoration-dashed decoration-current/50;
+  }
+
   /* Task lists are not in the Nuxt UI editor theme. */
   .ProseMirror ul[data-type='taskList'] {
     @apply list-none ps-0!;

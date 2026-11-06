@@ -3,7 +3,7 @@ import type { EditorToolbarItem } from '@nuxt/ui';
 import type { Editor } from '@tiptap/vue-3';
 import { TaskItem, TaskList } from '@tiptap/extension-list';
 import type { RouteLocationNormalized } from 'vue-router';
-import type { Item, ItemDetail, Neighbors, NotesGraph } from '~/types/items';
+import type { Item, ItemDetail, NotesGraph } from '~/types/items';
 import type { Changes } from '~/utils/saver';
 
 const props = defineProps<{ noteId?: string; parentId?: string }>();
@@ -155,37 +155,31 @@ async function askLink(editor: Editor) {
   if (href) editor.chain().focus().setLink({ href: /^[a-z]+:/i.test(href) ? href : `https://${href}` }).run();
 }
 
-// The notes offered after [[: a title shared by several notes is written as its path.
+// The notes offered after [[: picked, the link points to the note's id right away.
 const { data: graph } = useLazyAsyncData('graph', () => api<NotesGraph>('/api/graph/notes'));
-const noteItems = computed(() => {
-  const notes = (graph.value?.notes ?? []).filter((note) => note.id !== id.value && note.title);
-  const shared = (title: string) => notes.filter((note) => note.title.toLowerCase() === title.toLowerCase()).length > 1;
-  return notes.map((note) => ({
-    kind: 'wikiLink',
-    label: note.title,
-    description: note.path,
-    icon: 'i-lucide-file-text',
-    target: shared(note.title) ? note.path : note.title,
-  }));
-});
+const noteItems = computed(() =>
+  (graph.value?.notes ?? [])
+    .filter((note) => note.id !== id.value && note.title)
+    .map((note) => ({ kind: 'wikiLink', label: note.title, description: note.path, icon: 'i-lucide-file-text', id: note.id }))
+);
 
-// Opens the note a [[link]] names, as the API resolved it once the note is saved.
-async function openLink(event: MouseEvent) {
-  const target = (event.target as HTMLElement).closest<HTMLElement>('a[data-wikilink]')?.dataset.wikilink;
-  if (!target) return;
+function openLink(event: MouseEvent) {
+  const link = (event.target as HTMLElement).closest<HTMLElement>('a[data-wikilink]');
+  if (!link) return;
   event.preventDefault();
-  await saver.flush();
-  if (!id.value) return;
-  const { links } = await api<Neighbors>(`/api/notes/${id.value}/neighbors`);
-  const note = links.find((link) => link.path === target || link.title.toLowerCase() === target.toLowerCase());
-  if (note) return navigateTo(`/notes/${note.id}`);
-  toast.add({ title: 'Lien sans note', description: `Aucune note, ou plusieurs, ne s'appellent « ${target} ».`, color: 'warning' });
+  if (link.dataset.note) return navigateTo(`/notes/${link.dataset.note}`);
+  toast.add({
+    title: 'Lien en attente',
+    description: `Il sera relié dès qu'une seule note s'appellera « ${link.dataset.wikilink} ». Écris son chemin (/Dossier/Titre) si plusieurs portent ce titre.`,
+    color: 'warning',
+  });
 }
 
 const handlers = {
   wikiLink: {
     canExecute: () => true,
-    execute: (editor: Editor, item: { target: string }) => editor.chain().focus().insertContent([{ type: 'wikiLink', attrs: { target: item.target } }, { type: 'text', text: ' ' }]),
+    execute: (editor: Editor, item: { label: string; id: string }) =>
+      editor.chain().focus().insertContent([{ type: 'wikiLink', attrs: { target: item.label, id: item.id } }, { type: 'text', text: ' ' }]),
     isActive: () => false,
     isDisabled: () => false,
   },
