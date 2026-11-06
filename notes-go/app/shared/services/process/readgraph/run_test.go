@@ -55,7 +55,7 @@ func TestGraph(t *testing.T) {
 		{"Trashed", "", []string{a}},
 		{"InTrashedFolder", folder.GetResult().ID, []string{a}},
 	} {
-		process := createnote.Process(ctx, tx, createnote.Input{Title: note.title, Content: "C", ParentID: note.parentID, Tags: note.tags})
+		process := createnote.Process(ctx, tx, createnote.Input{Content: "# " + note.title, ParentID: note.parentID, Tags: note.tags})
 		process.Run()
 		if process.HasErr() {
 			t.Fatalf("note %s: %v", note.title, process.GetErr())

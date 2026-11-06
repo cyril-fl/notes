@@ -12,6 +12,7 @@ import (
 	"github.com/uptrace/bun/driver/pgdriver"
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/hashtag"
+	"main.go/app/shared/services/notetitle"
 	"main.go/app/shared/services/process/createtag"
 )
 
@@ -23,9 +24,8 @@ var (
 // foreignKeyViolation is the Postgres SQLSTATE raised here by items_parent_id_parent_kind_fkey.
 const foreignKeyViolation = "23503"
 
-// Input is a note as the user gave it: an empty Title is an untitled note, Tags are written into Content as #tags.
+// Input is a note as the user gave it: Tags are written into Content as #tags, the title comes from Content.
 type Input struct {
-	Title    string   `json:"title" binding:"optional"`
 	Content  string   `json:"content"`
 	ParentID string   `json:"parent_id" binding:"optional"`
 	Tags     []string `json:"tags" binding:"optional"`
@@ -42,6 +42,7 @@ type run struct {
 
 type cache struct {
 	input Input
+	title string
 	item  domain.Item
 	tags  []domain.Tag
 }
@@ -70,7 +71,6 @@ func (p *run) GetResult() domain.Item {
 
 func (p *run) makeNote() {
 	p.cache.input = Input{
-		Title:    strings.TrimSpace(p.input.Title),
 		Content:  strings.TrimSpace(p.input.Content),
 		ParentID: strings.TrimSpace(p.input.ParentID),
 	}
@@ -94,6 +94,7 @@ func (p *run) makeNote() {
 
 	p.cache.input.Content = hashtag.Sync(p.cache.input.Content, tags)
 	p.cache.input.Tags = hashtag.Parse(p.cache.input.Content)
+	p.cache.title = notetitle.From(p.cache.input.Content)
 }
 
 // saveNote writes item, metadata and tag links in one transaction: a failure leaves no half note.
@@ -113,7 +114,7 @@ func (p *run) saveNote() {
 }
 
 func (p *run) insertItem(ctx context.Context, tx bun.Tx) error {
-	p.cache.item = domain.Item{Kind: domain.NOTE, Title: p.cache.input.Title}
+	p.cache.item = domain.Item{Kind: domain.NOTE, Title: p.cache.title}
 	if p.cache.input.ParentID != "" {
 		p.cache.item.ParentID = &p.cache.input.ParentID
 	}

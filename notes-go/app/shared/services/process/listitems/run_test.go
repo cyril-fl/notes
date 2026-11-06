@@ -40,7 +40,7 @@ func TestListItems(t *testing.T) {
 	}
 	id := parent.GetResult().ID
 
-	note := createnote.Process(ctx, tx, createnote.Input{Title: "A note", Content: "C", ParentID: id})
+	note := createnote.Process(ctx, tx, createnote.Input{Content: "# A note", ParentID: id})
 	note.Run()
 	sub := createfolder.Process(ctx, tx, createfolder.Input{Title: "Z folder", ParentID: id})
 	sub.Run()

@@ -46,7 +46,6 @@ var cmdCreateTag = &cobra.Command{
 
 func init() {
 	plumcliutilsargs.Makeflags(cmdCreateNote, cmd.CreateNote.Flags)
-	cmdCreateNote.MarkFlagsMutuallyExclusive("title", "no-title")
 	cmdCreateNote.MarkFlagsMutuallyExclusive("tag", "tag-from-list")
 	cmdCreateNote.MarkFlagsMutuallyExclusive("parent", "parent-from-list")
 

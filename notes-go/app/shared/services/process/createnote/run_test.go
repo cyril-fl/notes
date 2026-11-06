@@ -17,7 +17,7 @@ import (
 
 // No DB needed: makeNote fails first and saveNote is guarded, so a nil db is never touched.
 func TestNoContent(t *testing.T) {
-	process := Process(context.Background(), nil, Input{Title: "title", Content: "   "})
+	process := Process(context.Background(), nil, Input{Content: "   "})
 	process.Run()
 
 	if !errors.Is(process.GetErr(), ErrNoContent) {
@@ -53,7 +53,7 @@ func TestCreateNote(t *testing.T) {
 	}
 
 	// Existing tag, new tag, and a case duplicate of the existing one: 2 links.
-	note := Process(ctx, tx, Input{Title: " Title ", Content: "content", Tags: []string{existing, existing + "-new", strings.ToUpper(existing), " "}})
+	note := Process(ctx, tx, Input{Content: "# Title \n\ncontent", Tags: []string{existing, existing + "-new", strings.ToUpper(existing), " "}})
 	note.Run()
 	if note.HasErr() {
 		t.Fatalf("create: %v", note.GetErr())
@@ -70,7 +70,7 @@ func TestCreateNote(t *testing.T) {
 
 	var content string
 	err = tx.NewSelect().Model((*domain.MetadataNote)(nil)).Column("content").Where("item_id = ?", item.ID).Scan(ctx, &content)
-	if err != nil || !strings.HasPrefix(content, "content\n\n#") {
+	if err != nil || !strings.HasPrefix(content, "# Title \n\ncontent\n\n#") {
 		t.Errorf("content = %q, %v; want content then its tags", content, err)
 	}
 
@@ -90,7 +90,14 @@ func TestCreateNote(t *testing.T) {
 		t.Errorf("invalid tag: err = %v, want %v", invalid.GetErr(), hashtag.ErrInvalid)
 	}
 
-	untitled := Process(ctx, tx, Input{Content: "content"})
+	words := Process(ctx, tx, Input{Content: "- [ ] du **pain**\net du lait"})
+	words.Run()
+	if words.HasErr() || words.GetResult().Title != "du pain" {
+		t.Errorf("title = %q, %v; want the first words", words.GetResult().Title, words.GetErr())
+	}
+
+	// Nothing to read a title from: only code.
+	untitled := Process(ctx, tx, Input{Content: "```\ncode\n```"})
 	untitled.Run()
 	if untitled.HasErr() {
 		t.Fatalf("untitled: %v", untitled.GetErr())

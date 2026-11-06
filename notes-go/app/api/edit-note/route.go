@@ -14,12 +14,12 @@ import (
 // Body has pointers to tell a field left out from an empty one: editnote replaces everything,
 // so a request without tags must keep them, not clear them.
 type Body struct {
-	Title   *string   `json:"title" binding:"optional"`
 	Content *string   `json:"content" binding:"optional"`
 	Tags    *[]string `json:"tags" binding:"optional"`
 }
 
-// Handler changes the fields given: PATCH /api/notes/{id}. The #tags of the content are the tags of the note.
+// Handler changes the fields given: PATCH /api/notes/{id}. The #tags of the content are the tags of the note,
+// its first heading (or first words) its title.
 // shortcut: reads then writes outside a transaction, a concurrent edit can be lost, fine for one user; use a tx if that changes.
 // @Summary  Change the fields given
 // @Tags     notes
@@ -52,10 +52,7 @@ func Handler(db bun.IDB) http.HandlerFunc {
 			return
 		}
 		note := current.GetResult()
-		input := editnote.Input{ID: id, Title: note.Item.Title, Content: note.Content, Tags: note.Tags}
-		if changes.Title != nil {
-			input.Title = *changes.Title
-		}
+		input := editnote.Input{ID: id, Content: note.Content, Tags: note.Tags}
 		if changes.Content != nil {
 			input.Content = *changes.Content
 		}

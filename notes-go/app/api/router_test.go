@@ -102,7 +102,8 @@ func TestNotes(t *testing.T) {
 	title := unique("note")
 
 	var note item
-	c.do("POST", "/api/notes", fmt.Sprintf(`{"title":%q,"content":"hello","tags":["go","sql"]}`, title), http.StatusCreated, &note)
+	// The title is the first heading of the content.
+	c.do("POST", "/api/notes", fmt.Sprintf(`{"content":"# %s\n\nhello","tags":["go","sql"]}`, title), http.StatusCreated, &note)
 	if note.Kind != "note" || note.Title != title {
 		t.Fatalf("note = %+v", note)
 	}
@@ -110,17 +111,17 @@ func TestNotes(t *testing.T) {
 
 	var read detail
 	c.do("GET", path, "", http.StatusOK, &read)
-	if read.Content != "hello\n\n#go #sql" || read.Path != "/"+title || strings.Join(read.Tags, ",") != "go,sql" {
+	if read.Content != "# "+title+"\n\nhello\n\n#go #sql" || read.Path != "/"+title || strings.Join(read.Tags, ",") != "go,sql" {
 		t.Errorf("read = %+v", read)
 	}
 	if strings.Contains(c.raw(path), "children") {
 		t.Errorf("a note has no children field: %s", c.raw(path))
 	}
 
-	// One field changed, the others kept; the tags are those of the text.
+	// One field changed, the others kept; the tags are those of the text, the title its first words.
 	c.do("PATCH", path, `{"content":"changed #go"}`, http.StatusOK, nil)
 	c.do("GET", path, "", http.StatusOK, &read)
-	if read.Content != "changed #go" || read.Item.Title != title || strings.Join(read.Tags, ",") != "go" {
+	if read.Content != "changed #go" || read.Item.Title != "changed" || strings.Join(read.Tags, ",") != "go" {
 		t.Errorf("after content patch: %+v", read)
 	}
 
@@ -137,16 +138,17 @@ func TestNotes(t *testing.T) {
 		t.Errorf("an explicit empty list clears the tags and their text: %s", c.raw(path))
 	}
 
-	c.do("PATCH", path, `{"title":""}`, http.StatusOK, nil)
+	// The title is not given: it comes from the content.
+	c.do("PATCH", path, `{"title":"x"}`, http.StatusBadRequest, nil)
 	c.do("GET", path, "", http.StatusOK, &read)
-	if read.Item.Title != "" || read.Content != "changed" {
-		t.Errorf("after title patch: %+v", read)
+	if read.Item.Title != "changed" || read.Content != "changed" {
+		t.Errorf("after tags cleared: %+v", read)
 	}
 
 	c.do("PATCH", path, `{"content":" "}`, http.StatusBadRequest, nil)
 	c.do("PATCH", path, `{"nope":1}`, http.StatusBadRequest, nil)
 	c.do("PATCH", "/api/notes/"+unknownID, `{"content":"x"}`, http.StatusNotFound, nil)
-	c.do("POST", "/api/notes", `{"title":"no content"}`, http.StatusBadRequest, nil)
+	c.do("POST", "/api/notes", `{"content":""}`, http.StatusBadRequest, nil)
 	c.do("POST", "/api/notes", `{"content":"x","parent_id":"nope"}`, http.StatusBadRequest, nil)
 	c.do("POST", "/api/notes", fmt.Sprintf(`{"content":"x","parent_id":%q}`, unknownID), http.StatusBadRequest, nil)
 	c.do("GET", "/api/notes/"+unknownID, "", http.StatusNotFound, nil)
@@ -180,7 +182,7 @@ func TestFoldersAndMove(t *testing.T) {
 	}
 
 	c.do("POST", "/api/folders", fmt.Sprintf(`{"title":"sub","parent_id":%q}`, folder.ID), http.StatusCreated, &sub)
-	c.do("POST", "/api/notes", `{"title":"loose","content":"C"}`, http.StatusCreated, &note)
+	c.do("POST", "/api/notes", `{"content":"# loose"}`, http.StatusCreated, &note)
 	c.do("POST", "/api/folders", `{"title":" "}`, http.StatusBadRequest, nil)
 
 	// A note and a folder are not interchangeable.
@@ -316,8 +318,8 @@ func TestTagsAndGraph(t *testing.T) {
 	c.do("POST", "/api/tags", `{"values":[]}`, http.StatusBadRequest, nil)
 
 	var a, b item
-	c.do("POST", "/api/notes", fmt.Sprintf(`{"title":"a","content":"needle-%s","tags":[%q]}`, first, first), http.StatusCreated, &a)
-	c.do("POST", "/api/notes", fmt.Sprintf(`{"title":"b","content":"C","tags":[%q]}`, first), http.StatusCreated, &b)
+	c.do("POST", "/api/notes", fmt.Sprintf(`{"content":"needle-%s","tags":[%q]}`, first, first), http.StatusCreated, &a)
+	c.do("POST", "/api/notes", fmt.Sprintf(`{"content":"C","tags":[%q]}`, first), http.StatusCreated, &b)
 
 	var tag struct {
 		Tag struct {

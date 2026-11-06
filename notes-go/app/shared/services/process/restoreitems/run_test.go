@@ -52,7 +52,7 @@ func TestTrashAndRestore(t *testing.T) {
 		return process.GetResult().ID
 	}
 	note := func(title, parentID string) string {
-		process := createnote.Process(ctx, tx, createnote.Input{Title: title, Content: "C", ParentID: parentID})
+		process := createnote.Process(ctx, tx, createnote.Input{Content: "# " + title, ParentID: parentID})
 		process.Run()
 		if process.HasErr() {
 			t.Fatalf("note %s: %v", title, process.GetErr())

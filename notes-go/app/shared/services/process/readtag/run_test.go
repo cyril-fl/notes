@@ -53,14 +53,14 @@ func TestReadTag(t *testing.T) {
 	}
 	var ids []string
 	for _, input := range []createnote.Input{
-		{Title: "Root", Content: "C", Tags: []string{tag}},
-		{Title: "Inside", Content: "C", Tags: []string{tag}, ParentID: folder.GetResult().ID},
-		{Title: "Trashed", Content: "C", Tags: []string{tag}},
+		{Content: "# Root", Tags: []string{tag}},
+		{Content: "# Inside", Tags: []string{tag}, ParentID: folder.GetResult().ID},
+		{Content: "# Trashed", Tags: []string{tag}},
 	} {
 		note := createnote.Process(ctx, tx, input)
 		note.Run()
 		if note.HasErr() {
-			t.Fatalf("note %s: %v", input.Title, note.GetErr())
+			t.Fatalf("note %s: %v", input.Content, note.GetErr())
 		}
 		ids = append(ids, note.GetResult().ID)
 	}

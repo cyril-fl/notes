@@ -25,7 +25,6 @@ type mill struct {
 
 type cache struct {
 	input          createnote.Input
-	noTitle        bool
 	tagFromList    bool
 	parentFromList bool
 	tags           []domain.Tag
@@ -58,14 +57,12 @@ func (m *mill) Resolve() createnote.Input {
 // Methods
 
 func (m *mill) readFlags() {
-	var errs [5]error
+	var errs [4]error
 
-	m.cache.input.Title, errs[0] = m.flags.GetString("title")
-	m.cache.input.Content, errs[1] = m.flags.GetString("content")
-	m.cache.input.ParentID, errs[2] = m.flags.GetString("parent")
-	m.cache.input.Tags, errs[3] = m.flags.GetStringSlice("tag")
-	errs[4] = m.readBoolFlags(map[string]*bool{
-		"no-title":         &m.cache.noTitle,
+	m.cache.input.Content, errs[0] = m.flags.GetString("content")
+	m.cache.input.ParentID, errs[1] = m.flags.GetString("parent")
+	m.cache.input.Tags, errs[2] = m.flags.GetStringSlice("tag")
+	errs[3] = m.readBoolFlags(map[string]*bool{
 		"tag-from-list":    &m.cache.tagFromList,
 		"parent-from-list": &m.cache.parentFromList,
 	})

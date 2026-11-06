@@ -19,9 +19,6 @@ func (m *mill) askMissing() {
 
 	var fields []huh.Field
 
-	if m.cache.input.Title == "" && !m.cache.noTitle {
-		fields = append(fields, huh.NewInput().Title("Title").Value(&m.cache.input.Title).Validate(notBlank))
-	}
 	if m.cache.input.Content == "" {
 		fields = append(fields, huh.NewText().Title("Content").Value(&m.cache.input.Content).Validate(notBlank))
 	}

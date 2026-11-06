@@ -54,7 +54,7 @@ func TestResolvePaths(t *testing.T) {
 	folderID := folder.GetResult().ID
 
 	note := func(title string) string {
-		process := createnote.Process(ctx, tx, createnote.Input{Title: title, Content: "C", ParentID: folderID})
+		process := createnote.Process(ctx, tx, createnote.Input{Content: "# " + title, ParentID: folderID})
 		process.Run()
 		if process.HasErr() {
 			t.Fatalf("note %s: %v", title, process.GetErr())

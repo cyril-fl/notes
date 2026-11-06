@@ -1,0 +1,80 @@
+// Package notetitle reads the title of a note from its markdown, as Apple Notes does: nobody types it apart.
+package notetitle
+
+import (
+	"regexp"
+	"strings"
+
+	"main.go/app/shared/services/hashtag"
+)
+
+// MaxLength is the most runes a title keeps when it comes from the first words of the text.
+const MaxLength = 50
+
+var (
+	fence   = regexp.MustCompile("^[ \\t]*(```|~~~)")
+	heading = regexp.MustCompile(`^ {0,3}#{1,6}(?:[ \t]+(.*?))?(?:[ \t]+#+)?[ \t]*$`)
+	// block is what starts a line without being text: quote, list item, task box.
+	block = regexp.MustCompile(`^[ \t]*(?:>[ \t]?)*(?:(?:[-*+]|\d+[.)])[ \t]+)?(?:\[[ xX]\][ \t]+)?`)
+	image = regexp.MustCompile(`!\[([^\]]*)\]\([^)]*\)`)
+	link  = regexp.MustCompile(`\[([^\]]*)\]\([^)]*\)`)
+	marks = regexp.MustCompile("\\*\\*|__|~~|[*_`]")
+	rule  = regexp.MustCompile(`^[ \t]*(?:[-*_][ \t]*){3,}$`)
+)
+
+// From gives the first heading of content, else its first line of text cut to MaxLength runes;
+// "" when there is neither: the note is untitled. Code blocks and lines of #tags only are skipped.
+func From(content string) string {
+	lines := textLines(content)
+	for _, line := range lines {
+		if match := heading.FindStringSubmatch(line); match != nil {
+			if title := clean(match[1]); title != "" {
+				return title
+			}
+		}
+	}
+	for _, line := range lines {
+		if heading.MatchString(line) || rule.MatchString(line) {
+			continue
+		}
+		if title := clean(block.ReplaceAllString(line, "")); title != "" {
+			return cut(title)
+		}
+	}
+	return ""
+}
+
+// Helpers
+
+// textLines drops fenced code: a # there is a comment, not a heading.
+func textLines(content string) []string {
+	var lines []string
+	inCode := false
+	for line := range strings.Lines(content) {
+		if fence.MatchString(line) {
+			inCode = !inCode
+			continue
+		}
+		if !inCode {
+			lines = append(lines, strings.TrimRight(line, "\r\n"))
+		}
+	}
+	return lines
+}
+
+// clean keeps the words: no link targets, emphasis marks or #tags.
+func clean(text string) string {
+	text = image.ReplaceAllString(text, "$1")
+	text = link.ReplaceAllString(text, "$1")
+	text = marks.ReplaceAllString(text, "")
+	text = hashtag.Remove(text, hashtag.Parse(text)...)
+	return strings.Join(strings.Fields(text), " ")
+}
+
+func cut(title string) string {
+	runes := []rune(title)
+	if len(runes) <= MaxLength {
+		return title
+	}
+	return strings.TrimSpace(string(runes[:MaxLength]))
+}

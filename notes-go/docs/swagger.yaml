@@ -30,8 +30,6 @@ components:
             type: string
           type: array
           uniqueItems: false
-        title:
-          type: string
       required:
       - content
       type: object
@@ -101,8 +99,6 @@ components:
             type: string
           type: array
           uniqueItems: false
-        title:
-          type: string
       type: object
     edittag.Body:
       properties:

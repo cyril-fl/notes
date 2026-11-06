@@ -26,19 +26,12 @@ func resolve(t *testing.T, args ...string) (*mill, createnote.Input) {
 }
 
 func TestResolveFromFlags(t *testing.T) {
-	resolver, input := resolve(t, "--title", "T", "--content", "C", "--tag", "go,sql", "--tag", "db", "--parent", "uuid")
+	resolver, input := resolve(t, "--content", "C", "--tag", "go,sql", "--tag", "db", "--parent", "uuid")
 	if resolver.HasErr() {
 		t.Fatalf("Resolve() error = %v", resolver.GetErr())
 	}
 
-	if input.Title != "T" || input.Content != "C" || input.ParentID != "uuid" || !slices.Equal(input.Tags, []string{"go", "sql", "db"}) {
+	if input.Content != "C" || input.ParentID != "uuid" || !slices.Equal(input.Tags, []string{"go", "sql", "db"}) {
 		t.Errorf("input = %+v", input)
-	}
-}
-
-func TestResolveNoTitle(t *testing.T) {
-	resolver, input := resolve(t, "--no-title", "--content", "C")
-	if resolver.HasErr() || input.Title != "" || input.Content != "C" {
-		t.Errorf("input = %+v, err = %v; want untitled C", input, resolver.GetErr())
 	}
 }

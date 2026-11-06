@@ -12,7 +12,7 @@ import (
 
 var errRequired = errors.New("required")
 
-// askMissing opens one form pre-filled with the current values: title and content when no flag
+// askMissing opens one form pre-filled with the current values: the content when no flag
 // gave a change, the tag list with --tag-from-list; no field, no form.
 func (m *mill) askMissing() {
 	if m.HasErr() {
@@ -22,11 +22,7 @@ func (m *mill) askMissing() {
 	var fields []huh.Field
 
 	if !m.hasChanges() {
-		// No validator: an empty title makes the note untitled.
-		fields = append(fields,
-			huh.NewInput().Title("Title").Value(&m.cache.input.Title),
-			huh.NewText().Title("Content").Value(&m.cache.input.Content).Validate(notBlank),
-		)
+		fields = append(fields, huh.NewText().Title("Content").Value(&m.cache.input.Content).Validate(notBlank))
 	}
 	if m.cache.tagFromList {
 		options := tagOptions(m.cache.tags, m.cache.input.Tags)

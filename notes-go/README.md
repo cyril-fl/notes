@@ -48,8 +48,8 @@ Un chemin doit correspondre exactement, majuscules comprises. Si plusieurs élé
 
 ```sh
 notes add folder --title Projets
-notes add note --title Idées --content "..." --tag go,sql --parent /Projets
-cat idees.md | notes add note --title Idées --content - --parent /Projets
+notes add note --content "# Idées" --tag go,sql --parent /Projets
+cat idees.md | notes add note --content - --parent /Projets
 
 notes show note /Projets/Idées
 notes show folder /Projets
@@ -61,7 +61,9 @@ notes edit folder /Projets --title Travail
 notes move /Projets/Idées --parent /Archives
 ```
 
-Si une valeur manque, un formulaire s'ouvre. Sans terminal (cron, CI), passe tout par les flags, avec `--title` ou `--no-title` pour le titre.
+Si une valeur manque, un formulaire s'ouvre. Sans terminal (cron, CI), passe tout par les flags.
+
+Une note n'a pas de titre à part : c'est son premier titre markdown (`#`, `##`…, quel que soit le niveau), sinon les 50 premiers caractères de sa première ligne de texte, sans la mise en forme, le code ni les lignes faites seulement de `#tags`. Une note sans texte reste sans titre. Le titre suit le contenu à chaque modification, et le chemin d'une note (`/Projets/Idées`) avec lui.
 
 ### Parcourir et chercher
 
@@ -118,7 +120,7 @@ notes serve --origin http://localhost:3000   # ou directement sur la machine
 
 | Ressource | Routes (préfixe `/api`) | Corps JSON |
 |---|---|---|
-| Notes | `POST /notes`, `GET`, `PATCH`, `DELETE /notes/{id}`, `GET /notes/{id}/neighbors` | `title`, `content`, `tags`, `parent_id` (création) |
+| Notes | `POST /notes`, `GET`, `PATCH`, `DELETE /notes/{id}`, `GET /notes/{id}/neighbors` | `content`, `tags`, `parent_id` (création) |
 | Dossiers | `GET`, `POST /folders`, `GET`, `PATCH`, `DELETE /folders/{id}` | `title`, `parent_id` (création) |
 | Parcourir | `GET /items?parent=<uuid>` (racine sans `parent`), `POST /move` | `ids`, `parent_id` (racine sans `parent_id`) |
 | Tags | `GET`, `POST /tags`, `GET`, `PATCH`, `DELETE /tags/{value}` | `values` (création), `value` (renommage) |
@@ -126,6 +128,7 @@ notes serve --origin http://localhost:3000   # ou directement sur la machine
 | Recherche | `GET /search?q=<texte>`, `GET /recent` | |
 | Corbeille | `GET`, `DELETE /trash`, `POST /restore` | `ids` (restauration) |
 
+- Le titre d'une note vient de son contenu, comme dans la CLI : l'API refuse un champ `title` pour une note.
 - `PATCH /notes/{id}` ne change que les champs envoyés. Sans `tags`, les tags sont les `#mots` du contenu. Avec `tags`, cette liste réécrit le contenu : `"tags": []` efface tous ses `#mots`.
 - Les erreurs ont la forme `{"error": "..."}`, avec le statut 400, 403, 404, 409, 413 ou 500.
   Seuls une route inconnue (404) et une méthode non gérée (405) répondent en texte brut, car c'est le routeur qui les écrit.

@@ -28,7 +28,6 @@ type mill struct {
 
 type cache struct {
 	input       editnote.Input
-	title       string
 	content     string
 	addTags     []string
 	removeTags  []string
@@ -65,12 +64,11 @@ func (m *mill) Resolve() editnote.Input {
 // Methods
 
 func (m *mill) readFlags() {
-	var errs [5]error
-	m.cache.title, errs[0] = m.flags.GetString("title")
-	m.cache.content, errs[1] = m.flags.GetString("content")
-	m.cache.addTags, errs[2] = m.flags.GetStringSlice("tag")
-	m.cache.removeTags, errs[3] = m.flags.GetStringSlice("untag")
-	m.cache.tagFromList, errs[4] = m.flags.GetBool("tag-from-list")
+	var errs [4]error
+	m.cache.content, errs[0] = m.flags.GetString("content")
+	m.cache.addTags, errs[1] = m.flags.GetStringSlice("tag")
+	m.cache.removeTags, errs[2] = m.flags.GetStringSlice("untag")
+	m.cache.tagFromList, errs[3] = m.flags.GetBool("tag-from-list")
 	m.SetErr(errors.Join(errs[:]...))
 }
 
@@ -82,19 +80,15 @@ func (m *mill) loadNote() {
 	process := readitem.Process(m.ctx, m.db, domain.NOTE, m.id)
 	process.Run()
 	current := process.GetResult()
-	m.cache.input = editnote.Input{ID: current.Item.ID, Title: current.Item.Title, Content: current.Content, Tags: current.Tags}
+	m.cache.input = editnote.Input{ID: current.Item.ID, Content: current.Content, Tags: current.Tags}
 	m.SetErr(process.GetErr())
 }
 
-// applyFlags uses Changed, not the value: --title "" is a real change (untitled note).
 func (m *mill) applyFlags() {
 	if m.HasErr() {
 		return
 	}
 
-	if m.flags.Changed("title") {
-		m.cache.input.Title = m.cache.title
-	}
 	if m.flags.Changed("content") {
 		m.cache.input.Content = m.cache.content
 	}
@@ -112,9 +106,9 @@ func (m *mill) loadTags() {
 	m.SetErr(process.GetErr())
 }
 
-// hasChanges reports whether a flag already says what to change, in which case title and content are not asked.
+// hasChanges reports whether a flag already says what to change, in which case the content is not asked.
 func (m *mill) hasChanges() bool {
-	return m.flags.Changed("title") || m.flags.Changed("content") || len(m.cache.addTags) > 0 || len(m.cache.removeTags) > 0
+	return m.flags.Changed("content") || len(m.cache.addTags) > 0 || len(m.cache.removeTags) > 0
 }
 
 // Helpers

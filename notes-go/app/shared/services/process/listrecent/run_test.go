@@ -35,7 +35,7 @@ func TestListRecent(t *testing.T) {
 	// Dated in the future so real notes rank after; current_timestamp would be the same for the whole transaction.
 	future := time.Now().AddDate(100, 0, 0)
 	note := func(title string, age int) string {
-		process := createnote.Process(ctx, tx, createnote.Input{Title: title, Content: "C"})
+		process := createnote.Process(ctx, tx, createnote.Input{Content: "# " + title})
 		process.Run()
 		if process.HasErr() {
 			t.Fatalf("note %s: %v", title, process.GetErr())

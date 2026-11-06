@@ -43,7 +43,7 @@ func TestListFolders(t *testing.T) {
 	child := folder("Child", top)
 	trashed := folder("Trashed", top)
 	folder("Hidden", trashed)
-	note := createnote.Process(ctx, tx, createnote.Input{Title: "Note", Content: "C", ParentID: top})
+	note := createnote.Process(ctx, tx, createnote.Input{Content: "# Note", ParentID: top})
 	note.Run()
 	trash := deleteitems.Process(ctx, tx, domain.FOLDER, []string{trashed})
 	trash.Run()

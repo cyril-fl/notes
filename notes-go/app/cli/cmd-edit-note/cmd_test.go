@@ -14,7 +14,7 @@ func TestNoFlags(t *testing.T) {
 			t.Errorf("--%s is changed", flag.Name)
 		}
 	})
-	if flags.Lookup("title") == nil {
-		t.Error("--title is not declared")
+	if flags.Lookup("content") == nil {
+		t.Error("--content is not declared")
 	}
 }

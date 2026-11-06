@@ -38,7 +38,7 @@ func TestCountTags(t *testing.T) {
 	seed.Run()
 	var trashedID string
 	for _, title := range []string{"A", "B", "Trashed"} {
-		note := createnote.Process(ctx, tx, createnote.Input{Title: title, Content: "C", Tags: []string{used}})
+		note := createnote.Process(ctx, tx, createnote.Input{Content: "# " + title, Tags: []string{used}})
 		note.Run()
 		if note.HasErr() {
 			t.Fatalf("note %s: %v", title, note.GetErr())

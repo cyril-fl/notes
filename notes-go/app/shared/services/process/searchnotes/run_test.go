@@ -62,18 +62,18 @@ func TestSearchNotes(t *testing.T) {
 	// Unique per run so real notes cannot match.
 	word := fmt.Sprintf("zq%d", time.Now().UnixNano())
 	ids := map[string]string{}
-	for _, note := range []createnote.Input{
-		{Title: "A in content", Content: "line\nhas " + strings.ToUpper(word) + " inside"},
-		{Title: "Z " + word, Content: "title match"},
-		{Title: "Percent", Content: word + "100% sure"},
-		{Title: "Trashed " + word, Content: "C"},
+	for title, content := range map[string]string{
+		"A in content":    "line\nhas " + strings.ToUpper(word) + " inside",
+		"Z " + word:       "title match",
+		"Percent":         word + "100% sure",
+		"Trashed " + word: "C",
 	} {
-		process := createnote.Process(ctx, tx, note)
+		process := createnote.Process(ctx, tx, createnote.Input{Content: "# " + title + "\n\n" + content})
 		process.Run()
 		if process.HasErr() {
-			t.Fatalf("note %s: %v", note.Title, process.GetErr())
+			t.Fatalf("note %s: %v", title, process.GetErr())
 		}
-		ids[note.Title] = process.GetResult().ID
+		ids[title] = process.GetResult().ID
 	}
 	trash := deleteitems.Process(ctx, tx, domain.NOTE, []string{ids["Trashed "+word]})
 	trash.Run()

@@ -40,7 +40,7 @@ func TestResolveFromFlags(t *testing.T) {
 	}
 	defer tx.Rollback()
 
-	seed := createnote.Process(ctx, tx, createnote.Input{Title: "Old", Content: "old", Tags: []string{"test-edit-a", "test-edit-b"}})
+	seed := createnote.Process(ctx, tx, createnote.Input{Content: "old", Tags: []string{"test-edit-a", "test-edit-b"}})
 	seed.Run()
 	if seed.HasErr() {
 		t.Fatalf("seed: %v", seed.GetErr())
@@ -48,7 +48,7 @@ func TestResolveFromFlags(t *testing.T) {
 
 	cmd := &cobra.Command{}
 	plumcliutilsargs.Makeflags(cmd, config.Current.Commands.EditNote.Flags)
-	if err := cmd.ParseFlags([]string{"--title", "", "--tag", "test-edit-c", "--untag", "TEST-EDIT-A"}); err != nil {
+	if err := cmd.ParseFlags([]string{"--tag", "test-edit-c", "--untag", "TEST-EDIT-A"}); err != nil {
 		t.Fatalf("ParseFlags() error = %v", err)
 	}
 
@@ -57,8 +57,8 @@ func TestResolveFromFlags(t *testing.T) {
 	if resolver.HasErr() {
 		t.Fatalf("Resolve() error = %v", resolver.GetErr())
 	}
-	// --title "" untitles, content is kept (editnote writes the tags into it), tags are merged.
-	if input.Title != "" || input.Content != "old\n\n#test-edit-a #test-edit-b" || !slices.Equal(input.Tags, []string{"test-edit-b", "test-edit-c"}) {
+	// Content is kept (editnote writes the tags into it), tags are merged.
+	if input.Content != "old\n\n#test-edit-a #test-edit-b" || !slices.Equal(input.Tags, []string{"test-edit-b", "test-edit-c"}) {
 		t.Errorf("input = %+v", input)
 	}
 }

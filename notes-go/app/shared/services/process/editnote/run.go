@@ -13,6 +13,7 @@ import (
 	"github.com/uptrace/bun/driver/pgdriver"
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/hashtag"
+	"main.go/app/shared/services/notetitle"
 	"main.go/app/shared/services/process/createtag"
 )
 
@@ -25,11 +26,10 @@ var (
 	ErrNotFound  = errors.New("note not found")
 )
 
-// Input is the whole new state of the note: an empty Title makes it untitled. Content ends up holding
+// Input is the whole new state of the note, its title comes from Content. Content ends up holding
 // exactly Tags as #tags, so callers give hashtag.Parse(Content) when only the content changes.
 type Input struct {
 	ID      string
-	Title   string
 	Content string
 	Tags    []string
 }
@@ -76,7 +76,6 @@ func (p *run) GetResult() domain.Item {
 func (p *run) makeNote() {
 	p.cache.input = Input{
 		ID:      strings.TrimSpace(p.input.ID),
-		Title:   strings.TrimSpace(p.input.Title),
 		Content: strings.TrimSpace(p.input.Content),
 	}
 	var tags []string
@@ -122,7 +121,7 @@ func (p *run) saveNote() {
 func (p *run) updateItem(ctx context.Context, tx bun.Tx) error {
 	err := tx.NewUpdate().
 		Model(&p.cache.item).
-		Set("title = NULLIF(?, '')", p.cache.input.Title). // NULL = untitled, like createnote's nullzero
+		Set("title = NULLIF(?, '')", notetitle.From(p.cache.input.Content)). // NULL = untitled, like createnote's nullzero
 		Set("updated_at = current_timestamp").
 		Where("id = ? AND kind = ?", p.cache.input.ID, domain.NOTE).
 		Returning("id, parent_id, created_at, updated_at, kind, title").

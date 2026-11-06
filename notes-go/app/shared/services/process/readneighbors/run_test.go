@@ -48,7 +48,7 @@ func TestNeighbors(t *testing.T) {
 		{"None", []string{c}},
 		{"Trashed", []string{a}},
 	} {
-		process := createnote.Process(ctx, tx, createnote.Input{Title: note.title, Content: "C", Tags: note.tags})
+		process := createnote.Process(ctx, tx, createnote.Input{Content: "# " + note.title, Tags: note.tags})
 		process.Run()
 		if process.HasErr() {
 			t.Fatalf("note %s: %v", note.title, process.GetErr())

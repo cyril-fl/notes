@@ -60,9 +60,9 @@ func TestPathAndChildren(t *testing.T) {
 
 	a := folder(t, tx, "A", "")
 	b := folder(t, tx, "B", a)
-	note := createnote.Process(ctx, tx, createnote.Input{Title: "N", Content: "C", ParentID: a})
+	note := createnote.Process(ctx, tx, createnote.Input{Content: "# N", ParentID: a})
 	note.Run()
-	untitled := createnote.Process(ctx, tx, createnote.Input{Content: "C", ParentID: b})
+	untitled := createnote.Process(ctx, tx, createnote.Input{Content: "```\ncode\n```", ParentID: b})
 	untitled.Run()
 	trashed := folder(t, tx, "Trashed", a)
 	trash := deleteitems.Process(ctx, tx, domain.FOLDER, []string{trashed})

@@ -56,20 +56,20 @@ func TestEditNote(t *testing.T) {
 
 	// Unique per run so real data in the DB cannot collide.
 	tag := fmt.Sprintf("test-%d", time.Now().UnixNano())
-	seed := createnote.Process(ctx, tx, createnote.Input{Title: "Old", Content: "old", Tags: []string{tag, tag + "-old"}})
+	seed := createnote.Process(ctx, tx, createnote.Input{Content: "# Old\n\nold", Tags: []string{tag, tag + "-old"}})
 	seed.Run()
 	if seed.HasErr() {
 		t.Fatalf("seed: %v", seed.GetErr())
 	}
 	id := seed.GetResult().ID
 
-	edit := Process(ctx, tx, Input{ID: id, Title: " ", Content: " new ", Tags: []string{tag, tag + "-new"}})
+	edit := Process(ctx, tx, Input{ID: id, Content: " new ", Tags: []string{tag, tag + "-new"}})
 	edit.Run()
 	if edit.HasErr() {
 		t.Fatalf("edit: %v", edit.GetErr())
 	}
-	if item := edit.GetResult(); item.ID != id || item.Title != "" || item.UpdatedAt.IsZero() {
-		t.Errorf("result = %+v, want same id, untitled, updated_at set", item)
+	if item := edit.GetResult(); item.ID != id || item.Title != "new" || item.UpdatedAt.IsZero() {
+		t.Errorf("result = %+v, want same id, title from the new content, updated_at set", item)
 	}
 
 	read := readitem.Process(ctx, tx, domain.NOTE, id)
