@@ -55,15 +55,13 @@ const isOverRoot = useDropFolder(rootLink, () => null);
           v-for="tag in tags"
           :key="tag.value"
           :to="`/tags/${encodeURIComponent(tag.value)}`"
-          :label="tag.value"
-          icon="i-lucide-hash"
+          :label="`#${tag.value}`"
           size="xs"
           color="neutral"
-          variant="subtle"
+          variant="soft"
           active-color="primary"
-          active-variant="soft"
-          class="max-w-full rounded-full"
-          :ui="{ label: 'truncate', leadingIcon: 'size-3' }"
+          class="max-w-full font-normal"
+          :ui="{ label: 'truncate' }"
         />
       </div>
     </section>

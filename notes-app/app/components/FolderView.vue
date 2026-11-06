@@ -22,7 +22,7 @@ const isOver = useDropFolder(panel, () => props.folderId ?? null);
       </UTooltip>
     </PageHeader>
     <ul v-if="items.length" :class="{ mosaic: view === 'grid' }">
-      <li v-for="item in items" :key="item.id" :class="{ 'border-b border-muted last:border-0': view === 'list' }">
+      <li v-for="item in items" :key="item.id">
         <ItemRow :item="item" :grid="view === 'grid'" />
       </li>
     </ul>

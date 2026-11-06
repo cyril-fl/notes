@@ -40,7 +40,7 @@ watch(isOver, (over) => (over ? start() : stop()));
           />
         </button>
         <NuxtLink :to="`/folders/${folder.id}`" draggable="false" class="flex min-w-0 flex-1 items-center gap-2 self-stretch">
-          <UIcon name="i-lucide-folder" class="size-4 shrink-0" :class="isOver ? 'text-white' : 'text-primary'" />
+          <UIcon name="i-lucide-folder" class="size-4 shrink-0" :class="isOver ? 'text-white' : 'text-muted'" />
           <span class="truncate">{{ folder.title }}</span>
         </NuxtLink>
       </div>

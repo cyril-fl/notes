@@ -14,7 +14,7 @@ defineProps<{ notes: { id: string; title: string; path: string; snippet?: string
     </li>
   </ul>
   <ul v-else>
-    <li v-for="note in notes" :key="note.id" class="border-b border-muted last:border-0">
+    <li v-for="note in notes" :key="note.id">
       <NuxtLink :to="`/notes/${note.id}`" class="block rounded-md px-2 py-2 transition-colors duration-150 hover:bg-accented/60">
         <p class="truncate text-sm">{{ displayTitle(note.title) }}</p>
         <p class="truncate text-xs text-muted">{{ note.snippet ?? note.path }}</p>

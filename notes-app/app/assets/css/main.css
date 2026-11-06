@@ -9,19 +9,20 @@
   --font-mono: 'Geist Mono', ui-monospace, monospace;
 }
 
-/* The greys of the previous design, used as the neutral color in app.config.ts. */
+/* Warm greys, used as the neutral color in app.config.ts. One scale serves both modes:
+   light reads text from 700 on white, dark reads its background from 900 and its text from 200. */
 @theme static {
-  --color-plain-50: #f6f6f6;
-  --color-plain-100: #e7e7e7;
-  --color-plain-200: #d1d1d1;
-  --color-plain-300: #b0b0b0;
-  --color-plain-400: #888888;
-  --color-plain-500: #6d6d6d;
-  --color-plain-600: #5d5d5d;
-  --color-plain-700: #4f4f4f;
-  --color-plain-800: #454545;
-  --color-plain-900: #3d3d3d;
-  --color-plain-950: #232323;
+  --color-plain-50: #f7f7f5;
+  --color-plain-100: #f1f1ef;
+  --color-plain-200: #e3e2e0;
+  --color-plain-300: #d3d2cf;
+  --color-plain-400: #9b9a97;
+  --color-plain-500: #787774;
+  --color-plain-600: #5f5e5b;
+  --color-plain-700: #373633;
+  --color-plain-800: #252525;
+  --color-plain-900: #191919;
+  --color-plain-950: #0f0f0f;
 }
 
 :root {
@@ -37,7 +38,7 @@
 @layer components {
   /* A row of the sidebar or of a list. */
   .row {
-    @apply flex h-8 min-w-0 items-center gap-2 rounded-md px-2 text-sm transition-colors duration-150 hover:bg-accented/60;
+    @apply flex h-7 min-w-0 items-center gap-2 rounded-md px-2 text-sm transition-colors duration-150 hover:bg-accented/60;
   }
 
   .row-active {

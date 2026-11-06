@@ -24,18 +24,18 @@ const date = computed(() =>
   <UContextMenu :items="itemMenu(item)">
     <NuxtLink v-if="grid" ref="link" :to="to" class="group flex min-w-0 flex-col gap-2">
       <div class="tile" :class="{ 'tile-over': isOver }">
-        <UIcon :name="isFolder ? 'i-lucide-folder' : 'i-lucide-file-text'" class="size-10" :class="isFolder ? 'text-primary' : 'text-muted'" />
+        <UIcon :name="isFolder ? 'i-lucide-folder' : 'i-lucide-file-text'" class="size-10 text-dimmed" />
       </div>
       <div class="min-w-0 text-center text-xs">
         <p class="truncate">{{ displayTitle(item.title) }}</p>
         <p class="text-muted">{{ date }}</p>
       </div>
     </NuxtLink>
-    <NuxtLink v-else ref="link" :to="to" class="row h-10" :class="{ 'row-over': isOver }">
+    <NuxtLink v-else ref="link" :to="to" class="row h-9" :class="{ 'row-over': isOver }">
       <UIcon
         :name="isFolder ? 'i-lucide-folder' : 'i-lucide-file-text'"
         class="size-4 shrink-0"
-        :class="isOver ? 'text-white' : isFolder ? 'text-primary' : 'text-muted'"
+        :class="isOver ? 'text-white' : 'text-muted'"
       />
       <span class="truncate">{{ displayTitle(item.title) }}</span>
       <span class="ml-auto shrink-0 pl-4 text-xs" :class="isOver ? 'text-white' : 'text-muted'">{{ date }}</span>
