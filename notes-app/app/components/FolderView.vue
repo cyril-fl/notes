@@ -14,7 +14,6 @@ const isOver = useDropFolder(panel, () => props.folderId ?? null);
   <div ref="panel" class="min-h-full p-8 transition-shadow duration-150" :class="{ 'ring-2 ring-inset ring-primary/40': isOver }">
     <div class="mx-auto max-w-3xl">
       <PageHeader :title="title" :subtitle="subtitle">
-        <slot name="actions" />
         <ViewToggle />
         <UTooltip text="Nouveau dossier">
           <UButton icon="i-lucide-folder-plus" color="neutral" variant="ghost" aria-label="Nouveau dossier" @click="createFolder(folderId)" />
