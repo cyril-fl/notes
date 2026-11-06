@@ -90,6 +90,14 @@ Les tags d'une note sont les `#mots` de son texte, code et liens exclus : `#idé
 
 Pour une base créée avant cette règle, `notes sync-tags` aligne une fois pour toutes les tags et le texte des notes.
 
+### Liens entre notes
+
+`[[Titre]]` dans le texte d'une note la relie à la note de ce titre, majuscules ou non, hors code. Si plusieurs notes ont ce titre, le lien ne mène nulle part : écris son chemin, `[[/Projets/Idées]]`. Un lien écrit avant que sa note existe se rattache dès qu'elle est créée ou prend ce titre. Quand une note change de titre, les `[[liens]]` qui y mènent sont réécrits dans le texte des autres notes.
+
+`GET /api/notes/{id}/neighbors` donne ses liens (`links`) et ses rétroliens (`backlinks`), et le graphe relie aussi les notes liées. Dans l'app, taper `[[` propose les notes, et un clic sur un lien l'ouvre.
+
+Pour une base créée avant cette règle, `notes sync-links` relie une fois pour toutes les notes d'après leurs `[[liens]]`.
+
 ### Corbeille
 
 ```sh
