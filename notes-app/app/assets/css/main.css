@@ -4,8 +4,9 @@
 @source '../../components';
 
 @theme static {
-  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  /* Served by the app (@nuxt/fonts), so every OS shows the same text. */
+  --font-sans: 'Reddit Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
 }
 
 /* Neutral greys and blue, taken from the previous design. */

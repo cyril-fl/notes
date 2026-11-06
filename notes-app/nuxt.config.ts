@@ -4,7 +4,6 @@ export default defineNuxtConfig({
   ssr: false,
   modules: ['@nuxt/ui', '@vueuse/nuxt'],
   css: ['~/assets/css/main.css'],
-  ui: { fonts: false },
   runtimeConfig: {
     public: { apiBase: 'http://localhost:8080' },
   },
