@@ -166,6 +166,8 @@ components:
       type: object
     readgraph.Link:
       properties:
+        linked:
+          type: boolean
         source:
           type: string
         tags:
@@ -176,6 +178,7 @@ components:
         target:
           type: string
       required:
+      - linked
       - source
       - tags
       - target
@@ -231,6 +234,19 @@ components:
       - item
       - path
       type: object
+    readneighbors.Linked:
+      properties:
+        id:
+          type: string
+        path:
+          type: string
+        title:
+          type: string
+      required:
+      - id
+      - path
+      - title
+      type: object
     readneighbors.Neighbor:
       properties:
         id:
@@ -255,6 +271,16 @@ components:
       type: object
     readneighbors.Result:
       properties:
+        backlinks:
+          items:
+            $ref: '#/components/schemas/readneighbors.Linked'
+          type: array
+          uniqueItems: false
+        links:
+          items:
+            $ref: '#/components/schemas/readneighbors.Linked'
+          type: array
+          uniqueItems: false
         neighbors:
           items:
             $ref: '#/components/schemas/readneighbors.Neighbor'
@@ -263,6 +289,8 @@ components:
         note:
           $ref: '#/components/schemas/readitem.Result'
       required:
+      - backlinks
+      - links
       - neighbors
       - note
       type: object

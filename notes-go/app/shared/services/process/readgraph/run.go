@@ -16,11 +16,13 @@ type Note struct {
 	Path  string `json:"path"`
 }
 
-// Link joins two notes sharing at least one tag, once per pair (Source < Target), with the shared tags.
+// Link joins two notes once per pair (Source < Target): Linked when a [[link]] goes from one to the
+// other, Tags the tags they share. One of the two at least.
 type Link struct {
 	Source string   `json:"source"`
 	Target string   `json:"target"`
 	Tags   []string `bun:",array" json:"tags"`
+	Linked bool     `json:"linked"`
 }
 
 // Result is every live note and the links between them.
@@ -72,21 +74,30 @@ func (p *run) loadNotes() {
 		Scan(p.ctx, &p.cache.result.Notes))
 }
 
-// loadLinks joins the tag links with themselves: same tag, other note, each pair once.
+// loadLinks pairs the notes sharing a tag (the tag links joined with themselves) with the notes joined by
+// a [[link]] in either direction, each pair once.
 func (p *run) loadLinks() {
 	if p.HasErr() {
 		return
 	}
 
-	p.SetErr(p.db.NewRaw(readitem.PathsCTE+`
-		SELECT a.note_id AS source, b.note_id AS target,
-			array_agg(t.value ORDER BY lower(t.value)) AS tags
-		FROM notes_on_tags AS a
-		JOIN notes_on_tags AS b ON b.tag_id = a.tag_id AND a.note_id < b.note_id
-		JOIN tags AS t ON t.id = a.tag_id
-		JOIN paths AS source_path ON source_path.id = a.note_id
-		JOIN paths AS target_path ON target_path.id = b.note_id
-		GROUP BY a.note_id, b.note_id
-		ORDER BY a.note_id, b.note_id`).
+	p.SetErr(p.db.NewRaw(readitem.PathsCTE+`,
+		shared AS (
+			SELECT a.note_id AS source, b.note_id AS target, array_agg(t.value ORDER BY lower(t.value)) AS tags
+			FROM notes_on_tags AS a
+			JOIN notes_on_tags AS b ON b.tag_id = a.tag_id AND a.note_id < b.note_id
+			JOIN tags AS t ON t.id = a.tag_id
+			GROUP BY a.note_id, b.note_id
+		),
+		linked AS (
+			SELECT DISTINCT least(source_id, target_id) AS source, greatest(source_id, target_id) AS target
+			FROM notes_on_links
+		)
+		SELECT coalesce(shared.source, linked.source) AS source, coalesce(shared.target, linked.target) AS target,
+			coalesce(shared.tags, '{}') AS tags, linked.source IS NOT NULL AS linked
+		FROM shared FULL JOIN linked ON linked.source = shared.source AND linked.target = shared.target
+		JOIN paths AS source_path ON source_path.id = coalesce(shared.source, linked.source)
+		JOIN paths AS target_path ON target_path.id = coalesce(shared.target, linked.target)
+		ORDER BY 1, 2`).
 		Scan(p.ctx, &p.cache.result.Links))
 }

@@ -351,6 +351,9 @@ func TestTagsAndGraph(t *testing.T) {
 	if neighbors.Note.Item.ID != a.ID || len(neighbors.Neighbors) != 1 || neighbors.Neighbors[0].ID != b.ID || neighbors.Neighbors[0].Shared != 1 {
 		t.Errorf("neighbors = %+v", neighbors)
 	}
+	if raw := c.raw("/api/notes/" + a.ID + "/neighbors"); !strings.Contains(raw, `"links":[]`) || !strings.Contains(raw, `"backlinks":[]`) {
+		t.Errorf("a note without [[links]] has links: [] and backlinks: []: %s", raw)
+	}
 	c.do("GET", "/api/notes/"+unknownID+"/neighbors", "", http.StatusNotFound, nil)
 
 	var graph []struct {

@@ -62,6 +62,15 @@ func TestGraph(t *testing.T) {
 		}
 		ids[note.title] = process.GetResult().ID
 	}
+	// A [[link]] joins two notes sharing no tag.
+	for _, note := range []struct{ key, content string }{{"Target", "# " + a + "-target"}, {"Source", "# " + a + "-source\n\n[[" + a + "-target]]"}} {
+		process := createnote.Process(ctx, tx, createnote.Input{Content: note.content})
+		process.Run()
+		if process.HasErr() {
+			t.Fatalf("note %s: %v", note.key, process.GetErr())
+		}
+		ids[note.key] = process.GetResult().ID
+	}
 	for kind, id := range map[domain.Kind]string{domain.NOTE: ids["Trashed"], domain.FOLDER: folder.GetResult().ID} {
 		trash := deleteitems.Process(ctx, tx, kind, []string{id})
 		trash.Run()
@@ -99,6 +108,12 @@ func TestGraph(t *testing.T) {
 			t.Errorf("note %s should have no link", title)
 		}
 	}
+	if link := findLink(got, ids["Source"], ids["Target"]); link == nil || !link.Linked || len(link.Tags) != 0 {
+		t.Errorf("Source-Target = %+v, want linked with no tags", link)
+	}
+	if link := findLink(got, ids["Two"], ids["Three"]); link == nil || link.Linked {
+		t.Errorf("Two-Three = %+v, want tags only", link)
+	}
 	// Two links to Three and One, whichever way round: one link per pair.
 	if n := countLinks(got, ids["Two"]); n != 2 {
 		t.Errorf("Two has %d links, want 2", n)
@@ -109,6 +124,15 @@ func TestGraph(t *testing.T) {
 
 func hasNote(result Result, id string) bool {
 	return slices.ContainsFunc(result.Notes, func(note Note) bool { return note.ID == id })
+}
+
+func findLink(result Result, a, b string) *Link {
+	for i, link := range result.Links {
+		if link.Source == a && link.Target == b || link.Source == b && link.Target == a {
+			return &result.Links[i]
+		}
+	}
+	return nil
 }
 
 func linkTags(result Result, a, b string) []string {

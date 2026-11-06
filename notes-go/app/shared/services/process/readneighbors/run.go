@@ -18,10 +18,20 @@ type Neighbor struct {
 	Shared int      `json:"shared"`
 }
 
-// Result is the center note (path, content, tags) and its neighbors, most shared tags first.
+// Linked is a note at the other end of a [[link]].
+type Linked struct {
+	ID    string `json:"id"`
+	Title string `json:"title"`
+	Path  string `json:"path"`
+}
+
+// Result is the center note (path, content, tags), its neighbors (most shared tags first),
+// the notes its [[links]] name, and the notes naming it.
 type Result struct {
 	Note      readitem.Result `json:"note"`
 	Neighbors []Neighbor      `json:"neighbors"`
+	Links     []Linked        `json:"links"`
+	Backlinks []Linked        `json:"backlinks"`
 }
 
 type run struct {
@@ -48,6 +58,7 @@ func Process(ctx context.Context, db bun.IDB, id string) *run {
 func (p *run) Run() {
 	p.loadNote()
 	p.loadNeighbors()
+	p.loadLinks()
 }
 
 // Getters & Setters
@@ -84,4 +95,31 @@ func (p *run) loadNeighbors() {
 		GROUP BY i.id, i.title, paths.path
 		ORDER BY shared DESC, lower(paths.path)`, p.cache.result.Note.Item.ID).
 		Scan(p.ctx, &p.cache.result.Neighbors))
+}
+
+// loadLinks reads both ends of the [[links]]; joining paths keeps live notes only. Empty, not null, in JSON.
+func (p *run) loadLinks() {
+	if p.HasErr() {
+		return
+	}
+
+	id := p.cache.result.Note.Item.ID
+	p.cache.result.Links, p.cache.result.Backlinks = []Linked{}, []Linked{}
+	for _, side := range []struct {
+		from, to string
+		dest     *[]Linked
+	}{{"source_id", "target_id", &p.cache.result.Links}, {"target_id", "source_id", &p.cache.result.Backlinks}} {
+		err := p.db.NewRaw(readitem.PathsCTE+`
+			SELECT i.id, coalesce(i.title, '') AS title, paths.path
+			FROM notes_on_links AS nl
+			JOIN items AS i ON i.id = nl.`+side.to+`
+			JOIN paths ON paths.id = i.id
+			WHERE nl.`+side.from+` = ?
+			ORDER BY lower(paths.path)`, id).
+			Scan(p.ctx, side.dest)
+		if err != nil {
+			p.SetErr(err)
+			return
+		}
+	}
 }
