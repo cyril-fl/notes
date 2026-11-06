@@ -1355,6 +1355,7 @@ export interface components {
             parent_id?: string;
         };
         "readgraph.Link": {
+            linked: boolean;
             source: string;
             tags: string[];
             target: string;
@@ -1375,6 +1376,11 @@ export interface components {
             path: string;
             tags?: string[];
         };
+        "readneighbors.Linked": {
+            id: string;
+            path: string;
+            title: string;
+        };
         "readneighbors.Neighbor": {
             id: string;
             path: string;
@@ -1383,6 +1389,8 @@ export interface components {
             title: string;
         };
         "readneighbors.Result": {
+            backlinks: components["schemas"]["readneighbors.Linked"][];
+            links: components["schemas"]["readneighbors.Linked"][];
             neighbors: components["schemas"]["readneighbors.Neighbor"][];
             note: components["schemas"]["readitem.Result"];
         };

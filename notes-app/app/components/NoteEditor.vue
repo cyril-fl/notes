@@ -3,7 +3,7 @@ import type { EditorToolbarItem } from '@nuxt/ui';
 import type { Editor } from '@tiptap/vue-3';
 import { TaskItem, TaskList } from '@tiptap/extension-list';
 import type { RouteLocationNormalized } from 'vue-router';
-import type { Item, ItemDetail } from '~/types/items';
+import type { Item, ItemDetail, Neighbors, NotesGraph } from '~/types/items';
 import type { Changes } from '~/utils/saver';
 
 const props = defineProps<{ noteId?: string; parentId?: string }>();
@@ -15,6 +15,7 @@ const api = useApi();
 const { prompt, confirm } = useDialogs();
 const { removeItem } = useItems();
 const baseURL = useRuntimeConfig().public.apiBase;
+const toast = useToast();
 
 const id = ref(props.noteId);
 const parent = ref(props.parentId);
@@ -154,7 +155,40 @@ async function askLink(editor: Editor) {
   if (href) editor.chain().focus().setLink({ href: /^[a-z]+:/i.test(href) ? href : `https://${href}` }).run();
 }
 
+// The notes offered after [[: a title shared by several notes is written as its path.
+const { data: graph } = useLazyAsyncData('graph', () => api<NotesGraph>('/api/graph/notes'));
+const noteItems = computed(() => {
+  const notes = (graph.value?.notes ?? []).filter((note) => note.id !== id.value && note.title);
+  const shared = (title: string) => notes.filter((note) => note.title.toLowerCase() === title.toLowerCase()).length > 1;
+  return notes.map((note) => ({
+    kind: 'wikiLink',
+    label: note.title,
+    description: note.path,
+    icon: 'i-lucide-file-text',
+    target: shared(note.title) ? note.path : note.title,
+  }));
+});
+
+// Opens the note a [[link]] names, as the API resolved it once the note is saved.
+async function openLink(event: MouseEvent) {
+  const target = (event.target as HTMLElement).closest<HTMLElement>('a[data-wikilink]')?.dataset.wikilink;
+  if (!target) return;
+  event.preventDefault();
+  await saver.flush();
+  if (!id.value) return;
+  const { links } = await api<Neighbors>(`/api/notes/${id.value}/neighbors`);
+  const note = links.find((link) => link.path === target || link.title.toLowerCase() === target.toLowerCase());
+  if (note) return navigateTo(`/notes/${note.id}`);
+  toast.add({ title: 'Lien sans note', description: `Aucune note, ou plusieurs, ne s'appellent « ${target} ».`, color: 'warning' });
+}
+
 const handlers = {
+  wikiLink: {
+    canExecute: () => true,
+    execute: (editor: Editor, item: { target: string }) => editor.chain().focus().insertContent([{ type: 'wikiLink', attrs: { target: item.target } }, { type: 'text', text: ' ' }]),
+    isActive: () => false,
+    isDisabled: () => false,
+  },
   link: {
     canExecute: () => true,
     execute: (editor: Editor) => {
@@ -195,7 +229,7 @@ const starterKit = {
       ALLOWED_LINKS.includes((url.split(':')[0] ?? '').toLowerCase()) && ctx.defaultValidate(url),
   },
 } as object;
-const extensions = [TaskList, TaskItem.configure({ nested: true })];
+const extensions = [TaskList, TaskItem.configure({ nested: true }), WikiLink];
 
 const status = computed(() => {
   if (failed.value) return 'Non enregistré';
@@ -237,11 +271,20 @@ const status = computed(() => {
       class="mt-2 w-full"
       :ui="{ base: 'sm:px-0 px-0' }"
       @update:model-value="onContent"
+      @click="openLink"
     >
       <UEditorToolbar
         :editor="editor"
         :items="toolbar"
         class="sticky top-0 z-10 -mx-1 border-b border-muted bg-default py-1"
+      />
+      <UEditorSuggestionMenu
+        :editor="editor"
+        :items="noteItems"
+        char="[["
+        plugin-key="wikiLinkMenu"
+        :filter-fields="['label', 'description']"
+        :suggestion="{ allowSpaces: true }"
       />
     </UEditor>
 

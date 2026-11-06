@@ -2,7 +2,7 @@ import { forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY
 import type { SimulationNodeDatum } from 'd3-force';
 
 type Node = SimulationNodeDatum & { id: string };
-type Link = { source: string; target: string; tags: string[] };
+type Link = { source: string; target: string; tags: string[]; linked?: boolean };
 
 const TICKS = 300;
 const MARGIN = 8;
@@ -19,7 +19,7 @@ function fit(values: number[]) {
 }
 
 /**
- * Where the notes go, in % of the view: the more tags two notes share, the closer they are.
+ * Where the notes go, in % of the view: the more tags two notes share, the closer they are; a [[link]] counts as one.
  * d3 seeds its randomness, so the same notes get the same map on every load.
  * shortcut: titles overlap inside big clusters, add zoom when a graph gets too dense to read.
  */
@@ -30,7 +30,7 @@ export function layoutGraph(notes: { id: string }[], links: Link[]) {
 
   forceSimulation(nodes)
     .force('charge', forceManyBody().strength(-300))
-    .force('link', forceLink<Node, Link>(edges).id(node => node.id).distance(link => 70 / link.tags.length).strength(1))
+    .force('link', forceLink<Node, Link>(edges).id(node => node.id).distance(link => 70 / Math.max(link.tags.length + (link.linked ? 1 : 0), 1)).strength(1))
     .force('collide', forceCollide(COLLIDE_RADIUS))
     .force('x', forceX().strength(0.04))
     .force('y', forceY().strength(0.08))

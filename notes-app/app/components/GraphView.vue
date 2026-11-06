@@ -81,7 +81,8 @@ function linkClass(link: Link) {
           :y1="at(link.source).y"
           :x2="at(link.target).x"
           :y2="at(link.target).y"
-          :stroke-width="Math.min(link.tags.length, 4)"
+          :stroke-width="Math.min(link.tags.length + (link.linked ? 1 : 0), 4)"
+          :stroke-dasharray="link.linked ? undefined : '0.5 0.5'"
           :class="linkClass(link)"
           class="transition-colors duration-150"
           vector-effect="non-scaling-stroke"
@@ -112,7 +113,7 @@ function linkClass(link: Link) {
         :style="linkLabelStyle(link)"
         class="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-default px-1 text-xs whitespace-nowrap text-primary"
       >
-        {{ link.tags.map(tag => `#${tag}`).join(' · ') }}
+        {{ [...(link.linked ? ['lien'] : []), ...link.tags.map(tag => `#${tag}`)].join(' · ') }}
       </span>
     </div>
   </div>

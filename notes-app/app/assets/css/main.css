@@ -63,6 +63,11 @@
     @apply bg-primary/10 ring-2 ring-primary;
   }
 
+  /* A [[link]] to another note. */
+  .ProseMirror a.wikilink {
+    @apply cursor-pointer rounded-sm px-0.5 text-primary underline decoration-primary/40 underline-offset-2 hover:bg-primary/10;
+  }
+
   /* Task lists are not in the Nuxt UI editor theme. */
   .ProseMirror ul[data-type='taskList'] {
     @apply list-none ps-0!;

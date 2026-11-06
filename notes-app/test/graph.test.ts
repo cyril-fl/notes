@@ -51,3 +51,12 @@ test('the same notes get the same map', () => {
   const graph = [notes('a', 'b', 'c'), [link('a', 'b', 'go')]] as const;
   assert.deepEqual(layoutGraph(...graph), layoutGraph(...graph));
 });
+
+test('a [[link]] alone pulls notes together like a shared tag', () => {
+  const positions = layoutGraph(notes('a', 'b', 'c'), [{ source: 'a', target: 'b', tags: [], linked: true }]);
+  for (const id of ['a', 'b', 'c']) {
+    const { x, y } = positions.get(id)!;
+    assert.ok(Number.isFinite(x) && Number.isFinite(y), `${id} at ${x}, ${y}`);
+  }
+  assert.ok(distance(positions, 'a', 'b') < distance(positions, 'a', 'c'));
+});
