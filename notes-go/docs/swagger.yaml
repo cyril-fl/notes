@@ -94,6 +94,8 @@ components:
       properties:
         content:
           type: string
+        pinned:
+          type: boolean
         tags:
           items:
             type: string
@@ -116,6 +118,19 @@ components:
       required:
       - id
       - path
+      type: object
+    listpinned.Pinned:
+      properties:
+        id:
+          type: string
+        path:
+          type: string
+        title:
+          type: string
+      required:
+      - id
+      - path
+      - title
       type: object
     listrecent.Recent:
       properties:
@@ -225,6 +240,8 @@ components:
           $ref: '#/components/schemas/domain.Item'
         path:
           type: string
+        pinned:
+          type: boolean
         tags:
           items:
             type: string
@@ -822,6 +839,26 @@ paths:
       summary: Read a note and the notes sharing its tags
       tags:
       - notes
+  /api/pinned:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/listpinned.Pinned'
+                type: array
+          description: OK
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: List the pinned notes
+      tags:
+      - search
   /api/recent:
     get:
       responses:

@@ -108,8 +108,8 @@ commands:
   edit-note:
     use: "note <uuid|path>"
     short: "Edit an existing note"
-    long: "Edit an existing note. Without content or tag flags, a form opens with the current content. The title follows the first heading of the content, or its first words."
-    example: "notes edit note /Projects/Go/Ideas --tag go --untag sql\ncat ideas.md | notes edit note <uuid> --content -"
+    long: "Edit an existing note. Without content, tag or pin flags, a form opens with the current content. The title follows the first heading of the content, or its first words. --pin alone leaves the text and its last change date as they are."
+    example: "notes edit note /Projects/Go/Ideas --tag go --untag sql\ncat ideas.md | notes edit note <uuid> --content -\nnotes edit note /Projects/Go/Ideas --pin"
     args:
       - name: "content"
         shorthand: "c"
@@ -130,6 +130,16 @@ commands:
         shorthand: ""
         value: ""
         usage: "Pick the tags from the existing ones, current ones checked"
+        type: "bool"
+      - name: "pin"
+        shorthand: ""
+        value: ""
+        usage: "Pin the note"
+        type: "bool"
+      - name: "unpin"
+        shorthand: ""
+        value: ""
+        usage: "Unpin the note"
         type: "bool"
   edit-folder:
     use: "folder <uuid|path>"

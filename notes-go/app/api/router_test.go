@@ -145,6 +145,17 @@ func TestNotes(t *testing.T) {
 		t.Errorf("after tags cleared: %+v", read)
 	}
 
+	// Pinning alone leaves the text as it is.
+	c.do("PATCH", path, `{"pinned":true}`, http.StatusOK, nil)
+	c.do("GET", path, "", http.StatusOK, &read)
+	if !strings.Contains(c.raw(path), `"pinned":true`) || read.Content != "changed" || !strings.Contains(c.raw("/api/pinned"), note.ID) {
+		t.Errorf("after pin: %s", c.raw(path))
+	}
+	c.do("PATCH", path, `{"pinned":false}`, http.StatusOK, nil)
+	if strings.Contains(c.raw("/api/pinned"), note.ID) {
+		t.Errorf("an unpinned note is listed: %s", c.raw("/api/pinned"))
+	}
+
 	c.do("PATCH", path, `{"content":" "}`, http.StatusBadRequest, nil)
 	c.do("PATCH", path, `{"nope":1}`, http.StatusBadRequest, nil)
 	c.do("PATCH", "/api/notes/"+unknownID, `{"content":"x"}`, http.StatusNotFound, nil)

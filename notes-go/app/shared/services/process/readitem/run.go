@@ -30,6 +30,7 @@ type Result struct {
 	Item     domain.Item   `json:"item"`
 	Path     string        `json:"path"`
 	Content  string        `json:"content,omitempty" binding:"optional"`
+	Pinned   bool          `json:"pinned,omitempty" binding:"optional"`
 	Tags     []string      `json:"tags,omitzero" binding:"optional"`
 	Children []domain.Item `json:"children,omitzero" binding:"optional"`
 }
@@ -104,9 +105,9 @@ func (p *run) loadNote() {
 
 	err := p.db.NewSelect().
 		Model((*domain.MetadataNote)(nil)).
-		Column("content").
+		Column("content", "pinned").
 		Where("item_id = ?", p.cache.id).
-		Scan(p.ctx, &p.cache.result.Content)
+		Scan(p.ctx, &p.cache.result.Content, &p.cache.result.Pinned)
 	if err != nil {
 		p.SetErr(err)
 		return

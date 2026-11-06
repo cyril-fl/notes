@@ -20,6 +20,7 @@ import (
 	apireadfolder "main.go/app/api/read-folder"
 	apireadgraph "main.go/app/api/read-graph"
 	apireadnote "main.go/app/api/read-note"
+	apireadpinned "main.go/app/api/read-pinned"
 	apireadrecent "main.go/app/api/read-recent"
 	apireadtag "main.go/app/api/read-tag"
 	apireadtrash "main.go/app/api/read-trash"
@@ -60,6 +61,7 @@ func New(db bun.IDB, origin string) http.Handler {
 	mux.Handle("GET /api/graph/notes", apireadgraph.Notes(db))
 	mux.Handle("GET /api/search", apisearch.Handler(db))
 	mux.Handle("GET /api/recent", apireadrecent.Handler(db))
+	mux.Handle("GET /api/pinned", apireadpinned.Handler(db))
 	mux.Handle("GET /api/trash", apireadtrash.Handler(db))
 	mux.Handle("DELETE /api/trash", apideletetrash.Handler(db))
 	mux.Handle("POST /api/restore", apirestore.Handler(db))

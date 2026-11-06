@@ -55,6 +55,7 @@ notes show note /Projets/Idées
 notes show folder /Projets
 
 notes edit note /Projets/Idées --tag go --untag sql
+notes edit note /Projets/Idées --pin       # --unpin pour retirer
 cat idees.md | notes edit note /Projets/Idées --content -
 notes edit folder /Projets --title Travail
 
@@ -130,7 +131,7 @@ notes serve --origin http://localhost:3000   # ou directement sur la machine
 
 | Ressource | Routes (préfixe `/api`) | Corps JSON |
 |---|---|---|
-| Notes | `POST /notes`, `GET`, `PATCH`, `DELETE /notes/{id}`, `GET /notes/{id}/neighbors` | `content`, `tags`, `parent_id` (création) |
+| Notes | `POST /notes`, `GET`, `PATCH`, `DELETE /notes/{id}`, `GET /notes/{id}/neighbors`, `GET /pinned` | `content`, `tags`, `parent_id` (création), `pinned` |
 | Dossiers | `GET`, `POST /folders`, `GET`, `PATCH`, `DELETE /folders/{id}` | `title`, `parent_id` (création) |
 | Parcourir | `GET /items?parent=<uuid>` (racine sans `parent`), `POST /move` | `ids`, `parent_id` (racine sans `parent_id`) |
 | Tags | `GET`, `POST /tags`, `GET`, `PATCH`, `DELETE /tags/{value}` | `values` (création), `value` (renommage) |
@@ -139,7 +140,7 @@ notes serve --origin http://localhost:3000   # ou directement sur la machine
 | Corbeille | `GET`, `DELETE /trash`, `POST /restore` | `ids` (restauration) |
 
 - Le titre d'une note vient de son contenu, comme dans la CLI : l'API refuse un champ `title` pour une note.
-- `PATCH /notes/{id}` ne change que les champs envoyés. Sans `tags`, les tags sont les `#mots` du contenu. Avec `tags`, cette liste réécrit le contenu : `"tags": []` efface tous ses `#mots`.
+- `PATCH /notes/{id}` ne change que les champs envoyés. `{"pinned": true}` seul épingle la note sans toucher à son texte ni à sa date de modification. Sans `tags`, les tags sont les `#mots` du contenu. Avec `tags`, cette liste réécrit le contenu : `"tags": []` efface tous ses `#mots`.
 - Les erreurs ont la forme `{"error": "..."}`, avec le statut 400, 403, 404, 409, 413 ou 500.
   Seuls une route inconnue (404) et une méthode non gérée (405) répondent en texte brut, car c'est le routeur qui les écrit.
 - Les éléments supprimés passent par la corbeille. Le serveur la purge toutes les heures. `DELETE /trash` la vide tout de suite et définitivement.
