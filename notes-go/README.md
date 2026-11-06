@@ -92,11 +92,11 @@ Pour une base créée avant cette règle, `notes sync-tags` aligne une fois pour
 
 ### Liens entre notes
 
-`[[Titre]]` dans le texte d'une note la relie à la note de ce titre, majuscules ou non, hors code. Si plusieurs notes ont ce titre, le lien ne mène nulle part : écris son chemin, `[[/Projets/Idées]]`. Un lien écrit avant que sa note existe se rattache dès qu'elle est créée ou prend ce titre. Quand une note change de titre, les `[[liens]]` qui y mènent sont réécrits dans le texte des autres notes.
+Écris `[[Titre]]` dans une note pour la relier à la note de ce titre, majuscules ou non, hors code. À l'enregistrement, un `[[Titre]]` qui désigne une seule note devient `[Titre](note:<uuid>)` : le lien suit désormais cette note par son id, même si une autre prend son titre, et le texte entre crochets se met à jour quand elle change de titre. Si aucune note, ou plusieurs, ont ce titre, `[[Titre]]` attend : il sera relié dès qu'une seule note portera ce titre. Pour départager, écris son chemin, `[[/Projets/Idées]]`.
 
 `GET /api/notes/{id}/neighbors` donne ses liens (`links`) et ses rétroliens (`backlinks`), et le graphe relie aussi les notes liées. Dans l'app, taper `[[` propose les notes, et un clic sur un lien l'ouvre.
 
-Pour une base créée avant cette règle, `notes sync-links` relie une fois pour toutes les notes d'après leurs `[[liens]]`.
+Pour une base créée avant cette règle, `notes sync-links` relie une fois pour toutes les `[[liens]]` des notes.
 
 ### Corbeille
 

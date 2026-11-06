@@ -42,8 +42,11 @@ func TestSyncLinks(t *testing.T) {
 		notes[i] = note.GetResult().ID
 	}
 
-	// A note as it was before: its [[link]] in the text, no row.
+	// A note as it was before: its [[link]] in the text, unresolved, no row.
 	if _, err := tx.NewDelete().Model((*domain.NoteLink)(nil)).Where("source_id = ?", notes[1]).Exec(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tx.NewUpdate().Model((*domain.MetadataNote)(nil)).Set("content = ?", "# "+u+"-source\n\n[["+u+"-target]]").Where("item_id = ?", notes[1]).Exec(ctx); err != nil {
 		t.Fatal(err)
 	}
 
@@ -55,6 +58,10 @@ func TestSyncLinks(t *testing.T) {
 	linked, err := tx.NewSelect().Model((*domain.NoteLink)(nil)).Where("source_id = ? AND target_id = ?", notes[1], notes[0]).Count(ctx)
 	if err != nil || linked != 1 {
 		t.Errorf("link = %d, %v; want 1", linked, err)
+	}
+	var text string
+	if err := tx.NewSelect().Model((*domain.MetadataNote)(nil)).Column("content").Where("item_id = ?", notes[1]).Scan(ctx, &text); err != nil || text != "# "+u+"-source\n\n["+u+"-target](note:"+notes[0]+")" {
+		t.Errorf("content = %q, %v; want the [[link]] resolved to the id", text, err)
 	}
 
 	second := Process(ctx, tx)

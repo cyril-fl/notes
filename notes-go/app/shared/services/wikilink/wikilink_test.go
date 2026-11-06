@@ -2,7 +2,13 @@ package wikilink
 
 import (
 	"slices"
+	"strings"
 	"testing"
+)
+
+const (
+	idA = "11111111-1111-1111-1111-111111111111"
+	idB = "22222222-2222-2222-2222-222222222222"
 )
 
 func TestParse(t *testing.T) {
@@ -18,7 +24,7 @@ func TestParse(t *testing.T) {
 		"inline code":        {"`[[a]]` [[b]]", []string{"b"}},
 		"fenced code":        {"```\n[[a]]\n```\n[[b]]", []string{"b"}},
 		"nested brackets":    {"[[[a]]]", []string{"a"}},
-		"single brackets":    {"[a](b)", nil},
+		"resolved":           {"[a](note:" + idA + ")", nil},
 	}
 	for name, c := range cases {
 		if got := Parse(c.content); !slices.Equal(got, c.want) {
@@ -27,20 +33,42 @@ func TestParse(t *testing.T) {
 	}
 }
 
-func TestRename(t *testing.T) {
+func TestIDs(t *testing.T) {
 	cases := map[string]struct {
-		content, from, to, want string
+		content string
+		want    []string
 	}{
-		"title":         {"voir [[Cour]] et [[cour]]", "Cour", "Courses", "voir [[Courses]] et [[Courses]]"},
-		"spaces":        {"[[ Cour ]]", "Cour", "Courses", "[[Courses]]"},
-		"path":          {"[[/A/Cour]]", "Cour", "Courses", "[[/A/Courses]]"},
-		"other link":    {"[[Autre]] [[/Cour/x]]", "Cour", "Courses", "[[Autre]] [[/Cour/x]]"},
-		"code kept":     {"`[[Cour]]` [[Cour]]", "Cour", "Courses", "`[[Cour]]` [[Courses]]"},
-		"nothing to do": {"texte", "Cour", "Courses", "texte"},
+		"links":       {"[A](note:" + idA + ") puis [B](note:" + idB + ")", []string{idA, idB}},
+		"once":        {"[A](note:" + idA + ") [a](note:" + idA + ")", []string{idA}},
+		"empty label": {"[](note:" + idA + ")", []string{idA}},
+		"code":        {"`[A](note:" + idA + ")`", nil},
+		"web link":    {"[A](https://a.b)", nil},
+		"not an id":   {"[A](note:nope)", nil},
+		"by title":    {"[[A]]", nil},
 	}
 	for name, c := range cases {
-		if got := Rename(c.content, c.from, c.to); got != c.want {
-			t.Errorf("%s: Rename(%q) = %q, want %q", name, c.content, got, c.want)
+		if got := IDs(c.content); !slices.Equal(got, c.want) {
+			t.Errorf("%s: IDs(%q) = %q, want %q", name, c.content, got, c.want)
 		}
+	}
+}
+
+func TestResolve(t *testing.T) {
+	notes := map[string][2]string{"courses": {idA, "Courses"}, "/a/b": {idB, "B"}}
+	resolve := func(target string) (string, string, bool) {
+		note, ok := notes[strings.ToLower(target)]
+		return note[0], note[1], ok
+	}
+	got := Resolve("[[courses]], [[/a/b]], [[inconnue]] et `[[courses]]`", resolve)
+	want := "[Courses](note:" + idA + "), [B](note:" + idB + "), [[inconnue]] et `[[courses]]`"
+	if got != want {
+		t.Errorf("Resolve = %q, want %q", got, want)
+	}
+}
+
+func TestRelabel(t *testing.T) {
+	got := Relabel("[Cour](note:"+idA+") [B](note:"+idB+")", idA, "Courses [x]")
+	if want := "[Courses x](note:" + idA + ") [B](note:" + idB + ")"; got != want {
+		t.Errorf("Relabel = %q, want %q", got, want)
 	}
 }

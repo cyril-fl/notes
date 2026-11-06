@@ -21,8 +21,8 @@ type cache struct {
 	changed int
 }
 
-// Process links every note, trashed ones included, to the notes its [[links]] name: for notes written
-// before links were read from the text.
+// Process resolves the [[links]] of every note, trashed ones included, and links it to the notes its text
+// points to: for notes written before links were read from the text.
 func Process(ctx context.Context, db bun.IDB) *run {
 	return &run{
 		ctx: ctx,
@@ -45,7 +45,7 @@ func (p *run) Run() {
 			if link.HasErr() {
 				return link.GetErr()
 			}
-			if link.GetResult() {
+			if _, changed := link.GetResult(); changed {
 				p.cache.changed++
 			}
 		}

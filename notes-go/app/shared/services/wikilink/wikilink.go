@@ -1,4 +1,6 @@
-// Package wikilink reads the [[links]] of a note's markdown: they are what links a note to the others.
+// Package wikilink reads the links of a note's markdown to other notes. A link is written [[Title]] (or
+// [[/Folder/Title]]) by hand; once it names exactly one note it becomes [Title](note:<id>): the id keeps
+// it on its note whatever the titles do, the label keeps it readable outside the app.
 package wikilink
 
 import (
@@ -8,73 +10,82 @@ import (
 )
 
 var (
-	link = regexp.MustCompile(`\[\[([^\[\]\n]+)\]\]`)
-	// skipped is what can hold [[ ]] without being a link: fenced and inline code.
+	byTitle = regexp.MustCompile(`\[\[([^\[\]\n]+)\]\]`)
+	byID    = regexp.MustCompile(`\[([^\[\]\n]*)\]\(note:([0-9a-fA-F-]{36})\)`)
+	// skipped is what can hold a link without being one: fenced and inline code.
 	skipped = regexp.MustCompile("(?ms)^[ \\t]*```.*?(?:^[ \\t]*```[^\\n]*$|\\z)|`[^`\\n]*`")
 )
 
-// span is one [[link]] of a text, [start, end[ with its brackets.
+// span is one link of a text, [start, end[ with its brackets: value is the target of a [[link]], the id of a note: link.
 type span struct {
 	start, end int
-	target     string
+	value      string
 }
 
-// Parse gives the targets of content, in order, each one once whatever its case: a title, or a path
-// starting with / when several notes share the title.
+// Parse gives the targets of the [[links]] not resolved yet, in order, each one once whatever its case.
 func Parse(content string) []string {
 	var targets []string
-	for _, l := range spans(content) {
-		if !slices.ContainsFunc(targets, func(t string) bool { return strings.EqualFold(t, l.target) }) {
-			targets = append(targets, l.target)
+	for _, l := range spans(content, byTitle, 1) {
+		if !slices.ContainsFunc(targets, func(t string) bool { return strings.EqualFold(t, l.value) }) {
+			targets = append(targets, l.value)
 		}
 	}
 	return targets
 }
 
-// Rename writes every link to the title from as a link to the title to: [[from]], and [[/path/from]]
-// whose last part is from.
-func Rename(content, from, to string) string {
-	links := spans(content)
+// IDs gives the ids of the notes the resolved links point to, in order, each one once.
+func IDs(content string) []string {
+	var ids []string
+	for _, l := range spans(content, byID, 2) {
+		if id := strings.ToLower(l.value); !slices.Contains(ids, id) {
+			ids = append(ids, id)
+		}
+	}
+	return ids
+}
+
+// Resolve writes every [[target]] that resolve finds as a link to the note's id, labelled with its title.
+func Resolve(content string, resolve func(target string) (id, title string, ok bool)) string {
+	links := spans(content, byTitle, 1)
 	slices.Reverse(links)
 	for _, l := range links {
-		if renamed, ok := rename(l.target, from, to); ok {
-			content = content[:l.start] + "[[" + renamed + "]]" + content[l.end:]
+		if id, title, ok := resolve(l.value); ok {
+			content = content[:l.start] + Link(id, title) + content[l.end:]
 		}
 	}
 	return content
 }
 
+// Relabel gives the links to the note id the label title: the text says what the note is called now.
+func Relabel(content, id, title string) string {
+	links := spans(content, byID, 2)
+	slices.Reverse(links)
+	for _, l := range links {
+		if strings.EqualFold(l.value, id) {
+			content = content[:l.start] + Link(id, title) + content[l.end:]
+		}
+	}
+	return content
+}
+
+// Link is the markdown of a resolved link; brackets would end the label early, they are dropped.
+func Link(id, title string) string {
+	label := strings.NewReplacer("[", "", "]", "", "\n", " ").Replace(title)
+	return "[" + label + "](note:" + id + ")"
+}
+
 // Helpers
 
-func spans(content string) []span {
+func spans(content string, pattern *regexp.Regexp, group int) []span {
 	hidden := skipped.FindAllStringIndex(content, -1)
 	var result []span
-	for _, match := range link.FindAllStringSubmatchIndex(content, -1) {
-		target := strings.TrimSpace(content[match[2]:match[3]])
-		if target != "" && !inside(hidden, match[0]) {
-			result = append(result, span{match[0], match[1], target})
+	for _, match := range pattern.FindAllStringSubmatchIndex(content, -1) {
+		value := strings.TrimSpace(content[match[2*group]:match[2*group+1]])
+		if value != "" && !inside(hidden, match[0]) {
+			result = append(result, span{match[0], match[1], value})
 		}
 	}
 	return result
-}
-
-func rename(target, from, to string) (string, bool) {
-	if strings.EqualFold(target, from) {
-		return to, true
-	}
-	if dir, last, ok := cutLast(target); ok && strings.EqualFold(last, from) {
-		return dir + "/" + to, true
-	}
-	return "", false
-}
-
-// cutLast splits a path into its folders and its last part.
-func cutLast(target string) (string, string, bool) {
-	if !strings.HasPrefix(target, "/") {
-		return "", "", false
-	}
-	i := strings.LastIndex(target, "/")
-	return target[:i], target[i+1:], true
 }
 
 func inside(ranges [][]int, at int) bool {

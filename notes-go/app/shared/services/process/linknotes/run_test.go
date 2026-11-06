@@ -47,32 +47,41 @@ func TestLinks(t *testing.T) {
 		t.Fatalf("folder: %v", folder.GetErr())
 	}
 
-	// a names b before b exists, itself, nothing, and the ambiguous c by title then by path.
+	// a names b before b exists, itself, nothing, then c before a second c, by title and by path.
 	a := create(t, ctx, tx, "", fmt.Sprintf("# %[1]s-a\n\n[[%[1]s-B]] [[%[1]s-b]] [[%[1]s-a]] [[%[1]s-none]] [[%[1]s-c]] [[/%[1]s-folder/%[1]s-c]]", u))
 	b := create(t, ctx, tx, "", "# "+u+"-b")
-	create(t, ctx, tx, "", "# "+u+"-c")
+	c := create(t, ctx, tx, "", "# "+u+"-c")
 	inFolder := create(t, ctx, tx, folder.GetResult().ID, "# "+u+"-c")
 
-	// b got its backlink when it was created; [[c]] matches two notes, its path only one.
+	// Each [[link]] became a link to the id of the note it named when it was resolved: the second c
+	// does not take the first one's link, its path reaches it.
+	want := fmt.Sprintf("[%[1]s-b](note:%[2]s) [%[1]s-b](note:%[2]s) [[%[1]s-a]] [[%[1]s-none]] [%[1]s-c](note:%[3]s) [%[1]s-c](note:%[4]s)", u, b, c, inFolder)
+	if got := content(t, ctx, tx, a); !strings.Contains(got, want) {
+		t.Errorf("content of a = %q, want it to hold %q", got, want)
+	}
 	got := neighbors(t, ctx, tx, a)
-	if !slices.Equal(ids(got.Links), sorted(b, inFolder)) || len(got.Backlinks) != 0 {
-		t.Errorf("links of a = %+v, backlinks %+v; want b and the c in the folder", got.Links, got.Backlinks)
+	if !slices.Equal(ids(got.Links), sorted(b, c, inFolder)) || len(got.Backlinks) != 0 {
+		t.Errorf("links of a = %+v, backlinks %+v; want b and both c", got.Links, got.Backlinks)
 	}
 	if got := neighbors(t, ctx, tx, b); !slices.Equal(ids(got.Backlinks), []string{a}) {
 		t.Errorf("backlinks of b = %+v, want a", got.Backlinks)
 	}
 
-	// Renaming b rewrites the links of a, whatever their case.
+	// A title shared from the start resolves nothing: the link waits, with no row.
+	d := create(t, ctx, tx, "", fmt.Sprintf("# %[1]s-d\n\n[[%[1]s-c]]", u))
+	if got := content(t, ctx, tx, d); !strings.Contains(got, "[["+u+"-c]]") || len(neighbors(t, ctx, tx, d).Links) != 0 {
+		t.Errorf("content of d = %q, want [[c]] unresolved", got)
+	}
+
+	// Renaming b keeps the links of a on it and writes its new title in them.
 	edit := editnote.Process(ctx, tx, editnote.Input{ID: b, Content: "# " + u + "-renamed"})
 	edit.Run()
 	if edit.HasErr() {
 		t.Fatalf("rename: %v", edit.GetErr())
 	}
-	read := readitem.Process(ctx, tx, domain.NOTE, a)
-	read.Run()
-	want := fmt.Sprintf("[[%[1]s-renamed]] [[%[1]s-renamed]] [[%[1]s-a]]", u)
-	if read.HasErr() || !strings.Contains(read.GetResult().Content, want) {
-		t.Errorf("content of a = %q, %v; want it to hold %q", read.GetResult().Content, read.GetErr(), want)
+	want = fmt.Sprintf("[%[1]s-renamed](note:%[2]s) [%[1]s-renamed](note:%[2]s)", u, b)
+	if got := content(t, ctx, tx, a); !strings.Contains(got, want) {
+		t.Errorf("content of a = %q, want it to hold %q", got, want)
 	}
 	if got := neighbors(t, ctx, tx, a); !slices.Contains(ids(got.Links), b) {
 		t.Errorf("links of a after the rename = %+v, want b still", got.Links)
@@ -89,6 +98,16 @@ func create(t *testing.T, ctx context.Context, tx bun.Tx, parentID, content stri
 		t.Fatalf("create %q: %v", content, note.GetErr())
 	}
 	return note.GetResult().ID
+}
+
+func content(t *testing.T, ctx context.Context, tx bun.Tx, id string) string {
+	t.Helper()
+	read := readitem.Process(ctx, tx, domain.NOTE, id)
+	read.Run()
+	if read.HasErr() {
+		t.Fatalf("read: %v", read.GetErr())
+	}
+	return read.GetResult().Content
 }
 
 func neighbors(t *testing.T, ctx context.Context, tx bun.Tx, id string) readneighbors.Result {

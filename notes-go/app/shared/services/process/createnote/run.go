@@ -165,7 +165,7 @@ func (p *run) linkTags(ctx context.Context, tx bun.Tx) error {
 	return err
 }
 
-// linkNotes links the note to the notes its [[links]] name, and the notes naming it to it.
+// linkNotes resolves the [[links]] of the note, links it, and resolves the [[links]] waiting for its title.
 func (p *run) linkNotes(ctx context.Context, tx bun.Tx) error {
 	link := linknotes.Process(ctx, tx, linknotes.Input{ID: p.cache.item.ID, Content: p.cache.input.Content, Title: p.cache.title})
 	link.Run()
