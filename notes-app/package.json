@@ -10,6 +10,7 @@
     "postinstall": "nuxt prepare",
     "types": "openapi-typescript ../notes-go/docs/swagger.yaml -o app/types/api.d.ts",
     "test": "node --test test/*.test.ts",
+    "e2e": "playwright test",
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
@@ -26,6 +27,7 @@
     "vue-router": "^5.4.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.0",
     "@tiptap/vue-3": "^3.32.2",
     "@types/d3-force": "^3.0.10",
     "openapi-typescript": "^7.13.0",

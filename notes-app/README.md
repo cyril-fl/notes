@@ -21,10 +21,15 @@ cd ../notes-app && pnpm install && pnpm dev   # http://localhost:3000
 
 Ouvre bien `localhost`, pas `127.0.0.1` : l'API compare l'origine exactement. `NUXT_PUBLIC_API_BASE` change l'adresse de l'API.
 
+## Raccourcis
+
+`⌘K` ou `/` ouvre la palette (notes, récentes, actions, thème), `N` crée une note dans le dossier affiché, `⇧N` un dossier. Hors d'un champ de saisie seulement.
+
 ## Commandes
 
 ```sh
-pnpm test        # file de sauvegarde et disposition du graphe
+pnpm test        # file de sauvegarde, liens et disposition du graphe
+pnpm e2e         # parcours dans Chrome, contre la stack lancée (make up) ; ou make e2e depuis la racine
 pnpm typecheck
 pnpm types       # régénère app/types/api.d.ts depuis ../notes-go/docs/swagger.yaml
 pnpm generate    # site statique dans .output/public

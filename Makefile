@@ -1,4 +1,4 @@
-.PHONY: up down
+.PHONY: up down e2e
 
 WEB_PORT := 3000
 WEB_LOG := $(CURDIR)/.build/notes-app.log
@@ -20,3 +20,7 @@ up:
 down:
 	@lsof -ti tcp:$(WEB_PORT) -sTCP:LISTEN | xargs kill 2>/dev/null || true
 	@cd notes-go && docker compose --profile api down
+
+# The browser tests run against the stack, in the installed Chrome.
+e2e: up
+	@cd notes-app && pnpm e2e
