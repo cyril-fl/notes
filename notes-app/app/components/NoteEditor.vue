@@ -13,7 +13,7 @@ const ALLOWED_LINKS = ['http', 'https', 'mailto'];
 
 const api = useApi();
 const { prompt, confirm } = useDialogs();
-const { removeItem } = useItems();
+const { removeItem, pinNote } = useItems();
 const baseURL = useRuntimeConfig().public.apiBase;
 const toast = useToast();
 
@@ -21,6 +21,7 @@ const id = ref(props.noteId);
 const parent = ref(props.parentId);
 const path = ref('');
 const tags = ref<string[]>([]);
+const pinned = ref(false);
 const initialContent = ref('');
 const loading = ref(!!props.noteId);
 const notFound = ref(false);
@@ -79,6 +80,7 @@ async function load() {
     const note = await api<ItemDetail>(`/api/notes/${props.noteId}`, { quiet: true });
     initialContent.value = note.content ?? '';
     tags.value = note.tags ?? [];
+    pinned.value = note.pinned ?? false;
     path.value = note.path.slice(0, note.path.lastIndexOf('/')) || '/';
     parent.value = note.item.parent_id ?? undefined;
     isEmpty.value = false;
@@ -139,6 +141,12 @@ onBeforeUnmount(async () => {
   await saver.flush(); // A save in progress would fail on a removed note.
   await removeItem({ id: id.value, kind: 'note' });
 });
+
+async function togglePin() {
+  if (!id.value) return;
+  await pinNote(id.value, !pinned.value);
+  pinned.value = !pinned.value;
+}
 
 async function remove() {
   saver.take();
@@ -247,6 +255,16 @@ const status = computed(() => {
     <div class="mb-2 flex h-6 items-center gap-2 text-xs text-muted">
       <span class="truncate">{{ path }}</span>
       <span class="ml-auto shrink-0" :class="{ 'text-error': failed }" role="status">{{ status }}</span>
+      <UTooltip v-if="id" :text="pinned ? 'Désépingler' : 'Épingler'">
+        <UButton
+          :icon="pinned ? 'i-lucide-pin-off' : 'i-lucide-pin'"
+          color="neutral"
+          variant="ghost"
+          size="xs"
+          :aria-label="pinned ? 'Désépingler la note' : 'Épingler la note'"
+          @click="togglePin"
+        />
+      </UTooltip>
       <UTooltip text="Supprimer">
         <UButton icon="i-lucide-trash-2" color="neutral" variant="ghost" size="xs" aria-label="Supprimer la note" @click="remove" />
       </UTooltip>

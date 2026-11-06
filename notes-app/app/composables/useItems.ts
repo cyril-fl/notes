@@ -1,5 +1,5 @@
 import type { ContextMenuItem } from '@nuxt/ui';
-import type { Item } from '~/types/items';
+import type { Item, Pinned } from '~/types/items';
 
 const CYCLE = 'Un dossier ne peut pas aller dans lui-même ou ses sous-dossiers.';
 const PARENT_IN_TRASH = "Le dossier parent est dans la corbeille : restaure-le d'abord.";
@@ -48,6 +48,10 @@ export function useItems() {
     return act(() => api<Item[]>('/api/restore', { method: 'POST', body: { ids: [id] }, conflict: PARENT_IN_TRASH }));
   }
 
+  function pinNote(id: string, pinned: boolean) {
+    return act(() => api(`/api/notes/${id}`, { method: 'PATCH', body: { pinned } }));
+  }
+
   function emptyTrash() {
     return act(() => api('/api/trash', { method: 'DELETE' }));
   }
@@ -55,7 +59,11 @@ export function useItems() {
   /** What right-clicking an item offers. */
   function itemMenu(item: Item): ContextMenuItem[][] {
     const remove = { label: 'Supprimer', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => removeItem(item) };
-    if (item.kind === 'note') return [[remove]];
+    if (item.kind === 'note') {
+      const pinned = isPinned(item.id);
+      const pin = { label: pinned ? 'Désépingler' : 'Épingler', icon: pinned ? 'i-lucide-pin-off' : 'i-lucide-pin', onSelect: () => pinNote(item.id, !pinned) };
+      return [[pin], [remove]];
+    }
 
     return [
       [
@@ -67,7 +75,22 @@ export function useItems() {
     ];
   }
 
-  return { createFolder, renameFolder, removeItem, moveItem, restoreItem, emptyTrash, itemMenu };
+  return { createFolder, renameFolder, removeItem, moveItem, restoreItem, pinNote, emptyTrash, itemMenu };
+}
+
+/** The pinned notes, read once for the sidebar, the menus and the editor. */
+export function usePinned() {
+  const api = useApi();
+  return useLazyAsyncData('pinned', () => api<Pinned[]>('/api/pinned'), { default: () => [] as Pinned[] });
+}
+
+function isPinned(id: string) {
+  return useNuxtData<Pinned[]>('pinned').data.value?.some((note) => note.id === id) ?? false;
+}
+
+/** The folder the page shows, where a new note or folder goes; undefined at the root and elsewhere. */
+export function currentFolder(route: { path: string; params: Record<string, unknown> }) {
+  return route.path.startsWith('/folders/') ? (route.params.id as string) : undefined;
 }
 
 export function newNotePath(parentId?: string) {

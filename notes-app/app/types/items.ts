@@ -10,3 +10,5 @@ export type Match = Schemas['searchnotes.Match'];
 export type Trashed = Schemas['listtrash.Trashed'];
 export type Neighbors = Schemas['readneighbors.Result'];
 export type NotesGraph = Schemas['readgraph.Result'];
+export type Recent = Schemas['listrecent.Recent'];
+export type Pinned = Schemas['listpinned.Pinned'];

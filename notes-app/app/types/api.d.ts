@@ -770,6 +770,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/pinned": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the pinned notes */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["listpinned.Pinned"][];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/recent": {
         parameters: {
             query?: never;
@@ -1328,6 +1373,7 @@ export interface components {
         };
         "editnote.Body": {
             content?: string;
+            pinned?: boolean;
             tags?: string[];
         };
         "edittag.Body": {
@@ -1336,6 +1382,11 @@ export interface components {
         "listfolders.Folder": {
             id: string;
             path: string;
+        };
+        "listpinned.Pinned": {
+            id: string;
+            path: string;
+            title: string;
         };
         "listrecent.Recent": {
             id: string;
@@ -1374,6 +1425,7 @@ export interface components {
             content?: string;
             item: components["schemas"]["domain.Item"];
             path: string;
+            pinned?: boolean;
             tags?: string[];
         };
         "readneighbors.Linked": {
