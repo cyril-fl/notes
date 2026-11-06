@@ -18,6 +18,7 @@ var (
 	block = regexp.MustCompile(`^[ \t]*(?:>[ \t]?)*(?:(?:[-*+]|\d+[.)])[ \t]+)?(?:\[[ xX]\][ \t]+)?`)
 	image = regexp.MustCompile(`!\[([^\]]*)\]\([^)]*\)`)
 	link  = regexp.MustCompile(`\[([^\]]*)\]\([^)]*\)`)
+	wiki  = regexp.MustCompile(`\[\[([^\[\]\n]+)\]\]`)
 	marks = regexp.MustCompile("\\*\\*|__|~~|[*_`]")
 	rule  = regexp.MustCompile(`^[ \t]*(?:[-*_][ \t]*){3,}$`)
 )
@@ -62,8 +63,9 @@ func textLines(content string) []string {
 	return lines
 }
 
-// clean keeps the words: no link targets, emphasis marks or #tags.
+// clean keeps the words: no link targets, [[ ]] around note links, emphasis marks or #tags.
 func clean(text string) string {
+	text = wiki.ReplaceAllString(text, "$1")
 	text = image.ReplaceAllString(text, "$1")
 	text = link.ReplaceAllString(text, "$1")
 	text = marks.ReplaceAllString(text, "")

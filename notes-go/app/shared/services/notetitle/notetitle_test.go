@@ -24,6 +24,7 @@ func TestFrom(t *testing.T) {
 		"numbered":             {"1. un", "un"},
 		"quote":                {"> cité", "cité"},
 		"image":                {"![chat](a.png)", "chat"},
+		"note link":            {"voir [[Courses]]", "voir Courses"},
 		"rule":                 {"---\n\ntexte", "texte"},
 		"code is not heading":  {"```sh\n# comment\n```\ntexte", "texte"},
 		"only code":            {"```\ncode\n```", ""},
