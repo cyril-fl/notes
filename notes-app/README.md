@@ -23,7 +23,9 @@ Ouvre bien `localhost`, pas `127.0.0.1` : l'API compare l'origine exactement. `N
 
 ## Raccourcis
 
-`⌘K` ou `/` ouvre la palette (notes, récentes, actions, thème), `N` crée une note dans le dossier affiché, `⇧N` un dossier. Hors d'un champ de saisie seulement.
+`⌘K` ou `/` ouvre la palette (notes, récentes, actions, thème), `N` crée une note dans le dossier affiché, `⇧N` un dossier, `⌘\` replie la barre latérale. Hors d'un champ de saisie seulement.
+
+La barre latérale se redimensionne en tirant son bord (sa largeur reste d'une visite à l'autre) et devient un tiroir sur petit écran.
 
 ## Commandes
 

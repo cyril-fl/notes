@@ -11,7 +11,7 @@ test('the palette finds a note and opens it', async ({ page }) => {
   await expect(page.getByRole('button', { name: /Rechercher/ })).toBeVisible();
   await page.keyboard.press('ControlOrMeta+k');
   await page.getByPlaceholder('Chercher une note, une action…').fill(`${box.prefix} palette`);
-  await page.getByRole('option', { name: new RegExp(`${box.prefix} palette`) }).first().click();
+  await page.getByRole('option', { name: new RegExp(`^${box.prefix} palette`) }).click();
   await expect(page).toHaveURL(`/notes/${note.id}`);
 });
 
@@ -56,7 +56,7 @@ test('pinning from the menu lists the note in the sidebar', async ({ page }) => 
 
 test('N opens a new note in the current folder, the theme button switches to dark', async ({ page }) => {
   await page.goto(`/folders/${box.folder.id}`);
-  await page.locator('body').click();
+  await expect(page.getByRole('heading', { name: box.prefix })).toBeVisible();
   await page.keyboard.press('n');
   await expect(page).toHaveURL(new RegExp(`/notes/new\\?parent=${box.folder.id}`));
 

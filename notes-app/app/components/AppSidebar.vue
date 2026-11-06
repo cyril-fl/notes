@@ -105,6 +105,9 @@ const isOverRoot = useDropFolder(rootLink, () => null);
       <UTooltip text="Nouveau dossier">
         <UButton icon="i-lucide-folder-plus" color="neutral" variant="ghost" size="sm" aria-label="Nouveau dossier" @click="createFolder()" />
       </UTooltip>
+      <UTooltip text="Replier la barre latérale" :kbds="['meta', '\\']">
+        <UDashboardSidebarCollapse color="neutral" variant="ghost" size="sm" class="hidden lg:inline-flex" />
+      </UTooltip>
     </div>
   </nav>
 </template>

@@ -2,23 +2,48 @@
 const route = useRoute();
 const { createFolder } = useItems();
 const searchOpen = useState('search-open', () => false);
+const collapsed = ref(false);
 
 // Single keys, like Notion or Linear: Nuxt UI skips them while typing in a field or the editor.
 defineShortcuts({
   '/': () => (searchOpen.value = true),
   n: () => navigateTo(newNotePath(currentFolder(route))),
   shift_n: () => createFolder(currentFolder(route)),
+  'meta_\\': () => (collapsed.value = !collapsed.value),
 });
 </script>
 
 <template>
-  <div class="flex h-dvh gap-2 overflow-hidden bg-muted p-2 text-default">
-    <aside class="w-64 shrink-0 overflow-hidden rounded-xl bg-default">
+  <!-- Nuxt UI's dashboard: a sidebar that resizes (its width kept in localStorage), collapses, and becomes a drawer on small screens. -->
+  <UDashboardGroup unit="rem" storage="local" storage-key="notes-layout" class="gap-2 bg-muted p-2 text-default">
+    <UDashboardSidebar
+      v-model:collapsed="collapsed"
+      collapsible
+      resizable
+      :min-size="12"
+      :default-size="16"
+      :max-size="28"
+      :ui="{
+        root: 'h-full min-h-0 min-w-0 overflow-hidden rounded-xl border-0 bg-default data-[collapsed=true]:hidden',
+        body: 'gap-0 p-0',
+      }"
+    >
       <AppSidebar />
-    </aside>
-    <main class="min-w-0 flex-1 overflow-y-auto rounded-xl bg-default">
-      <slot />
-    </main>
+    </UDashboardSidebar>
+
+    <UDashboardPanel :ui="{ root: 'h-full min-h-0 flex-1 overflow-hidden rounded-xl border-0 bg-default', body: 'gap-0 p-0 sm:gap-0 sm:p-0' }">
+      <template #body>
+        <!-- Only when the sidebar is out of sight: on a small screen, or collapsed. -->
+        <div class="flex px-2 pt-2" :class="{ 'lg:hidden': !collapsed }">
+          <UDashboardSidebarToggle color="neutral" variant="ghost" class="lg:hidden" />
+          <UDashboardSidebarCollapse color="neutral" variant="ghost" class="hidden lg:inline-flex" />
+        </div>
+        <main class="flex min-h-0 flex-1 flex-col">
+          <slot />
+        </main>
+      </template>
+    </UDashboardPanel>
+
     <AppSearch />
-  </div>
+  </UDashboardGroup>
 </template>
