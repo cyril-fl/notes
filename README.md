@@ -26,6 +26,18 @@ Projet de prise de notes un peu manière obsiediennes.
 - Bun ORM est natif a go et permet de coder en directement mes interface.
 - Une DB sql avec un ORM sera surement plus maintenable avec la structure de données soihaité
 
+## Serveur
+
+Chaque tag `v*` publie l'image `ghcr.io/cyril-fl/notes` (API et app web sur la même origine, amd64 et arm64). Sur le serveur, à côté de `compose.prod.yaml` et d'un `.env` copié de `.env.prod.example` :
+
+```sh
+docker compose -f compose.prod.yaml up -d                                    # Postgres, Silo et Notes
+echo '<mot de passe>' | docker exec -i note-api /notes user add <nom> --password-stdin
+docker compose -f compose.prod.yaml pull && docker compose -f compose.prod.yaml up -d   # mise à jour
+```
+
+Notes écoute en HTTP sur `NOTES_LISTEN` (`127.0.0.1:8080` par défaut) : le cookie de session exige HTTPS, un proxy devant le fournit. `WEB_ORIGIN` est l'adresse que tape le navigateur.
+
 ## Qualité
 
 - `make setup` dans `notes-go/` installe les hooks git (lefthook) : gofmt, Prettier et actionlint (les workflows) avant un commit, et le préfixe du message (`feat:`, `fix:`…) vérifié.
