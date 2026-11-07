@@ -83,12 +83,12 @@ components:
       - id
       - value
       type: object
-    editfolder.Input:
+    editfolder.Body:
       properties:
+        pinned:
+          type: boolean
         title:
           type: string
-      required:
-      - title
       type: object
     editnote.Body:
       properties:
@@ -133,12 +133,15 @@ components:
       properties:
         id:
           type: string
+        kind:
+          $ref: '#/components/schemas/domain.Kind'
         path:
           type: string
         title:
           type: string
       required:
       - id
+      - kind
       - path
       - title
       type: object
@@ -539,7 +542,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/editfolder.Input'
+              $ref: '#/components/schemas/editfolder.Body'
               description: body
               summary: body
         description: body
@@ -581,7 +584,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/respond.Failure'
           description: Internal Server Error
-      summary: Rename a folder
+      summary: Rename a folder, or make it a favorite
       tags:
       - folders
   /api/graph:

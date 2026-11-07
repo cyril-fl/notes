@@ -5,16 +5,25 @@ import (
 
 	"github.com/uptrace/bun"
 	"main.go/app/api/services/respond"
+	"main.go/app/shared/domain"
 	"main.go/app/shared/services/process/editfolder"
+	"main.go/app/shared/services/process/pinnote"
+	"main.go/app/shared/services/process/readitem"
 )
 
-// Handler renames a folder: PATCH /api/folders/{id}.
-// @Summary  Rename a folder
+// Body has pointers to tell a field left out: {"pinned": true} alone keeps the title.
+type Body struct {
+	Title  *string `json:"title" binding:"optional"`
+	Pinned *bool   `json:"pinned" binding:"optional"`
+}
+
+// Handler renames a folder or makes it a favorite: PATCH /api/folders/{id}.
+// @Summary  Rename a folder, or make it a favorite
 // @Tags     folders
 // @Accept   json
 // @Produce  json
 // @Param    id path string true "uuid"
-// @Param    body body editfolder.Input true "body"
+// @Param    body body Body true "body"
 // @Success  200 {object} domain.Item
 // @Failure  400 {object} respond.Failure
 // @Failure  409 {object} respond.Failure
@@ -29,13 +38,31 @@ func Handler(db bun.IDB) http.HandlerFunc {
 			return
 		}
 
-		var input editfolder.Input
-		if !respond.Decode(w, r, &input) {
+		var changes Body
+		if !respond.Decode(w, r, &changes) {
 			return
 		}
-		input.ID = id
 
-		process := editfolder.Process(r.Context(), db, input)
+		if changes.Pinned != nil {
+			pin := pinnote.Process(r.Context(), db, domain.FOLDER, id, *changes.Pinned)
+			pin.Run()
+			if pin.HasErr() {
+				respond.Error(w, pin.GetErr())
+				return
+			}
+		}
+		if changes.Title == nil {
+			current := readitem.Process(r.Context(), db, domain.FOLDER, id)
+			current.Run()
+			if current.HasErr() {
+				respond.Error(w, current.GetErr())
+				return
+			}
+			respond.JSON(w, http.StatusOK, current.GetResult().Item)
+			return
+		}
+
+		process := editfolder.Process(r.Context(), db, editfolder.Input{ID: id, Title: *changes.Title})
 		process.Run()
 		if process.HasErr() {
 			respond.Error(w, process.GetErr())

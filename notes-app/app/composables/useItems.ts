@@ -37,8 +37,8 @@ export function useItems() {
   }
 
   function removeItem(item: Pick<Item, 'id' | 'kind'>) {
-    const route = item.kind === 'folder' ? 'folders' : 'notes';
-    return act(() => api(`/api/${route}/${item.id}`, { method: 'DELETE' }));
+    const resource = item.kind === 'folder' ? 'folders' : 'notes';
+    return act(() => api(`/api/${resource}/${item.id}`, { method: 'DELETE' }));
   }
 
   /** A null parent is the root. */
@@ -51,8 +51,10 @@ export function useItems() {
     return act(() => api<Item[]>('/api/restore', { method: 'POST', body: { ids: [id] }, conflict: { [TAKEN]: NAME_TAKEN, 'in the trash': PARENT_IN_TRASH } }));
   }
 
-  function pinNote(id: string, pinned: boolean) {
-    return act(() => api(`/api/notes/${id}`, { method: 'PATCH', body: { pinned } }));
+  /** Pins a note, or makes a folder a favorite. */
+  function pinItem(item: Pick<Item, 'id' | 'kind'>, pinned: boolean) {
+    const resource = item.kind === 'folder' ? 'folders' : 'notes';
+    return act(() => api(`/api/${resource}/${item.id}`, { method: 'PATCH', body: { pinned } }));
   }
 
   function emptyTrash() {
@@ -64,24 +66,29 @@ export function useItems() {
     const remove = { label: 'Supprimer', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => removeItem(item) };
     if (item.kind === 'note') {
       const pinned = isPinned(item.id);
-      const pin = { label: pinned ? 'Désépingler' : 'Épingler', icon: pinned ? 'i-lucide-pin-off' : 'i-lucide-pin', onSelect: () => pinNote(item.id, !pinned) };
+      const pin = { label: pinned ? 'Désépingler' : 'Épingler', icon: pinned ? 'i-lucide-pin-off' : 'i-lucide-pin', onSelect: () => pinItem(item, !pinned) };
       return [[pin], [remove]];
     }
+
+    const favorite = isPinned(item.id);
 
     return [
       [
         { label: 'Nouvelle note', icon: 'i-lucide-square-pen', onSelect: () => navigateTo(newNotePath(item.id)) },
         { label: 'Nouveau dossier', icon: 'i-lucide-folder-plus', onSelect: () => createFolder(item.id) },
       ],
-      [{ label: 'Renommer', icon: 'i-lucide-pencil', onSelect: () => renameFolder(item) }],
+      [
+        { label: favorite ? 'Retirer des favoris' : 'Ajouter aux favoris', icon: favorite ? 'i-lucide-star-off' : 'i-lucide-star', onSelect: () => pinItem(item, !favorite) },
+        { label: 'Renommer', icon: 'i-lucide-pencil', onSelect: () => renameFolder(item) },
+      ],
       [remove],
     ];
   }
 
-  return { createFolder, renameFolder, removeItem, moveItem, restoreItem, pinNote, emptyTrash, itemMenu };
+  return { createFolder, renameFolder, removeItem, moveItem, restoreItem, pinItem, emptyTrash, itemMenu };
 }
 
-/** The pinned notes, read once for the sidebar, the menus and the editor. */
+/** The pinned notes and favorite folders, read once for the sidebar, the menus and the editor. */
 export function usePinned() {
   const api = useApi();
   return useLazyAsyncData('pinned', () => api<Pinned[]>('/api/pinned'), { default: () => [] as Pinned[] });

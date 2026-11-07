@@ -248,7 +248,7 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        /** Rename a folder */
+        /** Rename a folder, or make it a favorite */
         patch: {
             parameters: {
                 query?: never;
@@ -262,7 +262,7 @@ export interface paths {
             /** @description body */
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["editfolder.Input"];
+                    "application/json": components["schemas"]["editfolder.Body"];
                 };
             };
             responses: {
@@ -1509,8 +1509,9 @@ export interface components {
             /** @description unique case-insensitive, see CreateTables */
             value: string;
         };
-        "editfolder.Input": {
-            title: string;
+        "editfolder.Body": {
+            pinned?: boolean;
+            title?: string;
         };
         "editnote.Body": {
             content?: string;
@@ -1530,6 +1531,7 @@ export interface components {
         };
         "listpinned.Pinned": {
             id: string;
+            kind: components["schemas"]["domain.Kind"];
             path: string;
             title: string;
         };

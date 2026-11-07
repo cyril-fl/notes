@@ -8,11 +8,12 @@ import (
 	"main.go/app/shared/domain"
 )
 
-// Pinned is a pinned note.
+// Pinned is a pinned note or a favorite folder.
 type Pinned struct {
-	ID    string `json:"id"`
-	Title string `json:"title"`
-	Path  string `json:"path"`
+	ID    string      `json:"id"`
+	Kind  domain.Kind `json:"kind"`
+	Title string      `json:"title"`
+	Path  string      `json:"path"`
 }
 
 type run struct {
@@ -34,22 +35,23 @@ func Process(ctx context.Context, db bun.IDB) *run {
 	}
 }
 
-// Run joins paths to keep live notes only: a pinned note in the trash is not listed.
+// Run joins paths to keep live items only: a pinned note in the trash is not listed.
 func (p *run) Run() {
 	p.cache.result = []Pinned{}
 	p.SetErr(p.db.NewRaw(domain.PathsCTE+`
-		SELECT i.id, coalesce(i.title, '') AS title, paths.path
+		SELECT i.id, i.kind, coalesce(i.title, '') AS title, paths.path
 		FROM items AS i
 		JOIN paths ON paths.id = i.id
-		JOIN metadata_notes AS mn ON mn.item_id = i.id
-		WHERE i.kind = ? AND mn.pinned
-		ORDER BY lower(paths.path), i.id`, domain.NOTE).
+		LEFT JOIN metadata_notes AS mn ON mn.item_id = i.id
+		LEFT JOIN metadata_folders AS mf ON mf.item_id = i.id
+		WHERE mn.pinned OR mf.pinned
+		ORDER BY lower(paths.path), i.id`).
 		Scan(p.ctx, &p.cache.result))
 }
 
 // Getters & Setters
 
-// GetResult returns the pinned notes by path.
+// GetResult returns the pinned notes and favorite folders by path.
 func (p *run) GetResult() []Pinned {
 	return p.cache.result
 }

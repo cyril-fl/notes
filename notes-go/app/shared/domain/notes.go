@@ -44,4 +44,6 @@ type MetadataNote struct {
 type MetadataFolder struct {
 	bun.BaseModel `bun:"table:metadata_folders,alias:mf"`
 	Metadata      `bun:",inline"`
+
+	Pinned bool `bun:",notnull,default:false"` // a favorite
 }

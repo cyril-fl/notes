@@ -15,6 +15,14 @@ test('the sidebar collapses and comes back', async ({ page }) => {
   await expect(search).toBeVisible();
 });
 
+test('a folder is made a favorite from its menu', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('navigation').getByText(box.prefix).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Ajouter aux favoris' }).click();
+  await expect(page.getByRole('navigation').getByRole('link', { name: box.prefix })).toHaveCount(2); // In the tree and in the favorites.
+  await expect(page.getByRole('navigation').getByText('Favoris')).toBeVisible();
+});
+
 test('on a phone the sidebar opens as a drawer', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await page.goto('/');

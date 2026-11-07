@@ -147,7 +147,7 @@ notes serve --origin http://localhost:3000   # ou directement sur la machine
 | Ressource | Routes (préfixe `/api`) | Corps JSON |
 |---|---|---|
 | Notes | `POST /notes`, `GET`, `PATCH`, `DELETE /notes/{id}`, `GET /notes/{id}/neighbors`, `GET /pinned` | `content`, `tags`, `parent_id` (création), `pinned` |
-| Dossiers | `GET`, `POST /folders`, `GET`, `PATCH`, `DELETE /folders/{id}` | `title`, `parent_id` (création) |
+| Dossiers | `GET`, `POST /folders`, `GET`, `PATCH`, `DELETE /folders/{id}` | `title`, `parent_id` (création), `pinned` |
 | Parcourir | `GET /items?parent=<uuid>` (racine sans `parent`), `POST /move` | `ids`, `parent_id` (racine sans `parent_id`) |
 | Tags | `GET`, `POST /tags`, `GET`, `PATCH`, `DELETE /tags/{value}` | `values` (création), `value` (renommage) |
 | Graphe | `GET /graph` (tags comptés), `GET /graph/notes` (notes et tags qui les relient) | |
@@ -157,6 +157,7 @@ notes serve --origin http://localhost:3000   # ou directement sur la machine
 
 - Le titre d'une note vient de son contenu, comme dans la CLI : l'API refuse un champ `title` pour une note.
 - `PATCH /notes/{id}` ne change que les champs envoyés. `{"pinned": true}` seul épingle la note sans toucher à son texte ni à sa date de modification. Sans `tags`, les tags sont les `#mots` du contenu. Avec `tags`, cette liste réécrit le contenu : `"tags": []` efface tous ses `#mots`.
+- `PATCH /folders/{id}` avec `{"pinned": true}` met le dossier en favori. `GET /pinned` liste les notes épinglées et les dossiers favoris, avec leur `kind`.
 - Les erreurs ont la forme `{"error": "..."}`, avec le statut 400, 403, 404, 409, 413 ou 500.
   Seuls une route inconnue (404) et une méthode non gérée (405) répondent en texte brut, car c'est le routeur qui les écrit.
 - Les éléments supprimés passent par la corbeille. Le serveur la purge toutes les heures. `DELETE /trash` la vide tout de suite et définitivement.

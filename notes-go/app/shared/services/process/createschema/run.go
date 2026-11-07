@@ -31,6 +31,7 @@ func Process(ctx context.Context, db *bun.DB) *run {
 func (p *run) Run() {
 	p.registerModels()
 	p.createTables()
+	p.addColumns()
 	p.renameDuplicateFolders()
 	p.createIndexes()
 	p.runInTx()
@@ -45,6 +46,17 @@ func (p *run) registerModels() {
 func (p *run) createTables() {
 	p.cache.steps = append(p.cache.steps, func(tx bun.Tx) {
 		p.execQueries(getTables(tx))
+	})
+}
+
+// addColumns adds to a base made before them the columns its tables gained since: CREATE TABLE IF NOT EXISTS skips them.
+func (p *run) addColumns() {
+	p.cache.steps = append(p.cache.steps, func(tx bun.Tx) {
+		if p.HasErr() {
+			return
+		}
+		_, err := tx.ExecContext(p.ctx, `ALTER TABLE metadata_folders ADD COLUMN IF NOT EXISTS pinned boolean NOT NULL DEFAULT false`)
+		p.SetErr(err)
 	})
 }
 

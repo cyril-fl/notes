@@ -13,7 +13,7 @@ const ALLOWED_LINKS = ['http', 'https', 'mailto'];
 
 const api = useApi();
 const { prompt, confirm } = useDialogs();
-const { removeItem, pinNote } = useItems();
+const { removeItem, pinItem } = useItems();
 const baseURL = useRuntimeConfig().public.apiBase;
 const toast = useToast();
 
@@ -144,7 +144,7 @@ onBeforeUnmount(async () => {
 
 async function togglePin() {
   if (!id.value) return;
-  await pinNote(id.value, !pinned.value);
+  await pinItem({ id: id.value, kind: 'note' }, !pinned.value);
   pinned.value = !pinned.value;
 }
 

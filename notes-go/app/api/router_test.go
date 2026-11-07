@@ -199,6 +199,13 @@ func TestFoldersAndMove(t *testing.T) {
 	c.do("POST", "/api/folders", `{"title":" "}`, http.StatusBadRequest, nil)
 	c.do("POST", "/api/folders", fmt.Sprintf(`{"title":"SUB","parent_id":%q}`, folder.ID), http.StatusConflict, nil)
 
+	// A favorite keeps its title, and a note cannot be one through the folders.
+	c.do("PATCH", path, `{"pinned":true}`, http.StatusOK, nil)
+	if !strings.Contains(c.raw("/api/pinned"), folder.ID) || !strings.Contains(c.raw(path), title) {
+		t.Errorf("the favorite folder is not listed, or lost its title: %s", c.raw("/api/pinned"))
+	}
+	c.do("PATCH", "/api/folders/"+note.ID, `{"pinned":true}`, http.StatusNotFound, nil)
+
 	// A note and a folder are not interchangeable.
 	c.do("GET", "/api/notes/"+folder.ID, "", http.StatusNotFound, nil)
 	c.do("GET", "/api/folders/"+note.ID, "", http.StatusNotFound, nil)
@@ -253,7 +260,7 @@ func TestFoldersAndMove(t *testing.T) {
 	if folder.Title != renamed {
 		t.Errorf("folder = %+v", folder)
 	}
-	c.do("PATCH", path, `{}`, http.StatusBadRequest, nil)
+	c.do("PATCH", path, `{"title":""}`, http.StatusBadRequest, nil)
 	c.do("PATCH", "/api/folders/"+unknownID, `{"title":"x"}`, http.StatusNotFound, nil)
 
 	c.do("POST", "/api/move", fmt.Sprintf(`{"ids":[%q],"parent_id":%q}`, folder.ID, sub.ID), http.StatusConflict, nil)

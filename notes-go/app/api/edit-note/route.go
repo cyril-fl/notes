@@ -55,7 +55,7 @@ func Handler(db bun.IDB) http.HandlerFunc {
 		}
 		note := current.GetResult()
 		if changes.Pinned != nil {
-			pin := pinnote.Process(r.Context(), db, id, *changes.Pinned)
+			pin := pinnote.Process(r.Context(), db, domain.NOTE, id, *changes.Pinned)
 			pin.Run()
 			if pin.HasErr() {
 				respond.Error(w, pin.GetErr())

@@ -8,6 +8,8 @@ const searchOpen = useState('search-open', () => false);
 const colorMode = useColorMode();
 
 const { data: pinned } = usePinned();
+const favorites = computed(() => pinned.value.filter((item) => item.kind === 'folder'));
+const pinnedNotes = computed(() => pinned.value.filter((item) => item.kind === 'note'));
 const { data: recent } = useLazyAsyncData('recent', () => api<Recent[]>('/api/recent', { quiet: true }), { default: () => [] as Recent[] });
 const { data: tags } = useLazyAsyncData('tags', () => api<TagCount[]>('/api/graph'), { default: () => [] as TagCount[] });
 
@@ -33,9 +35,17 @@ const isOverRoot = useDropFolder(rootLink, () => null);
     </UButton>
 
     <div class="min-h-0 flex-1 space-y-5 overflow-y-auto">
-      <section v-if="pinned.length">
+      <section v-if="favorites.length">
+        <h2 class="px-2 pb-1 text-xs font-medium text-muted">Favoris</h2>
+        <NuxtLink v-for="folder in favorites" :key="folder.id" :to="`/folders/${folder.id}`" class="row" :class="{ 'row-active': route.params.id === folder.id }">
+          <UIcon name="i-lucide-star" class="size-4 shrink-0 text-muted" />
+          <span class="truncate">{{ folder.title }}</span>
+        </NuxtLink>
+      </section>
+
+      <section v-if="pinnedNotes.length">
         <h2 class="px-2 pb-1 text-xs font-medium text-muted">Épinglées</h2>
-        <NuxtLink v-for="note in pinned" :key="note.id" :to="`/notes/${note.id}`" class="row" :class="{ 'row-active': route.params.id === note.id }">
+        <NuxtLink v-for="note in pinnedNotes" :key="note.id" :to="`/notes/${note.id}`" class="row" :class="{ 'row-active': route.params.id === note.id }">
           <UIcon name="i-lucide-pin" class="size-4 shrink-0 text-muted" />
           <span class="truncate">{{ displayTitle(note.title) }}</span>
         </NuxtLink>

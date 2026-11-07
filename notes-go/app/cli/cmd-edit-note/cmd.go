@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	millflagseditnote "main.go/app/cli/cmd-edit-note/services/mill"
+	"main.go/app/shared/domain"
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/editnote"
 	"main.go/app/shared/services/process/pinnote"
@@ -53,7 +54,7 @@ func run(ctx context.Context, id string, flags *pflag.FlagSet) error {
 }
 
 func pin(ctx context.Context, id string, pinned bool) error {
-	process := pinnote.Process(ctx, postgrey.GetDb(), id, pinned)
+	process := pinnote.Process(ctx, postgrey.GetDb(), domain.NOTE, id, pinned)
 	process.Run()
 	if process.HasErr() {
 		return process.GetErr()

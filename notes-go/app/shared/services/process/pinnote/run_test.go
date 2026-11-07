@@ -3,6 +3,7 @@ package pinnote
 import (
 	"context"
 	"errors"
+	"fmt"
 	"slices"
 	"testing"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/uptrace/bun"
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/postgrey"
+	"main.go/app/shared/services/process/createfolder"
 	"main.go/app/shared/services/process/createnote"
 	"main.go/app/shared/services/process/createschema"
 	"main.go/app/shared/services/process/deleteitems"
@@ -45,7 +47,7 @@ func TestPin(t *testing.T) {
 		ids = append(ids, note.GetResult().ID)
 	}
 	for _, id := range ids {
-		pin := Process(ctx, tx, id, true)
+		pin := Process(ctx, tx, domain.NOTE, id, true)
 		pin.Run()
 		if pin.HasErr() {
 			t.Fatalf("pin: %v", pin.GetErr())
@@ -66,7 +68,7 @@ func TestPin(t *testing.T) {
 		t.Errorf("pinned = %v, want the live note only", got)
 	}
 
-	unpin := Process(ctx, tx, ids[0], false)
+	unpin := Process(ctx, tx, domain.NOTE, ids[0], false)
 	unpin.Run()
 	if unpin.HasErr() {
 		t.Fatalf("unpin: %v", unpin.GetErr())
@@ -75,8 +77,28 @@ func TestPin(t *testing.T) {
 		t.Errorf("pinned = %v, want the note unpinned", got)
 	}
 
+	// A folder is a favorite the same way, but only as a folder.
+	folder := createfolder.Process(ctx, tx, createfolder.Input{Title: fmt.Sprintf("fav-%d", time.Now().UnixNano())})
+	folder.Run()
+	if folder.HasErr() {
+		t.Fatalf("folder: %v", folder.GetErr())
+	}
+	fav := Process(ctx, tx, domain.FOLDER, folder.GetResult().ID, true)
+	fav.Run()
+	if fav.HasErr() {
+		t.Fatalf("fav: %v", fav.GetErr())
+	}
+	if got := pinned(t, ctx, tx); !slices.Contains(got, folder.GetResult().ID) {
+		t.Errorf("pinned = %v, want the favorite folder", got)
+	}
+	wrong := Process(ctx, tx, domain.NOTE, folder.GetResult().ID, true)
+	wrong.Run()
+	if !errors.Is(wrong.GetErr(), ErrNotFound) {
+		t.Errorf("pin a folder as a note: err = %v, want %v", wrong.GetErr(), ErrNotFound)
+	}
+
 	for _, id := range []string{ids[1], "00000000-0000-0000-0000-000000000000", "nope"} {
-		missing := Process(ctx, tx, id, true)
+		missing := Process(ctx, tx, domain.NOTE, id, true)
 		missing.Run()
 		if !errors.Is(missing.GetErr(), ErrNotFound) {
 			t.Errorf("pin %q: err = %v, want %v", id, missing.GetErr(), ErrNotFound)
