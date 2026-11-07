@@ -1,5 +1,6 @@
 # The server: `docker compose -f compose.prod.yaml up -d`, with a .env next to it (see .env.prod.example).
 # Update: `docker compose -f compose.prod.yaml pull && docker compose -f compose.prod.yaml up -d`.
+# The server keeps its own copy (with a Makefile for init, update and backup): a change here goes there by hand.
 services:
   notes:
     image: ghcr.io/cyril-fl/notes:${NOTES_VERSION:-latest}
