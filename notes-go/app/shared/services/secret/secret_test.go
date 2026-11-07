@@ -33,6 +33,18 @@ func TestSealOpen(t *testing.T) {
 	if _, err := Text("in clear").Value(); err == nil {
 		t.Error("Text(clear).Value() err = nil, want a refusal")
 	}
+
+	image := []byte("\x89PNG bytes")
+	sealedImage, err := SealBytes("a", image)
+	if err != nil || strings.Contains(string(sealedImage), "PNG") {
+		t.Errorf("SealBytes() = %q, %v; want the bytes hidden", sealedImage, err)
+	}
+	if data, err := OpenBytes("a", sealedImage); err != nil || string(data) != string(image) {
+		t.Errorf("OpenBytes() = %q, %v; want the bytes back", data, err)
+	}
+	if _, err := OpenBytes("a", image); err != ErrCorrupt {
+		t.Errorf("OpenBytes(clear) err = %v, want ErrCorrupt", err)
+	}
 }
 
 func TestRewrap(t *testing.T) {

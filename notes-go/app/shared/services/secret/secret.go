@@ -96,11 +96,38 @@ func Rewrap(wrapped, oldSecret string) (string, error) {
 
 // Seal encrypts text with the key of the account, loaded: the same text never gives the same value twice.
 func Seal(userID, text string) (Text, error) {
-	gcm, ok := keys.Load(userID)
-	if !ok {
-		return "", fmt.Errorf("%w: %s", ErrNotLoaded, userID)
+	gcm, err := account(userID)
+	if err != nil {
+		return "", err
 	}
-	return Text(Prefix + userID + ":" + seal(gcm.(cipher.AEAD), []byte(text))), nil
+	return Text(Prefix + userID + ":" + seal(gcm, []byte(text))), nil
+}
+
+// SealBytes encrypts the bytes of a file with the key of the account, loaded: nonce then ciphertext, no base64.
+func SealBytes(userID string, data []byte) ([]byte, error) {
+	gcm, err := account(userID)
+	if err != nil {
+		return nil, err
+	}
+	nonce := make([]byte, gcm.NonceSize())
+	rand.Read(nonce)
+	return gcm.Seal(nonce, nonce, data, nil), nil
+}
+
+// OpenBytes decrypts what SealBytes gave.
+func OpenBytes(userID string, data []byte) ([]byte, error) {
+	gcm, err := account(userID)
+	if err != nil {
+		return nil, err
+	}
+	if len(data) < gcm.NonceSize() {
+		return nil, ErrCorrupt
+	}
+	text, err := gcm.Open(nil, data[:gcm.NonceSize()], data[gcm.NonceSize():], nil)
+	if err != nil {
+		return nil, ErrCorrupt
+	}
+	return text, nil
 }
 
 // Open decrypts what Seal gave, its account's key loaded.
@@ -110,11 +137,11 @@ func Open(value string) (string, error) {
 		return "", ErrCorrupt
 	}
 	userID, data, _ := strings.Cut(data, ":")
-	gcm, ok := keys.Load(userID)
-	if !ok {
-		return "", fmt.Errorf("%w: %s", ErrNotLoaded, userID)
+	gcm, err := account(userID)
+	if err != nil {
+		return "", err
 	}
-	text, err := open(gcm.(cipher.AEAD), data)
+	text, err := open(gcm, data)
 	return string(text), err
 }
 
@@ -147,6 +174,14 @@ func (t *Text) Scan(src any) error {
 }
 
 // Helpers
+
+func account(userID string) (cipher.AEAD, error) {
+	gcm, ok := keys.Load(userID)
+	if !ok {
+		return nil, fmt.Errorf("%w: %s", ErrNotLoaded, userID)
+	}
+	return gcm.(cipher.AEAD), nil
+}
 
 func newAEAD(secret string) (cipher.AEAD, error) {
 	key, err := base64.StdEncoding.DecodeString(strings.TrimSpace(secret))

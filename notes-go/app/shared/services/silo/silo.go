@@ -13,6 +13,7 @@ import (
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	"main.go/app/shared/services/secret"
 )
 
 var ErrNotConfigured = errors.New("S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY and S3_BUCKET must be set")
@@ -52,7 +53,45 @@ func New(ctx context.Context) (Store, error) {
 	if err != nil {
 		return nil, fmt.Errorf("silo %s: %w", endpoint, err)
 	}
-	return &s3{client: client, bucket: bucket}, nil
+	return Sealed(&s3{client: client, bucket: bucket}), nil
+}
+
+// Sealed encrypts the bytes put in store with the key of their account, the first part of the key, and decrypts
+// them on Get: the account's key must be loaded.
+func Sealed(store Store) Store {
+	return sealed{store}
+}
+
+type sealed struct {
+	Store
+}
+
+func (s sealed) Put(ctx context.Context, key string, data []byte, contentType string) error {
+	userID, _, _ := strings.Cut(key, "/")
+	data, err := secret.SealBytes(userID, data)
+	if err != nil {
+		return err
+	}
+	return s.Store.Put(ctx, key, data, contentType)
+}
+
+// Get reads the whole file to decrypt it: GCM checks the bytes only at their end. The API caps a file at 20 MB.
+func (s sealed) Get(ctx context.Context, key string) (io.ReadCloser, error) {
+	body, err := s.Store.Get(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+	defer body.Close()
+	data, err := io.ReadAll(body)
+	if err != nil {
+		return nil, err
+	}
+	userID, _, _ := strings.Cut(key, "/")
+	data, err = secret.OpenBytes(userID, data)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", key, err)
+	}
+	return io.NopCloser(bytes.NewReader(data)), nil
 }
 
 func (s *s3) Put(ctx context.Context, key string, data []byte, contentType string) error {

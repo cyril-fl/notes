@@ -3,6 +3,8 @@ package createfile
 import (
 	"context"
 	"errors"
+	"io"
+	"strings"
 	"testing"
 
 	"main.go/app/shared/domain"
@@ -69,5 +71,23 @@ func TestCreateFile(t *testing.T) {
 	}
 	if len(store.Objects) != 2 {
 		t.Errorf("objects = %d, want 2", len(store.Objects))
+	}
+
+	// Through Sealed, as silo.New gives it: Silo keeps the bytes encrypted, Get gives them back.
+	sealed := Process(ctx, tx, silo.Sealed(store), Input{Data: []byte("GIF89a secret")})
+	sealed.Run()
+	if sealed.HasErr() {
+		t.Fatalf("sealed: %v", sealed.GetErr())
+	}
+	key := sealed.GetResult().Key()
+	if strings.Contains(string(store.Objects[key]), "GIF89a") {
+		t.Errorf("object in clear: %q", store.Objects[key])
+	}
+	body, err := silo.Sealed(store).Get(ctx, key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if data, _ := io.ReadAll(body); string(data) != "GIF89a secret" {
+		t.Errorf("Get() = %q, want the image back", data)
 	}
 }
