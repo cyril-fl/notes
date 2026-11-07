@@ -72,6 +72,7 @@ notes edit note /Projets/Idées --tag go --untag sql
 notes edit note /Projets/Idées --pin       # --unpin pour retirer
 cat idees.md | notes edit note /Projets/Idées --content -
 notes edit folder /Projets --title Travail
+notes edit folder /Projets --pin            # en favori, --unpin pour retirer
 
 notes move /Projets/Idées --parent /Archives
 ```
