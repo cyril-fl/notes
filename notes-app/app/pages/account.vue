@@ -63,6 +63,10 @@ async function changePassword() {
   try {
     await api('/api/me/password', { method: 'PATCH', body: { current: current.value, new: next.value }, quiet: true });
   } catch (error) {
+    if ((error as FetchError).status === 429) {
+      toast.add({ title: t('api.tooManyTries', { wait: retryWait(error as FetchError) }), color: 'error' });
+      return;
+    }
     // The API's messages are in English: the two the user can fix are said here.
     const message: string = (error as FetchError).data?.error ?? '';
     const key = message.includes('current password') ? 'account.wrongPassword' : message.includes('characters') ? 'account.shortPassword' : 'api.failed';

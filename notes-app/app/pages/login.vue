@@ -24,7 +24,11 @@ async function login() {
   } catch (error) {
     const status = (error as FetchError).status;
     failure.value =
-      status === 401 ? t('login.badCredentials') : status === 429 ? t('login.tooManyTries') : t('api.down');
+      status === 401
+        ? t('login.badCredentials')
+        : status === 429
+          ? t('api.tooManyTries', { wait: retryWait(error as FetchError) })
+          : t('api.down');
   } finally {
     pending.value = false;
   }

@@ -22,7 +22,8 @@
   },
   "api": {
     "down": "The API does not answer.",
-    "failed": "Something went wrong."
+    "failed": "Something went wrong.",
+    "tooManyTries": "Too many wrong passwords: try again in {wait}."
   },
   "sidebar": {
     "favorites": "Favorites",
@@ -151,8 +152,7 @@
     "name": "Name",
     "password": "Password",
     "submit": "Log in",
-    "badCredentials": "Wrong name or password.",
-    "tooManyTries": "Too many failed tries: try again in a quarter of an hour."
+    "badCredentials": "Wrong name or password."
   },
   "settings": {
     "account": "Account",

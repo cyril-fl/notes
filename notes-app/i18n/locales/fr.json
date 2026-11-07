@@ -22,7 +22,8 @@
   },
   "api": {
     "down": "L'API ne répond pas.",
-    "failed": "Une erreur est survenue."
+    "failed": "Une erreur est survenue.",
+    "tooManyTries": "Trop d’essais ratés : réessayez dans {wait}."
   },
   "sidebar": {
     "favorites": "Favoris",
@@ -151,8 +152,7 @@
     "name": "Nom",
     "password": "Mot de passe",
     "submit": "Se connecter",
-    "badCredentials": "Nom ou mot de passe incorrect.",
-    "tooManyTries": "Trop d’essais ratés : réessayez dans un quart d’heure."
+    "badCredentials": "Nom ou mot de passe incorrect."
   },
   "settings": {
     "account": "Compte",

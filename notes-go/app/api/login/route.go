@@ -1,9 +1,9 @@
 package login
 
 import (
+	"errors"
 	"net"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/uptrace/bun"
@@ -16,38 +16,6 @@ import (
 	"main.go/app/shared/services/process/edituser"
 	"main.go/app/shared/services/process/purgeaccount"
 )
-
-// After maxFailures wrong passwords from one address, it waits lockout: a password cannot be guessed by trying them all.
-// shortcut: kept in memory, a restart of the API forgets it; enough behind Tailscale, store it if the API ever faces the internet.
-const (
-	maxFailures = 5
-	lockout     = 15 * time.Minute
-)
-
-type failures struct {
-	sync.Mutex
-	byAddress map[string][]time.Time
-}
-
-// recent is the failures of address within lockout, older ones dropped.
-func (f *failures) recent(address string) int {
-	f.Lock()
-	defer f.Unlock()
-	kept := f.byAddress[address][:0]
-	for _, at := range f.byAddress[address] {
-		if time.Since(at) < lockout {
-			kept = append(kept, at)
-		}
-	}
-	f.byAddress[address] = kept
-	return len(kept)
-}
-
-func (f *failures) add(address string) {
-	f.Lock()
-	defer f.Unlock()
-	f.byAddress[address] = append(f.byAddress[address], time.Now())
-}
 
 // Handler logs in: POST /api/login. The session token goes in an HttpOnly cookie, never in the body.
 // @Summary  Log in
@@ -62,12 +30,10 @@ func (f *failures) add(address string) {
 // @Failure  500 {object} respond.Failure
 // @Router   /api/login [post]
 func Handler(db bun.IDB) http.HandlerFunc {
-	failed := &failures{byAddress: map[string][]time.Time{}}
-
 	return func(w http.ResponseWriter, r *http.Request) {
 		address, _, _ := net.SplitHostPort(r.RemoteAddr)
-		if failed.recent(address) >= maxFailures {
-			respond.JSON(w, http.StatusTooManyRequests, respond.Failure{Error: "too many failed logins, try again later"})
+		key := "address " + address
+		if failed.blocked(w, key) {
 			return
 		}
 
@@ -79,10 +45,13 @@ func Handler(db bun.IDB) http.HandlerFunc {
 		process := createsession.Process(r.Context(), db, input)
 		process.Run()
 		if process.HasErr() {
-			failed.add(address)
+			if errors.Is(process.GetErr(), createsession.ErrBadCredentials) {
+				failed.fail(key)
+			}
 			respond.Error(w, process.GetErr())
 			return
 		}
+		failed.reset(key)
 		result := process.GetResult()
 		auth.SetCookie(w, result.Token, result.ExpiresAt)
 		respond.JSON(w, http.StatusOK, result)
@@ -164,10 +133,16 @@ func EditMe(db bun.IDB) http.HandlerFunc {
 // @Success  204
 // @Failure  400 {object} respond.Failure
 // @Failure  401 {object} respond.Failure
+// @Failure  429 {object} respond.Failure
 // @Failure  500 {object} respond.Failure
 // @Router   /api/me/password [patch]
 func EditPassword(db bun.IDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		key := "account " + domain.UserID(r.Context())
+		if failed.blocked(w, key) {
+			return
+		}
+
 		var input editpassword.Input
 		if !respond.Decode(w, r, &input) {
 			return
@@ -176,9 +151,13 @@ func EditPassword(db bun.IDB) http.HandlerFunc {
 		process := editpassword.Process(r.Context(), db, input, auth.Token(r))
 		process.Run()
 		if process.HasErr() {
+			if errors.Is(process.GetErr(), editpassword.ErrWrongPassword) {
+				failed.fail(key)
+			}
 			respond.Error(w, process.GetErr())
 			return
 		}
+		failed.reset(key)
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
