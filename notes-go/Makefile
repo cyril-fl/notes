@@ -5,9 +5,13 @@ setup:
 	go install github.com/evilmartians/lefthook/v2
 	"$$(go env GOBIN | grep . || echo "$$(go env GOPATH)/bin")/lefthook" install --force
 
-# -p 1: the tests of every package share one database, and deadlock when they create the schema and tags at the same time.
+# The tests run in <POSTGRES_DB>_test, made on first use: they create the schema, a migration being written must not
+# reach the base the API serves. -p 1: the tests of every package share it, and deadlock when they create the schema
+# and tags at the same time.
 test:
-	set -a && . ./.env && set +a && CONFIG_FILE=$(CURDIR)/config/config.yaml go test -p 1 $(or $(ARGS),./...)
+	@set -a && . ./.env && set +a && \
+	docker compose exec -T postgres sh -c 'psql -U "$$POSTGRES_USER" -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = '"'"'$${POSTGRES_DB}_test'"'"'" | grep -q 1 || createdb -U "$$POSTGRES_USER" "$${POSTGRES_DB}_test"' && \
+	POSTGRES_DB=$${POSTGRES_DB}_test CONFIG_FILE=$(CURDIR)/config/config.yaml go test -p 1 $(or $(ARGS),./...)
 
 # Restore: docker compose exec -T postgres sh -c 'psql -U "$$POSTGRES_USER" "$$POSTGRES_DB"' < backups/<file>.sql
 backup:

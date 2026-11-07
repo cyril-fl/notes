@@ -210,6 +210,8 @@ make test ARGS="./app/shared/services/process/..."
 make down     # arrête les conteneurs et Colima
 ```
 
+Les tests tournent dans une base à part, `<POSTGRES_DB>_test`, créée au premier `make test`, chacun dans une transaction annulée. Ils créent le schéma : une migration en cours d'écriture n'atteint donc jamais la base que sert l'API.
+
 LibreDB Studio, une interface pour explorer la base, est sur <http://localhost:3001>.
 
 | Dossier | Contenu |
