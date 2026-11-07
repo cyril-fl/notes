@@ -1,7 +1,6 @@
 package exportnotes
 
 import (
-	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -118,9 +117,7 @@ func (p *run) loadTree() {
 	}
 
 	// Titles are sealed: ordered here, the oldest first among the same title, as uniqueName numbers them.
-	slices.SortStableFunc(items, func(a, b item) int {
-		return cmp.Or(strings.Compare(string(a.Kind), string(b.Kind)), domain.CompareFold(string(a.Title), string(b.Title)))
-	})
+	domain.SortFold(items, func(i item) string { return string(i.Title) }, func(a, b item) int { return strings.Compare(string(a.Kind), string(b.Kind)) })
 	p.cache.children = map[string][]item{}
 	for _, it := range items {
 		p.cache.children[it.ParentID] = append(p.cache.children[it.ParentID], it)

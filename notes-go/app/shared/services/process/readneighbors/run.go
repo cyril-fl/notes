@@ -1,10 +1,9 @@
 package readneighbors
 
 import (
-	"cmp"
 	"context"
+
 	"main.go/app/shared/services/secret"
-	"slices"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
@@ -111,9 +110,7 @@ func (p *run) loadNeighbors() {
 			p.SetErr(err)
 		}
 	}
-	slices.SortFunc(p.cache.result.Neighbors, func(a, b Neighbor) int {
-		return cmp.Or(b.Shared-a.Shared, domain.CompareFold(a.Path, b.Path))
-	})
+	domain.SortFold(p.cache.result.Neighbors, func(n Neighbor) string { return n.Path }, func(a, b Neighbor) int { return b.Shared - a.Shared })
 }
 
 // loadLinks reads both ends of the [[links]]; joining live keeps live notes only. Empty, not null, in JSON.
@@ -147,6 +144,6 @@ func (p *run) loadLinks() {
 		for i := range linked {
 			linked[i].Path = paths[linked[i].ID]
 		}
-		slices.SortFunc(linked, func(a, b Linked) int { return domain.CompareFold(a.Path, b.Path) })
+		domain.SortFold(linked, func(l Linked) string { return l.Path }, nil)
 	}
 }

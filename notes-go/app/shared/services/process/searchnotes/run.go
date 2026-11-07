@@ -103,7 +103,7 @@ func (p *run) searchNotes() {
 	for i := range p.cache.rows {
 		p.cache.rows[i].Path = paths[p.cache.rows[i].ID]
 	}
-	slices.SortFunc(p.cache.rows, func(a, b row) int { return domain.CompareFold(a.Path, b.Path) })
+	domain.SortFold(p.cache.rows, func(r row) string { return r.Path }, nil)
 }
 
 // makeMatches keeps the notes holding the text whatever its case, those with it in their title first.

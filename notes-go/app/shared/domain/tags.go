@@ -2,7 +2,6 @@ package domain
 
 import (
 	"context"
-	"slices"
 
 	"github.com/uptrace/bun"
 	"main.go/app/shared/services/secret"
@@ -37,7 +36,7 @@ func OpenTags(sealed []string) ([]string, error) {
 		}
 		values[i] = text
 	}
-	slices.SortFunc(values, CompareFold)
+	SortFold(values, func(v string) string { return v }, nil)
 	return values, nil
 }
 

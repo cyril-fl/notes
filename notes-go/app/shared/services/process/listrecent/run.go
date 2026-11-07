@@ -1,11 +1,10 @@
 package listrecent
 
 import (
-	"cmp"
 	"context"
-	"main.go/app/shared/services/secret"
-	"slices"
 	"time"
+
+	"main.go/app/shared/services/secret"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
@@ -75,7 +74,5 @@ func (p *run) loadNotes() {
 	for i := range p.cache.result {
 		p.cache.result[i].Path = paths[p.cache.result[i].ID]
 	}
-	slices.SortStableFunc(p.cache.result, func(a, b Recent) int {
-		return cmp.Or(b.UpdatedAt.Compare(a.UpdatedAt), domain.CompareFold(a.Path, b.Path))
-	})
+	domain.SortFold(p.cache.result, func(r Recent) string { return r.Path }, func(a, b Recent) int { return b.UpdatedAt.Compare(a.UpdatedAt) })
 }

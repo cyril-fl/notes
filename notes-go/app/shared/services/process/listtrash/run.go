@@ -1,11 +1,10 @@
 package listtrash
 
 import (
-	"cmp"
 	"context"
-	"main.go/app/shared/services/secret"
-	"slices"
 	"time"
+
+	"main.go/app/shared/services/secret"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
@@ -67,7 +66,5 @@ func (p *run) loadTrash() {
 		WHERE i.user_id = ? AND i.deleted_at IS NOT NULL AND parent.deleted_at IS DISTINCT FROM i.deleted_at
 		ORDER BY i.deleted_at DESC`, domain.UserID(p.ctx)).
 		Scan(p.ctx, &p.cache.result))
-	slices.SortStableFunc(p.cache.result, func(a, b Trashed) int {
-		return cmp.Or(b.DeletedAt.Compare(a.DeletedAt), domain.CompareFold(string(a.Title), string(b.Title)))
-	})
+	domain.SortFold(p.cache.result, func(t Trashed) string { return string(t.Title) }, func(a, b Trashed) int { return b.DeletedAt.Compare(a.DeletedAt) })
 }

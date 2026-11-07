@@ -1,10 +1,9 @@
 package counttags
 
 import (
-	"cmp"
 	"context"
+
 	"main.go/app/shared/services/secret"
-	"slices"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
@@ -59,7 +58,5 @@ func (p *run) countTags() {
 		WHERE t.user_id = ?
 		GROUP BY t.id, t.value`, domain.UserID(p.ctx)).
 		Scan(p.ctx, &p.cache.result))
-	slices.SortFunc(p.cache.result, func(a, b TagCount) int {
-		return cmp.Or(b.Notes-a.Notes, domain.CompareFold(string(a.Value), string(b.Value)))
-	})
+	domain.SortFold(p.cache.result, func(t TagCount) string { return string(t.Value) }, func(a, b TagCount) int { return b.Notes - a.Notes })
 }

@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"main.go/app/shared/services/secret"
-	"slices"
 	"strings"
+
+	"main.go/app/shared/services/secret"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
@@ -118,5 +118,5 @@ func (p *run) loadNotes() {
 	for i := range p.cache.result.Notes {
 		p.cache.result.Notes[i].Path = paths[p.cache.result.Notes[i].ID]
 	}
-	slices.SortFunc(p.cache.result.Notes, func(a, b Note) int { return domain.CompareFold(a.Path, b.Path) })
+	domain.SortFold(p.cache.result.Notes, func(n Note) string { return n.Path }, nil)
 }

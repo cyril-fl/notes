@@ -2,8 +2,8 @@ package readgraph
 
 import (
 	"context"
+
 	"main.go/app/shared/services/secret"
-	"slices"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
@@ -82,7 +82,7 @@ func (p *run) loadNotes() {
 	for i := range p.cache.result.Notes {
 		p.cache.result.Notes[i].Path = paths[p.cache.result.Notes[i].ID]
 	}
-	slices.SortStableFunc(p.cache.result.Notes, func(a, b Note) int { return domain.CompareFold(a.Path, b.Path) })
+	domain.SortFold(p.cache.result.Notes, func(n Note) string { return n.Path }, nil)
 }
 
 // loadLinks pairs the notes sharing a tag (the tag links joined with themselves) with the notes joined by

@@ -2,8 +2,8 @@ package listpinned
 
 import (
 	"context"
+
 	"main.go/app/shared/services/secret"
-	"slices"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
@@ -58,7 +58,7 @@ func (p *run) Run() {
 	for i := range p.cache.result {
 		p.cache.result[i].Path = paths[p.cache.result[i].ID]
 	}
-	slices.SortStableFunc(p.cache.result, func(a, b Pinned) int { return domain.CompareFold(a.Path, b.Path) })
+	domain.SortFold(p.cache.result, func(f Pinned) string { return f.Path }, nil)
 }
 
 // Getters & Setters

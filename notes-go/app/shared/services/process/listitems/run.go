@@ -1,11 +1,9 @@
 package listitems
 
 import (
-	"cmp"
 	"context"
 	"errors"
 	"fmt"
-	"slices"
 	"strings"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
@@ -74,8 +72,8 @@ func (p *run) loadItems() {
 	}
 
 	p.SetErr(toDomainErr(query.Scan(p.ctx)))
-	slices.SortStableFunc(p.cache.result, func(a, b domain.Item) int {
-		return cmp.Or(boolOrder(b.Kind == domain.FOLDER)-boolOrder(a.Kind == domain.FOLDER), domain.CompareFold(string(a.Title), string(b.Title)))
+	domain.SortFold(p.cache.result, func(i domain.Item) string { return string(i.Title) }, func(a, b domain.Item) int {
+		return boolOrder(b.Kind == domain.FOLDER) - boolOrder(a.Kind == domain.FOLDER)
 	})
 }
 

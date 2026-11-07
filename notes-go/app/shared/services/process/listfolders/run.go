@@ -2,7 +2,6 @@ package listfolders
 
 import (
 	"context"
-	"slices"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
@@ -66,5 +65,5 @@ func (p *run) loadFolders() {
 			p.cache.result = append(p.cache.result, Folder{ID: id, Path: path})
 		}
 	}
-	slices.SortFunc(p.cache.result, func(a, b Folder) int { return domain.CompareFold(a.Path, b.Path) })
+	domain.SortFold(p.cache.result, func(f Folder) string { return f.Path }, nil)
 }
