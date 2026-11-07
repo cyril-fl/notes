@@ -54,6 +54,6 @@ func (p *run) loadFolders() {
 		SELECT i.id, paths.path
 		FROM items AS i JOIN paths ON paths.id = i.id
 		WHERE i.kind = ?
-		ORDER BY lower(paths.path)`, domain.FOLDER).
+		ORDER BY lower(paths.path)`, domain.UserID(p.ctx), domain.FOLDER).
 		Scan(p.ctx, &p.cache.result))
 }

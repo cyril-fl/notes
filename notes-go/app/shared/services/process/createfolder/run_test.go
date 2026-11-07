@@ -3,6 +3,7 @@ package createfolder
 import (
 	"context"
 	"errors"
+	"main.go/app/shared/services/testaccount"
 	"testing"
 
 	"main.go/app/shared/domain"
@@ -39,6 +40,7 @@ func TestCreateFolder(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	root := Process(ctx, tx, Input{Title: " Root "})
 	root.Run()

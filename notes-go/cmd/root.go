@@ -8,6 +8,7 @@ import (
 
 	"charm.land/huh/v2"
 	"github.com/spf13/cobra"
+	cmdaccount "main.go/app/cli/cmd-account"
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/createschema"
 	"main.go/app/shared/services/process/purgeitems"
@@ -48,7 +49,13 @@ var cmdRoot = &cobra.Command{
 		// Startup is the "cron": no daemon, the trash is emptied whenever the CLI runs.
 		purge := purgeitems.Process(cobra.Context(), postgrey.GetDb(), c.Trash.RetentionDays)
 		purge.Run()
-		return purge.GetErr()
+		if purge.HasErr() || noAccount[cobra] {
+			return purge.GetErr()
+		}
+
+		ctx, err := cmdaccount.WithAccount(cobra.Context())
+		cobra.SetContext(ctx)
+		return err
 	},
 	PersistentPostRunE: func(cobra *cobra.Command, args []string) error {
 		if db := postgrey.GetDb(); db != nil {

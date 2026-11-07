@@ -83,7 +83,7 @@ func (p *run) rewriteNotes(ctx context.Context, tx bun.Tx) error {
 		Column("item_id", "content").
 		Where(`item_id IN (
 			SELECT nt.note_id FROM notes_on_tags AS nt JOIN tags AS t ON t.id = nt.tag_id
-			WHERE lower(t.value) IN (SELECT lower(v) FROM unnest(?::text[]) AS v))`, pgdialect.Array(p.cache.values)).
+			WHERE t.user_id = ? AND lower(t.value) IN (SELECT lower(v) FROM unnest(?::text[]) AS v))`, domain.UserID(p.ctx), pgdialect.Array(p.cache.values)).
 		Scan(ctx)
 	if err != nil {
 		return err
@@ -118,7 +118,7 @@ func trashNote(ctx context.Context, tx bun.Tx, id string) error {
 func (p *run) deleteTags(ctx context.Context, tx bun.Tx) error {
 	return tx.NewDelete().
 		Model((*domain.Tag)(nil)).
-		Where("lower(value) IN (SELECT lower(v) FROM unnest(?::text[]) AS v)", pgdialect.Array(p.cache.values)).
+		Where("user_id = ? AND lower(value) IN (SELECT lower(v) FROM unnest(?::text[]) AS v)", domain.UserID(p.ctx), pgdialect.Array(p.cache.values)).
 		Returning("*").
 		Scan(ctx, &p.cache.result)
 }

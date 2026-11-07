@@ -101,8 +101,8 @@ func (p *run) replaceLinks() {
 	// A purged note is gone from metadata_notes: its link stays in the text, with no row.
 	if ids := wikilink.IDs(p.cache.content); len(ids) > 0 {
 		err = p.db.NewRaw(`
-			SELECT mn.item_id::text FROM metadata_notes AS mn
-			WHERE mn.item_id::text IN (?) AND mn.item_id <> ? ORDER BY 1`, bun.In(ids), p.input.ID).
+			SELECT mn.item_id::text FROM metadata_notes AS mn JOIN items AS i ON i.id = mn.item_id
+			WHERE mn.item_id::text IN (?) AND mn.item_id <> ? AND i.user_id = ? ORDER BY 1`, bun.In(ids), p.input.ID, domain.UserID(p.ctx)).
 			Scan(p.ctx, &p.cache.after)
 		if err != nil {
 			p.SetErr(err)
@@ -161,9 +161,9 @@ func (p *run) resolveWaiting() {
 
 		var waiting []Input
 		err := p.db.NewRaw(`
-			SELECT mn.item_id AS id, mn.content FROM metadata_notes AS mn
-			WHERE mn.item_id <> ? AND strpos(lower(mn.content), lower(?)) > 0`,
-			p.input.ID, title+"]]").
+			SELECT mn.item_id AS id, mn.content FROM metadata_notes AS mn JOIN items AS i ON i.id = mn.item_id
+			WHERE mn.item_id <> ? AND i.user_id = ? AND strpos(lower(mn.content), lower(?)) > 0`,
+			p.input.ID, domain.UserID(p.ctx), title+"]]").
 			Scan(p.ctx, &waiting)
 		if err != nil {
 			p.SetErr(err)
@@ -199,7 +199,7 @@ func Resolve(ctx context.Context, db bun.IDB, target string) (string, string, er
 		SELECT i.id, i.title FROM items AS i JOIN paths ON paths.id = i.id
 		WHERE i.kind = ? AND paths.path = ? LIMIT 2`
 	}
-	if err := db.NewRaw(query, domain.NOTE, target).Scan(ctx, &notes); err != nil || len(notes) != 1 {
+	if err := db.NewRaw(query, domain.UserID(ctx), domain.NOTE, target).Scan(ctx, &notes); err != nil || len(notes) != 1 {
 		return "", "", err
 	}
 	return notes[0].ID, notes[0].Title, nil

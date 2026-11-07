@@ -88,7 +88,7 @@ func (p *run) updateFolder() {
 		Model(&p.cache.item).
 		Set("title = ?", p.cache.input.Title).
 		Set("updated_at = current_timestamp").
-		Where("id = ? AND kind = ?", p.cache.input.ID, domain.FOLDER).
+		Where("id = ? AND kind = ? AND user_id = ?", p.cache.input.ID, domain.FOLDER, domain.UserID(p.ctx)).
 		Returning("id, parent_id, created_at, updated_at, kind, title").
 		Scan(p.ctx)
 	p.SetErr(toDomainErr(err, p.cache.input.ID))

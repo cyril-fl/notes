@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"main.go/app/shared/services/testaccount"
 	"slices"
 	"testing"
 	"time"
@@ -36,6 +37,7 @@ func TestPin(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	var ids []string
 	for _, content := range []string{"# Pinned", "# Trashed"} {

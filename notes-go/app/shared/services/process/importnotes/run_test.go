@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"main.go/app/shared/services/testaccount"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -34,6 +35,7 @@ func TestImportNotes(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	// Unique per run: the dev database may hold anything at the root.
 	create := createfolder.Process(ctx, tx, createfolder.Input{Title: fmt.Sprintf("import-%d", time.Now().UnixNano())})

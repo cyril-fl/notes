@@ -62,6 +62,7 @@ func (p *run) loadItems() {
 	query := p.db.NewSelect().
 		Model(&p.cache.result).
 		Column("id", "parent_id", "created_at", "updated_at", "kind", "title").
+		Where("user_id = ?", domain.UserID(p.ctx)).
 		OrderExpr("kind = ? DESC, lower(title)", domain.FOLDER)
 
 	if p.cache.parentID == "" {

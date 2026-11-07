@@ -3,6 +3,7 @@ package listrecent
 import (
 	"context"
 	"fmt"
+	"main.go/app/shared/services/testaccount"
 	"testing"
 	"time"
 
@@ -31,6 +32,7 @@ func TestListRecent(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	// Dated in the future so real notes rank after; current_timestamp would be the same for the whole transaction.
 	future := time.Now().AddDate(100, 0, 0)

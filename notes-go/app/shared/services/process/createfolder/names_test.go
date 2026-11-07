@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"main.go/app/shared/services/testaccount"
 	"testing"
 	"time"
 
@@ -37,6 +38,7 @@ func TestFolderNames(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	u := fmt.Sprintf("test-%d", time.Now().UnixNano())
 	parent := folder(t, ctx, tx, u, "")

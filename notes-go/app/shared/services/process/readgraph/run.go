@@ -70,7 +70,7 @@ func (p *run) loadNotes() {
 		FROM items AS i
 		JOIN paths ON paths.id = i.id
 		WHERE i.kind = ?
-		ORDER BY lower(paths.path), i.id`, domain.NOTE).
+		ORDER BY lower(paths.path), i.id`, domain.UserID(p.ctx), domain.NOTE).
 		Scan(p.ctx, &p.cache.result.Notes))
 }
 
@@ -98,6 +98,6 @@ func (p *run) loadLinks() {
 		FROM shared FULL JOIN linked ON linked.source = shared.source AND linked.target = shared.target
 		JOIN paths AS source_path ON source_path.id = coalesce(shared.source, linked.source)
 		JOIN paths AS target_path ON target_path.id = coalesce(shared.target, linked.target)
-		ORDER BY 1, 2`).
+		ORDER BY 1, 2`, domain.UserID(p.ctx)).
 		Scan(p.ctx, &p.cache.result.Links))
 }

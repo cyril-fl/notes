@@ -32,6 +32,7 @@ func (p *run) Run() {
 	p.registerModels()
 	p.createTables()
 	p.addColumns()
+	p.requireUsers()
 	p.renameDuplicateFolders()
 	p.createIndexes()
 	p.runInTx()
@@ -55,8 +56,48 @@ func (p *run) addColumns() {
 		if p.HasErr() {
 			return
 		}
-		_, err := tx.ExecContext(p.ctx, `ALTER TABLE metadata_folders ADD COLUMN IF NOT EXISTS pinned boolean NOT NULL DEFAULT false`)
-		p.SetErr(err)
+		for _, statement := range []string{
+			`ALTER TABLE metadata_folders ADD COLUMN IF NOT EXISTS pinned boolean NOT NULL DEFAULT false`,
+			// Accounts: rows made before them have none until the first account adopts them (adduser).
+			`ALTER TABLE items ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES users (id) ON DELETE CASCADE`,
+			`ALTER TABLE tags ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES users (id) ON DELETE CASCADE`,
+			// A parent of another account is refused like a missing one: the parent FK holds user_id too.
+			`ALTER TABLE items DROP CONSTRAINT IF EXISTS items_parent_id_parent_kind_fkey`,
+			`DO $$ BEGIN
+				IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'items_parent_user_fkey') THEN
+					ALTER TABLE items ADD CONSTRAINT items_id_kind_user_key UNIQUE (id, kind, user_id);
+					ALTER TABLE items ADD CONSTRAINT items_parent_user_fkey FOREIGN KEY (parent_id, parent_kind, user_id)
+						REFERENCES items (id, kind, user_id) ON DELETE CASCADE;
+				END IF;
+			END $$`,
+		} {
+			if p.HasErr() {
+				return
+			}
+			_, err := tx.ExecContext(p.ctx, statement)
+			p.SetErr(err)
+		}
+	})
+}
+
+// requireUsers makes user_id NOT NULL once every row has an account: at once on a new base, after adduser on an old one.
+// Only then the indexes unique for the whole base go (createIndexes makes them per account): an API still running the
+// code from before accounts relies on them until its base has one.
+func (p *run) requireUsers() {
+	p.cache.steps = append(p.cache.steps, func(tx bun.Tx) {
+		for table, legacyIndex := range map[string]string{"items": "ux_folders_parent_title", "tags": "ux_tags_value_lower"} {
+			if p.HasErr() {
+				return
+			}
+			_, err := tx.ExecContext(p.ctx, `
+				DO $$ BEGIN
+					IF NOT EXISTS (SELECT 1 FROM `+table+` WHERE user_id IS NULL) THEN
+						ALTER TABLE `+table+` ALTER COLUMN user_id SET NOT NULL;
+						DROP INDEX IF EXISTS `+legacyIndex+`;
+					END IF;
+				END $$`)
+			p.SetErr(err)
+		}
 	})
 }
 
@@ -70,7 +111,7 @@ func (p *run) renameDuplicateFolders() {
 		}
 		_, err := tx.NewRaw(`
 			WITH ranked AS (
-				SELECT id, row_number() OVER (PARTITION BY parent_id, lower(title) ORDER BY created_at, id) AS n
+				SELECT id, row_number() OVER (PARTITION BY user_id, parent_id, lower(title) ORDER BY created_at, id) AS n
 				FROM items WHERE kind = ? AND deleted_at IS NULL
 			)
 			UPDATE items SET title = items.title || ' (' || ranked.n || ')'
@@ -123,7 +164,11 @@ func (p *run) runStep(tx bun.Tx) {
 // kind / parent_kind below are DB-only columns (not in the structs): their DEFAULT is the only allowed value.
 func getTables(tx bun.Tx) []*bun.CreateTableQuery {
 	return []*bun.CreateTableQuery{
+		tx.NewCreateTable().Model((*domain.User)(nil)),
+		tx.NewCreateTable().Model((*domain.Session)(nil)).
+			ForeignKey(`("user_id") REFERENCES "users" ("id") ON DELETE CASCADE`),
 		tx.NewCreateTable().Model((*domain.Item)(nil)).
+			ForeignKey(`("user_id") REFERENCES "users" ("id") ON DELETE CASCADE`).
 			ColumnExpr("CONSTRAINT items_kind_check CHECK (kind IN (?))", bun.List([]domain.Kind{domain.NOTE, domain.FOLDER})).
 			ColumnExpr("parent_kind VARCHAR NOT NULL DEFAULT ? CHECK (parent_kind = ?)", domain.FOLDER, domain.FOLDER).
 			ColumnExpr("UNIQUE (id, kind)").
@@ -135,7 +180,8 @@ func getTables(tx bun.Tx) []*bun.CreateTableQuery {
 		tx.NewCreateTable().Model((*domain.MetadataFolder)(nil)).
 			ColumnExpr("kind VARCHAR NOT NULL DEFAULT ? CHECK (kind = ?)", domain.FOLDER, domain.FOLDER).
 			ForeignKey(`("item_id", "kind") REFERENCES "items" ("id", "kind") ON DELETE CASCADE`),
-		tx.NewCreateTable().Model((*domain.Tag)(nil)),
+		tx.NewCreateTable().Model((*domain.Tag)(nil)).
+			ForeignKey(`("user_id") REFERENCES "users" ("id") ON DELETE CASCADE`),
 		tx.NewCreateTable().Model((*domain.NoteTag)(nil)).
 			ForeignKey(`("tag_id") REFERENCES "tags" ("id") ON DELETE CASCADE`).
 			ForeignKey(`("note_id") REFERENCES "metadata_notes" ("item_id") ON DELETE CASCADE`),
@@ -150,10 +196,12 @@ func getIndexes(tx bun.Tx) []*bun.CreateIndexQuery {
 	return []*bun.CreateIndexQuery{
 		tx.NewCreateIndex().Model((*domain.Item)(nil)).Index("idx_items_parent_id").Column("parent_id"),
 		tx.NewCreateIndex().Model((*domain.NoteTag)(nil)).Index("idx_notes_on_tags_note_id").Column("note_id"),
-		tx.NewCreateIndex().Model((*domain.Tag)(nil)).Index("ux_tags_value_lower").Unique().ColumnExpr("lower(value)"),
+		tx.NewCreateIndex().Model((*domain.User)(nil)).Index("ux_users_name_lower").Unique().ColumnExpr("lower(name)"),
+		tx.NewCreateIndex().Model((*domain.Item)(nil)).Index("idx_items_user_id").Column("user_id"),
+		tx.NewCreateIndex().Model((*domain.Tag)(nil)).Index("ux_tags_user_value_lower").Unique().ColumnExpr("user_id, lower(value)"),
 		// A root folder has no parent_id: coalesce gives the root one, so its folders are unique too.
 		tx.NewCreateIndex().Model((*domain.Item)(nil)).Index(domain.FolderNameIndex).Unique().
-			ColumnExpr("coalesce(parent_id, '00000000-0000-0000-0000-000000000000'), lower(title)").
+			ColumnExpr("user_id, coalesce(parent_id, '00000000-0000-0000-0000-000000000000'), lower(title)").
 			Where("kind = ? AND deleted_at IS NULL", domain.FOLDER),
 		// The primary key (source_id, target_id) only covers the links of a note, not its backlinks.
 		tx.NewCreateIndex().Model((*domain.NoteLink)(nil)).Index("idx_notes_on_links_target_id").Column("target_id"),

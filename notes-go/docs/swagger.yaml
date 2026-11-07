@@ -33,6 +33,26 @@ components:
       required:
       - content
       type: object
+    createsession.Input:
+      properties:
+        name:
+          type: string
+        password:
+          type: string
+      required:
+      - name
+      - password
+      type: object
+    createsession.Result:
+      properties:
+        expires_at:
+          type: string
+        user:
+          $ref: '#/components/schemas/domain.User'
+      required:
+      - expires_at
+      - user
+      type: object
     createtag.Body:
       properties:
         values:
@@ -82,6 +102,20 @@ components:
       required:
       - id
       - value
+      type: object
+    domain.User:
+      properties:
+        created_at:
+          type: string
+        id:
+          type: string
+        name:
+          description: unique case-insensitive, see createschema
+          type: string
+      required:
+      - created_at
+      - id
+      - name
       type: object
     editfolder.Body:
       properties:
@@ -713,6 +747,89 @@ paths:
       summary: List the direct children of a folder, or of the root
       tags:
       - items
+  /api/login:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createsession.Input'
+              description: body
+              summary: body
+        description: body
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/createsession.Result'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "429":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Too Many Requests
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Log in
+      tags:
+      - account
+  /api/logout:
+    post:
+      responses:
+        "204":
+          description: No Content
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Log out
+      tags:
+      - account
+  /api/me:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/domain.User'
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+      summary: The account logged in
+      tags:
+      - account
   /api/move:
     post:
       requestBody:

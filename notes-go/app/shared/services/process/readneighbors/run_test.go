@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"main.go/app/shared/services/testaccount"
 	"slices"
 	"testing"
 	"time"
@@ -34,6 +35,7 @@ func TestNeighbors(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	// Unique per run so real data in the DB cannot collide.
 	a, b, c := fmt.Sprintf("test-%d-a", time.Now().UnixNano()), fmt.Sprintf("test-%d-b", time.Now().UnixNano()), fmt.Sprintf("test-%d-c", time.Now().UnixNano())

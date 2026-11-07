@@ -71,7 +71,8 @@ func (p *run) loadNotes(ctx context.Context, tx bun.Tx) error {
 		FROM metadata_notes AS mn
 		LEFT JOIN notes_on_tags AS nt ON nt.note_id = mn.item_id
 		LEFT JOIN tags AS t ON t.id = nt.tag_id
-		GROUP BY mn.item_id, mn.content`).
+		WHERE mn.item_id IN (SELECT id FROM items WHERE user_id = ?)
+		GROUP BY mn.item_id, mn.content`, domain.UserID(p.ctx)).
 		Scan(ctx, &p.cache.notes)
 }
 
@@ -98,7 +99,7 @@ func (p *run) syncNote(ctx context.Context, tx bun.Tx, current note) error {
 	if err != nil {
 		return err
 	}
-	return linkTags(ctx, tx, current.ID, tags)
+	return linkTags(p.ctx, tx, current.ID, tags)
 }
 
 // Helpers
@@ -112,8 +113,8 @@ func linkTags(ctx context.Context, tx bun.Tx, id string, values []string) error 
 
 	_, err := tx.NewRaw(`
 		INSERT INTO notes_on_tags (tag_id, note_id)
-		SELECT t.id, ? FROM tags AS t WHERE lower(t.value) IN (SELECT lower(v) FROM unnest(?::text[]) AS v)
-		ON CONFLICT DO NOTHING`, id, pgdialect.Array(values)).
+		SELECT t.id, ? FROM tags AS t WHERE t.user_id = ? AND lower(t.value) IN (SELECT lower(v) FROM unnest(?::text[]) AS v)
+		ON CONFLICT DO NOTHING`, id, domain.UserID(ctx), pgdialect.Array(values)).
 		Exec(ctx)
 	return err
 }

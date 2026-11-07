@@ -5,6 +5,7 @@ import (
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
+	"main.go/app/shared/domain"
 )
 
 // TagCount is a tag with the number of live notes carrying it.
@@ -52,7 +53,8 @@ func (p *run) countTags() {
 		FROM tags AS t
 		LEFT JOIN notes_on_tags AS nt ON nt.tag_id = t.id
 		LEFT JOIN items AS i ON i.id = nt.note_id AND i.deleted_at IS NULL
+		WHERE t.user_id = ?
 		GROUP BY t.id, t.value
-		ORDER BY notes DESC, lower(t.value)`).
+		ORDER BY notes DESC, lower(t.value)`, domain.UserID(p.ctx)).
 		Scan(p.ctx, &p.cache.result))
 }

@@ -1,4 +1,4 @@
-// Package guard keeps web pages away from an API that has no authentication.
+// Package guard keeps the web pages of other sites away from the API: they could use the session cookie.
 package guard
 
 import (
@@ -52,9 +52,12 @@ func New(origin string, next http.Handler) http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.WriteHeader(http.StatusNoContent)
 		default:
 			w.Header().Set("Access-Control-Allow-Origin", origin)
+			// The web app runs on another port in development: its requests carry the session cookie.
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			next.ServeHTTP(w, r)
 		}
 	})

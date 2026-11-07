@@ -3,6 +3,7 @@ package deleteitems
 import (
 	"context"
 	"errors"
+	"main.go/app/shared/services/testaccount"
 	"testing"
 	"time"
 
@@ -41,6 +42,7 @@ func TestDeleteFolderTree(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	folder := func(parentID string) string {
 		p := createfolder.Process(ctx, tx, createfolder.Input{Title: "folder", ParentID: parentID})

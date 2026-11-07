@@ -62,6 +62,6 @@ func (p *run) loadNotes() {
 		WHERE i.kind = ?
 		ORDER BY updated_at DESC, lower(paths.path)
 		LIMIT ?`,
-		domain.NOTE, limit).
+		domain.UserID(p.ctx), domain.NOTE, limit).
 		Scan(p.ctx, &p.cache.result))
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"main.go/app/shared/services/testaccount"
 	"testing"
 	"time"
 
@@ -43,12 +44,13 @@ func TestMoveItems(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	// Unique per run: real root folders could have these names, and a folder name is unique in its folder.
 	u := fmt.Sprintf("test-%d", time.Now().UnixNano())
-	a := folder(t, tx, u+"-A", "")
-	b := folder(t, tx, u+"-B", "")
-	child := folder(t, tx, "Child", b)
+	a := folder(t, ctx, tx, u+"-A", "")
+	b := folder(t, ctx, tx, u+"-B", "")
+	child := folder(t, ctx, tx, "Child", b)
 	note := createnote.Process(ctx, tx, createnote.Input{Content: "C"})
 	note.Run()
 	if note.HasErr() {
@@ -95,9 +97,9 @@ func TestMoveItems(t *testing.T) {
 	}
 }
 
-func folder(t *testing.T, db bun.IDB, title, parentID string) string {
+func folder(t *testing.T, ctx context.Context, db bun.IDB, title, parentID string) string {
 	t.Helper()
-	process := createfolder.Process(context.Background(), db, createfolder.Input{Title: title, ParentID: parentID})
+	process := createfolder.Process(ctx, db, createfolder.Input{Title: title, ParentID: parentID})
 	process.Run()
 	if process.HasErr() {
 		t.Fatalf("folder %s: %v", title, process.GetErr())

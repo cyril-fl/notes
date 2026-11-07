@@ -2,6 +2,7 @@ package synctitles
 
 import (
 	"context"
+	"main.go/app/shared/services/testaccount"
 	"testing"
 
 	"main.go/app/shared/domain"
@@ -29,6 +30,7 @@ func TestSyncTitles(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	// Notes as they were before: a title typed apart from the text, or none.
 	seeds := []struct{ content, title, wantContent, wantTitle string }{

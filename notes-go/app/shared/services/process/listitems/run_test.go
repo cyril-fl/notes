@@ -3,6 +3,7 @@ package listitems
 import (
 	"context"
 	"errors"
+	"main.go/app/shared/services/testaccount"
 	"slices"
 	"testing"
 
@@ -32,6 +33,7 @@ func TestListItems(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	parent := createfolder.Process(ctx, tx, createfolder.Input{Title: "Parent"})
 	parent.Run()

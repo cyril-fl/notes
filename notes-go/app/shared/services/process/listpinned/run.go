@@ -45,7 +45,7 @@ func (p *run) Run() {
 		LEFT JOIN metadata_notes AS mn ON mn.item_id = i.id
 		LEFT JOIN metadata_folders AS mf ON mf.item_id = i.id
 		WHERE mn.pinned OR mf.pinned
-		ORDER BY lower(paths.path), i.id`).
+		ORDER BY lower(paths.path), i.id`, domain.UserID(p.ctx)).
 		Scan(p.ctx, &p.cache.result))
 }
 

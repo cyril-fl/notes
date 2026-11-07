@@ -22,7 +22,7 @@ var (
 	ErrParentNotFound = errors.New("parent folder not found")
 )
 
-// foreignKeyViolation is the Postgres SQLSTATE raised here by items_parent_id_parent_kind_fkey.
+// foreignKeyViolation is the Postgres SQLSTATE raised here by items_parent_user_fkey (a missing parent, or another account's).
 const foreignKeyViolation = "23503"
 
 // Input is a note as the user gave it: Tags are written into Content as #tags, the title comes from Content.
@@ -115,7 +115,7 @@ func (p *run) saveNote() {
 }
 
 func (p *run) insertItem(ctx context.Context, tx bun.Tx) error {
-	p.cache.item = domain.Item{Kind: domain.NOTE, Title: p.cache.title}
+	p.cache.item = domain.Item{UserID: domain.UserID(p.ctx), Kind: domain.NOTE, Title: p.cache.title}
 	if p.cache.input.ParentID != "" {
 		p.cache.item.ParentID = &p.cache.input.ParentID
 	}
@@ -150,7 +150,7 @@ func (p *run) linkTags(ctx context.Context, tx bun.Tx) error {
 	// createtag only returns new tags: select again to get the ids of existing ones too.
 	err := tx.NewSelect().
 		Model(&p.cache.tags).
-		Where("lower(value) IN (SELECT lower(v) FROM unnest(?::text[]) AS v)", pgdialect.Array(p.cache.input.Tags)).
+		Where("user_id = ? AND lower(value) IN (SELECT lower(v) FROM unnest(?::text[]) AS v)", domain.UserID(p.ctx), pgdialect.Array(p.cache.input.Tags)).
 		Scan(ctx)
 	if err != nil {
 		return err

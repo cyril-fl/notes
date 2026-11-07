@@ -2,6 +2,7 @@ package synctags
 
 import (
 	"context"
+	"main.go/app/shared/services/testaccount"
 	"slices"
 	"strings"
 	"testing"
@@ -32,6 +33,7 @@ func TestSyncBothWays(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	seed := createnote.Process(ctx, tx, createnote.Input{Content: "texte"})
 	seed.Run()

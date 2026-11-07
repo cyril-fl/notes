@@ -3,6 +3,7 @@ package counttags
 import (
 	"context"
 	"fmt"
+	"main.go/app/shared/services/testaccount"
 	"testing"
 	"time"
 
@@ -32,6 +33,7 @@ func TestCountTags(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	used, unused := fmt.Sprintf("test-%d-used", time.Now().UnixNano()), fmt.Sprintf("test-%d-unused", time.Now().UnixNano())
 	seed := createtag.Process(ctx, tx, []string{unused})

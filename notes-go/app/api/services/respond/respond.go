@@ -12,6 +12,7 @@ import (
 	"main.go/app/shared/services/hashtag"
 	"main.go/app/shared/services/process/createfolder"
 	"main.go/app/shared/services/process/createnote"
+	"main.go/app/shared/services/process/createsession"
 	"main.go/app/shared/services/process/createtag"
 	"main.go/app/shared/services/process/deleteitems"
 	"main.go/app/shared/services/process/deletetag"
@@ -23,6 +24,7 @@ import (
 	"main.go/app/shared/services/process/moveitems"
 	"main.go/app/shared/services/process/pinnote"
 	"main.go/app/shared/services/process/readitem"
+	"main.go/app/shared/services/process/readsession"
 	"main.go/app/shared/services/process/readtag"
 	"main.go/app/shared/services/process/restoreitems"
 	"main.go/app/shared/services/process/searchnotes"
@@ -53,6 +55,9 @@ var statuses = []struct {
 		readtag.ErrNoValue,
 		restoreitems.ErrNoValue, restoreitems.ErrInvalidID,
 		searchnotes.ErrNoValue,
+	}},
+	{http.StatusUnauthorized, []error{
+		createsession.ErrBadCredentials, readsession.ErrNoSession,
 	}},
 	{http.StatusNotFound, []error{
 		editfolder.ErrNotFound, editnote.ErrNotFound, emptytrash.ErrNotFound, edittag.ErrNotFound, pinnote.ErrNotFound, readitem.ErrNotFound, readtag.ErrNotFound,

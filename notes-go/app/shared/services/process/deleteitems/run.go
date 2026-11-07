@@ -76,9 +76,9 @@ func (p *run) markDeleted() {
 		Set("deleted_at = current_timestamp").
 		Where(`id IN (
 			WITH RECURSIVE tree AS (
-				SELECT id FROM items WHERE kind = ? AND id IN (?) AND deleted_at IS NULL
+				SELECT id FROM items WHERE kind = ? AND id IN (?) AND user_id = ? AND deleted_at IS NULL
 				UNION SELECT child.id FROM items AS child JOIN tree ON child.parent_id = tree.id
-			) SELECT id FROM tree)`, p.kind, bun.In(p.cache.ids)).
+			) SELECT id FROM tree)`, p.kind, bun.In(p.cache.ids), domain.UserID(p.ctx)).
 		Returning("id, kind, title").
 		Scan(p.ctx, &p.cache.result))
 }

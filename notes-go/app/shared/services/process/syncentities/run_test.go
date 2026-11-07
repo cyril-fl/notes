@@ -2,6 +2,7 @@ package syncentities
 
 import (
 	"context"
+	"main.go/app/shared/services/testaccount"
 	"testing"
 
 	"main.go/app/shared/domain"
@@ -29,6 +30,7 @@ func TestSyncEntities(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	// As the editor saved them before the fix: the title follows the text, entities included.
 	seeds := []struct{ content, wantContent, wantTitle string }{

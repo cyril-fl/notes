@@ -122,7 +122,7 @@ func (p *run) saveNote() {
 
 // readOldTitle finds nothing for an unknown id: updateItem then reports it.
 func (p *run) readOldTitle(ctx context.Context, tx bun.Tx) error {
-	err := tx.NewRaw("SELECT coalesce(title, '') FROM items WHERE id::text = ? AND kind = ?", p.cache.input.ID, domain.NOTE).Scan(ctx, &p.cache.oldTitle)
+	err := tx.NewRaw("SELECT coalesce(title, '') FROM items WHERE id::text = ? AND kind = ? AND user_id = ?", p.cache.input.ID, domain.NOTE, domain.UserID(p.ctx)).Scan(ctx, &p.cache.oldTitle)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil
 	}
@@ -135,7 +135,7 @@ func (p *run) updateItem(ctx context.Context, tx bun.Tx) error {
 		Model(&p.cache.item).
 		Set("title = NULLIF(?, '')", notetitle.From(p.cache.input.Content)). // NULL = untitled, like createnote's nullzero
 		Set("updated_at = current_timestamp").
-		Where("id = ? AND kind = ?", p.cache.input.ID, domain.NOTE).
+		Where("id = ? AND kind = ? AND user_id = ?", p.cache.input.ID, domain.NOTE, domain.UserID(p.ctx)).
 		Returning("id, parent_id, created_at, updated_at, kind, title").
 		Scan(ctx)
 	return toDomainErr(err, p.cache.input.ID)
@@ -166,7 +166,7 @@ func (p *run) replaceTags(ctx context.Context, tx bun.Tx) error {
 	// createtag only returns new tags: select again to get the ids of existing ones too.
 	err = tx.NewSelect().
 		Model(&p.cache.tags).
-		Where("lower(value) IN (SELECT lower(v) FROM unnest(?::text[]) AS v)", pgdialect.Array(p.cache.input.Tags)).
+		Where("user_id = ? AND lower(value) IN (SELECT lower(v) FROM unnest(?::text[]) AS v)", domain.UserID(p.ctx), pgdialect.Array(p.cache.input.Tags)).
 		Scan(ctx)
 	if err != nil {
 		return err

@@ -3,6 +3,7 @@ package restoreitems
 import (
 	"context"
 	"errors"
+	"main.go/app/shared/services/testaccount"
 	"testing"
 
 	"main.go/app/shared/domain"
@@ -42,6 +43,7 @@ func TestTrashAndRestore(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	folder := func(title, parentID string) string {
 		process := createfolder.Process(ctx, tx, createfolder.Input{Title: title, ParentID: parentID})

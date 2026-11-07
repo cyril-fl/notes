@@ -51,8 +51,8 @@ func (p *run) Run() {
 	result, err := p.db.NewRaw(`
 		UPDATE ? AS m SET pinned = ?
 		FROM items AS i
-		WHERE i.id = m.item_id AND i.id::text = ? AND i.kind = ? AND i.deleted_at IS NULL`,
-		bun.Ident(table), p.pinned, p.id, p.kind).
+		WHERE i.id = m.item_id AND i.id::text = ? AND i.kind = ? AND i.user_id = ? AND i.deleted_at IS NULL`,
+		bun.Ident(table), p.pinned, p.id, p.kind, domain.UserID(p.ctx)).
 		Exec(p.ctx)
 	if err != nil {
 		p.SetErr(err)

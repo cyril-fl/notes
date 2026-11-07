@@ -61,7 +61,7 @@ func (p *run) loadTrash() {
 			) SELECT count(*) FROM inside) AS inside
 		FROM items AS i
 		LEFT JOIN items AS parent ON parent.id = i.parent_id
-		WHERE i.deleted_at IS NOT NULL AND parent.deleted_at IS DISTINCT FROM i.deleted_at
-		ORDER BY i.deleted_at DESC, lower(i.title)`).
+		WHERE i.user_id = ? AND i.deleted_at IS NOT NULL AND parent.deleted_at IS DISTINCT FROM i.deleted_at
+		ORDER BY i.deleted_at DESC, lower(i.title)`, domain.UserID(p.ctx)).
 		Scan(p.ctx, &p.cache.result))
 }

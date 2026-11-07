@@ -2,6 +2,7 @@ package purgeitems
 
 import (
 	"context"
+	"main.go/app/shared/services/testaccount"
 	"testing"
 
 	"github.com/uptrace/bun"
@@ -40,6 +41,7 @@ func TestPurgeOldOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	ids := make([]string, 3) // live, deleted now, deleted 40 days ago
 	for i := range ids {

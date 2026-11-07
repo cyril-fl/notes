@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"main.go/app/shared/services/testaccount"
 	"testing"
 	"time"
 
@@ -43,6 +44,7 @@ func TestDeleteIgnoresCaseAndUnknown(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	// Unique per run so real data in the DB cannot collide.
 	value := fmt.Sprintf("test-%d", time.Now().UnixNano())

@@ -92,7 +92,7 @@ func (p *run) searchNotes() {
 		JOIN paths ON paths.id = i.id
 		WHERE i.kind = ? AND (i.title ILIKE ? OR mn.content ILIKE ?)
 		ORDER BY coalesce(i.title ILIKE ?, false) DESC, lower(paths.path)`,
-		domain.NOTE, pattern, pattern, pattern).
+		domain.UserID(p.ctx), domain.NOTE, pattern, pattern, pattern).
 		Scan(p.ctx, &p.cache.rows))
 }
 

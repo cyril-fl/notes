@@ -3,6 +3,7 @@ package synclinks
 import (
 	"context"
 	"fmt"
+	"main.go/app/shared/services/testaccount"
 	"testing"
 	"time"
 
@@ -30,6 +31,7 @@ func TestSyncLinks(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	u := fmt.Sprintf("test-%d", time.Now().UnixNano())
 	var notes [2]string

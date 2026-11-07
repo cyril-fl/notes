@@ -287,6 +287,39 @@ commands:
         value: ""
         usage: "Origin of the web app allowed to call the API (none when empty)"
         type: "string"
+  login:
+    use: "login"
+    short: "Log the CLI in to an account"
+    long: "Ask the account's name and password, and keep the session in the user's config folder (readable by the user only). Every other command then acts for this account."
+    example: "notes login"
+  logout:
+    use: "logout"
+    short: "Log the CLI out"
+  user:
+    use: "user"
+    short: "Manage the accounts (admin, on the server)"
+  user-add:
+    use: "add <name>"
+    short: "Create an account"
+    long: "Create an account; the password is asked twice, or read from stdin with --password-stdin. The first account takes the notes, folders and tags made before accounts existed."
+    example: "notes user add cyril\necho \"$PASSWORD\" | notes user add cyril --password-stdin"
+    args:
+      - name: "password-stdin"
+        shorthand: ""
+        value: ""
+        usage: "Read the password from the first line of stdin"
+        type: "bool"
+  reset-password:
+    use: "reset-password <name>"
+    short: "Give an account a new password (admin, on the server)"
+    long: "Give an account a new password, for a forgotten one, and log all its devices out. Run it on the server: it needs access to the base."
+    example: "notes reset-password cyril"
+    args:
+      - name: "password-stdin"
+        shorthand: ""
+        value: ""
+        usage: "Read the password from the first line of stdin"
+        type: "bool"
   root:
     short: "The root of the notes system"
     long: "The root of the notes system, used to access the main functionality"

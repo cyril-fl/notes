@@ -4,6 +4,7 @@ package linknotes_test
 import (
 	"context"
 	"fmt"
+	"main.go/app/shared/services/testaccount"
 	"slices"
 	"strings"
 	"testing"
@@ -38,6 +39,7 @@ func TestLinks(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	// Unique per run so real notes cannot match the titles.
 	u := fmt.Sprintf("test-%d", time.Now().UnixNano())

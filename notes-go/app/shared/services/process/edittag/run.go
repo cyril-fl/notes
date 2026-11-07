@@ -93,7 +93,7 @@ func (p *run) updateTag(ctx context.Context, tx bun.Tx) error {
 	err := tx.NewUpdate().
 		Model((*domain.Tag)(nil)).
 		Set("value = ?", p.cache.to).
-		Where("lower(value) = lower(?)", p.cache.from).
+		Where("user_id = ? AND lower(value) = lower(?)", domain.UserID(p.ctx), p.cache.from).
 		Returning("*").
 		Scan(ctx, &p.cache.result)
 

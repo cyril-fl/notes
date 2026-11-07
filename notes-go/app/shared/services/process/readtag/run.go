@@ -82,7 +82,7 @@ func (p *run) loadTag() {
 
 	err := p.db.NewSelect().
 		Model(&p.cache.result.Tag).
-		Where("lower(value) = lower(?)", p.cache.value).
+		Where("user_id = ? AND lower(value) = lower(?)", domain.UserID(p.ctx), p.cache.value).
 		Scan(p.ctx)
 	if errors.Is(err, sql.ErrNoRows) {
 		err = fmt.Errorf("%w: %q", ErrNotFound, p.cache.value)
@@ -102,6 +102,6 @@ func (p *run) loadNotes() {
 		JOIN items AS i ON i.id = nt.note_id
 		JOIN paths ON paths.id = i.id
 		WHERE nt.tag_id = ?
-		ORDER BY lower(paths.path)`, p.cache.result.Tag.ID).
+		ORDER BY lower(paths.path)`, domain.UserID(p.ctx), p.cache.result.Tag.ID).
 		Scan(p.ctx, &p.cache.result.Notes))
 }

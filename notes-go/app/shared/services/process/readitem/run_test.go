@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"main.go/app/shared/services/testaccount"
 	"testing"
 	"time"
 
@@ -59,16 +60,17 @@ func TestPathAndChildren(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	// Unique per run: a real root folder could be called A, and a folder name is unique in its folder.
 	root := fmt.Sprintf("test-%d", time.Now().UnixNano())
-	a := folder(t, tx, root, "")
-	b := folder(t, tx, "B", a)
+	a := folder(t, ctx, tx, root, "")
+	b := folder(t, ctx, tx, "B", a)
 	note := createnote.Process(ctx, tx, createnote.Input{Content: "# N", ParentID: a})
 	note.Run()
 	untitled := createnote.Process(ctx, tx, createnote.Input{Content: "```\ncode\n```", ParentID: b})
 	untitled.Run()
-	trashed := folder(t, tx, "Trashed", a)
+	trashed := folder(t, ctx, tx, "Trashed", a)
 	trash := deleteitems.Process(ctx, tx, domain.FOLDER, []string{trashed})
 	trash.Run()
 	if note.HasErr() || untitled.HasErr() || trash.HasErr() {
@@ -90,9 +92,9 @@ func TestPathAndChildren(t *testing.T) {
 	}
 }
 
-func folder(t *testing.T, db bun.IDB, title, parentID string) string {
+func folder(t *testing.T, ctx context.Context, db bun.IDB, title, parentID string) string {
 	t.Helper()
-	process := createfolder.Process(context.Background(), db, createfolder.Input{Title: title, ParentID: parentID})
+	process := createfolder.Process(ctx, db, createfolder.Input{Title: title, ParentID: parentID})
 	process.Run()
 	if process.HasErr() {
 		t.Fatalf("folder %s: %v", title, process.GetErr())

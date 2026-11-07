@@ -3,6 +3,7 @@ package millflagseditfolder
 import (
 	"context"
 	"errors"
+	"main.go/app/shared/services/testaccount"
 	"testing"
 
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
@@ -25,6 +26,7 @@ func TestResolve(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	seed := createfolder.Process(ctx, tx, createfolder.Input{Title: "Old"})
 	seed.Run()

@@ -65,7 +65,8 @@ func (p *run) loadNotes(ctx context.Context, tx bun.Tx) error {
 	return tx.NewRaw(`
 		SELECT i.id, coalesce(i.title, '') AS title, mn.content
 		FROM items AS i
-		JOIN metadata_notes AS mn ON mn.item_id = i.id`).
+		JOIN metadata_notes AS mn ON mn.item_id = i.id
+		WHERE i.user_id = ?`, domain.UserID(p.ctx)).
 		Scan(ctx, &p.cache.notes)
 }
 

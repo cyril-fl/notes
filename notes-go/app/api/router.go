@@ -17,6 +17,7 @@ import (
 	apiedittag "main.go/app/api/edit-tag"
 	apiexport "main.go/app/api/export"
 	apiimport "main.go/app/api/import"
+	apilogin "main.go/app/api/login"
 	apimove "main.go/app/api/move"
 	apireadfinder "main.go/app/api/read-finder"
 	apireadfolder "main.go/app/api/read-folder"
@@ -28,15 +29,20 @@ import (
 	apireadtrash "main.go/app/api/read-trash"
 	apirestore "main.go/app/api/restore"
 	apisearch "main.go/app/api/search"
+	"main.go/app/api/services/auth"
 	"main.go/app/api/services/guard"
 )
 
 // @title    Notes API
 // @version  1.0
 
-// New gives the API, reachable by web pages from origin only (none when empty).
+// New gives the API, reachable by web pages from origin only (none when empty), and by logged-in accounts only.
 func New(db bun.IDB, origin string) http.Handler {
 	mux := http.NewServeMux()
+
+	mux.Handle("POST /api/login", apilogin.Handler(db))
+	mux.Handle("POST /api/logout", apilogin.Logout(db))
+	mux.Handle("GET /api/me", apilogin.Me(db))
 
 	mux.Handle("POST /api/notes", apicreatenote.Handler(db))
 	mux.Handle("GET /api/notes/{id}", apireadnote.Handler(db))
@@ -71,5 +77,5 @@ func New(db bun.IDB, origin string) http.Handler {
 	mux.Handle("GET /api/export", apiexport.Handler(db))
 	mux.Handle("POST /api/import", apiimport.Handler(db))
 
-	return guard.New(origin, mux)
+	return guard.New(origin, auth.New(db, mux))
 }

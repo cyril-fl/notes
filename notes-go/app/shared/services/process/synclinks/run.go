@@ -5,6 +5,7 @@ import (
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
+	"main.go/app/shared/domain"
 	"main.go/app/shared/services/process/linknotes"
 )
 
@@ -33,7 +34,7 @@ func Process(ctx context.Context, db bun.IDB) *run {
 func (p *run) Run() {
 	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
 		// No title: every note gets its own links here, relinking the notes naming it would count them twice.
-		err := tx.NewRaw(`SELECT mn.item_id AS id, mn.content FROM metadata_notes AS mn`).
+		err := tx.NewRaw(`SELECT mn.item_id AS id, mn.content FROM metadata_notes AS mn JOIN items AS i ON i.id = mn.item_id WHERE i.user_id = ?`, domain.UserID(p.ctx)).
 			Scan(ctx, &p.cache.notes)
 		if err != nil {
 			return err

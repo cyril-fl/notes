@@ -2,6 +2,7 @@ package millflagseditnote
 
 import (
 	"context"
+	"main.go/app/shared/services/testaccount"
 	"slices"
 	"testing"
 
@@ -39,6 +40,7 @@ func TestResolveFromFlags(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	seed := createnote.Process(ctx, tx, createnote.Input{Content: "old", Tags: []string{"test-edit-a", "test-edit-b"}})
 	seed.Run()

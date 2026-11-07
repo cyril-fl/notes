@@ -17,7 +17,7 @@ var (
 	ErrParentNotFound = errors.New("parent folder not found")
 )
 
-// foreignKeyViolation is the Postgres SQLSTATE raised here by items_parent_id_parent_kind_fkey.
+// foreignKeyViolation is the Postgres SQLSTATE raised here by items_parent_user_fkey (a missing parent, or another account's).
 const foreignKeyViolation = "23503"
 
 // Input is a folder as the user gave it: an empty ParentID puts it at the root.
@@ -90,7 +90,7 @@ func (p *run) saveFolder() {
 }
 
 func (p *run) insertItem(ctx context.Context, tx bun.Tx) error {
-	p.cache.item = domain.Item{Kind: domain.FOLDER, Title: p.cache.input.Title}
+	p.cache.item = domain.Item{UserID: domain.UserID(p.ctx), Kind: domain.FOLDER, Title: p.cache.input.Title}
 	if p.cache.input.ParentID != "" {
 		p.cache.item.ParentID = &p.cache.input.ParentID
 	}

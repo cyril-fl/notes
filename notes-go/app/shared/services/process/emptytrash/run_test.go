@@ -3,6 +3,7 @@ package emptytrash
 import (
 	"context"
 	"errors"
+	"main.go/app/shared/services/testaccount"
 	"testing"
 
 	"github.com/uptrace/bun"
@@ -32,6 +33,7 @@ func TestEmptyTrashOfIDs(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	var ids []string
 	for _, content := range []string{"# Purged", "# Kept in the trash", "# Live"} {

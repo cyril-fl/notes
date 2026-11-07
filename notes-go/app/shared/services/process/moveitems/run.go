@@ -102,7 +102,7 @@ func (p *run) checkParent(ctx context.Context, tx bun.Tx) error {
 
 	exists, err := tx.NewSelect().
 		Model((*domain.Item)(nil)).
-		Where("id = ? AND kind = ?", p.cache.input.ParentID, domain.FOLDER).
+		Where("id = ? AND kind = ? AND user_id = ?", p.cache.input.ParentID, domain.FOLDER, domain.UserID(p.ctx)).
 		Exists(ctx)
 	if err == nil && !exists {
 		err = fmt.Errorf("%w: %q", ErrParentNotFound, p.cache.input.ParentID)
@@ -141,7 +141,7 @@ func (p *run) updateItems(ctx context.Context, tx bun.Tx) error {
 		Model((*domain.Item)(nil)).
 		Set("parent_id = ?", parentID).
 		Set("updated_at = current_timestamp").
-		Where("id IN (?)", bun.In(p.cache.input.IDs)).
+		Where("id IN (?) AND user_id = ?", bun.In(p.cache.input.IDs), domain.UserID(p.ctx)).
 		Returning("id, parent_id, created_at, updated_at, kind, title").
 		Scan(ctx, &p.cache.result)
 }

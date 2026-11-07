@@ -3,6 +3,7 @@ package readgraph
 import (
 	"context"
 	"fmt"
+	"main.go/app/shared/services/testaccount"
 	"slices"
 	"testing"
 	"time"
@@ -33,6 +34,7 @@ func TestGraph(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	folder := createfolder.Process(ctx, tx, createfolder.Input{Title: "Gone"})
 	folder.Run()

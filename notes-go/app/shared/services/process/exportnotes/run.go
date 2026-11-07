@@ -74,7 +74,7 @@ func (p *run) checkFolder() {
 	if p.folderID == "" {
 		return
 	}
-	exists, err := p.db.NewSelect().Model((*domain.Item)(nil)).Where("id = ? AND kind = ?", p.folderID, domain.FOLDER).Exists(p.ctx)
+	exists, err := p.db.NewSelect().Model((*domain.Item)(nil)).Where("id = ? AND kind = ? AND user_id = ?", p.folderID, domain.FOLDER, domain.UserID(p.ctx)).Exists(p.ctx)
 	if err == nil && !exists {
 		err = fmt.Errorf("%w: %q", ErrFolderNotFound, p.folderID)
 	}
@@ -89,7 +89,7 @@ func (p *run) loadTree() {
 	var items []item
 	err := p.db.NewRaw(`
 		WITH RECURSIVE tree AS (
-			SELECT id FROM items WHERE deleted_at IS NULL AND (CASE WHEN ? = '' THEN parent_id IS NULL ELSE parent_id::text = ? END)
+			SELECT id FROM items WHERE deleted_at IS NULL AND user_id = ? AND (CASE WHEN ? = '' THEN parent_id IS NULL ELSE parent_id::text = ? END)
 			UNION ALL SELECT child.id FROM items AS child JOIN tree ON child.parent_id = tree.id WHERE child.deleted_at IS NULL
 		)
 		SELECT i.id, coalesce(i.parent_id::text, '') AS parent_id, i.kind, coalesce(i.title, '') AS title, coalesce(mn.content, '') AS content
@@ -97,7 +97,7 @@ func (p *run) loadTree() {
 		JOIN items AS i ON i.id = tree.id
 		LEFT JOIN metadata_notes AS mn ON mn.item_id = i.id
 		ORDER BY i.kind, lower(i.title), i.created_at`,
-		p.folderID, p.folderID).
+		domain.UserID(p.ctx), p.folderID, p.folderID).
 		Scan(p.ctx, &items)
 	if err != nil {
 		p.SetErr(err)

@@ -41,7 +41,7 @@ func (p *run) empty() {
 	query := p.db.NewDelete().
 		Model((*domain.Item)(nil)).
 		ForceDelete().
-		Where("deleted_at IS NOT NULL")
+		Where("deleted_at IS NOT NULL AND user_id = ?", domain.UserID(p.ctx))
 	if len(p.ids) > 0 {
 		query = query.Where("id::text IN (?)", bun.List(p.ids))
 	}

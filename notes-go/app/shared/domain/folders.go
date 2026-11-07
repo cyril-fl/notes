@@ -6,8 +6,8 @@ import (
 	"github.com/uptrace/bun/driver/pgdriver"
 )
 
-// FolderNameIndex keeps two live folders of one folder (or of the root) from sharing a name, whatever its case.
-const FolderNameIndex = "ux_folders_parent_title"
+// FolderNameIndex keeps two live folders of one folder (or of an account's root) from sharing a name, whatever its case.
+const FolderNameIndex = "ux_folders_user_parent_title"
 
 // uniqueViolation is the Postgres SQLSTATE raised by FolderNameIndex.
 const uniqueViolation = "23505"

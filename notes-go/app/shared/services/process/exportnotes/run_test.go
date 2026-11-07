@@ -3,6 +3,7 @@ package exportnotes
 import (
 	"context"
 	"fmt"
+	"main.go/app/shared/services/testaccount"
 	"slices"
 	"testing"
 	"time"
@@ -31,6 +32,7 @@ func TestExportNotes(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	folder := func(title, parent string) string {
 		create := createfolder.Process(ctx, tx, createfolder.Input{Title: title, ParentID: parent})

@@ -6,6 +6,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"main.go/app/shared/domain"
+	"main.go/app/shared/services/password"
+	"main.go/app/shared/services/process/adduser"
+	"main.go/app/shared/services/testaccount"
 	"net/http"
 	"net/http/httptest"
 	"slices"
@@ -23,7 +27,9 @@ const unknownID = "3f2a4b1c-0d9e-4a8b-9c7d-1e2f3a4b5c6d"
 // client calls the whole API, guard included, inside a transaction rolled back at the end.
 type client struct {
 	t       *testing.T
-	handler http.Handler
+	handler http.Handler // logged in
+	api     http.Handler // as a request without session gets it
+	db      bun.Tx
 }
 
 func newClient(t *testing.T) *client {
@@ -45,7 +51,28 @@ func newClient(t *testing.T) *client {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { tx.Rollback() })
-	return &client{t: t, handler: New(bun.IDB(tx), "")}
+	return logIn(t, tx)
+}
+
+// other is a client of another account, in the same base.
+func (c *client) other(t *testing.T) *client {
+	return logIn(t, c.db)
+}
+
+// logIn makes an account in tx and a client logged in as it: a session made straight in the base.
+func logIn(t *testing.T, tx bun.Tx) *client {
+	t.Helper()
+	ctx, savepoint := testaccount.New(t, context.Background(), tx)
+	token := password.Token()
+	session := domain.Session{UserID: domain.UserID(ctx), TokenHash: password.TokenHash(token), ExpiresAt: time.Now().Add(time.Hour)}
+	if _, err := savepoint.NewInsert().Model(&session).Exec(ctx); err != nil {
+		t.Fatal(err)
+	}
+	api := New(bun.IDB(savepoint), "")
+	return &client{t: t, api: api, db: savepoint, handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Header.Set("Authorization", "Bearer "+token)
+		api.ServeHTTP(w, r)
+	})}
 }
 
 // do sends the request and checks the status; dest receives the JSON answer when given.
@@ -543,11 +570,75 @@ func TestRouterGuards(t *testing.T) {
 		t.Errorf("other host: status = %d, want 403", w.Code)
 	}
 
+	// Without a session, nothing answers, not even a 405: the routes stay unknown.
 	r = httptest.NewRequest(http.MethodPut, "/api/notes/"+unknownID, nil)
 	r.Host = "localhost:8080"
 	w = httptest.NewRecorder()
 	handler.ServeHTTP(w, r)
-	if w.Code != http.StatusMethodNotAllowed {
-		t.Errorf("unknown method: status = %d, want 405", w.Code)
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("no session: status = %d, want 401", w.Code)
+	}
+}
+
+// Two accounts in one base: neither sees, changes nor links to what the other has.
+func TestAccountsAreApart(t *testing.T) {
+	alice := newClient(t)
+	var folder, note item
+	alice.do("POST", "/api/folders", fmt.Sprintf(`{"title":%q}`, unique("alice")), http.StatusCreated, &folder)
+	alice.do("POST", "/api/notes", fmt.Sprintf(`{"content":"# Secret #privé","parent_id":%q}`, folder.ID), http.StatusCreated, &note)
+
+	bob := alice.other(t)
+	bob.do("GET", "/api/notes/"+note.ID, "", http.StatusNotFound, nil)
+	bob.do("GET", "/api/folders/"+folder.ID, "", http.StatusNotFound, nil)
+	bob.do("PATCH", "/api/notes/"+note.ID, `{"content":"# volé"}`, http.StatusNotFound, nil)
+	bob.do("DELETE", "/api/notes/"+note.ID, "", http.StatusNotFound, nil)
+	bob.do("POST", "/api/notes", fmt.Sprintf(`{"content":"# Intrus","parent_id":%q}`, folder.ID), http.StatusBadRequest, nil)
+	for _, path := range []string{"/api/items", "/api/search?q=Secret", "/api/graph", "/api/graph/notes", "/api/recent", "/api/folders", "/api/tags"} {
+		if got := bob.raw(path); strings.Contains(got, note.ID) || strings.Contains(got, folder.ID) || strings.Contains(got, "privé") {
+			t.Errorf("%s shows alice's data to bob: %s", path, got)
+		}
+	}
+	// A link by id to a note of another account links nothing.
+	var linking item
+	bob.do("POST", "/api/notes", fmt.Sprintf(`{"content":"# Lien\n\n[x](note:%s)"}`, note.ID), http.StatusCreated, &linking)
+	if got := bob.raw("/api/notes/" + linking.ID + "/neighbors"); !strings.Contains(got, `"links":[]`) {
+		t.Errorf("bob links to alice's note: %s", got)
+	}
+}
+
+func TestLogin(t *testing.T) {
+	c := newClient(t)
+	name := unique("login")
+	add := adduser.Process(context.Background(), c.db, adduser.Input{Name: name, Password: "correct horse"})
+	add.Run()
+	if add.HasErr() {
+		t.Fatal(add.GetErr())
+	}
+
+	send := func(method, path, body string, cookie *http.Cookie) *httptest.ResponseRecorder {
+		r := httptest.NewRequest(method, path, strings.NewReader(body))
+		r.Host = "localhost:8080"
+		if cookie != nil {
+			r.AddCookie(cookie)
+		}
+		w := httptest.NewRecorder()
+		c.api.ServeHTTP(w, r)
+		return w
+	}
+
+	if w := send("POST", "/api/login", fmt.Sprintf(`{"name":%q,"password":"wrong horse"}`, name), nil); w.Code != http.StatusUnauthorized {
+		t.Errorf("wrong password: status = %d, want 401", w.Code)
+	}
+	w := send("POST", "/api/login", fmt.Sprintf(`{"name":%q,"password":"correct horse"}`, name), nil)
+	cookies := w.Result().Cookies()
+	if w.Code != http.StatusOK || len(cookies) != 1 || !cookies[0].HttpOnly || strings.Contains(w.Body.String(), cookies[0].Value) {
+		t.Fatalf("login: status = %d, cookies = %v, body = %s; want an HttpOnly cookie, the token out of the body", w.Code, cookies, w.Body)
+	}
+	if w := send("GET", "/api/me", "", cookies[0]); w.Code != http.StatusOK || !strings.Contains(w.Body.String(), name) {
+		t.Errorf("me: status = %d, body = %s", w.Code, w.Body)
+	}
+	send("POST", "/api/logout", "", cookies[0])
+	if w := send("GET", "/api/me", "", cookies[0]); w.Code != http.StatusUnauthorized {
+		t.Errorf("me after logout: status = %d, want 401", w.Code)
 	}
 }

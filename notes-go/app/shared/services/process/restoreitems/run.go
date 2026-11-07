@@ -92,8 +92,8 @@ func (p *run) checkParents(ctx context.Context, tx bun.Tx) error {
 	err := tx.NewRaw(`
 		SELECT coalesce(i.title, 'untitled')
 		FROM items AS i JOIN items AS parent ON parent.id = i.parent_id
-		WHERE i.id IN (?) AND i.deleted_at IS NOT NULL AND parent.deleted_at IS NOT NULL AND parent.id NOT IN (?)`,
-		bun.In(p.cache.ids), bun.In(p.cache.ids)).
+		WHERE i.id IN (?) AND i.user_id = ? AND i.deleted_at IS NOT NULL AND parent.deleted_at IS NOT NULL AND parent.id NOT IN (?)`,
+		bun.In(p.cache.ids), domain.UserID(p.ctx), bun.In(p.cache.ids)).
 		Scan(ctx, &titles)
 	if err == nil && len(titles) > 0 {
 		err = fmt.Errorf("%w: %s", ErrParentInTrash, strings.Join(titles, ", "))
@@ -108,11 +108,11 @@ func (p *run) updateItems(ctx context.Context, tx bun.Tx) error {
 		UPDATE items SET deleted_at = NULL
 		WHERE id IN (
 			WITH RECURSIVE tree AS (
-				SELECT id, deleted_at FROM items WHERE id IN (?) AND deleted_at IS NOT NULL
+				SELECT id, deleted_at FROM items WHERE id IN (?) AND user_id = ? AND deleted_at IS NOT NULL
 				UNION SELECT child.id, child.deleted_at FROM items AS child JOIN tree ON child.parent_id = tree.id
 				WHERE child.deleted_at = tree.deleted_at
 			) SELECT id FROM tree)
-		RETURNING id, parent_id, created_at, updated_at, kind, title`, bun.In(p.cache.ids)).
+		RETURNING id, parent_id, created_at, updated_at, kind, title`, bun.In(p.cache.ids), domain.UserID(p.ctx)).
 		Scan(ctx, &p.cache.result)
 }
 

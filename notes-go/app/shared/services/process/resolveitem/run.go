@@ -77,7 +77,7 @@ func (p *run) resolvePath(path string) {
 		FROM paths
 		JOIN items AS i ON i.id = paths.id
 		WHERE paths.path = ? AND (? = '' OR i.kind = ?)`,
-		path, p.kind, p.kind).
+		domain.UserID(p.ctx), path, p.kind, p.kind).
 		Scan(p.ctx, &ids); err != nil {
 		p.SetErr(err)
 		return

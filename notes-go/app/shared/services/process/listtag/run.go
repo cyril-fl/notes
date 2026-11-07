@@ -44,6 +44,7 @@ func (p *run) GetResult() []domain.Tag {
 func (p *run) loadTags() {
 	p.SetErr(p.db.NewSelect().
 		Model(&p.cache.result).
+		Where("user_id = ?", domain.UserID(p.ctx)).
 		OrderExpr("lower(value)").
 		Scan(p.ctx))
 }

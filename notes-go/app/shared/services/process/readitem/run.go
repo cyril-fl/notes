@@ -93,7 +93,7 @@ func (p *run) loadItem() {
 	err := p.db.NewSelect().
 		Model(&p.cache.result.Item).
 		Column("id", "parent_id", "created_at", "updated_at", "kind", "title").
-		Where("id = ? AND kind = ?", p.cache.id, p.kind).
+		Where("id = ? AND kind = ? AND user_id = ?", p.cache.id, p.kind, domain.UserID(p.ctx)).
 		Scan(p.ctx)
 	p.SetErr(toDomainErr(err, p.cache.id))
 }
@@ -127,7 +127,7 @@ func (p *run) loadPath() {
 		return
 	}
 
-	p.SetErr(p.db.NewRaw(PathsCTE+"SELECT path FROM paths WHERE id = ?", p.cache.id).Scan(p.ctx, &p.cache.result.Path))
+	p.SetErr(p.db.NewRaw(PathsCTE+"SELECT path FROM paths WHERE id = ?", domain.UserID(p.ctx), p.cache.id).Scan(p.ctx, &p.cache.result.Path))
 }
 
 func (p *run) loadChildren() {

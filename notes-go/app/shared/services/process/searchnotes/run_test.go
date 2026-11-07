@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"main.go/app/shared/services/testaccount"
 	"strings"
 	"testing"
 	"time"
@@ -58,6 +59,7 @@ func TestSearchNotes(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	// Unique per run so real notes cannot match.
 	word := fmt.Sprintf("zq%d", time.Now().UnixNano())

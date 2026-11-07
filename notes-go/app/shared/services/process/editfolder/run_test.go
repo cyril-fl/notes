@@ -3,6 +3,7 @@ package editfolder
 import (
 	"context"
 	"errors"
+	"main.go/app/shared/services/testaccount"
 	"testing"
 
 	"main.go/app/shared/services/postgrey"
@@ -45,6 +46,7 @@ func TestEditFolder(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
 
 	seed := createfolder.Process(ctx, tx, createfolder.Input{Title: "Old"})
 	seed.Run()

@@ -93,7 +93,7 @@ func (p *run) loadNeighbors() {
 		JOIN paths ON paths.id = i.id
 		WHERE center.note_id = ?
 		GROUP BY i.id, i.title, paths.path
-		ORDER BY shared DESC, lower(paths.path)`, p.cache.result.Note.Item.ID).
+		ORDER BY shared DESC, lower(paths.path)`, domain.UserID(p.ctx), p.cache.result.Note.Item.ID).
 		Scan(p.ctx, &p.cache.result.Neighbors))
 }
 
@@ -115,7 +115,7 @@ func (p *run) loadLinks() {
 			JOIN items AS i ON i.id = nl.`+side.to+`
 			JOIN paths ON paths.id = i.id
 			WHERE nl.`+side.from+` = ?
-			ORDER BY lower(paths.path)`, id).
+			ORDER BY lower(paths.path)`, domain.UserID(p.ctx), id).
 			Scan(p.ctx, side.dest)
 		if err != nil {
 			p.SetErr(err)

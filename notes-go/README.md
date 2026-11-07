@@ -35,6 +35,21 @@ PORT=5432
 
 ## Utilisation
 
+### Comptes
+
+Chaque note, dossier et tag appartient à un compte, et un compte ne voit jamais ceux des autres. Les comptes se créent sur le serveur, par la CLI :
+
+```sh
+notes user add cyril            # demande le mot de passe deux fois (8 caractères au moins)
+notes login                     # nom et mot de passe, puis toutes les commandes agissent pour ce compte
+notes logout
+notes reset-password cyril      # mot de passe oublié : nouveau mot de passe, tous les appareils déconnectés
+```
+
+- **Base existante :** le premier compte créé reprend les notes, dossiers et tags faits avant les comptes.
+- **Scripts :** `--password-stdin` lit le mot de passe sur l'entrée standard, pour `user add` et `reset-password`.
+- **Session de la CLI :** elle est gardée dans `~/.config/notes/session` sous Linux et `~/Library/Application Support/notes/session` sous macOS, lisible par l'utilisateur seul. Elle dure 30 jours, prolongés à chaque usage.
+
 Les commandes `note` et `folder`, ainsi que `move`, `finder` et `graph`, acceptent un UUID ou un chemin :
 
 ```sh
@@ -148,6 +163,7 @@ notes serve --origin http://localhost:3000   # ou directement sur la machine
 
 | Ressource | Routes (préfixe `/api`) | Corps JSON |
 |---|---|---|
+| Compte | `POST /login`, `POST /logout`, `GET /me` | `name`, `password` (connexion) |
 | Notes | `POST /notes`, `GET`, `PATCH`, `DELETE /notes/{id}`, `GET /notes/{id}/neighbors`, `GET /pinned` | `content`, `tags`, `parent_id` (création), `pinned` |
 | Dossiers | `GET`, `POST /folders`, `GET`, `PATCH`, `DELETE /folders/{id}` | `title`, `parent_id` (création), `pinned` |
 | Parcourir | `GET /items?parent=<uuid>` (racine sans `parent`), `POST /move` | `ids`, `parent_id` (racine sans `parent_id`) |
@@ -157,10 +173,12 @@ notes serve --origin http://localhost:3000   # ou directement sur la machine
 | Corbeille | `GET`, `DELETE /trash` (tout), `DELETE /trash/{id}` (une suppression et ce qui est parti avec), `POST /restore` | `ids` (restauration) |
 | Export / import | `GET /export` (zip), `POST /import?parent=<uuid>` (zip en corps, `Content-Type: application/zip`, racine sans `parent`) | |
 
+- Tout, sauf `POST /login`, demande une session, sinon 401. La connexion pose un cookie `notes_session` (`HttpOnly`, `Secure`, `SameSite=Strict`), qui dure 30 jours prolongés à chaque requête. Les scripts peuvent envoyer le jeton dans `Authorization: Bearer <jeton>`.
+- Après 5 connexions ratées depuis une même adresse, `POST /login` répond 429 pendant 15 minutes.
 - Le titre d'une note vient de son contenu, comme dans la CLI : l'API refuse un champ `title` pour une note.
 - `PATCH /notes/{id}` ne change que les champs envoyés. `{"pinned": true}` seul épingle la note sans toucher à son texte ni à sa date de modification. Sans `tags`, les tags sont les `#mots` du contenu. Avec `tags`, cette liste réécrit le contenu : `"tags": []` efface tous ses `#mots`.
 - `PATCH /folders/{id}` avec `{"pinned": true}` met le dossier en favori. `GET /pinned` liste les notes épinglées et les dossiers favoris, avec leur `kind`.
-- Les erreurs ont la forme `{"error": "..."}`, avec le statut 400, 403, 404, 409, 413 ou 500.
+- Les erreurs ont la forme `{"error": "..."}`, avec le statut 400, 401, 403, 404, 409, 413, 429 ou 500.
   Seuls une route inconnue (404) et une méthode non gérée (405) répondent en texte brut, car c'est le routeur qui les écrit.
 - Les éléments supprimés passent par la corbeille. Le serveur la purge toutes les heures. `DELETE /trash` la vide tout de suite et définitivement.
 - `GET /export` et `POST /import` font comme `notes export` et `notes import`, en zip. L'import va dans le dossier `parent`, à la racine sans lui. Il répond `{"folders": n, "notes": n}`, ou 409 si un dossier du zip existe déjà à cet endroit.
@@ -168,10 +186,10 @@ notes serve --origin http://localhost:3000   # ou directement sur la machine
 
 ### Sécurité
 
-L'API n'a pas d'authentification : **ne la publie jamais ailleurs que sur `127.0.0.1`**.
+Chaque requête doit venir d'un compte connecté. Garde quand même l'API sur `127.0.0.1` derrière Tailscale ou un proxy HTTPS : le mot de passe et le cookie ne doivent jamais passer en clair sur un réseau.
 
-- Une requête dont l'en-tête `Origin` diffère de `--origin` est refusée (403). Sans `--origin`, aucune page web ne peut l'appeler.
-- Une requête sans `Origin` (`curl`, scripts) est acceptée : tout programme local peut donc appeler l'API.
+- Une requête dont l'en-tête `Origin` diffère de `--origin` est refusée (403). Sans `--origin`, aucune page web ne peut l'appeler. Le cookie `SameSite=Strict` ajoute une protection contre les autres sites.
+- Une requête sans `Origin` (`curl`, scripts) est acceptée si elle porte une session.
 - L'en-tête `Host` doit valoir `localhost`, `127.0.0.1`, `[::1]` ou l'hôte de `--origin`, ce qui bloque le DNS rebinding.
 
 ## Configuration
