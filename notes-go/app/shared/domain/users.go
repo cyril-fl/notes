@@ -28,7 +28,7 @@ type User struct {
 var Locales = []string{"fr", "en"}
 
 // Themes, ColorModes and Views are the other settings of the web app, the first one by default.
-// shortcut: Themes repeats the ids of notes-app/app/utils/themes.ts by hand, add a test comparing them if they multiply.
+// Themes repeats the ids of notes-app/app/utils/themes.ts, users_test.go checks they match.
 var (
 	Themes     = []string{"notes", "dracula", "catppuccin", "nord", "gruvbox", "everforest"}
 	ColorModes = []string{"system", "light", "dark"}
