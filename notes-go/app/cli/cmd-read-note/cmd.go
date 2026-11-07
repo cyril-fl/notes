@@ -65,12 +65,8 @@ func render(markdown string) (string, error) {
 		return markdown + "\n", nil
 	}
 
-	style := "light"
-	if lipgloss.HasDarkBackground(os.Stdin, os.Stdout) {
-		style = "dark"
-	}
-
-	renderer, err := glamour.NewTermRenderer(glamour.WithStandardStyle(style), glamour.WithWordWrap(width))
+	isDark := lipgloss.HasDarkBackground(os.Stdin, os.Stdout)
+	renderer, err := glamour.NewTermRenderer(glamour.WithStyles(style.Markdown(isDark)), glamour.WithWordWrap(width))
 	if err != nil {
 		return "", err
 	}
