@@ -170,7 +170,7 @@ notes serve --origin http://localhost:3000   # ou directement sur la machine
 
 | Ressource | Routes (préfixe `/api`) | Corps JSON |
 |---|---|---|
-| Compte | `POST /login`, `POST /logout`, `GET /me` | `name`, `password` (connexion) |
+| Compte | `POST /login`, `POST /logout`, `GET`, `PATCH /me` | `name`, `password` (connexion) ; réglages : `locale`, `theme`, `color_mode`, `view`, `trash_retention_days` (0 à 3650, 0 pour ne jamais purger) |
 | Notes | `POST /notes`, `GET`, `PATCH`, `DELETE /notes/{id}`, `GET /notes/{id}/neighbors`, `GET /pinned` | `content`, `tags`, `parent_id` (création), `pinned` |
 | Dossiers | `GET`, `POST /folders`, `GET`, `PATCH`, `DELETE /folders/{id}` | `title`, `parent_id` (création), `pinned` |
 | Parcourir | `GET /items?parent=<uuid>` (racine sans `parent`), `POST /move` | `ids`, `parent_id` (racine sans `parent_id`) |
