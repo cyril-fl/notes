@@ -1,12 +1,18 @@
 <script setup lang="ts">
+import type { User } from '~/types/items';
+
 // Same page for every note: a new note getting its address must keep its editor, and the cursor in it.
 definePageMeta({ key: 'note' });
 
 const route = useRoute();
+const api = useApi();
+const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
 
 function editorFor(key: number) {
   const id = route.params.id as string;
-  return { key, noteId: id === 'new' ? undefined : id, parentId: route.query.parent as string | undefined };
+  // shortcut: a reload of /notes/new?template= before me is loaded starts empty, wait for me if that bites.
+  const template = id === 'new' ? me.value?.snippets[Number(route.query.template)]?.content : undefined;
+  return { key, noteId: id === 'new' ? undefined : id, parentId: route.query.parent as string | undefined, template };
 }
 
 const editor = ref(editorFor(0));
@@ -27,5 +33,11 @@ function onCreated(id: string) {
 </script>
 
 <template>
-  <NoteEditor :key="editor.key" :note-id="editor.noteId" :parent-id="editor.parentId" @created="onCreated" />
+  <NoteEditor
+    :key="editor.key"
+    :note-id="editor.noteId"
+    :parent-id="editor.parentId"
+    :template="editor.template"
+    @created="onCreated"
+  />
 </template>

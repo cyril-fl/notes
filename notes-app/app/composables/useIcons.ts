@@ -26,7 +26,7 @@ export function useIcons() {
     graph: 'i-reicon-nodes',
     settings: 'i-reicon-setting',
     account: 'i-reicon-user',
-    logout: 'i-reicon-logout',
+    logout: 'i-reicon-power-off',
     avatar: 'i-reicon-image-plus',
     home: 'i-reicon-arrow-left',
     back: 'i-reicon-arrow-left',
@@ -43,6 +43,8 @@ export function useIcons() {
     darkMode: 'i-reicon-moon',
     export: 'i-reicon-download',
     import: 'i-reicon-upload',
+    snippet: 'i-reicon-text-block',
+    template: 'i-reicon-layout',
 
     // Graph
     zoomIn: 'i-reicon-plus',

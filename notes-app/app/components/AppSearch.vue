@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { CommandPaletteGroup, CommandPaletteItem } from '@nuxt/ui';
-import type { Match, Recent } from '~/types/items';
+import type { Match, Recent, User } from '~/types/items';
 
 const { icons } = useIcons();
 const { t } = useI18n();
@@ -10,6 +10,9 @@ const route = useRoute();
 const { createFolder } = useItems();
 
 const open = useState('search-open', () => false);
+// The T shortcut opens the palette on the templates alone.
+const templatesOnly = useState('search-templates', () => false);
+watch(open, (isOpen) => isOpen || (templatesOnly.value = false));
 const term = ref('');
 const query = refDebounced(term, 200);
 
@@ -23,6 +26,15 @@ const { data: recent } = useLazyAsyncData('recent', () => api<Recent[]>('/api/re
   default: () => [] as Recent[],
 });
 
+const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
+const templates = computed<CommandPaletteItem[]>(() =>
+  (me.value?.snippets ?? []).flatMap((snippet, index) =>
+    snippet.template
+      ? [{ label: snippet.name, icon: icons.template, to: newNotePath(currentFolder(route), index) }]
+      : [],
+  ),
+);
+
 const toNote = (note: { id: string; title: string; path: string }): CommandPaletteItem => ({
   label: displayTitle(note.title, t('untitled')),
   suffix: note.path,
@@ -33,6 +45,7 @@ const toNote = (note: { id: string; title: string; path: string }): CommandPalet
 // The API searches the text: the palette shows what it found as is, not filtered again on titles.
 const groups = computed<CommandPaletteGroup[]>(() => {
   const searching = term.value.trim() !== '';
+  if (templatesOnly.value) return [{ id: 'templates', label: t('search.fromTemplate'), items: templates.value }];
   return [
     searching
       ? { id: 'notes', label: t('common.notes'), items: matches.value.map(toNote), ignoreFilter: true }
@@ -42,6 +55,9 @@ const groups = computed<CommandPaletteGroup[]>(() => {
       label: t('search.actions'),
       items: [
         { label: t('common.newNote'), icon: icons.noteAdd, kbds: ['N'], to: newNotePath(currentFolder(route)) },
+        ...(templates.value.length
+          ? [{ label: t('search.fromTemplate'), icon: icons.template, kbds: ['T'], children: templates.value }]
+          : []),
         {
           label: t('common.newFolder'),
           icon: icons.folderAdd,

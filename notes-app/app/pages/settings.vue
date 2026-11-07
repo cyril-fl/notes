@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ImportResult, User } from '~/types/items';
+import type { ImportResult, Snippet, User } from '~/types/items';
 
 const { icons } = useIcons();
 const { t, locale } = useI18n();
@@ -49,7 +49,36 @@ async function changeRetention(next: number) {
   me.value = await api<User>('/api/me', { method: 'PATCH', body: { trash_retention_days: next } });
 }
 
-const { confirm } = useDialogs();
+const { confirm, snippet: editSnippet } = useDialogs();
+
+// The API takes the whole list: an edit sends it back with the one changed.
+async function saveSnippets(snippets: Snippet[]) {
+  me.value = await api<User>('/api/me', { method: 'PATCH', body: { snippets } });
+}
+
+async function addSnippet() {
+  const added = await editSnippet({ title: t('settings.addSnippet') });
+  if (added) await saveSnippets([...(me.value?.snippets ?? []), added]);
+}
+
+async function changeSnippet(index: number) {
+  const snippets = [...(me.value?.snippets ?? [])];
+  const changed = await editSnippet({ title: t('settings.editSnippet'), value: snippets[index] });
+  if (!changed) return;
+  snippets[index] = changed;
+  await saveSnippets(snippets);
+}
+
+async function removeSnippet(index: number) {
+  const snippets = [...(me.value?.snippets ?? [])];
+  const confirmed = await confirm({
+    title: t('settings.deleteSnippet', { name: snippets[index]?.name }),
+    action: t('common.delete'),
+  });
+  if (!confirmed) return;
+  snippets.splice(index, 1);
+  await saveSnippets(snippets);
+}
 
 async function deleteData() {
   const confirmed = await confirm({
@@ -155,6 +184,53 @@ async function importZip(event: Event) {
             class="w-56"
           />
         </li>
+      </ul>
+    </section>
+
+    <section class="mb-8">
+      <div class="flex items-center gap-4">
+        <div class="min-w-0 flex-1">
+          <h2 class="mb-1 text-sm font-semibold">{{ $t('settings.snippets') }}</h2>
+          <p class="text-xs text-muted">{{ $t('settings.snippetsDescription') }}</p>
+        </div>
+        <UButton
+          :label="$t('settings.addSnippet')"
+          :icon="icons.noteAdd"
+          color="neutral"
+          variant="outline"
+          :disabled="!me"
+          @click="addSnippet"
+        />
+      </div>
+      <ul>
+        <li
+          v-for="(snippet, index) in me?.snippets"
+          :key="index"
+          class="flex items-center gap-3 border-b border-muted py-3 last:border-b-0"
+        >
+          <UIcon :name="snippet.template ? icons.template : icons.snippet" class="size-4 shrink-0 text-muted" />
+          <p class="min-w-0 flex-1 truncate text-sm">{{ snippet.name }}</p>
+          <UBadge
+            :label="snippet.template ? $t('settings.template') : $t('settings.snippet')"
+            color="neutral"
+            variant="subtle"
+          />
+          <UButton
+            :icon="icons.rename"
+            color="neutral"
+            variant="ghost"
+            :aria-label="$t('settings.editSnippet')"
+            @click="changeSnippet(index)"
+          />
+          <UButton
+            :icon="icons.delete"
+            color="neutral"
+            variant="ghost"
+            :aria-label="$t('common.delete')"
+            @click="removeSnippet(index)"
+          />
+        </li>
+        <li v-if="me && !me.snippets.length" class="py-3 text-xs text-muted">{{ $t('settings.snippetsEmpty') }}</li>
       </ul>
     </section>
 

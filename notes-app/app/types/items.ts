@@ -15,4 +15,5 @@ export type Pinned = Schemas['listpinned.Pinned'];
 export type ImportResult = Schemas['importnotes.Result'];
 export type FolderPath = Schemas['listfolders.Folder'];
 export type User = Schemas['domain.User'];
+export type Snippet = Schemas['domain.Snippet'];
 export type NoteFile = Schemas['domain.File'];

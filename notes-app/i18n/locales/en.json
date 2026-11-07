@@ -46,7 +46,8 @@
     "noResult": "No result",
     "noResultDescription": "No note contains “{q}”.",
     "empty": "Search the notes",
-    "emptyDescription": "Type a word in the search bar."
+    "emptyDescription": "Type a word in the search bar.",
+    "fromTemplate": "Start from a template"
   },
   "items": {
     "cycle": "A folder cannot go into itself or its subfolders.",
@@ -194,7 +195,20 @@
       "gruvbox": "Gruvbox",
       "everforest": "Everforest"
     },
-    "manageAccount": "Manage account"
+    "manageAccount": "Manage account",
+    "snippets": "Snippets and templates",
+    "snippetsDescription": "A snippet is inserted by typing ;; in a note, a template gives a new note its starting text (T, or Cmd K).",
+    "snippet": "Snippet",
+    "template": "Template",
+    "snippetsEmpty": "No snippet nor template.",
+    "addSnippet": "Add",
+    "editSnippet": "Edit",
+    "deleteSnippet": "Delete “{name}”?",
+    "snippetName": "Name",
+    "snippetKind": "Kind",
+    "snippetContent": "Content",
+    "snippetHelp": "Markdown; a #tag adds that tag to the note.",
+    "save": "Save"
   },
   "account": {
     "title": "Account",

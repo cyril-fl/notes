@@ -29,7 +29,7 @@ Coller ou glisser une image (PNG, JPEG, GIF, WebP, 20 Mo au plus) dans une note 
 
 ## Raccourcis
 
-`⌘K` ou `/` ouvre la palette (notes, récentes, actions, thème), `N` crée une note dans le dossier affiché, `⇧N` un dossier, `⌘\` replie la barre latérale. Hors d'un champ de saisie seulement.
+`⌘K` ou `/` ouvre la palette (notes, récentes, actions, thème), `N` crée une note dans le dossier affiché, `T` une note à partir d'un template, `⇧N` un dossier, `⌘\` replie la barre latérale. Hors d'un champ de saisie seulement.
 
 La barre latérale se redimensionne en tirant son bord (sa largeur reste d'une visite à l'autre). Repliée, elle reste à l'écran en barre d'icônes (recherche, notes, graphe, corbeille, réglages, thème). Sur petit écran, elle devient un tiroir.
 
@@ -45,6 +45,7 @@ La page Réglages (menu de l'avatar en bas de la barre latérale, ou la palette)
 
 - **Langue** de l'interface, français ou anglais.
 - **Apparence** : le thème, choisi d'un clic sur sa miniature parmi des jeux de couleurs tout faits (Notes, Dracula, Catppuccin, Nord, Gruvbox, Everforest), et le mode (système, clair, sombre). Un thème se déclare dans `app/utils/themes.ts`, ses palettes dans `main.css`, et son id dans `domain.Themes` côté Go. Le bouton de mode de la barre latérale enregistre aussi, comme celui de la vue des listes.
+- **Snippets et templates** : du markdown nommé, dont les `#tags` deviennent les tags de la note où il arrive. Un snippet s'insère au curseur en tapant `;;` dans une note, puis son nom. Un template donne le texte de départ d'une nouvelle note (`T`, ou « Partir d'un template » dans la palette) ; la note n'est créée qu'une fois qu'on y tape.
 - **Corbeille** : la durée avant que les éléments supprimés soient effacés pour de bon (7, 30, 90, 365 jours, ou jamais).
 - **Exporter** télécharge toutes les notes en zip de fichiers `.md`, leurs images dans `_files/`, comme `notes export`.
 - **Importer** ajoute les `.md` d'un zip au dossier choisi (la racine par défaut), comme `notes import --parent`. Si un dossier du zip existe déjà à cet endroit, rien n'est importé.

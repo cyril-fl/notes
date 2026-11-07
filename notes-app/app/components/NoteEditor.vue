@@ -4,13 +4,14 @@ import type { Editor } from '@tiptap/vue-3';
 import { TaskItem, TaskList } from '@tiptap/extension-list';
 import type { FetchError } from 'ofetch';
 import type { RouteLocationNormalized } from 'vue-router';
-import type { Item, ItemDetail, NoteFile, NotesGraph } from '~/types/items';
+import type { Item, ItemDetail, NoteFile, NotesGraph, User } from '~/types/items';
 import type { Changes } from '~/utils/saver';
 
 const { icons } = useIcons();
 const { t } = useI18n();
 
-const props = defineProps<{ noteId?: string; parentId?: string }>();
+// template: the starting text of a new note, saved only once typed in.
+const props = defineProps<{ noteId?: string; parentId?: string; template?: string }>();
 const emit = defineEmits<{ created: [id: string] }>();
 
 const ALLOWED_LINKS = ['http', 'https', 'mailto'];
@@ -25,7 +26,7 @@ const id = ref(props.noteId);
 const parent = ref(props.parentId);
 const path = ref('');
 const tags = ref<string[]>([]);
-const initialContent = ref('');
+const initialContent = ref(props.template ?? '');
 const loading = ref(!!props.noteId);
 const notFound = ref(false);
 
@@ -186,6 +187,14 @@ const noteItems = computed(() =>
     .map((note) => ({ kind: 'wikiLink', label: note.title, description: note.path, icon: icons.note, id: note.id })),
 );
 
+// The snippets offered after ;; : picked, their markdown goes in at the cursor.
+const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
+const snippetItems = computed(() =>
+  (me.value?.snippets ?? [])
+    .filter((snippet) => !snippet.template)
+    .map((snippet) => ({ kind: 'snippet', label: snippet.name, icon: icons.snippet, content: snippet.content })),
+);
+
 function openLink(event: MouseEvent) {
   const link = (event.target as HTMLElement).closest<HTMLElement>('a[data-wikilink]');
   if (!link) return;
@@ -209,6 +218,13 @@ const handlers = {
           { type: 'wikiLink', attrs: { target: item.label, id: item.id } },
           { type: 'text', text: ' ' },
         ]),
+    isActive: () => false,
+    isDisabled: () => false,
+  },
+  snippet: {
+    canExecute: () => true,
+    execute: (editor: Editor, item: { content: string }) =>
+      editor.chain().focus().insertContent(item.content, { contentType: 'markdown' }),
     isActive: () => false,
     isDisabled: () => false,
   },
@@ -325,6 +341,13 @@ const status = computed(() => {
         char="[["
         plugin-key="wikiLinkMenu"
         :filter-fields="['label', 'description']"
+        :suggestion="{ allowSpaces: true }"
+      />
+      <UEditorSuggestionMenu
+        :editor="editor"
+        :items="snippetItems"
+        char=";;"
+        plugin-key="snippetMenu"
         :suggestion="{ allowSpaces: true }"
       />
     </UEditor>
