@@ -39,10 +39,10 @@ defineShortcuts({
   shift_n: () => createFolder(currentFolder(route)),
   'meta_\\': () => (collapsed.value = !collapsed.value),
 });
+// The template: Nuxt UI's dashboard, a sidebar that resizes (its width kept in localStorage), collapses, and becomes a drawer on small screens.
 </script>
 
 <template>
-  <!-- Nuxt UI's dashboard: a sidebar that resizes (its width kept in localStorage), collapses, and becomes a drawer on small screens. -->
   <UDashboardGroup unit="rem" storage="local" storage-key="notes-layout" class="gap-2 bg-muted p-2 text-default">
     <UDashboardSidebar
       v-model:collapsed="collapsed"

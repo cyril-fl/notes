@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-import { API, APP } from '../../playwright.config';
 import { sandbox, throwaway } from './helpers';
 
 // Each test acts on an account of its own: the shared e2e account and its session stay untouched.

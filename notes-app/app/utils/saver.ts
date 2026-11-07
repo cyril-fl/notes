@@ -1,7 +1,7 @@
 export type Changes = { content?: string };
 
 // send returns false when the changes cannot go yet: they wait for the next ones.
-export type Send = (changes: Changes) => Promise<boolean | void>;
+export type Send = (changes: Changes) => Promise<boolean | undefined>;
 
 /** Sends one request at a time and merges what comes meanwhile: two quick edits of a new note must not create two notes. */
 export function createSaver(send: Send, delay = 1500) {
