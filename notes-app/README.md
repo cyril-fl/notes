@@ -21,7 +21,7 @@ cd ../notes-app && pnpm install && pnpm dev   # http://localhost:3000
 
 Ouvre bien `localhost`, pas `127.0.0.1` : l'API compare l'origine exactement. `NUXT_PUBLIC_API_BASE` change l'adresse de l'API.
 
-L'app demande de se connecter avec un compte créé par la CLI (`notes user add <nom>`, voir le README de `notes-go`). Sans session, elle ouvre la page de connexion, puis revient à la page demandée. Réglages > Compte affiche le compte connecté et permet de se déconnecter.
+L'app demande de se connecter avec un compte créé par la CLI (`notes user add <nom>`, voir le README de `notes-go`). Sans session, elle ouvre la page de connexion, puis revient à la page demandée. L'avatar en bas de la barre latérale, réduite ou non, ouvre un menu : Compte, Réglages, Se déconnecter. La page Compte change l'avatar (une image du compte, les initiales sans elle), le nom et le mot de passe. Changer le mot de passe déconnecte les autres appareils.
 
 ## Images
 
@@ -41,7 +41,7 @@ Le graphe se déplace en glissant et zoome à la molette, en pinçant le trackpa
 
 ## Réglages
 
-La page Réglages (roue dentée en bas de la barre latérale, ou la palette) regroupe ce qui touche à l'app entière. Les réglages sont rangés sur le compte (`PATCH /api/me`) : ils suivent d'un appareil à l'autre.
+La page Réglages (menu de l'avatar en bas de la barre latérale, ou la palette) regroupe ce qui touche à l'app entière. Les réglages sont rangés sur le compte (`PATCH /api/me`) : ils suivent d'un appareil à l'autre.
 
 - **Langue** de l'interface, français ou anglais.
 - **Apparence** : le thème, choisi d'un clic sur sa miniature parmi des jeux de couleurs tout faits (Notes, Dracula, Catppuccin, Nord, Gruvbox, Everforest), et le mode (système, clair, sombre). Un thème se déclare dans `app/utils/themes.ts`, ses palettes dans `main.css`, et son id dans `domain.Themes` côté Go. Le bouton de mode de la barre latérale enregistre aussi, comme celui de la vue des listes.
