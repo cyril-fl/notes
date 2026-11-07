@@ -17,6 +17,12 @@ import (
 // MaxRetentionDays keeps the trash retention a sane number of days, ten years.
 const MaxRetentionDays = 3650
 
+// MaxSnippets and MaxSnippetSize keep the snippets of an account a small list.
+const (
+	MaxSnippets    = 100
+	MaxSnippetSize = 64 << 10
+)
+
 var (
 	ErrInvalidLocale    = errors.New("unknown locale")
 	ErrInvalidTheme     = errors.New("unknown theme")
@@ -24,17 +30,19 @@ var (
 	ErrInvalidView      = errors.New("unknown view")
 	ErrInvalidRetention = fmt.Errorf("the trash retention is between 0 and %d days", MaxRetentionDays)
 	ErrInvalidAvatar    = errors.New("the avatar is not an image of the account")
+	ErrInvalidSnippet   = fmt.Errorf("a snippet needs a name, at most %d of them of %d bytes each", MaxSnippets, MaxSnippetSize)
 )
 
 // Input holds the settings to change: a nil one is kept.
 type Input struct {
-	Locale             *string `json:"locale,omitempty" binding:"optional"`
-	Theme              *string `json:"theme,omitempty" binding:"optional"`
-	ColorMode          *string `json:"color_mode,omitempty" binding:"optional"`
-	View               *string `json:"view,omitempty" binding:"optional"`
-	TrashRetentionDays *int    `json:"trash_retention_days,omitempty" binding:"optional"`
-	Name               *string `json:"name,omitempty" binding:"optional"`
-	Avatar             *string `json:"avatar,omitempty" binding:"optional"` // the id of an image of the account, "" for none
+	Locale             *string           `json:"locale,omitempty" binding:"optional"`
+	Theme              *string           `json:"theme,omitempty" binding:"optional"`
+	ColorMode          *string           `json:"color_mode,omitempty" binding:"optional"`
+	View               *string           `json:"view,omitempty" binding:"optional"`
+	TrashRetentionDays *int              `json:"trash_retention_days,omitempty" binding:"optional"`
+	Name               *string           `json:"name,omitempty" binding:"optional"`
+	Avatar             *string           `json:"avatar,omitempty" binding:"optional"`   // the id of an image of the account, "" for none
+	Snippets           *[]domain.Snippet `json:"snippets,omitempty" binding:"optional"` // the whole list, it replaces the saved one
 }
 
 type run struct {
@@ -87,6 +95,8 @@ func (p *run) checkInput() {
 		p.SetErr(fmt.Errorf("%w: %d", ErrInvalidRetention, *p.input.TrashRetentionDays))
 	case p.input.Name != nil && strings.TrimSpace(*p.input.Name) == "":
 		p.SetErr(adduser.ErrNoName)
+	case !validSnippets(p.input.Snippets):
+		p.SetErr(ErrInvalidSnippet)
 	}
 }
 
@@ -140,6 +150,15 @@ func (p *run) updateUser() {
 			query.Set("avatar = NULLIF(?, '')::uuid", *p.input.Avatar)
 		}
 
+		// shortcut: the last of two devices editing the snippets wins, per-snippet endpoints if that bites.
+		if p.input.Snippets != nil {
+			snippets := *p.input.Snippets
+			if snippets == nil {
+				snippets = []domain.Snippet{} // null would break the not null column
+			}
+			query.Set("snippets = ?", snippets)
+		}
+
 		var pgErr pgdriver.Error
 		err := query.Scan(ctx)
 		if errors.As(err, &pgErr) && pgErr.Field('C') == "23505" {
@@ -154,4 +173,20 @@ func (p *run) updateUser() {
 // valid accepts a setting left out, or one of choices.
 func valid(value *string, choices []string) bool {
 	return value == nil || slices.Contains(choices, *value)
+}
+
+// validSnippets accepts snippets left out, or a short list of named ones.
+func validSnippets(snippets *[]domain.Snippet) bool {
+	if snippets == nil {
+		return true
+	}
+	if len(*snippets) > MaxSnippets {
+		return false
+	}
+	for _, snippet := range *snippets {
+		if strings.TrimSpace(snippet.Name) == "" || len(snippet.Content) > MaxSnippetSize {
+			return false
+		}
+	}
+	return true
 }

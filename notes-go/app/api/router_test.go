@@ -709,6 +709,13 @@ func TestLogin(t *testing.T) {
 		!strings.Contains(w.Body.String(), `"locale":"en","theme":"dracula","color_mode":"dark","view":"grid","trash_retention_days":7`) {
 		t.Errorf("edit settings: status = %d, body = %s", w.Code, w.Body)
 	}
+	if w := send("PATCH", "/api/me", `{"snippets":[{"name":"","content":"x"}]}`, cookies[0]); w.Code != http.StatusBadRequest {
+		t.Errorf("snippet without a name: status = %d, want 400", w.Code)
+	}
+	if w := send("PATCH", "/api/me", `{"snippets":[{"name":"Day","content":"# Today #daily","template":true}]}`, cookies[0]); w.Code != http.StatusOK ||
+		!strings.Contains(w.Body.String(), `"snippets":[{"name":"Day","content":"# Today #daily","template":true}]`) {
+		t.Errorf("edit snippets: status = %d, body = %s", w.Code, w.Body)
+	}
 	if w := send("PATCH", "/api/me", `{"avatar":"00000000-0000-0000-0000-000000000000"}`, cookies[0]); w.Code != http.StatusBadRequest {
 		t.Errorf("avatar of no image: status = %d, want 400", w.Code)
 	}

@@ -32,6 +32,9 @@ func TestInvalidInput(t *testing.T) {
 		{Input{TrashRetentionDays: days(-1)}, ErrInvalidRetention},
 		{Input{TrashRetentionDays: days(MaxRetentionDays + 1)}, ErrInvalidRetention},
 		{Input{Name: text(" ")}, adduser.ErrNoName},
+		{Input{Snippets: &[]domain.Snippet{{Name: " ", Content: "x"}}}, ErrInvalidSnippet},
+		{Input{Snippets: &[]domain.Snippet{{Name: "big", Content: string(make([]byte, MaxSnippetSize+1))}}}, ErrInvalidSnippet},
+		{Input{Snippets: new(make([]domain.Snippet, MaxSnippets+1))}, ErrInvalidSnippet},
 	}
 	for _, test := range tests {
 		process := Process(context.Background(), nil, test.input)
@@ -82,9 +85,19 @@ func TestEditUser(t *testing.T) {
 		t.Errorf("result = %+v, want locale kept, view grid, retention 0", got)
 	}
 
+	if got := process.GetResult(); len(got.Snippets) != 0 {
+		t.Errorf("snippets = %+v, want none by default", got.Snippets)
+	}
+	snippets := []domain.Snippet{{Name: "Meeting", Content: "## Meeting #work"}, {Name: "Day", Content: "# Today", Template: true}}
+	process = Process(ctx, tx, Input{Snippets: &snippets})
+	process.Run()
+	if got := process.GetResult(); process.HasErr() || len(got.Snippets) != 2 || got.Snippets[1] != snippets[1] {
+		t.Errorf("snippets: result = %+v, err = %v; want both saved", got.Snippets, process.GetErr())
+	}
+
 	process = Process(ctx, tx, Input{})
 	process.Run()
-	if got := process.GetResult(); process.HasErr() || got.View != "grid" {
+	if got := process.GetResult(); process.HasErr() || got.View != "grid" || len(got.Snippets) != 2 {
 		t.Errorf("empty edit: result = %+v, err = %v; want the account unchanged", got, process.GetErr())
 	}
 

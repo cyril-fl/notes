@@ -22,7 +22,15 @@ type User struct {
 	// Days before the trash is purged, 0 to never purge. An insert of 0 gets the default: only an update sets it.
 	TrashRetentionDays int       `bun:",notnull,default:30" json:"trash_retention_days"`
 	Avatar             string    `bun:",type:uuid,nullzero" json:"avatar,omitempty"` // the id of a File of the account, purgefiles keeps it
+	Snippets           []Snippet `bun:",type:jsonb,notnull,default:'[]'" json:"snippets"`
 	CreatedAt          time.Time `bun:",notnull,default:current_timestamp" json:"created_at"`
+}
+
+// Snippet is a piece of markdown of the account, its #tags become tags of the note it is put in.
+type Snippet struct {
+	Name     string `json:"name"`
+	Content  string `json:"content"`
+	Template bool   `json:"template"` // a template starts a new note, a snippet is inserted while typing
 }
 
 // Locales are the languages of the web app, the first one by default.

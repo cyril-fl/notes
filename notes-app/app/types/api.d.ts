@@ -2089,6 +2089,12 @@ export interface components {
         };
         /** @enum {string} */
         "domain.Kind": "folder" | "note";
+        "domain.Snippet": {
+            content: string;
+            name: string;
+            /** @description a template starts a new note, a snippet is inserted while typing */
+            template: boolean;
+        };
         "domain.Tag": {
             id: string;
             /** @description unique case-insensitive, see CreateTables */
@@ -2105,6 +2111,7 @@ export interface components {
             locale: string;
             /** @description unique case-insensitive, see createschema */
             name: string;
+            snippets: components["schemas"]["domain.Snippet"][];
             /** @description the colors of the web app, one of Themes */
             theme: string;
             /** @description Days before the trash is purged, 0 to never purge. An insert of 0 gets the default: only an update sets it. */
@@ -2134,6 +2141,8 @@ export interface components {
             color_mode?: string;
             locale?: string;
             name?: string;
+            /** @description the whole list, it replaces the saved one */
+            snippets?: components["schemas"]["domain.Snippet"][];
             theme?: string;
             trash_retention_days?: number;
             view?: string;

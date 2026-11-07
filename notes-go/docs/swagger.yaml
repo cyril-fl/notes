@@ -111,6 +111,20 @@ components:
       x-enum-varnames:
       - FOLDER
       - NOTE
+    domain.Snippet:
+      properties:
+        content:
+          type: string
+        name:
+          type: string
+        template:
+          description: a template starts a new note, a snippet is inserted while typing
+          type: boolean
+      required:
+      - content
+      - name
+      - template
+      type: object
     domain.Tag:
       properties:
         id:
@@ -140,6 +154,11 @@ components:
         name:
           description: unique case-insensitive, see createschema
           type: string
+        snippets:
+          items:
+            $ref: '#/components/schemas/domain.Snippet'
+          type: array
+          uniqueItems: false
         theme:
           description: the colors of the web app, one of Themes
           type: string
@@ -157,6 +176,7 @@ components:
       - id
       - locale
       - name
+      - snippets
       - theme
       - trash_retention_days
       - view
@@ -208,6 +228,12 @@ components:
           type: string
         name:
           type: string
+        snippets:
+          description: the whole list, it replaces the saved one
+          items:
+            $ref: '#/components/schemas/domain.Snippet'
+          type: array
+          uniqueItems: false
         theme:
           type: string
         trash_retention_days:
