@@ -187,15 +187,27 @@ const isOverRoot = useDropFolder(rootLink, () => null);
       </section>
 
       <section>
-        <NuxtLink
-          ref="rootLink"
-          to="/"
-          class="row font-medium"
-          :class="{ 'row-active': route.path === '/', 'row-over': isOverRoot }"
-        >
-          <UIcon :name="icons.notes" class="size-4 shrink-0" />
-          {{ $t('common.notes') }}
-        </NuxtLink>
+        <div class="flex items-center">
+          <NuxtLink
+            ref="rootLink"
+            to="/"
+            class="row flex-1 font-medium"
+            :class="{ 'row-active': route.path === '/', 'row-over': isOverRoot }"
+          >
+            <UIcon :name="icons.notes" class="size-4 shrink-0" />
+            {{ $t('common.notes') }}
+          </NuxtLink>
+          <UTooltip :text="$t('common.newFolder')">
+            <UButton
+              :icon="icons.folderAdd"
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              :aria-label="$t('common.newFolder')"
+              @click="createFolder()"
+            />
+          </UTooltip>
+        </div>
         <FolderTree />
       </section>
 
@@ -242,16 +254,6 @@ const isOverRoot = useDropFolder(rootLink, () => null);
           size="sm"
           :aria-label="darkMode ? $t('sidebar.lightTheme') : $t('sidebar.darkTheme')"
           @click="darkMode = !darkMode"
-        />
-      </UTooltip>
-      <UTooltip :text="$t('common.newFolder')">
-        <UButton
-          :icon="icons.folderAdd"
-          color="neutral"
-          variant="ghost"
-          size="sm"
-          :aria-label="$t('common.newFolder')"
-          @click="createFolder()"
         />
       </UTooltip>
       <UTooltip :text="$t('sidebar.collapse')" :kbds="['meta', '\\']">
