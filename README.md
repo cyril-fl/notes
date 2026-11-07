@@ -28,5 +28,5 @@ Projet de prise de notes un peu manière obsiediennes.
 
 ## Qualité
 
-- `make setup` dans `notes-go/` installe les hooks git (lefthook) : gofmt et Prettier avant un commit, et le préfixe du message (`feat:`, `fix:`…) vérifié.
+- `make setup` dans `notes-go/` installe les hooks git (lefthook) : gofmt, Prettier et actionlint (les workflows) avant un commit, et le préfixe du message (`feat:`, `fix:`…) vérifié.
 - La CI GitHub Actions lance à chaque push les tests Go, le lint, le format, les tests, le typecheck et le build de l'app.
