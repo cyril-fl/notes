@@ -15,16 +15,33 @@ const sections = computed(() =>
     { title: 'Mêmes tags', notes: data.value?.neighbors ?? [] },
   ].filter((section) => section.notes.length)
 );
+
+const total = computed(() => sections.value.reduce((sum, section) => sum + section.notes.length, 0));
 </script>
 
 <template>
-  <section v-if="sections.length" class="mt-10 space-y-6 border-t border-default pt-4">
-    <div v-for="(section, index) in sections" :key="section.title">
-      <div class="mb-2 flex items-center justify-between">
-        <h2 class="text-xs font-medium text-muted">{{ section.title }}</h2>
-        <NuxtLink v-if="index === 0" :to="{ path: '/graph', query: { note: noteId } }" class="text-xs text-primary">Voir le graphe</NuxtLink>
+  <!-- mt-auto + sticky: pinned to the bottom of the page, short note or long. -->
+  <UCollapsible v-if="sections.length" class="sticky bottom-0 z-10 -mx-8 -mb-8 mt-auto border-t border-default bg-default px-8">
+    <template #default="{ open }">
+      <div class="flex items-center py-2">
+        <UButton
+          :label="`Notes liées (${total})`"
+          :trailing-icon="open ? 'i-lucide-chevron-down' : 'i-lucide-chevron-up'"
+          color="neutral"
+          variant="ghost"
+          size="xs"
+          class="-ml-2"
+        />
+        <NuxtLink :to="{ path: '/graph', query: { note: noteId } }" class="ml-auto text-xs text-primary" @click.stop>Voir le graphe</NuxtLink>
       </div>
-      <NoteList :notes="section.notes" />
-    </div>
-  </section>
+    </template>
+    <template #content>
+      <div class="max-h-[40vh] space-y-6 overflow-y-auto pb-4">
+        <div v-for="section in sections" :key="section.title">
+          <h2 class="mb-2 text-xs font-medium text-muted">{{ section.title }}</h2>
+          <NoteList :notes="section.notes" />
+        </div>
+      </div>
+    </template>
+  </UCollapsible>
 </template>
