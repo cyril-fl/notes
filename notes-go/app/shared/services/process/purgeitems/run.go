@@ -12,21 +12,20 @@ type run struct {
 	plumprimitive.Process
 	cache
 
-	ctx           context.Context
-	db            bun.IDB // *bun.DB or bun.Tx: tests run inside a rolled-back transaction
-	retentionDays int
+	ctx context.Context
+	db  bun.IDB // *bun.DB or bun.Tx: tests run inside a rolled-back transaction
 }
 
 type cache struct {
 	purged int64
 }
 
-// Process empties the trash of the items deleted more than retentionDays ago; retentionDays <= 0 keeps them forever.
-func Process(ctx context.Context, db bun.IDB, retentionDays int) *run {
+// Process empties the trash of every account, of the items deleted longer ago than its trash_retention_days;
+// a retention of 0 keeps them forever.
+func Process(ctx context.Context, db bun.IDB) *run {
 	return &run{
-		ctx:           ctx,
-		db:            db,
-		retentionDays: retentionDays,
+		ctx: ctx,
+		db:  db,
 	}
 }
 
@@ -45,14 +44,12 @@ func (p *run) GetResult() int64 {
 
 // purge hard deletes: the ON DELETE CASCADE FKs remove metadata, tag links and children.
 func (p *run) purge() {
-	if p.retentionDays <= 0 {
-		return
-	}
-
 	result, err := p.db.NewDelete().
 		Model((*domain.Item)(nil)).
 		ForceDelete().
-		Where("deleted_at < current_timestamp - make_interval(days => ?)", p.retentionDays).
+		TableExpr("users AS u").
+		Where("u.id = i.user_id AND u.trash_retention_days > 0").
+		Where("i.deleted_at < current_timestamp - make_interval(days => u.trash_retention_days::int)").
 		Exec(p.ctx)
 	if err != nil {
 		p.SetErr(err)

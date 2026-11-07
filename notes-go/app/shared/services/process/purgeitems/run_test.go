@@ -13,16 +13,6 @@ import (
 	"main.go/app/shared/services/process/deleteitems"
 )
 
-// No DB needed: a retention <= 0 never touches the db.
-func TestDisabled(t *testing.T) {
-	process := Process(context.Background(), nil, 0)
-	process.Run()
-
-	if process.HasErr() || process.GetResult() != 0 {
-		t.Fatalf("purged = %d, err = %v; want 0, nil", process.GetResult(), process.GetErr())
-	}
-}
-
 func TestPurgeOldOnly(t *testing.T) {
 	ctx := context.Background()
 	env := postgrey.NewEnvironment()
@@ -64,7 +54,32 @@ func TestPurgeOldOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	purge := Process(ctx, tx, 30)
+	count := func() int64 {
+		left, err := tx.NewSelect().Model((*domain.Item)(nil)).WhereAllWithDeleted().Where("id IN (?)", bun.In(ids)).Count(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return left
+	}
+	setRetention := func(days int) {
+		_, err := tx.NewUpdate().Model((*domain.User)(nil)).Set("trash_retention_days = ?", days).Where("id = ?", domain.UserID(ctx)).Exec(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	setRetention(0)
+	purge := Process(ctx, tx)
+	purge.Run()
+	if purge.HasErr() {
+		t.Fatalf("purge: %v", purge.GetErr())
+	}
+	if left := count(); left != 3 {
+		t.Errorf("left with retention 0 = %d, want 3: nothing purged", left)
+	}
+
+	setRetention(30)
+	purge = Process(ctx, tx)
 	purge.Run()
 	if purge.HasErr() {
 		t.Fatalf("purge: %v", purge.GetErr())

@@ -47,7 +47,7 @@ var cmdRoot = &cobra.Command{
 		}
 
 		// Startup is the "cron": no daemon, the trash is emptied whenever the CLI runs.
-		purge := purgeitems.Process(cobra.Context(), postgrey.GetDb(), c.Trash.RetentionDays)
+		purge := purgeitems.Process(cobra.Context(), postgrey.GetDb())
 		purge.Run()
 		if purge.HasErr() || noAccount[cobra] {
 			return purge.GetErr()

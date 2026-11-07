@@ -15,7 +15,6 @@ import (
 	"main.go/app/api/services/guard"
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/purgeitems"
-	"main.go/config"
 )
 
 const (
@@ -42,7 +41,7 @@ func Serve(cobra *cobra.Command, args []string) error {
 
 	db := postgrey.GetDb()
 	go every(ctx, purgeInterval, func() {
-		purge := purgeitems.Process(ctx, db, config.Current.Trash.RetentionDays)
+		purge := purgeitems.Process(ctx, db)
 		purge.Run()
 		if purge.HasErr() && ctx.Err() == nil {
 			log.Printf("purge: %v", purge.GetErr())

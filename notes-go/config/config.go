@@ -23,11 +23,6 @@ var Current config
 type config struct {
 	Name     string   `yaml:"name"`
 	Commands commands `yaml:"commands"`
-	Trash    trash    `yaml:"trash"`
-}
-
-type trash struct {
-	RetentionDays int `yaml:"retention-days"` // <= 0: deleted items are never purged
 }
 
 type commands struct {

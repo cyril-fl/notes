@@ -1,7 +1,4 @@
 name: "notes"
-trash:
-  # Deleted notes and folders are purged for good after this many days (0 = never).
-  retention-days: 30
 commands:
   create:
     use: "add"
@@ -161,12 +158,12 @@ commands:
   delete-note:
     use: "note"
     short: "Move notes to the trash"
-    long: "Move notes to the trash. They are purged for good after trash.retention-days."
+    long: "Move notes to the trash. They are purged for good after the trash retention of the account, 30 days by default."
     example: "notes remove note <uuid|path> [<uuid|path>...]"
   delete-folder:
     use: "folder"
     short: "Move folders and their content to the trash"
-    long: "Move folders, their subfolders and notes to the trash. They are purged for good after trash.retention-days."
+    long: "Move folders, their subfolders and notes to the trash. They are purged for good after the trash retention of the account, 30 days by default."
     example: "notes remove folder <uuid|path> [<uuid|path>...]"
   delete-tag:
     use: "tag"
@@ -200,7 +197,7 @@ commands:
   trash:
     use: "trash"
     short: "List the removed notes and folders"
-    long: "List what was removed, each removal once with what went with it, and when it is purged (trash.retention-days)."
+    long: "List what was removed, each removal once with what went with it, and when it is purged."
     example: "notes trash\nnotes trash --json"
     args:
       - name: "json"

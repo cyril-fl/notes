@@ -10,10 +10,10 @@ import (
 	"charm.land/lipgloss/v2"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
+	"main.go/app/shared/domain"
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/listtrash"
 	"main.go/app/shared/services/screen"
-	"main.go/config"
 )
 
 // Trash lists what was removed, each removal once with how many items went with it, and when it is purged.
@@ -34,7 +34,11 @@ func Trash(cobra *cobra.Command, args []string) error {
 		return nil
 	}
 
-	screen.Print(output(process.GetResult(), config.Current.Trash.RetentionDays, time.Now()))
+	var user domain.User
+	if err := postgrey.GetDb().NewSelect().Model(&user).Where("id = ?", domain.UserID(cobra.Context())).Scan(cobra.Context()); err != nil {
+		return err
+	}
+	screen.Print(output(process.GetResult(), user.TrashRetentionDays, time.Now()))
 	return nil
 }
 
