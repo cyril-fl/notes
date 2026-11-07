@@ -39,10 +39,32 @@ test('the account page renames the account', async ({ page, request }) => {
 });
 
 // A real change would log out the session the other tests share: only the wrong password is tried.
-test('the account page refuses a wrong current password', async ({ page }) => {
+test('the account page refuses a wrong current password', async ({ page, request }) => {
+  try {
+    await page.goto('/account');
+    await page.getByLabel('Mot de passe actuel').fill('wrong password');
+    await page.getByLabel('Nouveau mot de passe').fill('another password');
+    await page.getByRole('button', { name: 'Changer le mot de passe' }).click();
+    await expect(page.getByText('Le mot de passe actuel est faux.').first()).toBeVisible();
+  } finally {
+    // The same password again: a success resets the count of wrong passwords, or the 4th run would wait.
+    const password = process.env.E2E_PASSWORD ?? 'e2e-password';
+    await request.patch(`${API}/api/me/password`, { ...api, data: { current: password, new: password } });
+  }
+});
+
+test('after too many wrong passwords the account page says how long to wait', async ({ page }) => {
+  // The API's real lockout would make the next runs wait: its answer is faked.
+  await page.route('**/api/me/password', (route) =>
+    route.fulfill({
+      status: 429,
+      headers: { 'Retry-After': '300', 'Access-Control-Expose-Headers': 'Retry-After' },
+      json: { error: 'too many wrong passwords, try again later' },
+    }),
+  );
   await page.goto('/account');
   await page.getByLabel('Mot de passe actuel').fill('wrong password');
   await page.getByLabel('Nouveau mot de passe').fill('another password');
   await page.getByRole('button', { name: 'Changer le mot de passe' }).click();
-  await expect(page.getByText('Le mot de passe actuel est faux.').first()).toBeVisible();
+  await expect(page.getByText('Trop d’essais ratés : réessayez dans 5 min.').first()).toBeVisible();
 });
