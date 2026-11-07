@@ -29,9 +29,10 @@ const cited = `EXISTS (
 	SELECT 1 FROM metadata_notes AS mn JOIN items AS i ON i.id = mn.item_id
 	WHERE i.user_id = f.user_id AND strpos(mn.content, f.id::text) > 0)`
 
-// Process deletes the files no note has cited for the trash retention of their account, like a trashed item:
-// an image removed from its text, or whose note was purged, comes back by undo or by pasting its link until then.
-// A retention of 0 keeps them forever.
+// Process deletes the files no note cites any more. Those of a note deleted for good go at once (createschema's
+// trigger dates them -infinity), unless another note still cites them. Those removed from a text wait the trash
+// retention of their account, like a trashed item: undo or the link pasted again brings them back until then.
+// A retention of 0 keeps those forever.
 func Process(ctx context.Context, db bun.IDB, store silo.Store) *run {
 	return &run{
 		ctx:   ctx,
@@ -71,10 +72,11 @@ func (p *run) findOrphans() {
 		return
 	}
 
-	err := p.db.NewSelect().Model(&p.cache.orphans).
+	// Not orphaned_at: time.Time cannot hold -infinity.
+	err := p.db.NewSelect().Model(&p.cache.orphans).Column("f.id", "f.user_id").
 		Join("JOIN users AS u ON u.id = f.user_id").
-		Where("u.trash_retention_days > 0").
-		Where("f.orphaned_at < current_timestamp - make_interval(days => u.trash_retention_days::int)").
+		Where(`f.orphaned_at = '-infinity' OR (u.trash_retention_days > 0
+			AND f.orphaned_at < current_timestamp - make_interval(days => u.trash_retention_days::int))`).
 		Scan(p.ctx)
 	p.SetErr(err)
 }

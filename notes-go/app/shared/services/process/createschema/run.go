@@ -32,6 +32,7 @@ func (p *run) Run() {
 	p.registerModels()
 	p.createTables()
 	p.createIndexes()
+	p.createTriggers()
 	p.runInTx()
 }
 
@@ -50,6 +51,19 @@ func (p *run) createTables() {
 func (p *run) createIndexes() {
 	p.cache.steps = append(p.cache.steps, func(tx bun.Tx) {
 		p.execQueries(getIndexes(tx))
+	})
+}
+
+// createTriggers replaces the triggers each time: CREATE OR REPLACE keeps them up to date without migrations.
+func (p *run) createTriggers() {
+	p.cache.steps = append(p.cache.steps, func(tx bun.Tx) {
+		for _, trigger := range triggers {
+			if p.HasErr() {
+				return
+			}
+			_, err := tx.ExecContext(p.ctx, trigger)
+			p.SetErr(err)
+		}
 	})
 }
 
@@ -137,6 +151,19 @@ func getIndexes(tx bun.Tx) []*bun.CreateIndexQuery {
 		// The primary key (source_id, target_id) only covers the links of a note, not its backlinks.
 		tx.NewCreateIndex().Model((*domain.NoteLink)(nil)).Index("idx_notes_on_links_target_id").Column("target_id"),
 	}
+}
+
+// triggers: an item deleted for good (purge, emptied trash, or a child of either by cascade) hands its images to
+// purgefiles at once with orphaned_at = -infinity. BEFORE: the note's text is still there; the cascade removes it after.
+var triggers = []string{
+	`CREATE OR REPLACE FUNCTION orphan_files_of_item() RETURNS trigger AS $$
+	BEGIN
+		UPDATE files AS f SET orphaned_at = '-infinity'
+		FROM metadata_notes AS mn
+		WHERE mn.item_id = OLD.id AND f.user_id = OLD.user_id AND strpos(mn.content, f.id::text) > 0;
+		RETURN OLD;
+	END $$ LANGUAGE plpgsql`,
+	`CREATE OR REPLACE TRIGGER items_orphan_files BEFORE DELETE ON items FOR EACH ROW EXECUTE FUNCTION orphan_files_of_item()`,
 }
 
 // Interface

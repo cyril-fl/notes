@@ -5,13 +5,16 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/createfile"
+	"main.go/app/shared/services/process/createfolder"
 	"main.go/app/shared/services/process/createnote"
 	"main.go/app/shared/services/process/createschema"
 	"main.go/app/shared/services/process/deleteitems"
+	"main.go/app/shared/services/process/emptytrash"
 	"main.go/app/shared/services/silo"
 	"main.go/app/shared/services/testaccount"
 )
@@ -104,5 +107,44 @@ func TestPurgeFiles(t *testing.T) {
 	keep.Run()
 	if keep.HasErr() || keep.GetResult() != 0 {
 		t.Errorf("purge with no retention = %d, %v, want 0", keep.GetResult(), keep.GetErr())
+	}
+
+	// Notes purged for good, here one by cascade with its folder, frees at once what it alone cited, retention or not.
+	folder := createfolder.Process(ctx, tx, createfolder.Input{Title: fmt.Sprintf("purge-%d", time.Now().UnixNano())})
+	folder.Run()
+	if folder.HasErr() {
+		t.Fatal(folder.GetErr())
+	}
+	content := "# purged\n\n![](" + domain.FileURL(files["removed"].ID) + ") ![](" + domain.FileURL(files["live"].ID) + ")"
+	purged := createnote.Process(ctx, tx, createnote.Input{Content: content, ParentID: folder.GetResult().ID})
+	purged.Run()
+	if purged.HasErr() {
+		t.Fatal(purged.GetErr())
+	}
+	for _, step := range []interface {
+		Run()
+		HasErr() bool
+		GetErr() error
+	}{
+		deleteitems.Process(ctx, tx, domain.FOLDER, []string{folder.GetResult().ID}),
+		emptytrash.Process(ctx, tx),
+	} {
+		step.Run()
+		if step.HasErr() {
+			t.Fatal(step.GetErr())
+		}
+	}
+	freed := Process(ctx, tx, store)
+	freed.Run()
+	// The whole trash went: the note of trashed too.
+	if freed.HasErr() || freed.GetResult() != 2 {
+		t.Errorf("purge after the trash = %d, %v, want removed and trashed (live is cited elsewhere)", freed.GetResult(), freed.GetErr())
+	}
+	if _, ok := store.Objects[files["live"].Key()]; !ok {
+		t.Error("live was removed, a live note cites it")
+	}
+	var orphaned int
+	if err := tx.NewRaw("SELECT count(*) FROM files WHERE id = ? AND orphaned_at IS NULL", files["live"].ID).Scan(ctx, &orphaned); err != nil || orphaned != 1 {
+		t.Errorf("live: orphaned_at not cleared (%d, %v)", orphaned, err)
 	}
 }
