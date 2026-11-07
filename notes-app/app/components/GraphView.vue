@@ -145,7 +145,7 @@ function linkClass(link: Link) {
       >
         <!-- Solid colors, not opacity: links drawn under the dot must not show through it. -->
         <span class="size-2.5 shrink-0 rounded-full transition-colors duration-150" :class="dotClass(note.id)" />
-        <span class="max-w-full truncate text-xs transition-opacity duration-150" :class="{ 'font-medium': note.id === active, 'opacity-30': isDimmed(note.id) }">{{ displayTitle(note.title) }}</span>
+        <span class="max-w-full truncate text-xs transition-opacity duration-150" :class="{ 'font-medium': note.id === active, 'opacity-30': isDimmed(note.id) }">{{ displayTitle(note.title, $t('untitled')) }}</span>
       </NuxtLink>
 
       <div
@@ -153,28 +153,28 @@ function linkClass(link: Link) {
         :style="{ left: `${at(hoveredNote.id).x}%`, top: `${at(hoveredNote.id).y}%` }"
         class="pointer-events-none absolute z-20 ml-4 flex max-w-64 -translate-y-1/2 flex-col gap-1 rounded-md bg-default p-2 text-xs shadow-lg ring ring-default"
       >
-        <span class="truncate font-medium">{{ displayTitle(hoveredNote.title) }}</span>
+        <span class="truncate font-medium">{{ displayTitle(hoveredNote.title, $t('untitled')) }}</span>
         <span class="truncate text-muted">{{ hoveredNote.path }}</span>
         <ul v-if="activeLinks.length" class="mt-1 flex flex-col gap-0.5 border-t border-default pt-1">
           <li v-for="link in activeLinks" :key="`${link.source}-${link.target}`" class="flex gap-2">
-            <span class="truncate">{{ displayTitle(titles.get(otherEnd(link)) ?? '') }}</span>
-            <span class="ml-auto shrink-0 text-primary">{{ [...(link.linked ? ['lien'] : []), ...link.tags.map(tag => `#${tag}`)].join(' ') }}</span>
+            <span class="truncate">{{ displayTitle(titles.get(otherEnd(link)), $t('untitled')) }}</span>
+            <span class="ml-auto shrink-0 text-primary">{{ [...(link.linked ? [$t('graph.link')] : []), ...link.tags.map(tag => `#${tag}`)].join(' ') }}</span>
           </li>
         </ul>
-        <span v-else class="text-muted">Aucun lien</span>
+        <span v-else class="text-muted">{{ $t('graph.noLink') }}</span>
       </div>
     </div>
 
     <!-- @pointerdown.stop: a click on a button is not the start of a drag. -->
     <div class="absolute right-3 bottom-3 z-30 flex gap-1 rounded-md bg-default/80 p-0.5 backdrop-blur" @pointerdown.stop>
-      <UTooltip text="Dézoomer">
-        <UButton :icon="icons.zoomOut" color="neutral" variant="ghost" size="sm" aria-label="Dézoomer" :disabled="zoom <= MIN_ZOOM" @click="zoomBy(1 / 1.4)" />
+      <UTooltip :text="$t('graph.zoomOut')">
+        <UButton :icon="icons.zoomOut" color="neutral" variant="ghost" size="sm" :aria-label="$t('graph.zoomOut')" :disabled="zoom <= MIN_ZOOM" @click="zoomBy(1 / 1.4)" />
       </UTooltip>
-      <UTooltip text="Zoomer">
-        <UButton :icon="icons.zoomIn" color="neutral" variant="ghost" size="sm" aria-label="Zoomer" :disabled="zoom >= MAX_ZOOM" @click="zoomBy(1.4)" />
+      <UTooltip :text="$t('graph.zoomIn')">
+        <UButton :icon="icons.zoomIn" color="neutral" variant="ghost" size="sm" :aria-label="$t('graph.zoomIn')" :disabled="zoom >= MAX_ZOOM" @click="zoomBy(1.4)" />
       </UTooltip>
-      <UTooltip text="Recentrer">
-        <UButton :icon="icons.recenter" color="neutral" variant="ghost" size="sm" aria-label="Recentrer" @click="recenter" />
+      <UTooltip :text="$t('graph.recenter')">
+        <UButton :icon="icons.recenter" color="neutral" variant="ghost" size="sm" :aria-label="$t('graph.recenter')" @click="recenter" />
       </UTooltip>
     </div>
   </div>

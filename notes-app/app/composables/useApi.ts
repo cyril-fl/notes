@@ -7,9 +7,9 @@ type ApiOptions = FetchOptions<'json'> & {
   quiet?: boolean;
 };
 
-function errorMessage(error: FetchError, conflict?: ApiOptions['conflict']): string {
-  if (!error.status) return "L'API ne répond pas.";
-  const message: string = error.data?.error ?? 'Une erreur est survenue.';
+function errorMessage(error: FetchError, t: (key: string) => string, conflict?: ApiOptions['conflict']): string {
+  if (!error.status) return t('api.down');
+  const message: string = error.data?.error ?? t('api.failed');
   if (error.status !== 409 || !conflict) return message;
   if (typeof conflict === 'string') return conflict;
   return Object.entries(conflict).find(([part]) => message.includes(part))?.[1] ?? message;
@@ -18,6 +18,7 @@ function errorMessage(error: FetchError, conflict?: ApiOptions['conflict']): str
 /** Calls the Go API and tells the user when it fails; without a session, opens the login page. */
 export function useApi() {
   const toast = useToast();
+  const { t } = useI18n();
   const route = useRoute();
   const baseURL = useRuntimeConfig().public.apiBase;
 
@@ -29,7 +30,7 @@ export function useApi() {
       if ((error as FetchError).status === 401 && route.path !== '/login') {
         await navigateTo({ path: '/login', query: { redirect: route.fullPath } });
       } else if (!quiet) {
-        toast.add({ title: errorMessage(error as FetchError, conflict), color: 'error' });
+        toast.add({ title: errorMessage(error as FetchError, t, conflict), color: 'error' });
       }
       throw error;
     }

@@ -18,8 +18,8 @@ function submit() {
     </template>
     <template #footer>
       <div class="flex w-full justify-end gap-2">
-        <UButton label="Annuler" color="neutral" variant="ghost" @click="emit('close')" />
-        <UButton type="submit" form="prompt" :label="action ?? 'Valider'" :disabled="!text.trim()" />
+        <UButton :label="$t('common.cancel')" color="neutral" variant="ghost" @click="emit('close')" />
+        <UButton type="submit" form="prompt" :label="action ?? $t('common.confirm')" :disabled="!text.trim()" />
       </div>
     </template>
   </UModal>

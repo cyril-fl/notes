@@ -15,8 +15,8 @@ const { data: folder, error } = useLazyAsyncData(`folder:${id}`, () => api<ItemD
   <UEmpty
     v-else-if="error"
     :icon="icons.folderNotFound"
-    title="Ce dossier est introuvable"
-    description="Il n'existe pas ou il est dans la corbeille."
-    :actions="[{ label: 'Retour aux notes', icon: icons.home, color: 'neutral', variant: 'subtle', to: '/' }]"
+    :title="$t('folder.notFound')"
+    :description="$t('folder.notFoundDescription')"
+    :actions="[{ label: $t('common.backToNotes'), icon: icons.home, color: 'neutral', variant: 'subtle', to: '/' }]"
   />
 </template>

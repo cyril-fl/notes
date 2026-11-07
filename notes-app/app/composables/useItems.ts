@@ -1,9 +1,6 @@
 import type { ContextMenuItem } from '@nuxt/ui';
 import type { FolderPath, Item, Pinned } from '~/types/items';
 
-const CYCLE = 'Un dossier ne peut pas aller dans lui-même ou ses sous-dossiers.';
-const PARENT_IN_TRASH = "Le dossier parent est dans la corbeille : restaure-le d'abord.";
-const NAME_TAKEN = 'Un dossier porte déjà ce nom à cet endroit.';
 // The part of the API's message saying a folder name is taken (domain.ErrFolderExists).
 const TAKEN = 'already exists here';
 
@@ -13,6 +10,7 @@ export function useItems() {
   const route = useRoute();
   const { prompt, confirm } = useDialogs();
   const { icons } = useIcons();
+  const { t } = useI18n();
 
   // On failure the toast already told the user.
   async function act<T>(request: () => Promise<T>): Promise<T | undefined> {
@@ -26,16 +24,16 @@ export function useItems() {
   }
 
   async function createFolder(parentId?: string) {
-    const title = await prompt({ title: 'Nouveau dossier', placeholder: 'Nom du dossier', action: 'Créer' });
+    const title = await prompt({ title: t('common.newFolder'), placeholder: t('items.folderName'), action: t('common.create') });
     if (!title) return;
     const body = { title, parent_id: parentId };
-    return act(() => api<Item>('/api/folders', { method: 'POST', body, conflict: NAME_TAKEN }));
+    return act(() => api<Item>('/api/folders', { method: 'POST', body, conflict: t('items.nameTaken') }));
   }
 
   async function renameFolder(folder: Item) {
-    const title = await prompt({ title: 'Renommer le dossier', value: folder.title, action: 'Renommer' });
+    const title = await prompt({ title: t('items.renameFolder'), value: folder.title, action: t('common.rename') });
     if (!title || title === folder.title) return;
-    return act(() => api<Item>(`/api/folders/${folder.id}`, { method: 'PATCH', body: { title }, conflict: NAME_TAKEN }));
+    return act(() => api<Item>(`/api/folders/${folder.id}`, { method: 'PATCH', body: { title }, conflict: t('items.nameTaken') }));
   }
 
   function removeItem(item: Pick<Item, 'id' | 'kind'>) {
@@ -50,11 +48,11 @@ export function useItems() {
   /** One id or several; a null parent is the root. */
   function moveItem(ids: string | string[], parentId: string | null) {
     const body = { ids: [ids].flat(), parent_id: parentId ?? undefined };
-    return act(() => api<Item[]>('/api/move', { method: 'POST', body, conflict: { [TAKEN]: NAME_TAKEN, 'into itself': CYCLE } }));
+    return act(() => api<Item[]>('/api/move', { method: 'POST', body, conflict: { [TAKEN]: t('items.nameTaken'), 'into itself': t('items.cycle') } }));
   }
 
   function restoreItem(id: string) {
-    return act(() => api<Item[]>('/api/restore', { method: 'POST', body: { ids: [id] }, conflict: { [TAKEN]: NAME_TAKEN, 'in the trash': PARENT_IN_TRASH } }));
+    return act(() => api<Item[]>('/api/restore', { method: 'POST', body: { ids: [id] }, conflict: { [TAKEN]: t('items.nameTaken'), 'in the trash': t('items.parentInTrash') } }));
   }
 
   /** Pins a note, or makes a folder a favorite. */
@@ -64,17 +62,17 @@ export function useItems() {
   }
 
   async function renameTag(value: string) {
-    const next = await prompt({ title: 'Renommer le tag', value, action: 'Renommer' });
+    const next = await prompt({ title: t('items.renameTag'), value, action: t('common.rename') });
     if (!next || next === value) return;
-    await changeTag(value, { method: 'PATCH', body: { value: next }, conflict: 'Ce tag existe déjà.' }, tagPath(next));
+    await changeTag(value, { method: 'PATCH', body: { value: next }, conflict: t('items.tagTaken') }, tagPath(next));
   }
 
   /** Asks first: the tag is also erased from the text of its notes, and no trash keeps it. */
   async function removeTag(value: string) {
     const confirmed = await confirm({
-      title: `Supprimer #${value} ?`,
-      description: 'Le tag sera aussi effacé du texte de ses notes.',
-      action: 'Supprimer',
+      title: t('items.deleteTag', { value }),
+      description: t('items.deleteTagDescription'),
+      action: t('common.delete'),
     });
     if (confirmed) await changeTag(value, { method: 'DELETE' }, '/');
   }
@@ -92,8 +90,8 @@ export function useItems() {
 
   function tagMenu(value: string): ContextMenuItem[][] {
     return [
-      [{ label: 'Renommer', icon: icons.rename, onSelect: () => renameTag(value) }],
-      [{ label: 'Supprimer', icon: icons.delete, color: 'error' as const, onSelect: () => removeTag(value) }],
+      [{ label: t('common.rename'), icon: icons.rename, onSelect: () => renameTag(value) }],
+      [{ label: t('common.delete'), icon: icons.delete, color: 'error' as const, onSelect: () => removeTag(value) }],
     ];
   }
 
@@ -108,10 +106,10 @@ export function useItems() {
 
   /** What right-clicking an item offers. */
   function itemMenu(item: Item): ContextMenuItem[][] {
-    const remove = { label: 'Supprimer', icon: icons.delete, color: 'error' as const, onSelect: () => removeItem(item) };
+    const remove = { label: t('common.delete'), icon: icons.delete, color: 'error' as const, onSelect: () => removeItem(item) };
     if (item.kind === 'note') {
       const pinned = isPinned(item.id);
-      const pin = { label: pinned ? 'Désépingler' : 'Épingler', icon: pinned ? icons.unpin : icons.pin, onSelect: () => pinItem(item, !pinned) };
+      const pin = { label: pinned ? t('items.unpin') : t('items.pin'), icon: pinned ? icons.unpin : icons.pin, onSelect: () => pinItem(item, !pinned) };
       return [[pin], [remove]];
     }
 
@@ -119,12 +117,12 @@ export function useItems() {
 
     return [
       [
-        { label: 'Nouvelle note', icon: icons.noteAdd, onSelect: () => navigateTo(newNotePath(item.id)) },
-        { label: 'Nouveau dossier', icon: icons.folderAdd, onSelect: () => createFolder(item.id) },
+        { label: t('common.newNote'), icon: icons.noteAdd, onSelect: () => navigateTo(newNotePath(item.id)) },
+        { label: t('common.newFolder'), icon: icons.folderAdd, onSelect: () => createFolder(item.id) },
       ],
       [
-        { label: favorite ? 'Retirer des favoris' : 'Ajouter aux favoris', icon: favorite ? icons.unfavorite : icons.favorite, onSelect: () => pinItem(item, !favorite) },
-        { label: 'Renommer', icon: icons.rename, onSelect: () => renameFolder(item) },
+        { label: favorite ? t('items.removeFavorite') : t('items.addFavorite'), icon: favorite ? icons.unfavorite : icons.favorite, onSelect: () => pinItem(item, !favorite) },
+        { label: t('common.rename'), icon: icons.rename, onSelect: () => renameFolder(item) },
       ],
       [remove],
     ];
@@ -149,9 +147,10 @@ export const ROOT = 'root';
 /** Where items can go, for a select: the root, then every folder by its path but the excluded ones. */
 export function useDestinations(exclude: () => string[] = () => []) {
   const api = useApi();
+  const { t } = useI18n();
   const { data: folders } = useLazyAsyncData('folder-paths', () => api<FolderPath[]>('/api/folders'), { default: () => [] as FolderPath[] });
   return computed(() => [
-    { label: 'Racine', value: ROOT },
+    { label: t('common.root'), value: ROOT },
     ...folders.value.filter((folder) => !exclude().includes(folder.id)).map((folder) => ({ label: folder.path, value: folder.id })),
   ]);
 }

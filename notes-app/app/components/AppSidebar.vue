@@ -27,37 +27,37 @@ const isOverRoot = useDropFolder(rootLink, () => null);
 
 <template>
   <!-- Reduced to a rail of icons: the sidebar never leaves the screen. -->
-  <nav v-if="collapsed" class="flex h-full flex-col items-center gap-1 py-3" aria-label="Navigation">
-    <UTooltip text="Rechercher" :kbds="['meta', 'K']" :content="{ side: 'right' }">
-      <UButton :icon="icons.search" color="neutral" variant="ghost" aria-label="Rechercher" @click="searchOpen = true" />
+  <nav v-if="collapsed" class="flex h-full flex-col items-center gap-1 py-3" :aria-label="$t('common.navigation')">
+    <UTooltip :text="$t('common.search')" :kbds="['meta', 'K']" :content="{ side: 'right' }">
+      <UButton :icon="icons.search" color="neutral" variant="ghost" :aria-label="$t('common.search')" @click="searchOpen = true" />
     </UTooltip>
-    <UTooltip text="Notes" :content="{ side: 'right' }">
-      <UButton :icon="icons.notes" to="/" color="neutral" variant="ghost" active-variant="soft" aria-label="Notes" :active="route.path === '/'" />
+    <UTooltip :text="$t('common.notes')" :content="{ side: 'right' }">
+      <UButton :icon="icons.notes" to="/" color="neutral" variant="ghost" active-variant="soft" :aria-label="$t('common.notes')" :active="route.path === '/'" />
     </UTooltip>
-    <UTooltip text="Graphe" :content="{ side: 'right' }">
-      <UButton :icon="icons.graph" to="/graph" color="neutral" variant="ghost" active-variant="soft" aria-label="Graphe" />
+    <UTooltip :text="$t('common.graph')" :content="{ side: 'right' }">
+      <UButton :icon="icons.graph" to="/graph" color="neutral" variant="ghost" active-variant="soft" :aria-label="$t('common.graph')" />
     </UTooltip>
-    <UTooltip text="Corbeille" :content="{ side: 'right' }">
-      <UButton :icon="icons.trash" to="/trash" color="neutral" variant="ghost" active-variant="soft" aria-label="Corbeille" />
+    <UTooltip :text="$t('common.trash')" :content="{ side: 'right' }">
+      <UButton :icon="icons.trash" to="/trash" color="neutral" variant="ghost" active-variant="soft" :aria-label="$t('common.trash')" />
     </UTooltip>
 
     <div class="mt-auto flex flex-col items-center gap-1 border-t border-default pt-2">
-      <UTooltip text="Réglages" :content="{ side: 'right' }">
-        <UButton :icon="icons.settings" to="/settings" color="neutral" variant="ghost" active-variant="soft" aria-label="Réglages" />
+      <UTooltip :text="$t('common.settings')" :content="{ side: 'right' }">
+        <UButton :icon="icons.settings" to="/settings" color="neutral" variant="ghost" active-variant="soft" :aria-label="$t('common.settings')" />
       </UTooltip>
-      <UTooltip :text="darkMode ? 'Thème clair' : 'Thème sombre'" :content="{ side: 'right' }">
-        <UButton :icon="darkMode ? icons.lightMode : icons.darkMode" color="neutral" variant="ghost" :aria-label="darkMode ? 'Thème clair' : 'Thème sombre'" @click="darkMode = !darkMode" />
+      <UTooltip :text="darkMode ? $t('sidebar.lightTheme') : $t('sidebar.darkTheme')" :content="{ side: 'right' }">
+        <UButton :icon="darkMode ? icons.lightMode : icons.darkMode" color="neutral" variant="ghost" :aria-label="darkMode ? $t('sidebar.lightTheme') : $t('sidebar.darkTheme')" @click="darkMode = !darkMode" />
       </UTooltip>
-      <UTooltip text="Déployer la barre latérale" :kbds="['meta', '\\']" :content="{ side: 'right' }">
+      <UTooltip :text="$t('sidebar.expand')" :kbds="['meta', '\\']" :content="{ side: 'right' }">
         <UDashboardSidebarCollapse color="neutral" variant="ghost" />
       </UTooltip>
     </div>
   </nav>
 
-  <nav v-else class="flex h-full flex-col gap-4 p-3" aria-label="Navigation">
+  <nav v-else class="flex h-full flex-col gap-4 p-3" :aria-label="$t('common.navigation')">
     <UButton
       :icon="icons.search"
-      label="Rechercher"
+      :label="$t('common.search')"
       color="neutral"
       variant="soft"
       size="sm"
@@ -72,10 +72,10 @@ const isOverRoot = useDropFolder(rootLink, () => null);
 
     <div class="min-h-0 flex-1 space-y-5 overflow-y-auto">
       <section v-if="favorites.length">
-        <h2 class="px-2 pb-1 text-xs font-medium text-muted">Favoris</h2>
+        <h2 class="px-2 pb-1 text-xs font-medium text-muted">{{ $t('sidebar.favorites') }}</h2>
         <div v-for="folder in favorites" :key="folder.id" class="row" :class="{ 'row-active': route.params.id === folder.id }">
-          <UTooltip text="Retirer des favoris">
-            <button type="button" class="shrink-0 text-muted hover:text-default" aria-label="Retirer des favoris" @click="pinItem(folder, false)">
+          <UTooltip :text="$t('sidebar.removeFavorite')">
+            <button type="button" class="shrink-0 text-muted hover:text-default" :aria-label="$t('sidebar.removeFavorite')" @click="pinItem(folder, false)">
               <UIcon :name="icons.favorite" class="block size-4" />
             </button>
           </UTooltip>
@@ -84,22 +84,22 @@ const isOverRoot = useDropFolder(rootLink, () => null);
       </section>
 
       <section v-if="pinnedNotes.length">
-        <h2 class="px-2 pb-1 text-xs font-medium text-muted">Épinglées</h2>
+        <h2 class="px-2 pb-1 text-xs font-medium text-muted">{{ $t('sidebar.pinned') }}</h2>
         <div v-for="note in pinnedNotes" :key="note.id" class="row" :class="{ 'row-active': route.params.id === note.id }">
-          <UTooltip text="Désépingler">
-            <button type="button" class="shrink-0 text-muted hover:text-default" aria-label="Désépingler" @click="pinItem(note, false)">
+          <UTooltip :text="$t('sidebar.unpin')">
+            <button type="button" class="shrink-0 text-muted hover:text-default" :aria-label="$t('sidebar.unpin')" @click="pinItem(note, false)">
               <UIcon :name="icons.pin" class="block size-4" />
             </button>
           </UTooltip>
-          <NuxtLink :to="`/notes/${note.id}`" class="flex-1 self-stretch truncate leading-7">{{ displayTitle(note.title) }}</NuxtLink>
+          <NuxtLink :to="`/notes/${note.id}`" class="flex-1 self-stretch truncate leading-7">{{ displayTitle(note.title, $t('untitled')) }}</NuxtLink>
         </div>
       </section>
 
       <section v-if="recent.length">
-        <h2 class="px-2 pb-1 text-xs font-medium text-muted">Récentes</h2>
+        <h2 class="px-2 pb-1 text-xs font-medium text-muted">{{ $t('sidebar.recent') }}</h2>
         <NuxtLink v-for="note in recent.slice(0, 5)" :key="note.id" :to="`/notes/${note.id}`" class="row" :class="{ 'row-active': route.params.id === note.id }">
           <UIcon :name="icons.recent" class="size-4 shrink-0 text-muted" />
-          <span class="truncate">{{ displayTitle(note.title) }}</span>
+          <span class="truncate">{{ displayTitle(note.title, $t('untitled')) }}</span>
         </NuxtLink>
       </section>
 
@@ -111,19 +111,19 @@ const isOverRoot = useDropFolder(rootLink, () => null);
           :class="{ 'row-active': route.path === '/', 'row-over': isOverRoot }"
         >
           <UIcon :name="icons.notes" class="size-4 shrink-0" />
-          Notes
+          {{ $t('common.notes') }}
         </NuxtLink>
         <FolderTree />
       </section>
 
       <NuxtLink to="/graph" class="row font-medium" :class="{ 'row-active': route.path === '/graph' }">
         <UIcon :name="icons.graph" class="size-4 shrink-0" />
-        Graphe
+        {{ $t('common.graph') }}
       </NuxtLink>
     </div>
 
     <section v-if="tags.length" class="border-t border-default pt-3">
-      <h2 class="px-2 pb-2 text-xs font-medium text-muted">Tags</h2>
+      <h2 class="px-2 pb-2 text-xs font-medium text-muted">{{ $t('common.tags') }}</h2>
       <!-- Capped so a long tag list never pushes the folders out of the sidebar. -->
       <div class="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto px-2">
         <UContextMenu v-for="tag in tags" :key="tag.value" :items="tagMenu(tag.value)">
@@ -144,18 +144,18 @@ const isOverRoot = useDropFolder(rootLink, () => null);
     <div class="flex items-center justify-between border-t border-default pt-2">
       <NuxtLink to="/trash" class="row flex-1" :class="{ 'row-active': route.path === '/trash' }">
         <UIcon :name="icons.trash" class="size-4 shrink-0" />
-        Corbeille
+        {{ $t('common.trash') }}
       </NuxtLink>
-      <UTooltip text="Réglages">
-        <UButton :icon="icons.settings" to="/settings" color="neutral" variant="ghost" size="sm" aria-label="Réglages" />
+      <UTooltip :text="$t('common.settings')">
+        <UButton :icon="icons.settings" to="/settings" color="neutral" variant="ghost" size="sm" :aria-label="$t('common.settings')" />
       </UTooltip>
-      <UTooltip :text="darkMode ? 'Thème clair' : 'Thème sombre'">
-        <UButton :icon="darkMode ? icons.lightMode : icons.darkMode" color="neutral" variant="ghost" size="sm" :aria-label="darkMode ? 'Thème clair' : 'Thème sombre'" @click="darkMode = !darkMode" />
+      <UTooltip :text="darkMode ? $t('sidebar.lightTheme') : $t('sidebar.darkTheme')">
+        <UButton :icon="darkMode ? icons.lightMode : icons.darkMode" color="neutral" variant="ghost" size="sm" :aria-label="darkMode ? $t('sidebar.lightTheme') : $t('sidebar.darkTheme')" @click="darkMode = !darkMode" />
       </UTooltip>
-      <UTooltip text="Nouveau dossier">
-        <UButton :icon="icons.folderAdd" color="neutral" variant="ghost" size="sm" aria-label="Nouveau dossier" @click="createFolder()" />
+      <UTooltip :text="$t('common.newFolder')">
+        <UButton :icon="icons.folderAdd" color="neutral" variant="ghost" size="sm" :aria-label="$t('common.newFolder')" @click="createFolder()" />
       </UTooltip>
-      <UTooltip text="Replier la barre latérale" :kbds="['meta', '\\']">
+      <UTooltip :text="$t('sidebar.collapse')" :kbds="['meta', '\\']">
         <UDashboardSidebarCollapse color="neutral" variant="ghost" size="sm" class="hidden lg:inline-flex" />
       </UTooltip>
     </div>

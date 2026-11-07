@@ -50,27 +50,27 @@ const isOver = useDropFolder(panel, () => props.folderId ?? null);
   <div ref="panel" class="flex min-h-full flex-col p-8 transition-shadow duration-150" :class="{ 'ring-2 ring-inset ring-primary/40': isOver }">
     <PageHeader :title="title">
       <ViewToggle />
-      <UTooltip text="Nouveau dossier">
-        <UButton :icon="icons.folderAdd" color="neutral" variant="ghost" aria-label="Nouveau dossier" @click="createFolder(folderId)" />
+      <UTooltip :text="$t('common.newFolder')">
+        <UButton :icon="icons.folderAdd" color="neutral" variant="ghost" :aria-label="$t('common.newFolder')" @click="createFolder(folderId)" />
       </UTooltip>
-      <UTooltip text="Nouvelle note">
-        <UButton :icon="icons.noteAdd" color="neutral" variant="ghost" aria-label="Nouvelle note" :to="newNotePath(folderId)" />
+      <UTooltip :text="$t('common.newNote')">
+        <UButton :icon="icons.noteAdd" color="neutral" variant="ghost" :aria-label="$t('common.newNote')" :to="newNotePath(folderId)" />
       </UTooltip>
     </PageHeader>
     <div v-if="selected.length" class="sticky top-0 z-10 mb-3 flex items-center gap-2 rounded-md bg-elevated py-1 pr-1 pl-3 text-sm">
-      <span class="mr-auto">{{ selected.length }} sélectionné{{ selected.length > 1 ? 's' : '' }}</span>
+      <span class="mr-auto">{{ $t('folder.selected', selected.length) }}</span>
       <USelectMenu
         :items="destinations"
         value-key="value"
-        placeholder="Déplacer vers…"
+        :placeholder="$t('folder.moveToPlaceholder')"
         size="sm"
         class="w-56"
-        aria-label="Déplacer vers"
+        :aria-label="$t('folder.moveTo')"
         @update:model-value="moveSelection"
       />
-      <UButton label="Supprimer" :icon="icons.delete" color="error" variant="ghost" size="sm" @click="removeSelection" />
-      <UTooltip text="Annuler la sélection" :kbds="['esc']">
-        <UButton :icon="icons.close" color="neutral" variant="ghost" size="sm" aria-label="Annuler la sélection" @click="selection = []" />
+      <UButton :label="$t('common.delete')" :icon="icons.delete" color="error" variant="ghost" size="sm" @click="removeSelection" />
+      <UTooltip :text="$t('folder.clearSelection')" :kbds="['esc']">
+        <UButton :icon="icons.close" color="neutral" variant="ghost" size="sm" :aria-label="$t('folder.clearSelection')" @click="selection = []" />
       </UTooltip>
     </div>
     <ul v-if="items.length" :class="{ mosaic: view === 'grid' }">
@@ -81,11 +81,11 @@ const isOver = useDropFolder(panel, () => props.folderId ?? null);
     <UEmpty
       v-else
       :icon="icons.folderEmpty"
-      title="Ce dossier est vide"
-      description="Créez une note ou glissez-y des éléments depuis la barre latérale."
+      :title="$t('folder.empty')"
+      :description="$t('folder.emptyDescription')"
       :actions="[
-        { label: 'Nouvelle note', icon: icons.noteAdd, to: newNotePath(folderId) },
-        { label: 'Nouveau dossier', icon: icons.folderAdd, color: 'neutral', variant: 'subtle', onClick: () => createFolder(folderId) },
+        { label: $t('common.newNote'), icon: icons.noteAdd, to: newNotePath(folderId) },
+        { label: $t('common.newFolder'), icon: icons.folderAdd, color: 'neutral', variant: 'subtle', onClick: () => createFolder(folderId) },
       ]"
     />
     <!-- Like a note's footer. The subtitle is the folder's own path: the breadcrumb leads to its parents. -->

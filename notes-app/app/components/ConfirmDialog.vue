@@ -7,7 +7,7 @@ const emit = defineEmits<{ close: [confirmed?: boolean] }>();
   <UModal :title="title" :description="description" :ui="{ content: 'max-w-sm' }" :close="false" @update:open="emit('close')">
     <template #footer>
       <div class="flex w-full justify-end gap-2">
-        <UButton label="Annuler" color="neutral" variant="ghost" @click="emit('close')" />
+        <UButton :label="$t('common.cancel')" color="neutral" variant="ghost" @click="emit('close')" />
         <UButton :label="action" color="error" @click="emit('close', true)" />
       </div>
     </template>

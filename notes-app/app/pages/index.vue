@@ -3,5 +3,5 @@ const { data: items } = useChildren();
 </script>
 
 <template>
-  <FolderView title="Notes" :items="items" />
+  <FolderView :title="$t('common.notes')" :items="items" />
 </template>

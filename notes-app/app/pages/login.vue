@@ -6,6 +6,7 @@ definePageMeta({ layout: false });
 
 const api = useApi();
 const route = useRoute();
+const { t } = useI18n();
 
 const name = ref('');
 const password = ref('');
@@ -23,7 +24,7 @@ async function login() {
   } catch (error) {
     const status = (error as FetchError).status;
     failure.value =
-      status === 401 ? 'Nom ou mot de passe incorrect.' : status === 429 ? 'Trop d’essais ratés : réessayez dans un quart d’heure.' : "L'API ne répond pas.";
+      status === 401 ? t('login.badCredentials') : status === 429 ? t('login.tooManyTries') : t('api.down');
   } finally {
     pending.value = false;
   }
@@ -33,15 +34,15 @@ async function login() {
 <template>
   <main class="flex min-h-dvh items-center justify-center bg-muted p-4">
     <form class="w-full max-w-xs space-y-4 rounded-xl bg-default p-6" @submit.prevent="login">
-      <h1 class="text-xl font-semibold tracking-tight">Notes</h1>
-      <UFormField label="Nom">
+      <h1 class="text-xl font-semibold tracking-tight">{{ $t('common.notes') }}</h1>
+      <UFormField :label="$t('login.name')">
         <UInput v-model="name" autocomplete="username" autofocus class="w-full" />
       </UFormField>
-      <UFormField label="Mot de passe">
+      <UFormField :label="$t('login.password')">
         <UInput v-model="password" type="password" autocomplete="current-password" class="w-full" />
       </UFormField>
       <p v-if="failure" class="text-sm text-error" role="alert">{{ failure }}</p>
-      <UButton type="submit" label="Se connecter" block :loading="pending" :disabled="!name || !password" />
+      <UButton type="submit" :label="$t('login.submit')" block :loading="pending" :disabled="!name || !password" />
     </form>
   </main>
 </template>

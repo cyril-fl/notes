@@ -9,14 +9,14 @@ defineProps<{ notes: { id: string; title: string; path: string; snippet?: string
         <div class="tile items-start justify-start text-muted">
           <p class="line-clamp-6">{{ note.snippet ?? note.path }}</p>
         </div>
-        <p class="truncate text-center text-xs">{{ displayTitle(note.title) }}</p>
+        <p class="truncate text-center text-xs">{{ displayTitle(note.title, $t('untitled')) }}</p>
       </NuxtLink>
     </li>
   </ul>
   <ul v-else>
     <li v-for="note in notes" :key="note.id">
       <NuxtLink :to="`/notes/${note.id}`" class="block rounded-md px-2 py-2 transition-colors duration-150 hover:bg-accented/60">
-        <p class="truncate text-sm">{{ displayTitle(note.title) }}</p>
+        <p class="truncate text-sm">{{ displayTitle(note.title, $t('untitled')) }}</p>
         <p class="truncate text-xs text-muted">{{ note.snippet ?? note.path }}</p>
       </NuxtLink>
     </li>

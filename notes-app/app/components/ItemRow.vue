@@ -2,6 +2,7 @@
 import type { Item } from '~/types/items';
 
 const { icons } = useIcons();
+const { locale } = useI18n();
 
 const props = defineProps<{ item: Item; grid?: boolean; selected?: boolean }>();
 
@@ -18,7 +19,7 @@ const isOver = useDropFolder(
   () => props.item.id
 );
 const date = computed(() =>
-  new Date(props.item.updated_at ?? props.item.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+  new Date(props.item.updated_at ?? props.item.created_at).toLocaleDateString(locale.value, { day: 'numeric', month: 'short', year: 'numeric' })
 );
 </script>
 
@@ -29,7 +30,7 @@ const date = computed(() =>
         <UIcon :name="isFolder ? icons.folder : icons.note" class="size-10 text-dimmed" />
       </div>
       <div class="min-w-0 text-center text-xs">
-        <p class="truncate">{{ displayTitle(item.title) }}</p>
+        <p class="truncate">{{ displayTitle(item.title, $t('untitled')) }}</p>
         <p class="text-muted">{{ date }}</p>
       </div>
     </NuxtLink>
@@ -39,7 +40,7 @@ const date = computed(() =>
         class="size-4 shrink-0"
         :class="isOver ? 'text-white' : 'text-muted'"
       />
-      <span class="truncate">{{ displayTitle(item.title) }}</span>
+      <span class="truncate">{{ displayTitle(item.title, $t('untitled')) }}</span>
       <span class="ml-auto shrink-0 pl-4 text-xs" :class="isOver ? 'text-white' : 'text-muted'">{{ date }}</span>
     </NuxtLink>
   </UContextMenu>

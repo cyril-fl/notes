@@ -18,15 +18,15 @@ const { data: matches, status } = useLazyAsyncData(
 
 <template>
   <div class="p-8">
-    <PageHeader title="Recherche" :subtitle="q">
+    <PageHeader :title="$t('search.title')" :subtitle="q">
       <ViewToggle />
     </PageHeader>
     <NoteList v-if="matches.length" :notes="matches" :grid="view === 'grid'" />
     <UEmpty
       v-else-if="status !== 'pending'"
       :icon="icons.searchEmpty"
-      :title="q.trim() ? 'Aucun résultat' : 'Rechercher dans les notes'"
-      :description="q.trim() ? `Aucune note ne contient « ${q} ».` : 'Tapez un mot dans la barre de recherche.'"
+      :title="q.trim() ? $t('search.noResult') : $t('search.empty')"
+      :description="q.trim() ? $t('search.noResultDescription', { q }) : $t('search.emptyDescription')"
     />
   </div>
 </template>

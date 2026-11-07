@@ -7,6 +7,7 @@ import type { Item, ItemDetail, NotesGraph } from '~/types/items';
 import type { Changes } from '~/utils/saver';
 
 const { icons } = useIcons();
+const { t } = useI18n();
 
 const props = defineProps<{ noteId?: string; parentId?: string }>();
 const emit = defineEmits<{ created: [id: string] }>();
@@ -127,9 +128,9 @@ async function beforeLeave(to: RouteLocationNormalized) {
   await saver.flush();
   if (!failed.value) return true;
   const leave = await confirm({
-    title: "La note n'est pas enregistrée",
-    description: 'Tes dernières modifications seront perdues.',
-    action: 'Quitter quand même',
+    title: t('note.unsaved'),
+    description: t('note.unsavedDescription'),
+    action: t('note.leaveAnyway'),
   });
   return leave === true;
 }
@@ -147,7 +148,7 @@ async function askLink(editor: Editor) {
   const current = editor.getAttributes('link').href as string | undefined;
   if (current) return editor.chain().focus().unsetLink().run();
 
-  const href = await prompt({ title: 'Ajouter un lien', placeholder: 'https://', action: 'Ajouter' });
+  const href = await prompt({ title: t('note.addLink'), placeholder: 'https://', action: t('common.add') });
   if (href) editor.chain().focus().setLink({ href: /^[a-z]+:/i.test(href) ? href : `https://${href}` }).run();
 }
 
@@ -165,8 +166,8 @@ function openLink(event: MouseEvent) {
   event.preventDefault();
   if (link.dataset.note) return navigateTo(`/notes/${link.dataset.note}`);
   toast.add({
-    title: 'Lien en attente',
-    description: `Il sera relié dès qu'une seule note s'appellera « ${link.dataset.wikilink} ». Écris son chemin (/Dossier/Titre) si plusieurs portent ce titre.`,
+    title: t('note.pendingLink'),
+    description: t('note.pendingLinkDescription', { target: link.dataset.wikilink }),
     color: 'warning',
   });
 }
@@ -192,22 +193,22 @@ const handlers = {
 
 const toolbar: EditorToolbarItem[][] = [
   [
-    { kind: 'heading', level: 1, icon: icons.heading1, tooltip: { text: 'Titre 1' } },
-    { kind: 'heading', level: 2, icon: icons.heading2, tooltip: { text: 'Titre 2' } },
-    { kind: 'heading', level: 3, icon: icons.heading3, tooltip: { text: 'Titre 3' } },
+    { kind: 'heading', level: 1, icon: icons.heading1, tooltip: { text: t('note.heading', { level: 1 }) } },
+    { kind: 'heading', level: 2, icon: icons.heading2, tooltip: { text: t('note.heading', { level: 2 }) } },
+    { kind: 'heading', level: 3, icon: icons.heading3, tooltip: { text: t('note.heading', { level: 3 }) } },
   ],
   [
-    { kind: 'mark', mark: 'bold', icon: icons.bold, tooltip: { text: 'Gras' } },
-    { kind: 'mark', mark: 'italic', icon: icons.italic, tooltip: { text: 'Italique' } },
-    { kind: 'mark', mark: 'strike', icon: icons.strike, tooltip: { text: 'Barré' } },
-    { kind: 'mark', mark: 'code', icon: icons.code, tooltip: { text: 'Code' } },
-    { kind: 'link', icon: icons.link, tooltip: { text: 'Lien' } },
+    { kind: 'mark', mark: 'bold', icon: icons.bold, tooltip: { text: t('note.bold') } },
+    { kind: 'mark', mark: 'italic', icon: icons.italic, tooltip: { text: t('note.italic') } },
+    { kind: 'mark', mark: 'strike', icon: icons.strike, tooltip: { text: t('note.strike') } },
+    { kind: 'mark', mark: 'code', icon: icons.code, tooltip: { text: t('note.code') } },
+    { kind: 'link', icon: icons.link, tooltip: { text: t('note.link') } },
   ],
   [
-    { kind: 'bulletList', icon: icons.list, tooltip: { text: 'Liste' } },
-    { kind: 'orderedList', icon: icons.orderedList, tooltip: { text: 'Liste numérotée' } },
-    { kind: 'taskList', icon: icons.taskList, tooltip: { text: 'Tâches' } },
-    { kind: 'blockquote', icon: icons.quote, tooltip: { text: 'Citation' } },
+    { kind: 'bulletList', icon: icons.list, tooltip: { text: t('note.bulletList') } },
+    { kind: 'orderedList', icon: icons.orderedList, tooltip: { text: t('note.orderedList') } },
+    { kind: 'taskList', icon: icons.taskList, tooltip: { text: t('note.taskList') } },
+    { kind: 'blockquote', icon: icons.quote, tooltip: { text: t('note.quote') } },
   ],
 ];
 
@@ -222,9 +223,9 @@ const starterKit = {
 const extensions = [TaskList, TaskItem.configure({ nested: true }), WikiLink];
 
 const status = computed(() => {
-  if (failed.value) return 'Non enregistré';
-  if (isEmpty.value && id.value) return 'Vide : ira à la corbeille en la quittant';
-  if (saving.value) return 'Enregistrement…';
+  if (failed.value) return t('note.notSaved');
+  if (isEmpty.value && id.value) return t('note.emptyWillTrash');
+  if (saving.value) return t('note.saving');
   return '';
 });
 </script>
@@ -233,9 +234,9 @@ const status = computed(() => {
   <UEmpty
     v-if="notFound"
     :icon="icons.noteNotFound"
-    title="Cette note est introuvable"
-    description="Elle n'existe pas ou elle est dans la corbeille."
-    :actions="[{ label: 'Retour aux notes', icon: icons.home, color: 'neutral', variant: 'subtle', to: '/' }]"
+    :title="$t('note.notFound')"
+    :description="$t('note.notFoundDescription')"
+    :actions="[{ label: $t('common.backToNotes'), icon: icons.home, color: 'neutral', variant: 'subtle', to: '/' }]"
   />
 
   <!-- UEditor hands its listeners to TipTap, not to the page: clicks on links are caught here. -->
@@ -244,7 +245,7 @@ const status = computed(() => {
       v-slot="{ editor }"
       :model-value="initialContent"
       content-type="markdown"
-      placeholder="Commencez par un titre…"
+      :placeholder="$t('note.placeholder')"
       :autofocus="!noteId"
       :image="false"
       :mention="false"

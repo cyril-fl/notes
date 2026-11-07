@@ -40,7 +40,7 @@ watch(isOver, (over) => (over ? start() : stop()));
           v-if="hasSubfolders"
           type="button"
           class="flex size-5 shrink-0 items-center justify-center rounded"
-          :aria-label="open ? 'Replier' : 'Déplier'"
+          :aria-label="open ? $t('items.collapse') : $t('items.expand')"
           :aria-expanded="open"
           @click="open = !open"
         >

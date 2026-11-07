@@ -2,6 +2,7 @@
 import type { Neighbors } from '~/types/items';
 
 const { icons } = useIcons();
+const { t } = useI18n();
 
 const props = defineProps<{ noteId: string }>();
 
@@ -12,9 +13,9 @@ const { data } = useLazyAsyncData(`neighbors:${props.noteId}`, () =>
 
 const sections = computed(() =>
   [
-    { title: 'Liens', notes: data.value?.links ?? [] },
-    { title: 'Rétroliens', notes: data.value?.backlinks ?? [] },
-    { title: 'Mêmes tags', notes: data.value?.neighbors ?? [] },
+    { title: t('related.links'), notes: data.value?.links ?? [] },
+    { title: t('related.backlinks'), notes: data.value?.backlinks ?? [] },
+    { title: t('related.sameTags'), notes: data.value?.neighbors ?? [] },
   ].filter((section) => section.notes.length)
 );
 
@@ -26,14 +27,14 @@ const total = computed(() => sections.value.reduce((sum, section) => sum + secti
     <template #default="{ open }">
       <div class="flex items-center py-2">
         <UButton
-          :label="`Notes liées (${total})`"
+          :label="$t('related.title', { total })"
           :trailing-icon="open ? icons.chevronDown : icons.chevronUp"
           color="neutral"
           variant="ghost"
           size="xs"
           class="-ml-2"
         />
-        <NuxtLink :to="{ path: '/graph', query: { note: noteId } }" class="ml-auto text-xs text-primary" @click.stop>Voir le graphe</NuxtLink>
+        <NuxtLink :to="{ path: '/graph', query: { note: noteId } }" class="ml-auto text-xs text-primary" @click.stop>{{ $t('related.showGraph') }}</NuxtLink>
       </div>
     </template>
     <template #content>
