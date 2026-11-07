@@ -5,6 +5,11 @@ pre-commit:
       glob: "*.go"
       run: gofmt -w {staged_files}
       stage_fixed: true
+    prettier:
+      root: notes-app/
+      glob: "*.{ts,vue,js,mjs,json,css}"
+      run: pnpm exec prettier --write --ignore-unknown {staged_files}
+      stage_fixed: true
 
 commit-msg:
   commands:

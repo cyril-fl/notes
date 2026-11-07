@@ -11,7 +11,10 @@
     "types": "openapi-typescript ../notes-go/docs/swagger.yaml -o app/types/api.d.ts",
     "test": "node --test test/*.test.ts",
     "e2e": "playwright test",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "^4.0.0",
@@ -31,10 +34,14 @@
     "vue-router": "^5.4.0"
   },
   "devDependencies": {
+    "@nuxt/eslint": "^1.17.0",
     "@playwright/test": "^1.65.0",
     "@tiptap/vue-3": "^3.32.2",
     "@types/d3-force": "^3.0.10",
+    "eslint": "^10.14.0",
+    "eslint-config-prettier": "^10.1.8",
     "openapi-typescript": "^7.13.0",
+    "prettier": "^3.9.10",
     "typescript": "^5.9.3",
     "vue-tsc": "^3.3.14"
   }
