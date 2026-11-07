@@ -16,6 +16,8 @@ export default defineConfig({
     baseURL: APP,
     channel: 'chrome',
     colorScheme: 'light',
+    // Without the cookie of a language, the app follows the browser's: the tests read French.
+    locale: 'fr-FR',
     storageState: SESSION,
   },
 });

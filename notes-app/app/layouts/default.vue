@@ -1,8 +1,16 @@
 <script setup lang="ts">
+import type { User } from '~/types/items';
+
 const route = useRoute();
+const api = useApi();
+const { setLocale } = useI18n();
 const { createFolder } = useItems();
 const searchOpen = useState('search-open', () => false);
 const collapsed = ref(false);
+
+// The account's language wins over the cookie's, which only remembers this browser's last one.
+const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
+watch(() => me.value?.locale, (locale) => locale && setLocale(locale as 'fr' | 'en'));
 
 // Single keys, like Notion or Linear: Nuxt UI skips them while typing in a field or the editor.
 defineShortcuts({

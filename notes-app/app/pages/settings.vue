@@ -2,6 +2,7 @@
 import type { ImportResult, User } from '~/types/items';
 
 const { icons } = useIcons();
+const { t, locale } = useI18n();
 
 const api = useApi();
 const toast = useToast();
@@ -11,6 +12,16 @@ const input = useTemplateRef('input');
 const importing = ref(false);
 
 const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
+
+// Each language in its own words. The layout watches me: it switches the interface once the API saved the choice.
+const languages = [
+  { label: 'Français', value: 'fr' },
+  { label: 'English', value: 'en' },
+];
+
+async function changeLanguage(next: string) {
+  me.value = await api<User>('/api/me', { method: 'PATCH', body: { locale: next } });
+}
 
 async function logout() {
   await api('/api/logout', { method: 'POST' });
@@ -31,9 +42,9 @@ async function importZip(event: Event) {
       query: parent.value === ROOT ? {} : { parent: parent.value },
       body: file,
       headers: { 'Content-Type': 'application/zip' },
-      conflict: 'Un dossier du zip existe déjà à cet endroit : importez ailleurs, ou renommez-le.',
+      conflict: t('settings.importConflict'),
     });
-    toast.add({ title: `${result.notes} note(s) et ${result.folders} dossier(s) importés`, color: 'success' });
+    toast.add({ title: t('settings.imported', { notes: result.notes, folders: result.folders }), color: 'success' });
     await refreshNuxtData();
   } finally {
     importing.value = false;
@@ -44,36 +55,44 @@ async function importZip(event: Event) {
 
 <template>
   <div class="p-8">
-    <PageHeader title="Réglages" />
+    <PageHeader :title="$t('common.settings')" />
 
     <section class="mb-8">
-      <h2 class="mb-1 text-sm font-semibold">Compte</h2>
+      <h2 class="mb-1 text-sm font-semibold">{{ $t('settings.account') }}</h2>
       <div class="flex items-center gap-4 py-3">
         <p class="min-w-0 flex-1 truncate text-sm">
-          Connecté en tant que <span class="font-medium">{{ me?.name }}</span>
+          {{ $t('settings.loggedInAs') }} <span class="font-medium">{{ me?.name }}</span>
         </p>
-        <UButton label="Se déconnecter" color="neutral" variant="outline" @click="logout" />
+        <UButton :label="$t('settings.logout')" color="neutral" variant="outline" @click="logout" />
+      </div>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="mb-1 text-sm font-semibold">{{ $t('settings.language') }}</h2>
+      <div class="flex items-center gap-4 py-3">
+        <p class="min-w-0 flex-1 text-xs text-muted">{{ $t('settings.languageDescription') }}</p>
+        <USelectMenu :model-value="locale" :items="languages" value-key="value" :search-input="false" :aria-label="$t('settings.language')" class="w-56" @update:model-value="changeLanguage" />
       </div>
     </section>
 
     <section>
-      <h2 class="mb-1 text-sm font-semibold">Données</h2>
+      <h2 class="mb-1 text-sm font-semibold">{{ $t('settings.data') }}</h2>
       <ul>
         <li class="flex items-center gap-4 border-b border-muted py-3">
           <div class="min-w-0 flex-1">
-            <p class="text-sm">Exporter</p>
-            <p class="text-xs text-muted">Toutes les notes en fichiers markdown, un dossier par dossier, dans un zip.</p>
+            <p class="text-sm">{{ $t('settings.export') }}</p>
+            <p class="text-xs text-muted">{{ $t('settings.exportDescription') }}</p>
           </div>
-          <UButton label="Exporter" :icon="icons.export" color="neutral" variant="outline" :href="exportURL" download />
+          <UButton :label="$t('settings.export')" :icon="icons.export" color="neutral" variant="outline" :href="exportURL" download />
         </li>
         <li class="flex items-center gap-4 py-3">
           <div class="min-w-0 flex-1">
-            <p class="text-sm">Importer</p>
-            <p class="text-xs text-muted">Les fichiers .md d'un zip (un export, un vault Obsidian…), ajoutés au dossier choisi.</p>
+            <p class="text-sm">{{ $t('settings.import') }}</p>
+            <p class="text-xs text-muted">{{ $t('settings.importDescription') }}</p>
           </div>
-          <USelectMenu v-model="parent" :items="destinations" value-key="value" aria-label="Importer dans" class="w-56" />
+          <USelectMenu v-model="parent" :items="destinations" value-key="value" :aria-label="$t('settings.importInto')" class="w-56" />
           <input ref="input" type="file" accept=".zip,application/zip" class="hidden" @change="importZip">
-          <UButton label="Importer" :icon="icons.import" color="neutral" variant="outline" :loading="importing" @click="input?.click()" />
+          <UButton :label="$t('settings.import')" :icon="icons.import" color="neutral" variant="outline" :loading="importing" @click="input?.click()" />
         </li>
       </ul>
     </section>

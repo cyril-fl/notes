@@ -29,3 +29,20 @@ test('a zip is imported into the chosen folder', async ({ page }) => {
   await page.goto(`/folders/${box.folder.id}`);
   await expect(page.getByRole('main').getByText('Importé')).toBeVisible();
 });
+
+// The language is the account's: without the cookie that remembers it, the API gives it back after a reload.
+test('the language of the interface is a setting of the account', async ({ page }) => {
+  try {
+    await page.goto('/settings');
+    await page.getByRole('button', { name: 'Langue' }).click();
+    await page.getByRole('option', { name: 'English' }).click();
+    await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+
+    await page.context().clearCookies({ name: 'notes-locale' });
+    await page.reload();
+    await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+  } finally {
+    // The other tests read French.
+    await box.api.patch('/api/me', { data: { locale: 'fr' } });
+  }
+});
