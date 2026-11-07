@@ -723,7 +723,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Change the language of the account logged in */
+        /** Change the settings of the account logged in */
         patch: {
             parameters: {
                 query?: never;
@@ -734,7 +734,7 @@ export interface paths {
             /** @description body */
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["login.MeBody"];
+                    "application/json": components["schemas"]["edituser.Input"];
                 };
             };
             responses: {
@@ -1817,6 +1817,12 @@ export interface components {
             locale: string;
             /** @description unique case-insensitive, see createschema */
             name: string;
+            /** @description one of Themes */
+            theme: string;
+            /** @description Days before the trash is purged, 0 to never purge. An insert of 0 gets the default: only an update sets it. */
+            trash_retention_days: number;
+            /** @description how the web app lists items, one of Views */
+            view: string;
         };
         "editfolder.Body": {
             pinned?: boolean;
@@ -1829,6 +1835,12 @@ export interface components {
         };
         "edittag.Body": {
             value: string;
+        };
+        "edituser.Input": {
+            locale?: string;
+            theme?: string;
+            trash_retention_days?: number;
+            view?: string;
         };
         "importnotes.Result": {
             folders: number;
@@ -1856,9 +1868,6 @@ export interface components {
             inside: number;
             kind: components["schemas"]["domain.Kind"];
             title: string;
-        };
-        "login.MeBody": {
-            locale: string;
         };
         "moveitems.Input": {
             ids: string[];

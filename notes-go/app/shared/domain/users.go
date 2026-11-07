@@ -12,15 +12,25 @@ import (
 type User struct {
 	bun.BaseModel `bun:"table:users,alias:u" json:"-"`
 
-	ID           string    `bun:",pk,type:uuid,default:gen_random_uuid()" json:"id"`
-	Name         string    `bun:",notnull" json:"name"` // unique case-insensitive, see createschema
-	PasswordHash string    `bun:",notnull" json:"-"`
-	Locale       string    `bun:",notnull,default:'fr'" json:"locale"` // the language of the web app, one of Locales
-	CreatedAt    time.Time `bun:",notnull,default:current_timestamp" json:"created_at"`
+	ID           string `bun:",pk,type:uuid,default:gen_random_uuid()" json:"id"`
+	Name         string `bun:",notnull" json:"name"` // unique case-insensitive, see createschema
+	PasswordHash string `bun:",notnull" json:"-"`
+	Locale       string `bun:",notnull,default:'fr'" json:"locale"`    // the language of the web app, one of Locales
+	Theme        string `bun:",notnull,default:'system'" json:"theme"` // one of Themes
+	View         string `bun:",notnull,default:'list'" json:"view"`    // how the web app lists items, one of Views
+	// Days before the trash is purged, 0 to never purge. An insert of 0 gets the default: only an update sets it.
+	TrashRetentionDays int       `bun:",notnull,default:30" json:"trash_retention_days"`
+	CreatedAt          time.Time `bun:",notnull,default:current_timestamp" json:"created_at"`
 }
 
 // Locales are the languages of the web app, the first one by default.
 var Locales = []string{"fr", "en"}
+
+// Themes and Views are the other settings of the web app, the first one by default.
+var (
+	Themes = []string{"system", "light", "dark"}
+	Views  = []string{"list", "grid"}
+)
 
 // Session is a login of a device: the client keeps the token, the base only its hash.
 type Session struct {

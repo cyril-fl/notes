@@ -115,11 +115,24 @@ components:
         name:
           description: unique case-insensitive, see createschema
           type: string
+        theme:
+          description: one of Themes
+          type: string
+        trash_retention_days:
+          description: 'Days before the trash is purged, 0 to never purge. An insert
+            of 0 gets the default: only an update sets it.'
+          type: integer
+        view:
+          description: how the web app lists items, one of Views
+          type: string
       required:
       - created_at
       - id
       - locale
       - name
+      - theme
+      - trash_retention_days
+      - view
       type: object
     editfolder.Body:
       properties:
@@ -146,6 +159,17 @@ components:
           type: string
       required:
       - value
+      type: object
+    edituser.Input:
+      properties:
+        locale:
+          type: string
+        theme:
+          type: string
+        trash_retention_days:
+          type: integer
+        view:
+          type: string
       type: object
     importnotes.Result:
       properties:
@@ -217,13 +241,6 @@ components:
       - inside
       - kind
       - title
-      type: object
-    login.MeBody:
-      properties:
-        locale:
-          type: string
-      required:
-      - locale
       type: object
     moveitems.Input:
       properties:
@@ -846,7 +863,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/login.MeBody'
+              $ref: '#/components/schemas/edituser.Input'
               description: body
               summary: body
         description: body
@@ -882,7 +899,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/respond.Failure'
           description: Internal Server Error
-      summary: Change the language of the account logged in
+      summary: Change the settings of the account logged in
       tags:
       - account
   /api/move:
