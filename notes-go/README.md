@@ -12,7 +12,7 @@ CLI de prise de notes en Go, avec dossiers, tags et corbeille. Les notes sont en
 
 ```sh
 cp .env.example .env     # puis renseigne les mots de passe
-make up                  # démarre Colima, PostgreSQL et LibreDB Studio
+make up                  # démarre Colima, PostgreSQL, Silo et LibreDB Studio
 go build -o "$(go env GOPATH)/bin/notes" .
 ```
 
@@ -28,6 +28,11 @@ POSTGRES_PASSWORD=...
 POSTGRES_DB=notes
 POSTGRES_HOST=localhost
 PORT=5432
+# Pour export et import, qui lisent et écrivent les images
+S3_ENDPOINT=localhost:9000
+S3_ACCESS_KEY=notes
+S3_SECRET_KEY=...
+S3_BUCKET=notes
 ```
 
 - Ce fichier passe avant le `.env` du dossier courant. Sans lui, le `.env` d'un autre projet peut diriger la CLI vers une autre base, où elle créerait son schéma et lancerait sa purge.
@@ -134,6 +139,16 @@ notes import ~/Obsidian/vault        # à la racine
 
 `import` fait l'inverse, tout ou rien : un nom de dossier déjà pris au même endroit arrête tout l'import, sans rien laisser derrière. Les fichiers cachés (`.obsidian`, `.git`…) et ceux qui ne sont pas des `.md` sont ignorés. Un texte sans titre markdown reçoit le nom de son fichier en tête, `# Nom`, comme dans Obsidian. Les `[[liens]]` se relient à l'import, comme à la frappe.
 
+Les images suivent les notes. À l'export, celles qu'une note cite sont copiées dans `_files/` à la racine de l'export, et la note les cite par un chemin relatif (`../_files/<uuid>.png`). À l'import, une image citée par un chemin relatif (`![](photo.png)`, `![](<photo de mer.png>)`) devient une image de la note, où qu'elle soit dans le dossier. `_files/` ne devient pas un dossier. Une image absente ou qui n'est pas en PNG, JPEG, GIF ou WebP garde son lien tel quel. Les `![[image.png]]` d'Obsidian restent du texte.
+
+### Images
+
+Coller ou glisser une image dans l'éditeur de l'app l'envoie à l'API, qui la range dans [Silo](https://github.com/pgsty/silo) (un stockage S3, fork de MinIO, démarré par `make up`) et la décrit dans la table `files`. La note la cite en markdown : `![nom](/api/files/<uuid>)`.
+
+- PNG, JPEG, GIF et WebP seulement (pas de SVG, qui peut contenir des scripts), 20 Mo au plus. Le type est lu dans le fichier, pas dans ce qu'envoie le navigateur.
+- Une image ne part pas à la corbeille avec sa note : le serveur efface, toutes les heures, celles qu'aucune note ne cite plus, corbeille comprise, une heure au moins après leur envoi. Une note purgée libère donc ses images, comme une image retirée de son texte.
+- Le navigateur ne parle jamais à Silo : il passe par `GET /api/files/{id}`, protégé par la session. La console de Silo est sur http://localhost:9001 (identifiants `S3_ACCESS_KEY` / `S3_SECRET_KEY`).
+
 ### Scripts
 
 `search`, `recent`, `trash` et `show folder` acceptent `--json`, tout comme `show tag --list`, qui accepte aussi `--yaml` :
@@ -164,16 +179,18 @@ notes serve --origin http://localhost:3000   # ou directement sur la machine
 | Recherche | `GET /search?q=<texte>`, `GET /recent` | |
 | Corbeille | `GET`, `DELETE /trash` (tout), `DELETE /trash/{id}` (une suppression et ce qui est parti avec), `POST /restore` | `ids` (restauration) |
 | Export / import | `GET /export` (zip), `POST /import?parent=<uuid>` (zip en corps, `Content-Type: application/zip`, racine sans `parent`) | |
+| Images | `POST /files?name=<nom>` (l'image en corps), `GET /files/{id}` | |
 
 - Tout, sauf `POST /login`, demande une session, sinon 401. La connexion pose un cookie `notes_session` (`HttpOnly`, `Secure`, `SameSite=Strict`), qui dure 30 jours prolongés à chaque requête. Les scripts peuvent envoyer le jeton dans `Authorization: Bearer <jeton>`.
 - Après 5 connexions ratées depuis une même adresse, `POST /login` répond 429 pendant 15 minutes.
 - Le titre d'une note vient de son contenu, comme dans la CLI : l'API refuse un champ `title` pour une note.
 - `PATCH /notes/{id}` ne change que les champs envoyés. `{"pinned": true}` seul épingle la note sans toucher à son texte ni à sa date de modification. Sans `tags`, les tags sont les `#mots` du contenu. Avec `tags`, cette liste réécrit le contenu : `"tags": []` efface tous ses `#mots`.
 - `PATCH /folders/{id}` avec `{"pinned": true}` met le dossier en favori. `GET /pinned` liste les notes épinglées et les dossiers favoris, avec leur `kind`.
-- Les erreurs ont la forme `{"error": "..."}`, avec le statut 400, 401, 403, 404, 409, 413, 429 ou 500.
+- Les erreurs ont la forme `{"error": "..."}`, avec le statut 400, 401, 403, 404, 409, 413, 415, 429 ou 500.
   Seuls une route inconnue (404) et une méthode non gérée (405) répondent en texte brut, car c'est le routeur qui les écrit.
 - Les éléments supprimés passent par la corbeille. Le serveur la purge toutes les heures. `DELETE /trash` la vide tout de suite et définitivement.
 - `GET /export` et `POST /import` font comme `notes export` et `notes import`, en zip. L'import va dans le dossier `parent`, à la racine sans lui. Il répond `{"folders": n, "notes": n}`, ou 409 si un dossier du zip existe déjà à cet endroit.
+- `POST /files` répond le fichier créé (`id`, `name`, `content_type`, `size`), 415 si ce n'est pas une image acceptée. `GET /files/{id}` renvoie l'image, mise en cache par le navigateur : une image ne change jamais.
 - `make openapi` génère le contrat OpenAPI dans `docs/swagger.yaml`, à partir des commentaires `@` des routes.
 
 ### Sécurité
@@ -194,22 +211,28 @@ Chaque requête doit venir d'un compte connecté. Garde quand même l'API sur `1
 | `PORT` | Port PostgreSQL | `5432` |
 | `CONFIG_FILE` | Remplace la configuration embarquée | `config/config.yaml`, intégré au binaire |
 | `WEB_ORIGIN` | Origine de l'app web pour `make api` | aucune |
+| `S3_ENDPOINT` | Adresse de Silo, sans `http://` (`note-silo:9000` dans `.env.docker`) | |
+| `S3_ACCESS_KEY`, `S3_SECRET_KEY` | Identifiants de Silo, qui le créent aussi au premier `make up` | |
+| `S3_BUCKET` | Bucket des images, créé au premier lancement | |
+| `S3_SECURE` | `true` pour parler à Silo en HTTPS | non |
 
 Les commandes, leurs textes d'aide et leurs flags sont définis dans `config/config.yaml`. Ce fichier est intégré à la compilation : recompile après l'avoir modifié, ou pointe `CONFIG_FILE` vers ton fichier.
 
 ## Sauvegarde
 
 ```sh
-make backup    # écrit backups/notes-<date>.sql (ignoré par git)
+make backup    # écrit backups/notes-<date>.sql et les images dans backups/notes-<date>.files/ (ignorés par git)
 ```
 
 Pour restaurer :
 
 ```sh
 docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" "$POSTGRES_DB"' < backups/<fichier>.sql
+docker compose cp backups/<fichier>.files silo:/tmp/restore
+docker compose exec silo sh -c 'mcli alias set local http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" && mcli mirror /tmp/restore local/notes'
 ```
 
-Le dump commence par supprimer les tables existantes : la restauration remplace donc tout le contenu de la base.
+Le dump commence par supprimer les tables existantes : la restauration remplace donc tout le contenu de la base. Les images s'ajoutent à celles de Silo, sans rien effacer.
 
 ## Développement
 

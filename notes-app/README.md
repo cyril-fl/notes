@@ -15,13 +15,17 @@ WEB_ORIGIN=http://localhost:3000
 ```
 
 ```sh
-cd ../notes-go && make up && make api   # PostgreSQL et l'API sur :8080
+cd ../notes-go && make up && make api   # PostgreSQL, Silo et l'API sur :8080
 cd ../notes-app && pnpm install && pnpm dev   # http://localhost:3000
 ```
 
 Ouvre bien `localhost`, pas `127.0.0.1` : l'API compare l'origine exactement. `NUXT_PUBLIC_API_BASE` change l'adresse de l'API.
 
 L'app demande de se connecter avec un compte créé par la CLI (`notes user add <nom>`, voir le README de `notes-go`). Sans session, elle ouvre la page de connexion, puis revient à la page demandée. Réglages > Compte affiche le compte connecté et permet de se déconnecter.
+
+## Images
+
+Coller ou glisser une image (PNG, JPEG, GIF, WebP, 20 Mo au plus) dans une note l'envoie à l'API et l'insère à cet endroit. Elle est rangée dans Silo, voir le README de `notes-go`.
 
 ## Raccourcis
 
@@ -42,7 +46,7 @@ La page Réglages (roue dentée en bas de la barre latérale, ou la palette) reg
 - **Langue** de l'interface, français ou anglais.
 - **Apparence** : le thème, choisi d'un clic sur sa miniature parmi des jeux de couleurs tout faits (Notes, Dracula, Catppuccin, Nord, Gruvbox, Everforest), et le mode (système, clair, sombre). Un thème se déclare dans `app/utils/themes.ts`, ses palettes dans `main.css`, et son id dans `domain.Themes` côté Go. Le bouton de mode de la barre latérale enregistre aussi, comme celui de la vue des listes.
 - **Corbeille** : la durée avant que les éléments supprimés soient effacés pour de bon (7, 30, 90, 365 jours, ou jamais).
-- **Exporter** télécharge toutes les notes en zip de fichiers `.md`, comme `notes export`.
+- **Exporter** télécharge toutes les notes en zip de fichiers `.md`, leurs images dans `_files/`, comme `notes export`.
 - **Importer** ajoute les `.md` d'un zip au dossier choisi (la racine par défaut), comme `notes import --parent`. Si un dossier du zip existe déjà à cet endroit, rien n'est importé.
 
 ## Commandes
