@@ -22,8 +22,12 @@ function isDimmed(id: string) {
   return active.value !== null && id !== active.value && !linkedToActive.value.has(id);
 }
 
+// Zoom spreads the notes from the center rather than scaling the drawing: titles keep their size and stop overlapping.
+const zoom = ref(1);
+
 function at(id: string) {
-  return positions.value.get(id) ?? { x: 50, y: 50 };
+  const { x, y } = positions.value.get(id) ?? { x: 50, y: 50 };
+  return { x: 50 + (x - 50) * zoom.value, y: 50 + (y - 50) * zoom.value };
 }
 
 function linkLabelStyle(link: Link) {
@@ -52,6 +56,33 @@ useEventListener(window, 'pointermove', (event: PointerEvent) => {
 });
 useEventListener(window, 'pointerup', () => (drag = null));
 
+const view = useTemplateRef('view');
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 6;
+
+/** Zooms by factor, keeping the point under (x, y) — in px from the view's corner, its center by default — in place. */
+function zoomBy(factor: number, x?: number, y?: number) {
+  const { width, height } = view.value!.getBoundingClientRect();
+  const next = Math.min(Math.max(zoom.value * factor, MIN_ZOOM), MAX_ZOOM);
+  const ratio = next / zoom.value;
+  const cx = (x ?? width / 2) - width / 2;
+  const cy = (y ?? height / 2) - height / 2;
+  offset.value = { x: cx - (cx - offset.value.x) * ratio, y: cy - (cy - offset.value.y) * ratio };
+  zoom.value = next;
+}
+
+// The wheel, and a trackpad pinch (a wheel with ctrlKey for the browser); passive: false to keep the page from scrolling.
+useEventListener(view, 'wheel', (event: WheelEvent) => {
+  event.preventDefault();
+  const rect = view.value!.getBoundingClientRect();
+  zoomBy(Math.exp(-event.deltaY * (event.ctrlKey ? 0.01 : 0.002)), event.clientX - rect.left, event.clientY - rect.top);
+}, { passive: false });
+
+function recenter() {
+  zoom.value = 1;
+  offset.value = { x: 0, y: 0 };
+}
+
 // A drag that ends on a note must not open it.
 function swallowClickAfterDrag(event: MouseEvent) {
   if (!moved) return;
@@ -68,6 +99,7 @@ function linkClass(link: Link) {
 
 <template>
   <div
+    ref="view"
     class="relative size-full cursor-grab touch-none overflow-hidden select-none active:cursor-grabbing"
     @pointerdown="startDrag"
     @click.capture="swallowClickAfterDrag"
@@ -115,6 +147,19 @@ function linkClass(link: Link) {
       >
         {{ [...(link.linked ? ['lien'] : []), ...link.tags.map(tag => `#${tag}`)].join(' · ') }}
       </span>
+    </div>
+
+    <!-- @pointerdown.stop: a click on a button is not the start of a drag. -->
+    <div class="absolute right-3 bottom-3 z-30 flex gap-1 rounded-md bg-default/80 p-0.5 backdrop-blur" @pointerdown.stop>
+      <UTooltip text="Dézoomer">
+        <UButton icon="i-lucide-minus" color="neutral" variant="ghost" size="sm" aria-label="Dézoomer" :disabled="zoom <= MIN_ZOOM" @click="zoomBy(1 / 1.4)" />
+      </UTooltip>
+      <UTooltip text="Zoomer">
+        <UButton icon="i-lucide-plus" color="neutral" variant="ghost" size="sm" aria-label="Zoomer" :disabled="zoom >= MAX_ZOOM" @click="zoomBy(1.4)" />
+      </UTooltip>
+      <UTooltip text="Recentrer">
+        <UButton icon="i-lucide-locate-fixed" color="neutral" variant="ghost" size="sm" aria-label="Recentrer" @click="recenter" />
+      </UTooltip>
     </div>
   </div>
 </template>

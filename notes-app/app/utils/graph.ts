@@ -20,8 +20,7 @@ function fit(values: number[]) {
 
 /**
  * Where the notes go, in % of the view: the more tags two notes share, the closer they are; a [[link]] counts as one.
- * d3 seeds its randomness, so the same notes get the same map on every load.
- * shortcut: titles overlap inside big clusters, add zoom when a graph gets too dense to read.
+ * d3 seeds its randomness, so the same notes get the same map on every load. GraphView zooms by spreading them.
  */
 export function layoutGraph(notes: { id: string }[], links: Link[]) {
   const nodes: Node[] = notes.map(({ id }) => ({ id }));
