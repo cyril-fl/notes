@@ -1265,3 +1265,30 @@ paths:
       summary: List what was removed
       tags:
       - trash
+  /api/trash/{id}:
+    delete:
+      parameters:
+      - description: uuid of an item listed by GET /api/trash
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Delete one removal of the trash for good
+      tags:
+      - trash

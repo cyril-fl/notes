@@ -152,7 +152,7 @@ notes serve --origin http://localhost:3000   # ou directement sur la machine
 | Tags | `GET`, `POST /tags`, `GET`, `PATCH`, `DELETE /tags/{value}` | `values` (création), `value` (renommage) |
 | Graphe | `GET /graph` (tags comptés), `GET /graph/notes` (notes et tags qui les relient) | |
 | Recherche | `GET /search?q=<texte>`, `GET /recent` | |
-| Corbeille | `GET`, `DELETE /trash`, `POST /restore` | `ids` (restauration) |
+| Corbeille | `GET`, `DELETE /trash` (tout), `DELETE /trash/{id}` (une suppression et ce qui est parti avec), `POST /restore` | `ids` (restauration) |
 | Export / import | `GET /export` (zip), `POST /import?parent=<uuid>` (zip en corps, `Content-Type: application/zip`, racine sans `parent`) | |
 
 - Le titre d'une note vient de son contenu, comme dans la CLI : l'API refuse un champ `title` pour une note.

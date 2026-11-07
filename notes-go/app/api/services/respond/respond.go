@@ -18,6 +18,7 @@ import (
 	"main.go/app/shared/services/process/editfolder"
 	"main.go/app/shared/services/process/editnote"
 	"main.go/app/shared/services/process/edittag"
+	"main.go/app/shared/services/process/emptytrash"
 	"main.go/app/shared/services/process/listitems"
 	"main.go/app/shared/services/process/moveitems"
 	"main.go/app/shared/services/process/pinnote"
@@ -54,7 +55,7 @@ var statuses = []struct {
 		searchnotes.ErrNoValue,
 	}},
 	{http.StatusNotFound, []error{
-		editfolder.ErrNotFound, editnote.ErrNotFound, edittag.ErrNotFound, pinnote.ErrNotFound, readitem.ErrNotFound, readtag.ErrNotFound,
+		editfolder.ErrNotFound, editnote.ErrNotFound, emptytrash.ErrNotFound, edittag.ErrNotFound, pinnote.ErrNotFound, readitem.ErrNotFound, readtag.ErrNotFound,
 	}},
 	{http.StatusConflict, []error{
 		domain.ErrFolderExists, edittag.ErrAlreadyExists, moveitems.ErrCycle, restoreitems.ErrParentInTrash,

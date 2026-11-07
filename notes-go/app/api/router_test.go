@@ -304,6 +304,14 @@ func TestEmptyTrash(t *testing.T) {
 	c.do("DELETE", "/api/folders/"+folder.ID, "", http.StatusNoContent, nil)
 	c.do("DELETE", "/api/notes/"+removed.ID, "", http.StatusNoContent, nil)
 
+	// One removal goes alone, its content with it; a live item is not in the trash.
+	c.do("DELETE", "/api/trash/"+folder.ID, "", http.StatusNoContent, nil)
+	if got := c.raw("/api/trash"); strings.Contains(got, folder.ID) || !strings.Contains(got, removed.ID) {
+		t.Errorf("trash = %s, want the note only", got)
+	}
+	c.do("DELETE", "/api/trash/"+live.ID, "", http.StatusNotFound, nil)
+	c.do("DELETE", "/api/trash/nope", "", http.StatusNotFound, nil)
+
 	c.do("DELETE", "/api/trash", "", http.StatusNoContent, nil)
 
 	if got := c.raw("/api/trash"); strings.TrimSpace(got) != "[]" {
