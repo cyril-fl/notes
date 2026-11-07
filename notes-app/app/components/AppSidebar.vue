@@ -3,7 +3,7 @@ import type { Recent, TagCount } from '~/types/items';
 
 const api = useApi();
 const route = useRoute();
-const { createFolder } = useItems();
+const { createFolder, tagMenu } = useItems();
 const searchOpen = useState('search-open', () => false);
 const colorMode = useColorMode();
 
@@ -82,18 +82,18 @@ const isOverRoot = useDropFolder(rootLink, () => null);
       <h2 class="px-2 pb-2 text-xs font-medium text-muted">Tags</h2>
       <!-- Capped so a long tag list never pushes the folders out of the sidebar. -->
       <div class="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto px-2">
-        <UButton
-          v-for="tag in tags"
-          :key="tag.value"
-          :to="`/tags/${encodeURIComponent(tag.value)}`"
-          :label="`#${tag.value}`"
-          size="xs"
-          color="neutral"
-          variant="soft"
-          active-color="primary"
-          class="max-w-full font-normal"
-          :ui="{ label: 'truncate' }"
-        />
+        <UContextMenu v-for="tag in tags" :key="tag.value" :items="tagMenu(tag.value)">
+          <UButton
+            :to="tagPath(tag.value)"
+            :label="`#${tag.value}`"
+            size="xs"
+            color="neutral"
+            variant="soft"
+            active-color="primary"
+            class="max-w-full font-normal"
+            :ui="{ label: 'truncate' }"
+          />
+        </UContextMenu>
       </div>
     </section>
 

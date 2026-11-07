@@ -15,6 +15,18 @@ test('the sidebar collapses and comes back', async ({ page }) => {
   await expect(search).toBeVisible();
 });
 
+test('a tag is renamed from its menu in the sidebar', async ({ page }) => {
+  const tag = box.prefix.replace('-', '');
+  await box.note(`# Taguée\n\n#${tag}`);
+  await page.goto('/');
+  await page.getByRole('link', { name: `#${tag}` }).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Renommer' }).click();
+  await page.getByRole('dialog').getByRole('textbox').fill(`${tag}x`);
+  await page.getByRole('dialog').getByRole('button', { name: 'Renommer' }).click();
+  await expect(page.getByRole('link', { name: `#${tag}x` })).toBeVisible();
+  await box.api.delete(`/api/tags/${tag}x`); // Trashing the note leaves its tag.
+});
+
 test('a folder is made a favorite from its menu', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('navigation').getByText(box.prefix).click({ button: 'right' });

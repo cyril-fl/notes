@@ -10,7 +10,8 @@ const TAKEN = 'already exists here';
 /** Every change to the items: the views read again what they show afterwards. */
 export function useItems() {
   const api = useApi();
-  const { prompt } = useDialogs();
+  const route = useRoute();
+  const { prompt, confirm } = useDialogs();
 
   // On failure the toast already told the user.
   async function act<T>(request: () => Promise<T>): Promise<T | undefined> {
@@ -57,6 +58,40 @@ export function useItems() {
     return act(() => api(`/api/${resource}/${item.id}`, { method: 'PATCH', body: { pinned } }));
   }
 
+  async function renameTag(value: string) {
+    const next = await prompt({ title: 'Renommer le tag', value, action: 'Renommer' });
+    if (!next || next === value) return;
+    await changeTag(value, { method: 'PATCH', body: { value: next }, conflict: 'Ce tag existe déjà.' }, tagPath(next));
+  }
+
+  /** Asks first: the tag is also erased from the text of its notes, and no trash keeps it. */
+  async function removeTag(value: string) {
+    const confirmed = await confirm({
+      title: `Supprimer #${value} ?`,
+      description: 'Le tag sera aussi effacé du texte de ses notes.',
+      action: 'Supprimer',
+    });
+    if (confirmed) await changeTag(value, { method: 'DELETE' }, '/');
+  }
+
+  /** On the tag's page, leaves it for next before reading again: the old page would only find the tag gone. */
+  async function changeTag(value: string, options: Parameters<typeof api>[1], next: string) {
+    try {
+      await api(`/api${tagPath(value)}`, options);
+    } catch {
+      return; // The toast already told the user.
+    }
+    if (route.path === tagPath(value)) await navigateTo(next, { replace: true });
+    await refreshNuxtData();
+  }
+
+  function tagMenu(value: string): ContextMenuItem[][] {
+    return [
+      [{ label: 'Renommer', icon: 'i-lucide-pencil', onSelect: () => renameTag(value) }],
+      [{ label: 'Supprimer', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => removeTag(value) }],
+    ];
+  }
+
   function emptyTrash() {
     return act(() => api('/api/trash', { method: 'DELETE' }));
   }
@@ -85,7 +120,7 @@ export function useItems() {
     ];
   }
 
-  return { createFolder, renameFolder, removeItem, moveItem, restoreItem, pinItem, emptyTrash, itemMenu };
+  return { createFolder, renameFolder, removeItem, moveItem, restoreItem, pinItem, emptyTrash, itemMenu, renameTag, removeTag, tagMenu };
 }
 
 /** The pinned notes and favorite folders, read once for the sidebar, the menus and the editor. */
@@ -101,6 +136,11 @@ function isPinned(id: string) {
 /** The folder the page shows, where a new note or folder goes; undefined at the root and elsewhere. */
 export function currentFolder(route: { path: string; params: Record<string, unknown> }) {
   return route.path.startsWith('/folders/') ? (route.params.id as string) : undefined;
+}
+
+/** The page of a tag; the API's route is the same under /api. */
+export function tagPath(value: string) {
+  return `/tags/${encodeURIComponent(value)}`;
 }
 
 export function newNotePath(parentId?: string) {
