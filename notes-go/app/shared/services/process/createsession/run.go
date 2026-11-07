@@ -11,6 +11,7 @@ import (
 	"github.com/uptrace/bun"
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/password"
+	"main.go/app/shared/services/secret"
 )
 
 // Lifetime is how long a session lasts without use: each use starts it again (readsession).
@@ -57,6 +58,7 @@ func Process(ctx context.Context, db bun.IDB, input Input) *run {
 
 func (p *run) Run() {
 	p.checkPassword()
+	p.loadKey()
 	p.saveSession()
 }
 
@@ -70,7 +72,7 @@ func (p *run) GetResult() Result {
 
 func (p *run) checkPassword() {
 	user := &p.cache.result.User
-	err := p.db.NewSelect().Model(user).Where("lower(name) = lower(?)", strings.TrimSpace(p.input.Name)).Scan(p.ctx)
+	err := p.db.NewSelect().Model(user).ExcludeColumn("snippets").Where("lower(name) = lower(?)", strings.TrimSpace(p.input.Name)).Scan(p.ctx)
 	if errors.Is(err, sql.ErrNoRows) {
 		password.Verify(p.input.Password, dummyHash)
 		p.SetErr(ErrBadCredentials)
@@ -83,6 +85,20 @@ func (p *run) checkPassword() {
 	if !password.Verify(p.input.Password, user.PasswordHash) {
 		p.SetErr(ErrBadCredentials)
 	}
+}
+
+// loadKey reads the snippets once the key of the account opens them.
+func (p *run) loadKey() {
+	if p.HasErr() {
+		return
+	}
+
+	user := &p.cache.result.User
+	err := secret.Load(p.ctx, p.db, user.ID)
+	if err == nil {
+		err = p.db.NewSelect().Model(user).Column("snippets").WherePK().Scan(p.ctx)
+	}
+	p.SetErr(err)
 }
 
 func (p *run) saveSession() {

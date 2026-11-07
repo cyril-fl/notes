@@ -289,10 +289,14 @@ func loadNotes(ctx context.Context, db bun.IDB, query string, args ...any) ([]In
 // save writes content and the title it gives; updated_at stays, the user did not write this change.
 // WhereAllWithDeleted: a trashed note keeps its links right too.
 func save(ctx context.Context, db bun.IDB, id, content string) error {
-	if _, err := db.NewUpdate().Model((*domain.MetadataNote)(nil)).Set("content = ?", secret.Text(content)).Where("item_id = ?", id).Exec(ctx); err != nil {
+	sealed, err := secret.Seal(domain.UserID(ctx), content)
+	if err != nil {
 		return err
 	}
-	_, err := db.NewUpdate().Model((*domain.Item)(nil)).Set("title = NULLIF(?, '')", notetitle.From(content)).Where("id = ?", id).WhereAllWithDeleted().Exec(ctx)
+	if _, err := db.NewUpdate().Model((*domain.MetadataNote)(nil)).Set("content = ?", sealed).Where("item_id = ?", id).Exec(ctx); err != nil {
+		return err
+	}
+	_, err = db.NewUpdate().Model((*domain.Item)(nil)).Set("title = NULLIF(?, '')", notetitle.From(content)).Where("id = ?", id).WhereAllWithDeleted().Exec(ctx)
 	return err
 }
 

@@ -54,6 +54,15 @@ var cmdEncrypt = &cobra.Command{
 	RunE:    cmdaccount.Encrypt,
 }
 
+var cmdRotateSecret = &cobra.Command{
+	Use:     cmd.RotateSecret.Use,
+	Short:   cmd.RotateSecret.Short,
+	Long:    cmd.RotateSecret.Long,
+	Example: cmd.RotateSecret.Example,
+	Args:    cobra.NoArgs,
+	RunE:    cmdaccount.RotateSecret,
+}
+
 var cmdAccount = &cobra.Command{
 	Use:   cmd.Account.Use,
 	Short: cmd.Account.Short,
@@ -70,7 +79,7 @@ var cmdAccountPurge = &cobra.Command{
 
 // noAccount is what runs without a logged-in account: logging in, the admin's commands, and the API, which logs
 // each request in itself.
-var noAccount = map[*cobra.Command]bool{cmdUser: true, cmdLogin: true, cmdLogout: true, cmdUserAdd: true, cmdResetPassword: true, cmdEncrypt: true, cmdServe: true}
+var noAccount = map[*cobra.Command]bool{cmdUser: true, cmdLogin: true, cmdLogout: true, cmdUserAdd: true, cmdResetPassword: true, cmdEncrypt: true, cmdRotateSecret: true, cmdServe: true}
 
 func init() {
 	plumcliutilsargs.Makeflags(cmdUserAdd, cmd.UserAdd.Flags)
@@ -78,5 +87,5 @@ func init() {
 
 	cmdUser.AddCommand(cmdUserAdd)
 	cmdAccount.AddCommand(cmdAccountPurge)
-	cmdRoot.AddCommand(cmdLogin, cmdLogout, cmdUser, cmdResetPassword, cmdEncrypt, cmdAccount)
+	cmdRoot.AddCommand(cmdLogin, cmdLogout, cmdUser, cmdResetPassword, cmdEncrypt, cmdRotateSecret, cmdAccount)
 }

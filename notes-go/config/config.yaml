@@ -312,6 +312,11 @@ commands:
     short: "Encrypt what the accounts wrote before encryption (admin, on the server)"
     long: "Encrypt with NOTES_SECRET the notes and snippets of every account still kept in clear, once, after make backup. A second run finds nothing left."
     example: "notes encrypt"
+  rotate-secret:
+    use: "rotate-secret"
+    short: "Seal the keys of the accounts by a new NOTES_SECRET (admin, on the server)"
+    long: "Seal the key of every account, sealed by NOTES_OLD_SECRET, by NOTES_SECRET instead. Put the new secret in NOTES_SECRET and the old one in NOTES_OLD_SECRET, after make backup; the notes are not rewritten. Then the same NOTES_SECRET goes in .env.docker, and make api."
+    example: "NOTES_OLD_SECRET=<old> notes rotate-secret"
   account:
     use: "account"
     short: "Manage the account logged in"

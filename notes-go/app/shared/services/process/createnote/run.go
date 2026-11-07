@@ -127,12 +127,16 @@ func (p *run) insertItem(ctx context.Context, tx bun.Tx) error {
 }
 
 func (p *run) insertMetadata(ctx context.Context, tx bun.Tx) error {
+	content, err := secret.Seal(domain.UserID(p.ctx), p.cache.input.Content)
+	if err != nil {
+		return err
+	}
 	metadata := domain.MetadataNote{
 		Metadata: domain.Metadata{ItemID: p.cache.item.ID},
-		Content:  secret.Text(p.cache.input.Content),
+		Content:  content,
 	}
 
-	_, err := tx.NewInsert().Model(&metadata).Exec(ctx)
+	_, err = tx.NewInsert().Model(&metadata).Exec(ctx)
 	return err
 }
 

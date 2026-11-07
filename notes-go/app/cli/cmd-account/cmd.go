@@ -1,5 +1,5 @@
 // Package cmdaccount logs the CLI in and out, empties the account, and lets the admin create accounts, reset their
-// password and encrypt what was written in clear.
+// password, encrypt what was written in clear and change the server's secret.
 package cmdaccount
 
 import (
@@ -23,6 +23,7 @@ import (
 	"main.go/app/shared/services/process/purgeaccount"
 	"main.go/app/shared/services/process/readsession"
 	"main.go/app/shared/services/process/resetpassword"
+	"main.go/app/shared/services/process/rotatesecret"
 )
 
 // sessionFile keeps the CLI's session token, readable by the user only: it opens the account.
@@ -142,6 +143,17 @@ func Encrypt(cobra *cobra.Command, args []string) error {
 		return process.GetErr()
 	}
 	fmt.Printf("Successfully encrypted %d notes and the snippets of %d accounts\n", process.GetResult().Notes, process.GetResult().Accounts)
+	return nil
+}
+
+// RotateSecret seals the keys of the accounts by NOTES_SECRET, in place of NOTES_OLD_SECRET.
+func RotateSecret(cobra *cobra.Command, args []string) error {
+	process := rotatesecret.Process(cobra.Context(), postgrey.GetDb(), os.Getenv("NOTES_OLD_SECRET"))
+	process.Run()
+	if process.HasErr() {
+		return process.GetErr()
+	}
+	fmt.Printf("Successfully sealed %d account keys by the new NOTES_SECRET: put it in .env.docker too, then make api\n", process.GetResult())
 	return nil
 }
 

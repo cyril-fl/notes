@@ -11,6 +11,7 @@ import (
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/password"
 	"main.go/app/shared/services/process/createsession"
+	"main.go/app/shared/services/secret"
 )
 
 var ErrNoSession = errors.New("not logged in, or the session expired")
@@ -29,6 +30,7 @@ type cache struct {
 }
 
 // Process finds the account of a session token, and starts its lifetime again: a device in use stays logged in.
+// It loads the key of the account: its notes open from then on.
 func Process(ctx context.Context, db bun.IDB, token string) *run {
 	return &run{
 		ctx:   ctx,
@@ -52,6 +54,9 @@ func (p *run) Run() {
 		Scan(p.ctx, &p.cache.user)
 	if errors.Is(err, sql.ErrNoRows) {
 		err = ErrNoSession
+	}
+	if err == nil {
+		err = secret.Load(p.ctx, p.db, p.cache.user.ID)
 	}
 	p.SetErr(err)
 }

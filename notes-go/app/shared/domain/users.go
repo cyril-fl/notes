@@ -2,7 +2,6 @@ package domain
 
 import (
 	"context"
-	"database/sql/driver"
 	"encoding/json"
 	"errors"
 	"time"
@@ -18,6 +17,7 @@ type User struct {
 	ID           string `bun:",pk,type:uuid,default:gen_random_uuid()" json:"id"`
 	Name         string `bun:",notnull" json:"name"` // unique case-insensitive, see createschema
 	PasswordHash string `bun:",notnull" json:"-"`
+	DataKey      string `bun:",nullzero" json:"-"`                          // the key of its notes sealed by NOTES_SECRET, see services/secret
 	Locale       string `bun:",notnull,default:'fr'" json:"locale"`         // the language of the web app, one of Locales
 	Theme        string `bun:",notnull,default:'notes'" json:"theme"`       // the colors of the web app, one of Themes
 	ColorMode    string `bun:",notnull,default:'system'" json:"color_mode"` // light or dark, one of ColorModes
@@ -35,20 +35,21 @@ type Snippet struct {
 	Content string `json:"content"`
 }
 
-// Snippets are kept sealed, as one JSON string in their jsonb column.
+// Snippets are kept sealed, as one JSON string in their jsonb column: write Seal's.
 type Snippets []Snippet
 
-func (s Snippets) Value() (driver.Value, error) {
+// Seal gives the snippets sealed by the key of the account, as the JSON string to write.
+func (s Snippets) Seal(userID string) (string, error) {
 	if s == nil {
-		s = Snippets{} // null would break the not null column
+		s = Snippets{}
 	}
 	data, err := json.Marshal([]Snippet(s))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	sealed, err := secret.Seal(string(data))
+	sealed, err := secret.Seal(userID, string(data))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	data, err = json.Marshal(sealed)
 	return string(data), err

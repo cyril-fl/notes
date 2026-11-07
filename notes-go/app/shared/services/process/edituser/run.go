@@ -152,11 +152,11 @@ func (p *run) updateUser() {
 
 		// shortcut: the last of two devices editing the snippets wins, per-snippet endpoints if that bites.
 		if p.input.Snippets != nil {
-			snippets := *p.input.Snippets
-			if snippets == nil {
-				snippets = []domain.Snippet{} // null would break the not null column
+			sealed, err := domain.Snippets(*p.input.Snippets).Seal(domain.UserID(p.ctx))
+			if err != nil {
+				return err
 			}
-			query.Set("snippets = ?", domain.Snippets(snippets))
+			query.Set("snippets = ?", sealed)
 		}
 
 		var pgErr pgdriver.Error

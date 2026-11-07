@@ -143,9 +143,13 @@ func (p *run) updateItem(ctx context.Context, tx bun.Tx) error {
 }
 
 func (p *run) updateMetadata(ctx context.Context, tx bun.Tx) error {
-	_, err := tx.NewUpdate().
+	content, err := secret.Seal(domain.UserID(p.ctx), p.cache.input.Content)
+	if err != nil {
+		return err
+	}
+	_, err = tx.NewUpdate().
 		Model((*domain.MetadataNote)(nil)).
-		Set("content = ?", secret.Text(p.cache.input.Content)).
+		Set("content = ?", content).
 		Where("item_id = ?", p.cache.item.ID).
 		Exec(ctx)
 	return err

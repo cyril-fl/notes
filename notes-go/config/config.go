@@ -59,6 +59,7 @@ type commands struct {
 	UserAdd       plumcliconfig.Cmdparams `yaml:"user-add"`
 	ResetPassword plumcliconfig.Cmdparams `yaml:"reset-password"`
 	Encrypt       plumcliconfig.Cmdparams `yaml:"encrypt"`
+	RotateSecret  plumcliconfig.Cmdparams `yaml:"rotate-secret"`
 	Account       plumcliconfig.Cmdparams `yaml:"account"`
 	AccountPurge  plumcliconfig.Cmdparams `yaml:"account-purge"`
 	Root          plumcliconfig.Cmdparams `yaml:"root"`

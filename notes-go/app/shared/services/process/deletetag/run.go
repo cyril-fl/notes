@@ -91,11 +91,15 @@ func (p *run) rewriteNotes(ctx context.Context, tx bun.Tx) error {
 	}
 
 	for i := range notes {
-		notes[i].Content = secret.Text(hashtag.Remove(string(notes[i].Content), p.cache.values...))
-		if _, err := tx.NewUpdate().Model(&notes[i]).Column("content").WherePK().Exec(ctx); err != nil {
+		content := hashtag.Remove(string(notes[i].Content), p.cache.values...)
+		sealed, err := secret.Seal(domain.UserID(p.ctx), content)
+		if err != nil {
 			return err
 		}
-		if notes[i].Content == "" {
+		if _, err := tx.NewUpdate().Model((*domain.MetadataNote)(nil)).Set("content = ?", sealed).Where("item_id = ?", notes[i].ItemID).Exec(ctx); err != nil {
+			return err
+		}
+		if content == "" {
 			if err := trashNote(ctx, tx, notes[i].ItemID); err != nil {
 				return err
 			}

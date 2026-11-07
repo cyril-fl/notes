@@ -9,6 +9,7 @@ import (
 
 	"github.com/uptrace/bun"
 	"main.go/app/shared/domain"
+	"main.go/app/shared/services/secret"
 )
 
 // New creates an account in tx and returns ctx acting for it, with a savepoint of tx begun with that ctx: a bun.Tx
@@ -18,6 +19,9 @@ func New(t *testing.T, ctx context.Context, tx bun.Tx) (context.Context, bun.Tx)
 	t.Helper()
 	user := domain.User{Name: fmt.Sprintf("test-%d", time.Now().UnixNano()), PasswordHash: "-"}
 	if err := tx.NewInsert().Model(&user).Returning("id").Scan(ctx); err != nil {
+		t.Fatalf("test account: %v", err)
+	}
+	if err := secret.Load(ctx, tx, user.ID); err != nil {
 		t.Fatalf("test account: %v", err)
 	}
 	ctx = domain.WithUser(ctx, user.ID)

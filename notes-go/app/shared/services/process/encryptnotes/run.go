@@ -56,16 +56,29 @@ func (p *run) GetResult() Result {
 // Methods
 
 func (p *run) sealNotes(ctx context.Context, tx bun.Tx) error {
-	var notes []domain.MetadataNote
-	err := tx.NewSelect().Model(&notes).Column("item_id", "content").Where("content NOT LIKE ?", secret.Prefix+"%").Scan(ctx)
+	var notes []struct {
+		ID      string `bun:"id"`
+		UserID  string `bun:"user_id"`
+		Content string `bun:"content"`
+	}
+	err := tx.NewRaw(`
+		SELECT mn.item_id AS id, i.user_id, mn.content FROM metadata_notes AS mn JOIN items AS i ON i.id = mn.item_id
+		WHERE mn.content NOT LIKE ?`, secret.Prefix+"%").Scan(ctx, &notes)
 	if err != nil {
 		return err
 	}
 	for _, note := range notes {
-		if err := linknotes.Files(ctx, tx, note.ItemID, string(note.Content)); err != nil {
+		if err := linknotes.Files(ctx, tx, note.ID, note.Content); err != nil {
 			return err
 		}
-		if _, err := tx.NewUpdate().Model(&note).Column("content").WherePK().Exec(ctx); err != nil {
+		if err := secret.Load(ctx, tx, note.UserID); err != nil {
+			return err
+		}
+		sealed, err := secret.Seal(note.UserID, note.Content)
+		if err != nil {
+			return err
+		}
+		if _, err := tx.NewUpdate().Model((*domain.MetadataNote)(nil)).Set("content = ?", sealed).Where("item_id = ?", note.ID).Exec(ctx); err != nil {
 			return err
 		}
 	}
@@ -81,7 +94,14 @@ func (p *run) sealSnippets(ctx context.Context, tx bun.Tx) error {
 		return err
 	}
 	for _, user := range users {
-		if _, err := tx.NewUpdate().Model(&user).Column("snippets").WherePK().Exec(ctx); err != nil {
+		if err := secret.Load(ctx, tx, user.ID); err != nil {
+			return err
+		}
+		sealed, err := user.Snippets.Seal(user.ID)
+		if err != nil {
+			return err
+		}
+		if _, err := tx.NewUpdate().Model((*domain.User)(nil)).Set("snippets = ?", sealed).Where("id = ?", user.ID).Exec(ctx); err != nil {
 			return err
 		}
 	}
