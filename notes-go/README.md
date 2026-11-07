@@ -49,6 +49,7 @@ notes user add cyril            # demande le mot de passe deux fois (8 caractèr
 notes login                     # nom et mot de passe, puis toutes les commandes agissent pour ce compte
 notes logout
 notes reset-password cyril      # mot de passe oublié : nouveau mot de passe, tous les appareils déconnectés
+notes account purge             # vide le compte connecté (notes, dossiers, tags, images), après avoir tapé son nom
 ```
 
 - **Scripts :** `--password-stdin` lit le mot de passe sur l'entrée standard, pour `user add` et `reset-password`.

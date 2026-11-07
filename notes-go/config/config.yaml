@@ -307,6 +307,14 @@ commands:
         value: ""
         usage: "Read the password from the first line of stdin"
         type: "bool"
+  account:
+    use: "account"
+    short: "Manage the account logged in"
+  account-purge:
+    use: "purge"
+    short: "Delete every note, folder, tag and image of the account"
+    long: "Delete for good every note, folder, tag and image of the account logged in, the trash included. The account and its settings stay. Type the account's name to confirm."
+    example: "notes account purge"
   root:
     short: "The root of the notes system"
     long: "The root of the notes system, used to access the main functionality"

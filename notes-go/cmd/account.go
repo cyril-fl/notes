@@ -45,6 +45,20 @@ var cmdResetPassword = &cobra.Command{
 	RunE:    cmdaccount.ResetPassword,
 }
 
+var cmdAccount = &cobra.Command{
+	Use:   cmd.Account.Use,
+	Short: cmd.Account.Short,
+}
+
+var cmdAccountPurge = &cobra.Command{
+	Use:     cmd.AccountPurge.Use,
+	Short:   cmd.AccountPurge.Short,
+	Long:    cmd.AccountPurge.Long,
+	Example: cmd.AccountPurge.Example,
+	Args:    cobra.NoArgs,
+	RunE:    cmdaccount.Purge,
+}
+
 // noAccount is what runs without a logged-in account: logging in, the admin's commands, and the API, which logs
 // each request in itself.
 var noAccount = map[*cobra.Command]bool{cmdUser: true, cmdLogin: true, cmdLogout: true, cmdUserAdd: true, cmdResetPassword: true, cmdServe: true}
@@ -54,5 +68,6 @@ func init() {
 	plumcliutilsargs.Makeflags(cmdResetPassword, cmd.ResetPassword.Flags)
 
 	cmdUser.AddCommand(cmdUserAdd)
-	cmdRoot.AddCommand(cmdLogin, cmdLogout, cmdUser, cmdResetPassword)
+	cmdAccount.AddCommand(cmdAccountPurge)
+	cmdRoot.AddCommand(cmdLogin, cmdLogout, cmdUser, cmdResetPassword, cmdAccount)
 }

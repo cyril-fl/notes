@@ -1,4 +1,5 @@
-// Package cmdaccount logs the CLI in and out, and lets the admin create accounts and reset their password.
+// Package cmdaccount logs the CLI in and out, empties the account, and lets the admin create accounts and reset their
+// password.
 package cmdaccount
 
 import (
@@ -18,6 +19,7 @@ import (
 	"main.go/app/shared/services/process/adduser"
 	"main.go/app/shared/services/process/createsession"
 	"main.go/app/shared/services/process/deletesession"
+	"main.go/app/shared/services/process/purgeaccount"
 	"main.go/app/shared/services/process/readsession"
 	"main.go/app/shared/services/process/resetpassword"
 )
@@ -128,6 +130,37 @@ func ResetPassword(cobra *cobra.Command, args []string) error {
 		return process.GetErr()
 	}
 	fmt.Printf("Successfully reset the password of %s: log in again on every device\n", args[0])
+	return nil
+}
+
+// Purge deletes for good every note, folder, tag and image of the account logged in, once its name is typed.
+func Purge(cobra *cobra.Command, args []string) error {
+	session := readsession.Process(cobra.Context(), postgrey.GetDb(), readToken())
+	session.Run()
+	if session.HasErr() {
+		return session.GetErr()
+	}
+	name := session.GetResult().Name
+
+	var typed string
+	if err := huhform.New(
+		huh.NewInput().Title(fmt.Sprintf("Type %s to delete every note, folder, tag and image for good", name)).Value(&typed).
+			Validate(func(value string) error {
+				if value != name {
+					return errors.New("not the account's name")
+				}
+				return nil
+			}),
+	).Run(); err != nil {
+		return err
+	}
+
+	process := purgeaccount.Process(cobra.Context(), postgrey.GetDb())
+	process.Run()
+	if process.HasErr() {
+		return process.GetErr()
+	}
+	fmt.Printf("Successfully emptied account %s\n", name)
 	return nil
 }
 
