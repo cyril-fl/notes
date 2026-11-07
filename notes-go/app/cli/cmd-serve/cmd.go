@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -37,6 +38,10 @@ func Serve(cobra *cobra.Command, args []string) error {
 	if err := guard.CheckOrigin(origin); err != nil {
 		return err
 	}
+	web, err := cobra.Flags().GetString("web")
+	if err != nil {
+		return err
+	}
 
 	ctx, stop := signal.NotifyContext(cobra.Context(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -60,9 +65,13 @@ func Serve(cobra *cobra.Command, args []string) error {
 		}
 	})
 
+	handler := api.New(db, store, origin)
+	if web != "" {
+		handler = withWeb(web, handler)
+	}
 	server := &http.Server{
 		Addr:              addr,
-		Handler:           api.New(db, store, origin),
+		Handler:           handler,
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       30 * time.Second,
 		WriteTimeout:      30 * time.Second,
@@ -102,4 +111,21 @@ func every(ctx context.Context, interval time.Duration, task func()) {
 			task()
 		}
 	}
+}
+
+// withWeb serves the web app of dir next to the API, so both share one origin. A path that is no file is a page of
+// the app: 200.html, the fallback `nuxt generate` writes, lets its router show it.
+func withWeb(dir string, api http.Handler) http.Handler {
+	files := http.FileServer(http.Dir(dir))
+	mux := http.NewServeMux()
+	mux.Handle("/api/", api)
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if f, err := http.Dir(dir).Open(r.URL.Path); err == nil {
+			f.Close()
+			files.ServeHTTP(w, r)
+			return
+		}
+		http.ServeFile(w, r, filepath.Join(dir, "200.html"))
+	})
+	return mux
 }

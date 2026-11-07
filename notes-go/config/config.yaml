@@ -274,6 +274,11 @@ commands:
         value: ""
         usage: "Origin of the web app allowed to call the API (none when empty)"
         type: "string"
+      - name: "web"
+        shorthand: ""
+        value: ""
+        usage: "Folder of the generated web app, served on the same address as the API (none when empty)"
+        type: "string"
   login:
     use: "login"
     short: "Log the CLI in to an account"

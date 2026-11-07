@@ -169,7 +169,7 @@ make api                                     # dans Docker, avec WEB_ORIGIN déf
 notes serve --origin http://localhost:3000   # ou directement sur la machine
 ```
 
-`--addr` choisit l'adresse d'écoute (`127.0.0.1:8080` par défaut) et `--origin` l'origine de l'app web autorisée.
+`--addr` choisit l'adresse d'écoute (`127.0.0.1:8080` par défaut) et `--origin` l'origine de l'app web autorisée, `--web` un dossier de l'app générée (`bun run generate`) servi à la même adresse que l'API.
 
 | Ressource | Routes (préfixe `/api`) | Corps JSON |
 |---|---|---|
