@@ -1,4 +1,4 @@
-.PHONY: setup test backup api openapi
+.PHONY: setup test backup purge api openapi
 
 # Not `go tool lefthook install`: the hook would call a build cache path that expires, then skip its checks without failing.
 setup:
@@ -28,6 +28,16 @@ backup:
 		&& mcli alias set local http://127.0.0.1:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" >/dev/null \
 		&& mcli mirror --quiet local/'"$$S3_BUCKET"' /tmp/backup >/dev/null' \
 		&& docker compose cp silo:/tmp/backup $$file.files && echo $$file.files
+
+# Every note, folder, tag and image of every account, after a backup. The accounts, their settings and sessions stay.
+# One account empties its own from the settings of the web app (DELETE /api/me/data).
+purge:
+	@printf 'Delete the notes, folders, tags and images of every account? Type purge: ' && read answer && [ "$$answer" = purge ]
+	@$(MAKE) --no-print-directory backup
+	@set -a && . ./.env && set +a && \
+	docker compose exec -T postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$$POSTGRES_USER" "$$POSTGRES_DB" -c "TRUNCATE items, tags, files CASCADE"' && \
+	docker compose exec -T silo sh -c 'mcli alias set local http://127.0.0.1:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" >/dev/null \
+		&& mcli rm --recursive --force --quiet local/'"$$S3_BUCKET"
 
 api:
 	@docker compose up -d --build api

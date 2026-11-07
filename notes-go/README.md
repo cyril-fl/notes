@@ -234,6 +234,8 @@ docker compose cp backups/<fichier>.files silo:/tmp/restore
 docker compose exec silo sh -c 'mcli alias set local http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" && mcli mirror /tmp/restore local/notes'
 ```
 
+Pour tout effacer, tous comptes confondus, après une sauvegarde : `make purge` (il faut taper `purge` pour confirmer). Les comptes et leurs réglages restent.
+
 Le dump commence par supprimer les tables existantes : la restauration remplace donc tout le contenu de la base. Les images s'ajoutent à celles de Silo, sans rien effacer.
 
 ## Développement
