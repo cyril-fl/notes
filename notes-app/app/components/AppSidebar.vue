@@ -92,6 +92,9 @@ const isOverRoot = useDropFolder(rootLink, () => null);
         <UIcon name="i-lucide-trash-2" class="size-4 shrink-0" />
         Corbeille
       </NuxtLink>
+      <UTooltip text="Réglages">
+        <UButton icon="i-lucide-settings" to="/settings" color="neutral" variant="ghost" size="sm" aria-label="Réglages" />
+      </UTooltip>
       <UTooltip :text="colorMode.value === 'dark' ? 'Thème clair' : 'Thème sombre'">
         <UButton
           :icon="colorMode.value === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'"

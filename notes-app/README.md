@@ -27,6 +27,13 @@ Ouvre bien `localhost`, pas `127.0.0.1` : l'API compare l'origine exactement. `N
 
 La barre latérale se redimensionne en tirant son bord (sa largeur reste d'une visite à l'autre) et devient un tiroir sur petit écran.
 
+## Réglages
+
+La page Réglages (roue dentée en bas de la barre latérale, ou la palette) regroupe ce qui touche à l'app entière. Pour l'instant :
+
+- **Exporter** télécharge toutes les notes en zip de fichiers `.md`, comme `notes export`.
+- **Importer** ajoute à la racine les `.md` d'un zip, comme `notes import`. Si un dossier du zip existe déjà à la racine, rien n'est importé.
+
 ## Commandes
 
 ```sh

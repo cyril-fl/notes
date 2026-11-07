@@ -39,6 +39,7 @@ const groups = computed<CommandPaletteGroup[]>(() => {
         { label: 'Nouveau dossier', icon: 'i-lucide-folder-plus', kbds: ['shift', 'N'], onSelect: () => createFolder(currentFolder(route)) },
         { label: 'Graphe', icon: 'i-lucide-waypoints', to: '/graph' },
         { label: 'Corbeille', icon: 'i-lucide-trash-2', to: '/trash' },
+        { label: 'Réglages', icon: 'i-lucide-settings', to: '/settings' },
         ...(searching ? [{ label: `Tous les résultats pour « ${term.value} »`, icon: 'i-lucide-search', to: { path: '/search', query: { q: term.value } } }] : []),
       ],
     },
