@@ -254,7 +254,7 @@ const status = computed(() => {
   <!-- UEditor hands its listeners to TipTap, not to the page: clicks on links are caught here. -->
   <article v-else-if="!loading" class="flex flex-1 flex-col p-8" @focusin="touched = true" @pointerdown.capture="touched = true" @click="openLink">
     <div class="mb-2 flex h-6 items-center gap-2 text-xs text-muted">
-      <span class="truncate">{{ path }}</span>
+      <PathNav :path="path" />
       <span class="ml-auto shrink-0" :class="{ 'text-error': failed }" role="status">{{ status }}</span>
       <UTooltip v-if="id" :text="pinned ? 'Désépingler' : 'Épingler'">
         <UButton

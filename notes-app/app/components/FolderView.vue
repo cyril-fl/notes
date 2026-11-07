@@ -47,6 +47,10 @@ const isOver = useDropFolder(panel, () => props.folderId ?? null);
 <template>
   <div ref="panel" class="min-h-full p-8 transition-shadow duration-150" :class="{ 'ring-2 ring-inset ring-primary/40': isOver }">
     <PageHeader :title="title" :subtitle="subtitle">
+      <!-- The subtitle is the folder's own path: the breadcrumb leads to its parents. -->
+      <template v-if="subtitle" #subtitle>
+        <PathNav :path="subtitle.slice(0, subtitle.lastIndexOf('/'))" />
+      </template>
       <ViewToggle />
       <UTooltip text="Nouveau dossier">
         <UButton icon="i-lucide-folder-plus" color="neutral" variant="ghost" aria-label="Nouveau dossier" @click="createFolder(folderId)" />
