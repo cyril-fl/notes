@@ -31,6 +31,19 @@ test('[[ offers the notes and links by id', async ({ page }) => {
   await expect(page).toHaveURL(`/notes/${target.id}`);
 });
 
+test('# offers the existing tags', async ({ page }) => {
+  await box.note(`# ${box.prefix} tagged\n\n#${box.prefix}-tag`);
+  const source = await box.note(`# ${box.prefix} source\n\nVoir`);
+  await page.goto(`/notes/${source.id}`);
+  const editor = page.locator('.ProseMirror');
+  await editor.click();
+  await page.keyboard.press('ControlOrMeta+End');
+  await page.keyboard.type(` #${box.prefix}-t`);
+  await page.getByRole('option', { name: `${box.prefix}-tag` }).click();
+
+  await expect.poll(() => box.content(source.id), { timeout: 5000 }).toContain(`#${box.prefix}-tag`);
+});
+
 test('a [[link]] typed by hand waits, then the API points it to its note', async ({ page }) => {
   const target = await box.note(`# ${box.prefix} main`);
   const source = await box.note(`# ${box.prefix} tapé\n\nVoir`);

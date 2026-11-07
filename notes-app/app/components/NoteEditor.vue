@@ -4,7 +4,7 @@ import type { Editor } from '@tiptap/vue-3';
 import { TaskItem, TaskList } from '@tiptap/extension-list';
 import type { FetchError } from 'ofetch';
 import type { RouteLocationNormalized } from 'vue-router';
-import type { Item, ItemDetail, NoteFile, NotesGraph, User } from '~/types/items';
+import type { Item, ItemDetail, NoteFile, NotesGraph, TagCount, User } from '~/types/items';
 import type { Changes } from '~/utils/saver';
 
 const { icons } = useIcons();
@@ -198,6 +198,12 @@ const snippetItems = computed(() =>
   })),
 );
 
+// The existing tags offered after #: the same data as the sidebar, refreshed when a save changes the tags.
+const { data: allTags } = useLazyAsyncData('tags', () => api<TagCount[]>('/api/graph'), {
+  default: () => [] as TagCount[],
+});
+const tagItems = computed(() => allTags.value.map((tag) => ({ kind: 'tag', label: tag.value, icon: icons.tag })));
+
 function openLink(event: MouseEvent) {
   const link = (event.target as HTMLElement).closest<HTMLElement>('a[data-wikilink]');
   if (!link) return;
@@ -221,6 +227,12 @@ const handlers = {
           { type: 'wikiLink', attrs: { target: item.label, id: item.id } },
           { type: 'text', text: ' ' },
         ]),
+    isActive: () => false,
+    isDisabled: () => false,
+  },
+  tag: {
+    canExecute: () => true,
+    execute: (editor: Editor, item: { label: string }) => editor.chain().focus().insertContent(`#${item.label} `),
     isActive: () => false,
     isDisabled: () => false,
   },
@@ -350,6 +362,7 @@ const status = computed(() => {
         plugin-key="snippetMenu"
         :suggestion="{ allowSpaces: true }"
       />
+      <UEditorSuggestionMenu :editor="editor" :items="tagItems" char="#" plugin-key="tagMenu" />
     </UEditor>
 
     <footer class="shrink-0 border-t border-default px-8">
