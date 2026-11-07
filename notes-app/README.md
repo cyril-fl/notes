@@ -40,7 +40,7 @@ Le graphe se déplace en glissant et zoome à la molette, en pinçant le trackpa
 La page Réglages (roue dentée en bas de la barre latérale, ou la palette) regroupe ce qui touche à l'app entière. Les réglages sont rangés sur le compte (`PATCH /api/me`) : ils suivent d'un appareil à l'autre.
 
 - **Langue** de l'interface, français ou anglais.
-- **Apparence** : le thème (système, clair, sombre) et la vue des listes (liste, mosaïque). Le bouton de thème de la barre latérale et celui de la vue les enregistrent aussi.
+- **Apparence** : le thème, choisi d'un clic sur sa miniature parmi des jeux de couleurs tout faits (Notes, Dracula, Catppuccin, Nord, Gruvbox), et le mode (système, clair, sombre). Un thème se déclare dans `app/utils/themes.ts`, ses palettes dans `main.css`, et son id dans `domain.Themes` côté Go. Le bouton de mode de la barre latérale enregistre aussi, comme celui de la vue des listes.
 - **Corbeille** : la durée avant que les éléments supprimés soient effacés pour de bon (7, 30, 90, 365 jours, ou jamais).
 - **Exporter** télécharge toutes les notes en zip de fichiers `.md`, comme `notes export`.
 - **Importer** ajoute les `.md` d'un zip au dossier choisi (la racine par défaut), comme `notes import --parent`. Si un dossier du zip existe déjà à cet endroit, rien n'est importé.
