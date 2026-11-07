@@ -16,7 +16,7 @@ WEB_ORIGIN=http://localhost:3000
 
 ```sh
 cd ../notes-go && make up && make api   # PostgreSQL, Silo et l'API sur :8080
-cd ../notes-app && pnpm install && pnpm dev   # http://localhost:3000
+cd ../notes-app && bun install && bun run dev   # http://localhost:3000
 ```
 
 Ouvre bien `localhost`, pas `127.0.0.1` : l'API compare l'origine exactement. `NUXT_PUBLIC_API_BASE` change l'adresse de l'API.
@@ -53,11 +53,11 @@ La page Réglages (menu de l'avatar en bas de la barre latérale, ou la palette)
 ## Commandes
 
 ```sh
-pnpm test        # file de sauvegarde, liens et disposition du graphe
-pnpm e2e         # parcours dans Chrome, contre la stack lancée (make up) ; ou make e2e depuis la racine
-                 # se connecte avec le compte e2e (E2E_NAME, E2E_PASSWORD) : notes user add e2e, après le tien
-                 # E2E_APP et E2E_API pointent les tests vers une autre stack
-pnpm typecheck
-pnpm types       # régénère app/types/api.d.ts depuis ../notes-go/docs/swagger.yaml
-pnpm generate    # site statique dans .output/public
+bun run test        # file de sauvegarde, liens et disposition du graphe
+bun run e2e         # parcours dans Chrome, contre la stack lancée (make up) ; ou make e2e depuis la racine
+                    # se connecte avec le compte e2e (E2E_NAME, E2E_PASSWORD) : notes user add e2e, après le tien
+                    # E2E_APP et E2E_API pointent les tests vers une autre stack
+bun run typecheck
+bun run types       # régénère app/types/api.d.ts depuis ../notes-go/docs/swagger.yaml
+bun run generate    # site statique dans .output/public
 ```

@@ -15,7 +15,7 @@ description: Close a piece of work or a version of Notes - one commit per change
 
 ## Before the tag
 
-- `cd notes-go && make test`; `cd notes-app && pnpm test && pnpm typecheck && pnpm e2e` (needs `make up`).
+- `cd notes-go && make test`; `cd notes-app && bun run test && bun run typecheck && bun run e2e` (needs `make up`).
 - READMEs in French: `notes-go/README.md` (CLI, API), `notes-app/README.md` (the app).
 - The wiki is a separate repo, `../notes.wiki` (pages `Home.md`, `cli.md`, `api.md`): check `git status` there, it may hold the user's own uncommitted edits.
 

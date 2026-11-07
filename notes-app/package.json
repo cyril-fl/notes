@@ -2,6 +2,7 @@
   "name": "notes-app",
   "type": "module",
   "private": true,
+  "packageManager": "bun@1.4.4",
   "scripts": {
     "dev": "nuxt dev",
     "build": "nuxt build",
@@ -9,7 +10,7 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "types": "openapi-typescript ../notes-go/docs/swagger.yaml -o app/types/api.d.ts",
-    "test": "node --test test/*.test.ts",
+    "test": "bun test test/*.test.ts",
     "e2e": "playwright test",
     "typecheck": "nuxt typecheck",
     "lint": "eslint .",

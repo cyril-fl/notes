@@ -46,20 +46,16 @@ jobs:
         working-directory: notes-app
     steps:
       - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
+      - uses: oven-sh/setup-bun@v2
         with:
-          version: 10
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: pnpm
-          cache-dependency-path: notes-app/pnpm-lock.yaml
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
-      - run: pnpm format:check
-      - run: pnpm test
-      - run: pnpm typecheck
-      - run: pnpm build
+          bun-version-file: notes-app/package.json
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bun run format:check
+      - run: bun run test
+      # --bun: nuxt runs on Bun instead of Node, a bit faster.
+      - run: bun --bun run typecheck
+      - run: bun --bun run build
 
   # The stack of `make up`, from the same compose file: the e2e helpers reach its containers (note-api, note-postgres).
   e2e:
@@ -70,20 +66,15 @@ jobs:
         with:
           go-version-file: notes-go/go.mod
           cache-dependency-path: notes-go/go.sum
-      - uses: pnpm/action-setup@v6
+      - uses: oven-sh/setup-bun@v2
         with:
-          version: 10
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: pnpm
-          cache-dependency-path: notes-app/pnpm-lock.yaml
-      - run: pnpm install --frozen-lockfile
+          bun-version-file: notes-app/package.json
+      - run: bun install --frozen-lockfile
         working-directory: notes-app
       - name: swagger.yaml and api.d.ts match the code
         run: |
           make -C notes-go openapi
-          (cd notes-app && pnpm types)
+          (cd notes-app && bun run types)
           git diff --exit-code
       # .env.docker for the API, .env for the interpolation of compose.yaml. Not secrets: a throwaway base.
       - name: Start Postgres, Silo and the API
@@ -107,12 +98,12 @@ jobs:
       - name: Start the web app
         working-directory: notes-app
         run: |
-          pnpm build
+          bun --bun run build
           nohup node .output/server/index.mjs > /tmp/notes-app.log 2>&1 &
           curl -fs --retry 20 --retry-delay 1 --retry-all-errors -o /dev/null http://localhost:3000
           curl -s --retry 20 --retry-delay 1 --retry-all-errors -o /dev/null http://localhost:8080/api/me
       # The Chrome of the runner, as `channel: 'chrome'` asks: no browser to download.
-      - run: pnpm e2e
+      - run: bun run e2e
         working-directory: notes-app
       - if: failure()
         working-directory: notes-go

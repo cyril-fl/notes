@@ -1,7 +1,7 @@
 // Screenshots a page of the running app as the e2e account, its settings changed for the shot, then set back.
 // node scripts/screenshot.mjs <out.png> [page path] [settings JSON for PATCH /api/me]
 // e.g. node scripts/screenshot.mjs /tmp/nord-dark.png /settings '{"theme":"nord","color_mode":"dark"}'
-// Needs `make up` and the session written by a `pnpm e2e` run (test-results/.session.json).
+// Needs `make up` and the session written by a `bun run e2e` run (test-results/.session.json).
 import { chromium, request } from '@playwright/test';
 
 const APP = process.env.E2E_APP ?? 'http://localhost:3000';
@@ -17,7 +17,7 @@ const changes = JSON.parse(settings);
 
 const api = await request.newContext({ baseURL: API, storageState: SESSION, extraHTTPHeaders: { Origin: APP } });
 const me = await api.get('/api/me');
-if (!me.ok()) throw new Error(`GET /api/me: ${me.status()}, run pnpm e2e once to log in`);
+if (!me.ok()) throw new Error(`GET /api/me: ${me.status()}, run bun run e2e once to log in`);
 const before = await me.json();
 const browser = await chromium.launch({ channel: 'chrome' });
 try {

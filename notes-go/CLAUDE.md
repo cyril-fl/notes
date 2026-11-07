@@ -6,7 +6,7 @@ Go module `main.go`: the CLI (cobra, `cmd/` + `app/cli/`) and the API (`notes se
 
 - `make test` (`ARGS=./app/...` to narrow): runs in the base `<POSTGRES_DB>_test`, never the dev one. Needs Postgres up.
 - `make api`: rebuilds and restarts the API container. The app talks to the old binary until then.
-- `make openapi` after an API change (swag comments), then `pnpm types` in `notes-app/`.
+- `make openapi` after an API change (swag comments), then `bun run types` in `notes-app/`.
 - `make backup` before touching data or the schema.
 - The CLI by hand: `set -a && . ./.env && set +a && CONFIG_FILE=$PWD/config/config.yaml go run . <args>`. It acts for the account of the local CLI session: do not run `notes logout`, it deletes that session.
 

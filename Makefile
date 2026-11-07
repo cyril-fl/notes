@@ -10,8 +10,8 @@ up:
 	@if lsof -ti tcp:$(WEB_PORT) -sTCP:LISTEN >/dev/null; then \
 		echo "Port $(WEB_PORT) already in use: web app not started"; \
 	else \
-		cd notes-app && pnpm install --silent && \
-		{ nohup pnpm dev > $(WEB_LOG) 2>&1 < /dev/null & } && \
+		cd notes-app && bun install --silent && \
+		{ nohup bun run dev > $(WEB_LOG) 2>&1 < /dev/null & } && \
 		echo "http://localhost:$(WEB_PORT) (log: .build/notes-app.log)"; \
 	fi
 
@@ -23,4 +23,4 @@ down:
 
 # The browser tests run against the stack, in the installed Chrome.
 e2e: up
-	@cd notes-app && pnpm e2e
+	@cd notes-app && bun run e2e

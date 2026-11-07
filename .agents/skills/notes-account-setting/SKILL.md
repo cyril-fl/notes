@@ -36,14 +36,14 @@ Both bases: `make test` runs in `<POSTGRES_DB>_test`, and it fails until the col
 
 ## 3. API surface
 
-`make test`, then `make openapi`, then `cd ../notes-app && pnpm types`, then `make api` (the API container serves the old binary until then).
+`make test`, then `make openapi`, then `cd ../notes-app && bun run types`, then `make api` (the API container serves the old binary until then).
 
 ## 4. App
 
 - `notes-app/app/layouts/default.vue` loads `me` (`useLazyAsyncData('me')`, shared with the settings page) and applies the account to the app: its `watch(me, …)` sets the locale, the theme colors (`appConfig.ui.colors`), `colorMode.preference` and `useView()`. A setting that some other control also changes (the sidebar mode button, the view toggle) is saved back by the second watch there.
 - `notes-app/app/pages/settings.vue`: one `<section>` per group, a row with title, `text-xs text-muted` description and a `USelectMenu` (`value-key="value"`, `:search-input="false"`, `aria-label`) whose change sends `PATCH /api/me` and stores the answer in `me.value`.
 - Texts in both `i18n/locales/fr.json` and `en.json`, under `settings`.
-- `pnpm typecheck && pnpm test`, then an e2e in `test/e2e/settings.spec.ts` that sets the setting from the page, polls `GET /api/me`, and **sets the account back in a `finally`**: every run shares the e2e account.
+- `bun run typecheck && bun run test`, then an e2e in `test/e2e/settings.spec.ts` that sets the setting from the page, polls `GET /api/me`, and **sets the account back in a `finally`**: every run shares the e2e account.
 
 ## 5. Finish
 

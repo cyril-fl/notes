@@ -4,7 +4,7 @@ Nuxt 4, Nuxt UI 4 (Tailwind 4), `@nuxtjs/i18n`, VueUse; client only, the Go API 
 
 ## Commands
 
-`pnpm test` (node unit tests in `test/*.test.ts`), `pnpm typecheck`, `pnpm e2e` (Playwright in the installed Chrome, against `make up`), `pnpm types` (API types from `../notes-go/docs/swagger.yaml`), `pnpm lint` (ESLint, `@nuxt/eslint`), `pnpm format` (Prettier, also run on staged files by the pre-commit hook).
+`bun run test` (unit tests in `test/*.test.ts`; not a bare `bun test`, which also picks the e2e specs), `bun run typecheck`, `bun run e2e` (Playwright in the installed Chrome, against `make up`), `bun run types` (API types from `../notes-go/docs/swagger.yaml`), `bun run lint` (ESLint, `@nuxt/eslint`), `bun run format` (Prettier, also run on staged files by the pre-commit hook).
 
 ## Rules
 
