@@ -12,6 +12,7 @@ import (
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/process/createsession"
 	"main.go/app/shared/services/process/deletesession"
+	"main.go/app/shared/services/process/editlocale"
 )
 
 // After maxFailures wrong passwords from one address, it waits lockout: a password cannot be guessed by trying them all.
@@ -121,5 +122,38 @@ func Me(db bun.IDB) http.HandlerFunc {
 			return
 		}
 		respond.JSON(w, http.StatusOK, user)
+	}
+}
+
+type MeBody struct {
+	Locale string `json:"locale"`
+}
+
+// EditMe changes the settings of the account logged in: PATCH /api/me.
+// @Summary  Change the language of the account logged in
+// @Tags     account
+// @Accept   json
+// @Produce  json
+// @Param    body body MeBody true "body"
+// @Success  200 {object} domain.User
+// @Failure  400 {object} respond.Failure
+// @Failure  401 {object} respond.Failure
+// @Failure  413 {object} respond.Failure
+// @Failure  500 {object} respond.Failure
+// @Router   /api/me [patch]
+func EditMe(db bun.IDB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var input MeBody
+		if !respond.Decode(w, r, &input) {
+			return
+		}
+
+		process := editlocale.Process(r.Context(), db, input.Locale)
+		process.Run()
+		if process.HasErr() {
+			respond.Error(w, process.GetErr())
+			return
+		}
+		respond.JSON(w, http.StatusOK, process.GetResult())
 	}
 }

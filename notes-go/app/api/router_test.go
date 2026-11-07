@@ -637,6 +637,12 @@ func TestLogin(t *testing.T) {
 	if w := send("GET", "/api/me", "", cookies[0]); w.Code != http.StatusOK || !strings.Contains(w.Body.String(), name) {
 		t.Errorf("me: status = %d, body = %s", w.Code, w.Body)
 	}
+	if w := send("PATCH", "/api/me", `{"locale":"de"}`, cookies[0]); w.Code != http.StatusBadRequest {
+		t.Errorf("unknown locale: status = %d, want 400", w.Code)
+	}
+	if w := send("PATCH", "/api/me", `{"locale":"en"}`, cookies[0]); w.Code != http.StatusOK || !strings.Contains(w.Body.String(), `"locale":"en"`) {
+		t.Errorf("edit me: status = %d, body = %s", w.Code, w.Body)
+	}
 	send("POST", "/api/logout", "", cookies[0])
 	if w := send("GET", "/api/me", "", cookies[0]); w.Code != http.StatusUnauthorized {
 		t.Errorf("me after logout: status = %d, want 401", w.Code)

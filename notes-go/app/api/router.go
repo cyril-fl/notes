@@ -43,6 +43,7 @@ func New(db bun.IDB, origin string) http.Handler {
 	mux.Handle("POST /api/login", apilogin.Handler(db))
 	mux.Handle("POST /api/logout", apilogin.Logout(db))
 	mux.Handle("GET /api/me", apilogin.Me(db))
+	mux.Handle("PATCH /api/me", apilogin.EditMe(db))
 
 	mux.Handle("POST /api/notes", apicreatenote.Handler(db))
 	mux.Handle("GET /api/notes/{id}", apireadnote.Handler(db))

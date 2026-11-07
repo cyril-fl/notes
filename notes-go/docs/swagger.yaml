@@ -109,12 +109,16 @@ components:
           type: string
         id:
           type: string
+        locale:
+          description: the language of the web app, one of Locales
+          type: string
         name:
           description: unique case-insensitive, see createschema
           type: string
       required:
       - created_at
       - id
+      - locale
       - name
       type: object
     editfolder.Body:
@@ -213,6 +217,13 @@ components:
       - inside
       - kind
       - title
+      type: object
+    login.MeBody:
+      properties:
+        locale:
+          type: string
+      required:
+      - locale
       type: object
     moveitems.Input:
       properties:
@@ -828,6 +839,50 @@ paths:
                 $ref: '#/components/schemas/respond.Failure'
           description: Unauthorized
       summary: The account logged in
+      tags:
+      - account
+    patch:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/login.MeBody'
+              description: body
+              summary: body
+        description: body
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/domain.User'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "413":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Request Entity Too Large
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Change the language of the account logged in
       tags:
       - account
   /api/move:
