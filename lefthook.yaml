@@ -10,6 +10,9 @@ pre-commit:
       glob: "*.{ts,vue,js,mjs,json,css}"
       run: pnpm exec prettier --write --ignore-unknown {staged_files}
       stage_fixed: true
+    actionlint:
+      glob: ".github/workflows/*.{yml,yaml}"
+      run: actionlint {staged_files}
 
 commit-msg:
   commands:

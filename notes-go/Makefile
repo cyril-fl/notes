@@ -3,6 +3,7 @@
 # Not `go tool lefthook install`: the hook would call a build cache path that expires, then skip its checks without failing.
 setup:
 	go install github.com/evilmartians/lefthook/v2
+	go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
 	"$$(go env GOBIN | grep . || echo "$$(go env GOPATH)/bin")/lefthook" install --force
 
 # The tests run in <POSTGRES_DB>_test, made on first use: they create the schema, a migration being written must not
