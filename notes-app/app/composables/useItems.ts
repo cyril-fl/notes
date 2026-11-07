@@ -96,6 +96,11 @@ export function useItems() {
     return act(() => api('/api/trash', { method: 'DELETE' }));
   }
 
+  /** Deletes one removal for good, with what went with it. */
+  function purgeItem(id: string) {
+    return act(() => api(`/api/trash/${id}`, { method: 'DELETE' }));
+  }
+
   /** What right-clicking an item offers. */
   function itemMenu(item: Item): ContextMenuItem[][] {
     const remove = { label: 'Supprimer', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => removeItem(item) };
@@ -120,7 +125,7 @@ export function useItems() {
     ];
   }
 
-  return { createFolder, renameFolder, removeItem, moveItem, restoreItem, pinItem, emptyTrash, itemMenu, renameTag, removeTag, tagMenu };
+  return { createFolder, renameFolder, removeItem, moveItem, restoreItem, pinItem, emptyTrash, purgeItem, itemMenu, renameTag, removeTag, tagMenu };
 }
 
 /** The pinned notes and favorite folders, read once for the sidebar, the menus and the editor. */

@@ -2,7 +2,7 @@
 import type { Trashed } from '~/types/items';
 
 const api = useApi();
-const { restoreItem, emptyTrash } = useItems();
+const { restoreItem, emptyTrash, purgeItem } = useItems();
 const { confirm } = useDialogs();
 
 const { data: items, status } = useLazyAsyncData('trash', () => api<Trashed[]>('/api/trash'), {
@@ -16,6 +16,15 @@ async function askEmpty() {
     action: 'Vider',
   });
   if (confirmed) await emptyTrash();
+}
+
+async function askPurge(item: Trashed) {
+  const confirmed = await confirm({
+    title: `Supprimer « ${displayTitle(item.title)} » définitivement ?`,
+    description: item.inside ? `Les ${item.inside} éléments supprimés avec lui le seront aussi.` : 'Il ne pourra plus être restauré.',
+    action: 'Supprimer',
+  });
+  if (confirmed) await purgeItem(item.id);
 }
 
 function deletedOn(item: Trashed) {
@@ -35,6 +44,9 @@ function deletedOn(item: Trashed) {
         <span v-if="item.inside" class="shrink-0 text-xs text-muted">+{{ item.inside }}</span>
         <span class="ml-auto shrink-0 pl-4 text-xs text-muted">{{ deletedOn(item) }}</span>
         <UButton label="Restaurer" color="neutral" variant="ghost" size="xs" @click="restoreItem(item.id)" />
+        <UTooltip text="Supprimer définitivement">
+          <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="xs" aria-label="Supprimer définitivement" @click="askPurge(item)" />
+        </UTooltip>
       </li>
     </ul>
     <UEmpty
