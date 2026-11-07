@@ -3,17 +3,15 @@ package cmdtrash
 import (
 	"fmt"
 	"math"
-	"strings"
-	"text/tabwriter"
 	"time"
 
-	"charm.land/lipgloss/v2"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/listtrash"
 	"main.go/app/shared/services/screen"
+	"main.go/app/shared/services/style"
 )
 
 // Trash lists what was removed, each removal once with how many items went with it, and when it is purged.
@@ -43,18 +41,13 @@ func Trash(cobra *cobra.Command, args []string) error {
 }
 
 func output(trash []listtrash.Trashed, retention int, now time.Time) string {
-	var out strings.Builder
-	out.WriteString(lipgloss.NewStyle().Bold(true).Render("Trash") + "\n")
-	out.WriteString(lipgloss.NewStyle().Faint(true).Render("notes restore <uuid> brings an item back") + "\n")
-	out.WriteString(lipgloss.NewStyle().Faint(true).Render(info(len(trash), retention)) + "\n\n")
-
+	header := style.Header("Trash", "notes restore <uuid> brings an item back", info(len(trash), retention)) + "\n"
 	if len(trash) == 0 {
-		out.WriteString(lipgloss.NewStyle().Faint(true).Italic(true).Render("The trash is empty"))
-		return out.String()
+		return header + style.Empty().Render("The trash is empty")
 	}
 
-	table := tabwriter.NewWriter(&out, 0, 0, 2, ' ', 0)
-	for _, item := range trash {
+	cells := make([][]string, len(trash))
+	for i, item := range trash {
 		title := item.Title
 		if title == "" {
 			title = "untitled"
@@ -62,10 +55,9 @@ func output(trash []listtrash.Trashed, retention int, now time.Time) string {
 		if item.Inside > 0 {
 			title += fmt.Sprintf(" (+%d inside)", item.Inside)
 		}
-		fmt.Fprintf(table, "%s\t%s\tremoved %s\t%s\t%s\n", item.Kind, title, item.DeletedAt.Format("2 Jan 2006"), purge(item.DeletedAt, retention, now), item.ID)
+		cells[i] = []string{string(item.Kind), title, "removed " + item.DeletedAt.Format("2 Jan 2006"), purge(item.DeletedAt, retention, now), item.ID}
 	}
-	table.Flush() // writes to a strings.Builder: cannot fail
-	return out.String()
+	return header + style.Table(cells, -1, 1)
 }
 
 func info(removals, retention int) string {

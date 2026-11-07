@@ -12,6 +12,7 @@ import (
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/process/readitem"
 	"main.go/app/shared/services/screen"
+	"main.go/app/shared/services/style"
 )
 
 // headerHeight is the title, path, info and blank line above the children; footerHeight the blank and shortcut lines.
@@ -65,6 +66,7 @@ type model struct {
 func newModel(load loader, folder readitem.Result, cursor int, clipboard *domain.Item, status string, failed bool) *model {
 	m := &model{load: load, folder: folder, clipboard: clipboard, status: status, failed: failed, filter: textinput.New()}
 	m.filter.Prompt = "/"
+	m.filter.SetStyles(style.Filter(m.filter.Styles()))
 	m.cursor = min(max(0, cursor), max(0, len(m.visible())-1))
 	return m
 }
@@ -272,11 +274,11 @@ func (m *model) quit(kind actionKind, item domain.Item) (tea.Model, tea.Cmd) {
 func (m *model) statusLine() string {
 	switch {
 	case m.failed:
-		return lipgloss.NewStyle().Foreground(lipgloss.Red).Render(m.status)
+		return style.Error().Render(m.status)
 	case m.clipboard != nil:
-		return lipgloss.NewStyle().Faint(true).Render(fmt.Sprintf("✂ %s · ^V pastes it here, ⎋ cancels", untitled(m.clipboard.Title)))
+		return style.Muted().Render(fmt.Sprintf("✂ %s · ^V pastes it here, ⎋ cancels", untitled(m.clipboard.Title)))
 	case m.status != "":
-		return lipgloss.NewStyle().Faint(true).Render(m.status)
+		return style.Muted().Render(m.status)
 	}
 	return ""
 }

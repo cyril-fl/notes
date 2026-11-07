@@ -5,10 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"text/tabwriter"
 
 	"charm.land/huh/v2"
-	"charm.land/lipgloss/v2"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	plumdebug "github.com/cyril-fl/plum/utils/debug"
 	"github.com/spf13/cobra"
@@ -17,6 +15,7 @@ import (
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/readitem"
 	"main.go/app/shared/services/screen"
+	"main.go/app/shared/services/style"
 )
 
 // Read shows the folder title and path, then one line per direct child with its uuid; ctrl+e edits it; --json prints it for scripts.
@@ -77,40 +76,20 @@ const EmptyFolder = "This folder is empty"
 // Output renders a folder like `show folder`: the header from the whole folder, then rows (the finder
 // passes its filtered, scrolled window); cursor >= 0 marks that row as selected, empty shows when no row.
 func Output(folder readitem.Result, rows []domain.Item, cursor int, empty string) string {
-	var output strings.Builder
-	output.WriteString(lipgloss.NewStyle().Bold(true).Render(folder.Item.Title) + "\n")
-	output.WriteString(lipgloss.NewStyle().Faint(true).Render(folder.Path) + "\n")
-	output.WriteString(lipgloss.NewStyle().Faint(true).Render(info(folder)) + "\n")
-
-	output.WriteString("\n")
+	header := style.Header(folder.Item.Title, folder.Path, info(folder)) + "\n"
 	if len(rows) == 0 {
-		output.WriteString(lipgloss.NewStyle().Faint(true).Italic(true).Render(empty))
-	} else {
-		var lines strings.Builder
-		table := tabwriter.NewWriter(&lines, 0, 0, 2, ' ', 0)
-		for _, child := range rows {
-			title := child.Title
-			if title == "" {
-				title = "untitled"
-			}
-			fmt.Fprintf(table, "%s\t%s\t%s\n", child.Kind, title, child.ID)
-		}
-		table.Flush() // writes to a strings.Builder: cannot fail
-
-		// Styled after the tabwriter: escape codes would break its column widths.
-		for i, row := range strings.Split(strings.TrimRight(lines.String(), "\n"), "\n") {
-			switch {
-			case cursor < 0:
-				output.WriteString(row + "\n")
-			case i == cursor:
-				output.WriteString(lipgloss.NewStyle().Bold(true).Render("> "+row) + "\n")
-			default:
-				output.WriteString("  " + row + "\n")
-			}
-		}
+		return header + style.Empty().Render(empty)
 	}
 
-	return output.String()
+	cells := make([][]string, len(rows))
+	for i, child := range rows {
+		title := child.Title
+		if title == "" {
+			title = "untitled"
+		}
+		cells[i] = []string{string(child.Kind), title, child.ID}
+	}
+	return header + style.Table(cells, cursor, 1)
 }
 
 // info counts the children, and dates the folder when it is a real one (the root has no row).

@@ -15,6 +15,7 @@ import (
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/readitem"
 	"main.go/app/shared/services/screen"
+	"main.go/app/shared/services/style"
 )
 
 // Read shows the note path, then its content rendered as markdown; ctrl+e edits it, then shows it again.
@@ -54,7 +55,7 @@ func load(ctx context.Context, id string) (string, error) {
 		return "", err
 	}
 
-	return lipgloss.NewStyle().Faint(true).Render(note.Path) + "\n\n" + content, nil
+	return style.Muted().Render(note.Path) + "\n\n" + content, nil
 }
 
 // render keeps the raw markdown when stdout is not a terminal (pipe, file).

@@ -7,9 +7,9 @@ import (
 
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
-	"charm.land/lipgloss/v2"
 	plumtypes "github.com/cyril-fl/plum/types"
 	"golang.org/x/term"
+	"main.go/app/shared/services/style"
 )
 
 // ErrQuit is returned when the user quits everything (ctrl+q), not just this view (esc):
@@ -93,14 +93,13 @@ type Hint struct {
 	Label string
 }
 
-// Footer renders shortcuts like the forms' help line: bold key glyph, muted label, " · " between.
+// Footer renders shortcuts like the forms' help line: accent key glyph, muted label, subtle " · " between.
 func Footer(hints ...Hint) string {
-	key, label := lipgloss.NewStyle().Bold(true), lipgloss.NewStyle().Faint(true)
 	parts := make([]string, len(hints))
 	for i, hint := range hints {
-		parts[i] = key.Render(hint.Key.Symbol()) + " " + label.Render(hint.Label)
+		parts[i] = style.Key().Render(hint.Key.Symbol()) + " " + style.Muted().Render(hint.Label)
 	}
-	return strings.Join(parts, label.Render(" · "))
+	return strings.Join(parts, style.Subtle().Render(" · "))
 }
 
 func footer() string {

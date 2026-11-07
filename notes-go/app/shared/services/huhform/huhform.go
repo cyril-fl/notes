@@ -9,6 +9,7 @@ import (
 	"charm.land/lipgloss/v2"
 	plumtypes "github.com/cyril-fl/plum/types"
 	"golang.org/x/term"
+	"main.go/app/shared/services/style"
 )
 
 // New builds a one-group form with the shared key map and theme, as tall as the terminal.
@@ -83,7 +84,11 @@ func shortcut(label string, keys ...plumtypes.Key) key.Binding {
 // theme renders the help line like the SCNe footer: bold key, muted label, " · " between.
 func theme(isDark bool) *huh.Styles {
 	t := huh.ThemeCharm(isDark)
-	t.Help.ShortKey = t.Help.ShortKey.Bold(true)
-	t.Help.ShortSeparator = t.Help.ShortSeparator.Transform(func(string) string { return " · " })
+	t.Help.ShortKey = style.Key()
+	t.Help.ShortDesc = style.Muted()
+	t.Help.ShortSeparator = style.Subtle().Transform(func(string) string { return " · " })
+	t.Focused.Title = t.Focused.Title.Foreground(style.ColorAccent())
+	t.Focused.SelectSelector = t.Focused.SelectSelector.Foreground(style.ColorAccent())
+	t.Focused.Base = t.Focused.Base.BorderForeground(style.ColorAccent())
 	return t
 }

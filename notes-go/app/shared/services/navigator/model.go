@@ -3,15 +3,14 @@
 package navigator
 
 import (
-	"fmt"
 	"strings"
-	"text/tabwriter"
 
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 	plumtypes "github.com/cyril-fl/plum/types"
 	"main.go/app/shared/services/screen"
+	"main.go/app/shared/services/style"
 )
 
 // headerHeight is the title, path, info and blank line above the rows; footerHeight the blank and shortcut lines.
@@ -84,6 +83,7 @@ type model struct {
 func newModel(load Loader, options Options, current Target, page Page, history []Target, cursor int) *model {
 	m := &model{load: load, options: options, current: current, page: page, history: history, filter: textinput.New()}
 	m.filter.Prompt = "/"
+	m.filter.SetStyles(style.Filter(m.filter.Styles()))
 	m.cursor = min(max(0, cursor), max(0, len(m.visible())-1))
 	return m
 }
@@ -209,35 +209,16 @@ func (m *model) View() tea.View {
 // Render draws a page like show folder: bold title, faint path and info, then the rows, the selected one marked
 // (cursor < 0: none, for a pipe).
 func Render(p Page, rows []Row, cursor int, empty string) string {
-	var output strings.Builder
-	output.WriteString(lipgloss.NewStyle().Bold(true).Render(p.Title) + "\n")
-	output.WriteString(lipgloss.NewStyle().Faint(true).Render(p.Path) + "\n")
-	output.WriteString(lipgloss.NewStyle().Faint(true).Render(p.Info) + "\n\n")
-
+	header := style.Header(p.Title, p.Path, p.Info) + "\n"
 	if len(rows) == 0 {
-		output.WriteString(lipgloss.NewStyle().Faint(true).Italic(true).Render(empty))
-		return output.String()
+		return header + style.Empty().Render(empty)
 	}
 
-	var lines strings.Builder
-	table := tabwriter.NewWriter(&lines, 0, 0, 2, ' ', 0)
-	for _, r := range rows {
-		fmt.Fprintln(table, strings.Join(r.Cells, "\t"))
+	cells := make([][]string, len(rows))
+	for i, r := range rows {
+		cells[i] = r.Cells
 	}
-	table.Flush() // writes to a strings.Builder: cannot fail
-
-	// Styled after the tabwriter: escape codes would break its column widths.
-	for i, line := range strings.Split(strings.TrimRight(lines.String(), "\n"), "\n") {
-		switch {
-		case cursor < 0:
-			output.WriteString(line + "\n")
-		case i == cursor:
-			output.WriteString(lipgloss.NewStyle().Bold(true).Render("> "+line) + "\n")
-		default:
-			output.WriteString("  " + line + "\n")
-		}
-	}
-	return output.String()
+	return header + style.Table(cells, cursor, 0)
 }
 
 // visible is the page's rows matching the filter, case-insensitively, on any cell.

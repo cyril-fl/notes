@@ -4,11 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
-	"text/tabwriter"
 
 	"charm.land/huh/v2"
-	"charm.land/lipgloss/v2"
 
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	plumdebug "github.com/cyril-fl/plum/utils/debug"
@@ -19,6 +16,7 @@ import (
 	"main.go/app/shared/services/process/listtag"
 	"main.go/app/shared/services/process/readtag"
 	"main.go/app/shared/services/screen"
+	"main.go/app/shared/services/style"
 )
 
 // Read shows one tag and its notes, or lists tags with --list, one value per line, or as YAML/JSON with --yaml/--json.
@@ -65,23 +63,16 @@ func loadTag(ctx context.Context, value string) (string, error) {
 	}
 
 	result := process.GetResult()
-	var output strings.Builder
-	output.WriteString(lipgloss.NewStyle().Bold(true).Render(result.Tag.Value) + "\n")
-
-	output.WriteString("\n")
+	header := style.Title().Render(result.Tag.Value) + "\n\n"
 	if len(result.Notes) == 0 {
-		output.WriteString(lipgloss.NewStyle().Faint(true).Italic(true).Render("No note carries this tag"))
-	} else {
-		table := tabwriter.NewWriter(&output, 0, 0, 2, ' ', 0)
-		for _, note := range result.Notes {
-			fmt.Fprintf(table, "%s\t%s\n", note.Path, note.ID)
-		}
-		if err := table.Flush(); err != nil {
-			return "", err
-		}
+		return header + style.Empty().Render("No note carries this tag"), nil
 	}
 
-	return output.String(), nil
+	cells := make([][]string, len(result.Notes))
+	for i, note := range result.Notes {
+		cells[i] = []string{note.Path, note.ID}
+	}
+	return header + style.Table(cells, -1, 0), nil
 }
 
 func listTags(cobra *cobra.Command, asYAML bool, asJSON bool) error {
