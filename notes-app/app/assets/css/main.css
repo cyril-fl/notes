@@ -17,7 +17,7 @@
   --color-plain-200: #e3e2e0;
   --color-plain-300: #d3d2cf;
   --color-plain-400: #9b9a97;
-  --color-plain-500: #787774;
+  --color-plain-500: #6c6c69;
   --color-plain-600: #5f5e5b;
   --color-plain-700: #373633;
   --color-plain-800: #252525;
@@ -26,9 +26,21 @@
 }
 
 /* The themes of app/utils/themes.ts, an accent and its greys each, taken from the key colors of the open source schemes
-   of the same name, the shades used for text and buttons darkened or lightened to reach WCAG AA (4.5:1) in both modes.
+   of the same name (notes: the Tailwind blue on the plain greys), the shades used for text and buttons darkened or lightened to reach WCAG AA (4.5:1) in both modes.
    Static: Tailwind keeps them though no class uses them. The greys serve both modes, like plain. */
 @theme static {
+  --color-notes-50: #eff6ff;
+  --color-notes-100: #dbeafe;
+  --color-notes-200: #bfdbfe;
+  --color-notes-300: #93c5fd;
+  --color-notes-400: #60a5fa;
+  --color-notes-500: #2c6def;
+  --color-notes-600: #255ee4;
+  --color-notes-700: #1d4ed8;
+  --color-notes-800: #1e40af;
+  --color-notes-900: #1e3a8a;
+  --color-notes-950: #172554;
+
   --color-dracula-50: #f7f2ff;
   --color-dracula-100: #ede3fe;
   --color-dracula-200: #dccafd;
