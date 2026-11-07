@@ -15,8 +15,12 @@ type User struct {
 	ID           string    `bun:",pk,type:uuid,default:gen_random_uuid()" json:"id"`
 	Name         string    `bun:",notnull" json:"name"` // unique case-insensitive, see createschema
 	PasswordHash string    `bun:",notnull" json:"-"`
+	Locale       string    `bun:",notnull,default:'fr'" json:"locale"` // the language of the web app, one of Locales
 	CreatedAt    time.Time `bun:",notnull,default:current_timestamp" json:"created_at"`
 }
+
+// Locales are the languages of the web app, the first one by default.
+var Locales = []string{"fr", "en"}
 
 // Session is a login of a device: the client keeps the token, the base only its hash.
 type Session struct {
