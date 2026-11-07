@@ -4,12 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
+	"slices"
 	"strings"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"main.go/app/shared/domain"
+	"main.go/app/shared/services/process/linknotes"
 )
 
 // invalidText is the Postgres SQLSTATE raised when an id is not a uuid.
@@ -80,7 +83,10 @@ func (p *run) restoreItems() {
 		if err := p.checkParents(ctx, tx); err != nil {
 			return err
 		}
-		return p.updateItems(ctx, tx)
+		if err := p.updateItems(ctx, tx); err != nil {
+			return err
+		}
+		return p.linkNotes(ctx, tx)
 	})
 	p.SetErr(toDomainErr(err))
 }
@@ -114,6 +120,34 @@ func (p *run) updateItems(ctx context.Context, tx bun.Tx) error {
 			) SELECT id FROM tree)
 		RETURNING id, parent_id, created_at, updated_at, kind, title`, bun.In(p.cache.ids), domain.UserID(p.ctx)).
 		Scan(ctx, &p.cache.result)
+}
+
+// linkNotes links each restored note again: its own [[links]], and the [[links]] of the notes waiting for its
+// title. A link to a trashed note stays in the text and in notes_on_links, hidden by the readers: it is back here.
+func (p *run) linkNotes(ctx context.Context, tx bun.Tx) error {
+	titles := map[string]string{}
+	for _, item := range p.cache.result {
+		if item.Kind == domain.NOTE {
+			titles[item.ID] = item.Title
+		}
+	}
+	if len(titles) == 0 {
+		return nil
+	}
+
+	var notes []linknotes.Input
+	if err := tx.NewRaw("SELECT item_id AS id, content FROM metadata_notes WHERE item_id IN (?)", bun.In(slices.Collect(maps.Keys(titles)))).Scan(ctx, &notes); err != nil {
+		return err
+	}
+	for _, note := range notes {
+		note.Title = titles[note.ID]
+		link := linknotes.Process(ctx, tx, note)
+		link.Run()
+		if link.HasErr() {
+			return link.GetErr()
+		}
+	}
+	return nil
 }
 
 // Helpers

@@ -125,3 +125,60 @@ func TestTrashAndRestore(t *testing.T) {
 		t.Errorf("err = %v, want %v", invalid.GetErr(), ErrInvalidID)
 	}
 }
+
+// A [[link]] waiting for a trashed note resolves when the note comes back.
+func TestRestoreLinks(t *testing.T) {
+	ctx := context.Background()
+	env := postgrey.NewEnvironment()
+	env.ReadEnv()
+	db := env.Connect()
+	defer db.Close()
+
+	schema := createschema.Process(ctx, db)
+	schema.Run()
+	if schema.HasErr() {
+		t.Fatalf("create schema: %v", schema.GetErr())
+	}
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
+
+	note := func(content string) string {
+		process := createnote.Process(ctx, tx, createnote.Input{Content: content})
+		process.Run()
+		if process.HasErr() {
+			t.Fatalf("note %q: %v", content, process.GetErr())
+		}
+		return process.GetResult().ID
+	}
+
+	b := note("# Bee")
+	remove := deleteitems.Process(ctx, tx, domain.NOTE, []string{b})
+	remove.Run()
+	if remove.HasErr() {
+		t.Fatal(remove.GetErr())
+	}
+	a := note("see [[Bee]]")
+
+	restore := Process(ctx, tx, []string{b})
+	restore.Run()
+	if restore.HasErr() {
+		t.Fatal(restore.GetErr())
+	}
+
+	var content string
+	var links int
+	if err := tx.NewRaw("SELECT content FROM metadata_notes WHERE item_id = ?", a).Scan(ctx, &content); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.NewRaw("SELECT count(*) FROM notes_on_links WHERE source_id = ? AND target_id = ?", a, b).Scan(ctx, &links); err != nil {
+		t.Fatal(err)
+	}
+	if want := "see [Bee](note:" + b + ")"; content != want || links != 1 {
+		t.Errorf("content = %q, links = %d; want %q, 1", content, links, want)
+	}
+}
