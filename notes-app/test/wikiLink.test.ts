@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { readWikiLink, writeWikiLink } from '../app/utils/wikiLink.ts';
+import { readWikiLink, resolvedLinks, writeWikiLink } from '../app/utils/wikiLink.ts';
 
 const ID = '3f2a0000-0000-0000-0000-00000000abcd';
 
@@ -23,4 +23,11 @@ test('leaves the other links and brackets to markdown', () => {
 test('writes by id once resolved, by title until then', () => {
   assert.equal(writeWikiLink('Courses [x]', ID), `[Courses x](note:${ID})`);
   assert.equal(writeWikiLink('Courses', null), '[[Courses]]');
+});
+
+test('pairs the links the API resolved with the targets typed', () => {
+  const sent = '[[Autre]] puis [[/A/Idées]] et [[Inconnu]]';
+  const saved = `[Autre](note:${ID}) puis [Idées](note:${ID.toUpperCase()}) et [[Inconnu]]`;
+  assert.deepEqual([...resolvedLinks(sent, saved)], [['autre', { target: 'Autre', id: ID }], ['/a/idées', { target: 'Idées', id: ID }]]);
+  assert.equal(resolvedLinks('[[Autre]]', 'texte').size, 0);
 });

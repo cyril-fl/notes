@@ -36,6 +36,7 @@ const isEmpty = ref(!props.noteId);
 const touched = ref(false);
 
 const saver = createSaver(send);
+const editorRef = useTemplateRef<{ editor?: Editor }>('editor');
 
 async function send(changes: Changes): Promise<boolean | void> {
   if (id.value && Object.values(changes).every((value) => value === undefined)) return;
@@ -71,9 +72,23 @@ async function patchNote(changes: Changes) {
 async function readTags(changes: Changes) {
   if (changes.content === undefined) return;
   const note = await api<ItemDetail>(`/api/notes/${id.value}`);
+  showResolvedLinks(changes.content, note.content ?? '');
   const changed = note.tags?.join() !== tags.value.join();
   tags.value = note.tags ?? [];
   if (changed) await refreshNuxtData();
+}
+
+// The API points the typed [[links]] to their note: the editor shows them resolved, without touching the cursor or the undo history.
+function showResolvedLinks(sent: string, saved: string) {
+  const editor = editorRef.value?.editor;
+  const links = resolvedLinks(sent, saved);
+  if (!editor || !links.size) return;
+  const { tr } = editor.state;
+  editor.state.doc.descendants((node, pos) => {
+    const link = node.type.name === 'wikiLink' && !node.attrs.id && links.get(node.attrs.target.toLowerCase());
+    if (link) tr.setNodeMarkup(pos, undefined, link);
+  });
+  if (tr.docChanged) editor.view.dispatch(tr.setMeta('addToHistory', false));
 }
 
 async function load() {
@@ -242,6 +257,7 @@ const status = computed(() => {
   <!-- UEditor hands its listeners to TipTap, not to the page: clicks on links are caught here. -->
   <article v-else-if="!loading" class="flex flex-1 flex-col p-8" @focusin="touched = true" @pointerdown.capture="touched = true" @click="openLink">
     <UEditor
+      ref="editor"
       v-slot="{ editor }"
       :model-value="initialContent"
       content-type="markdown"

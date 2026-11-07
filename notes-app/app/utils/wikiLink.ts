@@ -17,6 +17,21 @@ export function writeWikiLink(target: string, id: string | null) {
   return id ? `[${target.replace(/[[\]]/g, '')}](note:${id})` : `[[${target}]]`;
 }
 
+/** The [[targets]] the API resolved on saving, by lowercased target: it rewrites each link in place, so sent and saved links pair up in order. */
+export function resolvedLinks(sent: string, saved: string) {
+  const links = (content: string) => [...content.matchAll(new RegExp(`${BY_ID.source}|${BY_TITLE.source}`, 'g'))];
+  const before = links(sent);
+  const after = links(saved);
+  const resolved = new Map<string, { target: string; id: string }>();
+  if (before.length !== after.length) return resolved;
+  before.forEach((link, i) => {
+    const target = link[3]?.trim();
+    const id = after[i]![2];
+    if (target && id) resolved.set(target.toLowerCase(), { target: after[i]![1]!.trim(), id: id.toLowerCase() });
+  });
+  return resolved;
+}
+
 /**
  * A link to another note: a node and not text, or the markdown serializer would escape its brackets.
  * Typing or pasting [[Title]] makes one, the API then points it to the note's id.
