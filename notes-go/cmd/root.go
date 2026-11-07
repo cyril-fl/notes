@@ -96,7 +96,34 @@ func version() string {
 	return info.Main.Version
 }
 
+// groups sorts the commands of the help by scope; a command left out shows under "Additional Commands".
+var groups = []struct {
+	group    cobra.Group
+	commands []string
+}{
+	{cobra.Group{ID: "notes", Title: "Notes, folders and tags:"}, []string{"add", "show", "edit", "move", "remove"}},
+	{cobra.Group{ID: "browse", Title: "Browse:"}, []string{"finder", "recent", "search", "graph"}},
+	{cobra.Group{ID: "trash", Title: "Trash:"}, []string{"trash", "restore"}},
+	{cobra.Group{ID: "files", Title: "Markdown files:"}, []string{"import", "export"}},
+	{cobra.Group{ID: "account", Title: "Account:"}, []string{"login", "logout", "account"}},
+	{cobra.Group{ID: "admin", Title: "Admin (on the server):"}, []string{"user", "reset-password", "rotate-secret", "serve"}},
+}
+
+func groupCommands() {
+	byName := map[string]string{}
+	for _, g := range groups {
+		cmdRoot.AddGroup(&g.group)
+		for _, name := range g.commands {
+			byName[name] = g.group.ID
+		}
+	}
+	for _, command := range cmdRoot.Commands() {
+		command.GroupID = byName[command.Name()]
+	}
+}
+
 func Execute() {
+	groupCommands()
 	err := cmdRoot.Execute()
 	if errors.Is(err, huh.ErrUserAborted) || errors.Is(err, screen.ErrQuit) {
 		return
