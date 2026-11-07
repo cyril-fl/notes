@@ -10,9 +10,9 @@ const route = useRoute();
 const { createFolder } = useItems();
 
 const open = useState('search-open', () => false);
-// The T shortcut opens the palette on the templates alone.
-const templatesOnly = useState('search-templates', () => false);
-watch(open, (isOpen) => isOpen || (templatesOnly.value = false));
+// The T shortcut opens the palette on the snippets alone.
+const snippetsOnly = useState('search-snippets', () => false);
+watch(open, (isOpen) => isOpen || (snippetsOnly.value = false));
 const term = ref('');
 const query = refDebounced(term, 200);
 
@@ -27,12 +27,12 @@ const { data: recent } = useLazyAsyncData('recent', () => api<Recent[]>('/api/re
 });
 
 const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
-const templates = computed<CommandPaletteItem[]>(() =>
-  (me.value?.snippets ?? []).flatMap((snippet, index) =>
-    snippet.template
-      ? [{ label: snippet.name, icon: icons.template, to: newNotePath(currentFolder(route), index) }]
-      : [],
-  ),
+const snippets = computed<CommandPaletteItem[]>(() =>
+  (me.value?.snippets ?? []).map((snippet, index) => ({
+    label: snippet.name,
+    icon: icons.snippet,
+    to: newNotePath(currentFolder(route), index),
+  })),
 );
 
 const toNote = (note: { id: string; title: string; path: string }): CommandPaletteItem => ({
@@ -45,7 +45,7 @@ const toNote = (note: { id: string; title: string; path: string }): CommandPalet
 // The API searches the text: the palette shows what it found as is, not filtered again on titles.
 const groups = computed<CommandPaletteGroup[]>(() => {
   const searching = term.value.trim() !== '';
-  if (templatesOnly.value) return [{ id: 'templates', label: t('search.fromTemplate'), items: templates.value }];
+  if (snippetsOnly.value) return [{ id: 'snippets', label: t('search.fromSnippet'), items: snippets.value }];
   return [
     searching
       ? { id: 'notes', label: t('common.notes'), items: matches.value.map(toNote), ignoreFilter: true }
@@ -55,8 +55,8 @@ const groups = computed<CommandPaletteGroup[]>(() => {
       label: t('search.actions'),
       items: [
         { label: t('common.newNote'), icon: icons.noteAdd, kbds: ['N'], to: newNotePath(currentFolder(route)) },
-        ...(templates.value.length
-          ? [{ label: t('search.fromTemplate'), icon: icons.template, kbds: ['T'], children: templates.value }]
+        ...(snippets.value.length
+          ? [{ label: t('search.fromSnippet'), icon: icons.snippet, kbds: ['T'], children: snippets.value }]
           : []),
         {
           label: t('common.newFolder'),

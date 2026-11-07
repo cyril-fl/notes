@@ -47,7 +47,7 @@
     "noResultDescription": "Aucune note ne contient « {q} ».",
     "empty": "Rechercher dans les notes",
     "emptyDescription": "Tapez un mot dans la barre de recherche.",
-    "fromTemplate": "Partir d'un template"
+    "fromSnippet": "Nouvelle note depuis un snippet"
   },
   "items": {
     "cycle": "Un dossier ne peut pas aller dans lui-même ou ses sous-dossiers.",
@@ -196,16 +196,13 @@
       "everforest": "Everforest"
     },
     "manageAccount": "Gérer le compte",
-    "snippets": "Snippets et templates",
-    "snippetsDescription": "Un snippet s'insère en tapant ;; dans une note, un template donne le texte de départ d'une nouvelle note (T, ou Cmd K).",
-    "snippet": "Snippet",
-    "template": "Template",
-    "snippetsEmpty": "Aucun snippet ni template.",
+    "snippets": "Snippets",
+    "snippetsDescription": "Du markdown réutilisable : tapez ;; dans une note pour l'insérer, ou T (ou Cmd K) pour commencer une nouvelle note avec.",
+    "snippetsEmpty": "Aucun snippet.",
     "addSnippet": "Ajouter",
     "editSnippet": "Modifier",
     "deleteSnippet": "Supprimer « {name} » ?",
     "snippetName": "Nom",
-    "snippetKind": "Type",
     "snippetContent": "Contenu",
     "snippetHelp": "Du markdown ; un #tag ajoute ce tag à la note.",
     "save": "Enregistrer"

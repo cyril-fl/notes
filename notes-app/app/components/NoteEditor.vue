@@ -10,8 +10,8 @@ import type { Changes } from '~/utils/saver';
 const { icons } = useIcons();
 const { t } = useI18n();
 
-// template: the starting text of a new note, saved only once typed in.
-const props = defineProps<{ noteId?: string; parentId?: string; template?: string }>();
+// start: the starting text of a new note, saved only once typed in.
+const props = defineProps<{ noteId?: string; parentId?: string; start?: string }>();
 const emit = defineEmits<{ created: [id: string] }>();
 
 const ALLOWED_LINKS = ['http', 'https', 'mailto'];
@@ -26,7 +26,7 @@ const id = ref(props.noteId);
 const parent = ref(props.parentId);
 const path = ref('');
 const tags = ref<string[]>([]);
-const initialContent = ref(props.template ?? '');
+const initialContent = ref(props.start ?? '');
 const loading = ref(!!props.noteId);
 const notFound = ref(false);
 
@@ -190,9 +190,12 @@ const noteItems = computed(() =>
 // The snippets offered after ;; : picked, their markdown goes in at the cursor.
 const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
 const snippetItems = computed(() =>
-  (me.value?.snippets ?? [])
-    .filter((snippet) => !snippet.template)
-    .map((snippet) => ({ kind: 'snippet', label: snippet.name, icon: icons.snippet, content: snippet.content })),
+  (me.value?.snippets ?? []).map((snippet) => ({
+    kind: 'snippet',
+    label: snippet.name,
+    icon: icons.snippet,
+    content: snippet.content,
+  })),
 );
 
 function openLink(event: MouseEvent) {

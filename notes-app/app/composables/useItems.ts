@@ -220,9 +220,9 @@ export function tagPath(value: string) {
   return `/tags/${encodeURIComponent(value)}`;
 }
 
-// template: the index of a template in the account's snippets.
-export function newNotePath(parentId?: string, template?: number) {
-  return { path: '/notes/new', query: { parent: parentId, template } };
+// snippet: the index of the account's snippet the note starts with.
+export function newNotePath(parentId?: string, snippet?: number) {
+  return { path: '/notes/new', query: { parent: parentId, snippet } };
 }
 
 /** Items a folder holds, the root without an id. */

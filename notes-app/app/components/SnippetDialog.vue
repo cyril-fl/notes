@@ -4,13 +4,7 @@ import type { Snippet } from '~/types/items';
 const props = defineProps<{ title: string; value?: Snippet }>();
 const emit = defineEmits<{ close: [value?: Snippet] }>();
 
-const { t } = useI18n();
-
-const snippet = ref<Snippet>({ name: '', content: '', template: false, ...props.value });
-const kinds = computed(() => [
-  { label: t('settings.snippet'), value: false },
-  { label: t('settings.template'), value: true },
-]);
+const snippet = ref<Snippet>({ name: '', content: '', ...props.value });
 
 function submit() {
   const name = snippet.value.name.trim();
@@ -22,23 +16,13 @@ function submit() {
   <UModal :title="title" :close="false" @update:open="emit('close')">
     <template #body>
       <form id="snippet" class="flex flex-col gap-4" @submit.prevent="submit">
-        <div class="flex gap-2">
-          <UInput
-            v-model="snippet.name"
-            autofocus
-            class="flex-1"
-            :placeholder="$t('settings.snippetName')"
-            :aria-label="$t('settings.snippetName')"
-          />
-          <USelectMenu
-            v-model="snippet.template"
-            :items="kinds"
-            value-key="value"
-            :search-input="false"
-            :aria-label="$t('settings.snippetKind')"
-            class="w-36"
-          />
-        </div>
+        <UInput
+          v-model="snippet.name"
+          autofocus
+          class="w-full"
+          :placeholder="$t('settings.snippetName')"
+          :aria-label="$t('settings.snippetName')"
+        />
         <UFormField :help="$t('settings.snippetHelp')">
           <UTextarea
             v-model="snippet.content"

@@ -47,7 +47,7 @@
     "noResultDescription": "No note contains “{q}”.",
     "empty": "Search the notes",
     "emptyDescription": "Type a word in the search bar.",
-    "fromTemplate": "Start from a template"
+    "fromSnippet": "New note from a snippet"
   },
   "items": {
     "cycle": "A folder cannot go into itself or its subfolders.",
@@ -196,16 +196,13 @@
       "everforest": "Everforest"
     },
     "manageAccount": "Manage account",
-    "snippets": "Snippets and templates",
-    "snippetsDescription": "A snippet is inserted by typing ;; in a note, a template gives a new note its starting text (T, or Cmd K).",
-    "snippet": "Snippet",
-    "template": "Template",
-    "snippetsEmpty": "No snippet nor template.",
+    "snippets": "Snippets",
+    "snippetsDescription": "Reusable markdown: type ;; in a note to insert it, or T (or Cmd K) to start a new note with it.",
+    "snippetsEmpty": "No snippet.",
     "addSnippet": "Add",
     "editSnippet": "Edit",
     "deleteSnippet": "Delete “{name}”?",
     "snippetName": "Name",
-    "snippetKind": "Kind",
     "snippetContent": "Content",
     "snippetHelp": "Markdown; a #tag adds that tag to the note.",
     "save": "Save"

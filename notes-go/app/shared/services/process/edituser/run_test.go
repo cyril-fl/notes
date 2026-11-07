@@ -88,7 +88,7 @@ func TestEditUser(t *testing.T) {
 	if got := process.GetResult(); len(got.Snippets) != 0 {
 		t.Errorf("snippets = %+v, want none by default", got.Snippets)
 	}
-	snippets := []domain.Snippet{{Name: "Meeting", Content: "## Meeting #work"}, {Name: "Day", Content: "# Today", Template: true}}
+	snippets := []domain.Snippet{{Name: "Meeting", Content: "## Meeting #work"}, {Name: "Day", Content: "# Today"}}
 	process = Process(ctx, tx, Input{Snippets: &snippets})
 	process.Run()
 	if got := process.GetResult(); process.HasErr() || len(got.Snippets) != 2 || got.Snippets[1] != snippets[1] {

@@ -74,22 +74,15 @@ test('the settings save the theme and the trash retention to the account', async
   }
 });
 
-// A snippet goes in with ;; and its #tag becomes a tag; a template starts a new note from T. Set back to none afterwards.
-test('snippets and templates are made in the settings and used in the notes', async ({ page }) => {
+// A snippet goes in with ;; and its #tag becomes a tag, then starts a new note from T. Set back to none afterwards.
+test('snippets are made in the settings and used in the notes', async ({ page }) => {
   try {
     await page.goto('/settings');
-    for (const [name, kind, content] of [
-      [`${box.prefix} réunion`, 'Snippet', 'Réunion #e2esnippet'],
-      [`${box.prefix} journal`, 'Template', '# Journal du jour'],
-    ]) {
-      await page.getByRole('button', { name: 'Ajouter' }).click();
-      await page.getByRole('textbox', { name: 'Nom' }).fill(name!);
-      await page.getByRole('button', { name: 'Type' }).click();
-      await page.getByRole('option', { name: kind }).click();
-      await page.getByRole('textbox', { name: 'Contenu' }).fill(content!);
-      await page.getByRole('button', { name: 'Enregistrer' }).click();
-      await expect(page.getByText(name!)).toBeVisible();
-    }
+    await page.getByRole('button', { name: 'Ajouter' }).click();
+    await page.getByRole('textbox', { name: 'Nom' }).fill(`${box.prefix} réunion`);
+    await page.getByRole('textbox', { name: 'Contenu' }).fill('## Réunion #e2esnippet');
+    await page.getByRole('button', { name: 'Enregistrer' }).click();
+    await expect(page.getByText(`${box.prefix} réunion`)).toBeVisible();
 
     const note = await box.note(`# ${box.prefix} snippet\n\nTexte`);
     await page.goto(`/notes/${note.id}`);
@@ -106,9 +99,9 @@ test('snippets and templates are made in the settings and used in the notes', as
     await page.goto(`/folders/${box.folder.id}`);
     await expect(page.getByRole('heading', { name: box.prefix })).toBeVisible();
     await page.keyboard.press('t');
-    await page.getByRole('option', { name: `${box.prefix} journal` }).click();
+    await page.getByRole('option', { name: `${box.prefix} réunion` }).click();
     await expect(page).toHaveURL(/\/notes\/new\?/);
-    await expect(editor.getByRole('heading', { name: 'Journal du jour' })).toBeVisible();
+    await expect(editor.getByRole('heading', { name: 'Réunion' })).toBeVisible();
   } finally {
     await box.api.patch('/api/me', { data: { snippets: [] } });
   }

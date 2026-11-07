@@ -117,13 +117,9 @@ components:
           type: string
         name:
           type: string
-        template:
-          description: a template starts a new note, a snippet is inserted while typing
-          type: boolean
       required:
       - content
       - name
-      - template
       type: object
     domain.Tag:
       properties:

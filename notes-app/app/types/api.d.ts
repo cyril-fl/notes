@@ -2092,8 +2092,6 @@ export interface components {
         "domain.Snippet": {
             content: string;
             name: string;
-            /** @description a template starts a new note, a snippet is inserted while typing */
-            template: boolean;
         };
         "domain.Tag": {
             id: string;

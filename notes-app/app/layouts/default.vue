@@ -6,7 +6,7 @@ const api = useApi();
 const { setLocale } = useI18n();
 const { createFolder } = useItems();
 const searchOpen = useState('search-open', () => false);
-const searchTemplates = useState('search-templates', () => false);
+const searchSnippets = useState('search-snippets', () => false);
 const collapsed = ref(false);
 
 // The account's language wins over the cookie's, which only remembers this browser's last one.
@@ -38,7 +38,7 @@ defineShortcuts({
   '/': () => (searchOpen.value = true),
   n: () => navigateTo(newNotePath(currentFolder(route))),
   shift_n: () => createFolder(currentFolder(route)),
-  t: () => (searchTemplates.value = searchOpen.value = true),
+  t: () => (searchSnippets.value = searchOpen.value = true),
   'meta_\\': () => (collapsed.value = !collapsed.value),
 });
 // The template: Nuxt UI's dashboard, a sidebar that resizes (its width kept in localStorage), collapses, and becomes a drawer on small screens.

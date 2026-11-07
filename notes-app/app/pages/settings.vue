@@ -208,13 +208,8 @@ async function importZip(event: Event) {
           :key="index"
           class="flex items-center gap-3 border-b border-muted py-3 last:border-b-0"
         >
-          <UIcon :name="snippet.template ? icons.template : icons.snippet" class="size-4 shrink-0 text-muted" />
+          <UIcon :name="icons.snippet" class="size-4 shrink-0 text-muted" />
           <p class="min-w-0 flex-1 truncate text-sm">{{ snippet.name }}</p>
-          <UBadge
-            :label="snippet.template ? $t('settings.template') : $t('settings.snippet')"
-            color="neutral"
-            variant="subtle"
-          />
           <UButton
             :icon="icons.rename"
             color="neutral"

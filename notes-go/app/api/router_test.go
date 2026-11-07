@@ -712,8 +712,8 @@ func TestLogin(t *testing.T) {
 	if w := send("PATCH", "/api/me", `{"snippets":[{"name":"","content":"x"}]}`, cookies[0]); w.Code != http.StatusBadRequest {
 		t.Errorf("snippet without a name: status = %d, want 400", w.Code)
 	}
-	if w := send("PATCH", "/api/me", `{"snippets":[{"name":"Day","content":"# Today #daily","template":true}]}`, cookies[0]); w.Code != http.StatusOK ||
-		!strings.Contains(w.Body.String(), `"snippets":[{"name":"Day","content":"# Today #daily","template":true}]`) {
+	if w := send("PATCH", "/api/me", `{"snippets":[{"name":"Day","content":"# Today #daily"}]}`, cookies[0]); w.Code != http.StatusOK ||
+		!strings.Contains(w.Body.String(), `"snippets":[{"name":"Day","content":"# Today #daily"}]`) {
 		t.Errorf("edit snippets: status = %d, body = %s", w.Code, w.Body)
 	}
 	if w := send("PATCH", "/api/me", `{"avatar":"00000000-0000-0000-0000-000000000000"}`, cookies[0]); w.Code != http.StatusBadRequest {

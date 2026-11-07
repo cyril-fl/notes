@@ -26,11 +26,10 @@ type User struct {
 	CreatedAt          time.Time `bun:",notnull,default:current_timestamp" json:"created_at"`
 }
 
-// Snippet is a piece of markdown of the account, its #tags become tags of the note it is put in.
+// Snippet is a piece of markdown of the account, inserted while typing or starting a new note; its #tags become tags of that note.
 type Snippet struct {
-	Name     string `json:"name"`
-	Content  string `json:"content"`
-	Template bool   `json:"template"` // a template starts a new note, a snippet is inserted while typing
+	Name    string `json:"name"`
+	Content string `json:"content"`
 }
 
 // Locales are the languages of the web app, the first one by default.
