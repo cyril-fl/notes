@@ -26,15 +26,16 @@
 }
 
 /* The themes of app/utils/themes.ts, an accent and its greys each, taken from the key colors of the open source schemes
-   of the same name. Static: Tailwind keeps them though no class uses them. The greys serve both modes, like plain. */
+   of the same name, the shades used for text and buttons darkened or lightened to reach WCAG AA (4.5:1) in both modes.
+   Static: Tailwind keeps them though no class uses them. The greys serve both modes, like plain. */
 @theme static {
   --color-dracula-50: #f7f2ff;
   --color-dracula-100: #ede3fe;
   --color-dracula-200: #dccafd;
   --color-dracula-300: #cbb0fb;
   --color-dracula-400: #bd93f9;
-  --color-dracula-500: #a974f5;
-  --color-dracula-600: #9356e8;
+  --color-dracula-500: #9053e5;
+  --color-dracula-600: #864ad9;
   --color-dracula-700: #7b40cc;
   --color-dracula-800: #6435a6;
   --color-dracula-900: #522e85;
@@ -44,8 +45,8 @@
   --color-dracula-gray-100: #eeeee8;
   --color-dracula-gray-200: #dcdce0;
   --color-dracula-gray-300: #c0c2cf;
-  --color-dracula-gray-400: #8b93b8;
-  --color-dracula-gray-500: #6272a4;
+  --color-dracula-gray-400: #9aa1c0;
+  --color-dracula-gray-500: #5b6996;
   --color-dracula-gray-600: #4f5a80;
   --color-dracula-gray-700: #44475a;
   --color-dracula-gray-800: #343746;
@@ -57,7 +58,7 @@
   --color-catppuccin-200: #e2cdfb;
   --color-catppuccin-300: #cba6f7;
   --color-catppuccin-400: #b585f3;
-  --color-catppuccin-500: #9d5ff0;
+  --color-catppuccin-500: #9055df;
   --color-catppuccin-600: #8839ef;
   --color-catppuccin-700: #7228d2;
   --color-catppuccin-800: #5e22ab;
@@ -69,7 +70,7 @@
   --color-catppuccin-gray-200: #ccd0da;
   --color-catppuccin-gray-300: #bcc0cc;
   --color-catppuccin-gray-400: #9ca0b0;
-  --color-catppuccin-gray-500: #7f849c;
+  --color-catppuccin-gray-500: #62667a;
   --color-catppuccin-gray-600: #5c5f77;
   --color-catppuccin-gray-700: #4c4f69;
   --color-catppuccin-gray-800: #313244;
@@ -81,8 +82,8 @@
   --color-nord-200: #bfdbe6;
   --color-nord-300: #a3cddc;
   --color-nord-400: #88c0d0;
-  --color-nord-500: #81a1c1;
-  --color-nord-600: #5e81ac;
+  --color-nord-500: #5577a1;
+  --color-nord-600: #51729c;
   --color-nord-700: #4c6d96;
   --color-nord-800: #405a7a;
   --color-nord-900: #364b64;
@@ -92,8 +93,8 @@
   --color-nord-gray-100: #e5e9f0;
   --color-nord-gray-200: #d8dee9;
   --color-nord-gray-300: #c2c9d6;
-  --color-nord-gray-400: #8f99ab;
-  --color-nord-gray-500: #6b7489;
+  --color-nord-gray-400: #a8b0bf;
+  --color-nord-gray-500: #5f677a;
   --color-nord-gray-600: #4c566a;
   --color-nord-gray-700: #434c5e;
   --color-nord-gray-800: #3b4252;
@@ -105,7 +106,7 @@
   --color-gruvbox-200: #fecb8f;
   --color-gruvbox-300: #feab57;
   --color-gruvbox-400: #fe8019;
-  --color-gruvbox-500: #d65d0e;
+  --color-gruvbox-500: #c1530c;
   --color-gruvbox-600: #af3a03;
   --color-gruvbox-700: #8f2f03;
   --color-gruvbox-800: #742805;
@@ -117,8 +118,8 @@
   --color-gruvbox-gray-200: #ebdbb2;
   --color-gruvbox-gray-300: #d5c4a1;
   --color-gruvbox-gray-400: #bdae93;
-  --color-gruvbox-gray-500: #a89984;
-  --color-gruvbox-gray-600: #7c6f64;
+  --color-gruvbox-gray-500: #6e635a;
+  --color-gruvbox-gray-600: #5f5650;
   --color-gruvbox-gray-700: #504945;
   --color-gruvbox-gray-800: #3c3836;
   --color-gruvbox-gray-900: #282828;
@@ -129,8 +130,8 @@
   --color-everforest-200: #d7e2b5;
   --color-everforest-300: #bfd08f;
   --color-everforest-400: #a7c080;
-  --color-everforest-500: #8da101;
-  --color-everforest-600: #728201;
+  --color-everforest-500: #6d7c02;
+  --color-everforest-600: #647103;
   --color-everforest-700: #5a6604;
   --color-everforest-800: #485108;
   --color-everforest-900: #3c440b;
@@ -140,8 +141,8 @@
   --color-everforest-gray-100: #f4f0d9;
   --color-everforest-gray-200: #e6e2cc;
   --color-everforest-gray-300: #d3c6aa;
-  --color-everforest-gray-400: #9da9a0;
-  --color-everforest-gray-500: #859289;
+  --color-everforest-gray-400: #a1aca3;
+  --color-everforest-gray-500: #636e69;
   --color-everforest-gray-600: #5c6a72;
   --color-everforest-gray-700: #4f585e;
   --color-everforest-gray-800: #343f44;
@@ -187,7 +188,7 @@
 
   /* An item being dragged over. */
   .row-over {
-    @apply bg-primary text-white;
+    @apply bg-primary text-inverted;
   }
 
   /* The mosaic view: square tiles with their title below. */

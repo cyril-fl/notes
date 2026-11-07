@@ -38,10 +38,10 @@ const date = computed(() =>
       <UIcon
         :name="isFolder ? icons.folder : icons.note"
         class="size-4 shrink-0"
-        :class="isOver ? 'text-white' : 'text-muted'"
+        :class="isOver ? 'text-inverted' : 'text-muted'"
       />
       <span class="truncate">{{ displayTitle(item.title, $t('untitled')) }}</span>
-      <span class="ml-auto shrink-0 pl-4 text-xs" :class="isOver ? 'text-white' : 'text-muted'">{{ date }}</span>
+      <span class="ml-auto shrink-0 pl-4 text-xs" :class="isOver ? 'text-inverted' : 'text-muted'">{{ date }}</span>
     </NuxtLink>
   </UContextMenu>
 </template>
