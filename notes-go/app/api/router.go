@@ -48,6 +48,7 @@ func New(db bun.IDB, store silo.Store, origin string) http.Handler {
 	mux.Handle("POST /api/logout", apilogin.Logout(db))
 	mux.Handle("GET /api/me", apilogin.Me(db))
 	mux.Handle("PATCH /api/me", apilogin.EditMe(db))
+	mux.Handle("DELETE /api/me/data", apilogin.DeleteData(db))
 	mux.Handle("PATCH /api/me/password", apilogin.EditPassword(db))
 
 	mux.Handle("POST /api/notes", apicreatenote.Handler(db))

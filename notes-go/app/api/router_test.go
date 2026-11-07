@@ -357,6 +357,25 @@ func TestEmptyTrash(t *testing.T) {
 	c.do("DELETE", "/api/trash", "", http.StatusNoContent, nil)
 }
 
+// The data of the account go, the account and its session stay; another account keeps its own.
+func TestDeleteData(t *testing.T) {
+	alice := newClient(t)
+	var kept item
+	alice.do("POST", "/api/notes", `{"content":"# Kept"}`, http.StatusCreated, &kept)
+
+	bob := alice.other(t)
+	var gone item
+	bob.do("POST", "/api/notes", `{"content":"# Gone #bob"}`, http.StatusCreated, &gone)
+	bob.do("DELETE", "/api/me/data", "", http.StatusNoContent, nil)
+
+	bob.do("GET", "/api/notes/"+gone.ID, "", http.StatusNotFound, nil)
+	if got := bob.raw("/api/tags"); strings.TrimSpace(got) != "[]" {
+		t.Errorf("tags = %q, want []", got)
+	}
+	bob.do("GET", "/api/me", "", http.StatusOK, nil)
+	alice.do("GET", "/api/notes/"+kept.ID, "", http.StatusOK, nil)
+}
+
 func TestTagsAndGraph(t *testing.T) {
 	c := newClient(t)
 	first, second := unique("first"), unique("second")

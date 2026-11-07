@@ -17,7 +17,8 @@
     "newFolder": "Nouveau dossier",
     "backToNotes": "Retour aux notes",
     "root": "Racine",
-    "navigation": "Navigation"
+    "navigation": "Navigation",
+    "typeToConfirm": "Tapez « {text} » pour confirmer"
   },
   "api": {
     "down": "L'API ne répond pas.",
@@ -178,6 +179,11 @@
     "modeSystem": "Système",
     "modeLight": "Clair",
     "modeDark": "Sombre",
+    "danger": "Zone de danger",
+    "deleteData": "Supprimer toutes mes données",
+    "deleteDataDescription": "Les notes, dossiers, tags et images, corbeille comprise. Le compte et ses réglages restent.",
+    "deleteDataConfirm": "Tout est effacé pour de bon, sans passer par la corbeille. Exportez d'abord pour garder une copie.",
+    "dataDeleted": "Toutes les données ont été supprimées",
     "themes": {
       "notes": "Notes",
       "dracula": "Dracula",

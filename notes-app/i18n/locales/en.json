@@ -17,7 +17,8 @@
     "newFolder": "New folder",
     "backToNotes": "Back to notes",
     "root": "Root",
-    "navigation": "Navigation"
+    "navigation": "Navigation",
+    "typeToConfirm": "Type “{text}” to confirm"
   },
   "api": {
     "down": "The API does not answer.",
@@ -178,6 +179,11 @@
     "modeSystem": "System",
     "modeLight": "Light",
     "modeDark": "Dark",
+    "danger": "Danger zone",
+    "deleteData": "Delete all my data",
+    "deleteDataDescription": "The notes, folders, tags and images, trash included. The account and its settings stay.",
+    "deleteDataConfirm": "Everything is erased for good, without going through the trash. Export first to keep a copy.",
+    "dataDeleted": "All the data were deleted",
     "themes": {
       "notes": "Notes",
       "dracula": "Dracula",

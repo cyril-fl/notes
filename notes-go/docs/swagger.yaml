@@ -1071,6 +1071,26 @@ paths:
       summary: Change the settings of the account logged in
       tags:
       - account
+  /api/me/data:
+    delete:
+      responses:
+        "204":
+          description: No Content
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Delete every note, folder, tag and image of the account logged in
+      tags:
+      - account
   /api/me/password:
     patch:
       requestBody:

@@ -9,7 +9,7 @@ export function useDialogs() {
   return {
     prompt: (props: { title: string; value?: string; placeholder?: string; action?: string }) =>
       promptDialog.open(props).result as Promise<string | undefined>,
-    confirm: (props: { title: string; description?: string; action: string }) =>
+    confirm: (props: { title: string; description?: string; action: string; expected?: string }) =>
       confirmDialog.open(props).result as Promise<boolean | undefined>,
   };
 }

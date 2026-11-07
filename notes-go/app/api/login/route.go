@@ -14,6 +14,7 @@ import (
 	"main.go/app/shared/services/process/deletesession"
 	"main.go/app/shared/services/process/editpassword"
 	"main.go/app/shared/services/process/edituser"
+	"main.go/app/shared/services/process/purgeaccount"
 )
 
 // After maxFailures wrong passwords from one address, it waits lockout: a password cannot be guessed by trying them all.
@@ -173,6 +174,26 @@ func EditPassword(db bun.IDB) http.HandlerFunc {
 		}
 
 		process := editpassword.Process(r.Context(), db, input, auth.Token(r))
+		process.Run()
+		if process.HasErr() {
+			respond.Error(w, process.GetErr())
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// DeleteData deletes for good every note, folder, tag and image of the account logged in: DELETE /api/me/data.
+// The account, its settings and its sessions stay.
+// @Summary  Delete every note, folder, tag and image of the account logged in
+// @Tags     account
+// @Success  204
+// @Failure  401 {object} respond.Failure
+// @Failure  500 {object} respond.Failure
+// @Router   /api/me/data [delete]
+func DeleteData(db bun.IDB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		process := purgeaccount.Process(r.Context(), db)
 		process.Run()
 		if process.HasErr() {
 			respond.Error(w, process.GetErr())

@@ -69,3 +69,19 @@ test('the settings save the theme and the trash retention to the account', async
     await request.patch(`${API}/api/me`, { ...api, data: { theme: before.theme, trash_retention_days: before.trash_retention_days } });
   }
 });
+
+// The real delete would empty the e2e account under the other tests: only the guard is checked, then cancelled.
+test('deleting all the data asks to type the name of the account', async ({ page, request }) => {
+  const me = await (await request.get(`${API}/api/me`, { headers: { Origin: APP } })).json();
+  await page.goto('/settings');
+  await page.getByRole('button', { name: 'Supprimer toutes mes données' }).click();
+
+  const dialog = page.getByRole('dialog');
+  const action = dialog.getByRole('button', { name: 'Supprimer toutes mes données' });
+  await expect(action).toBeDisabled();
+  await dialog.getByRole('textbox').fill(me.name);
+  await expect(action).toBeEnabled();
+
+  await dialog.getByRole('button', { name: 'Annuler' }).click();
+  await expect(dialog).toBeHidden();
+});

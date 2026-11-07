@@ -46,6 +46,21 @@ async function changeRetention(next: number) {
   me.value = await api<User>('/api/me', { method: 'PATCH', body: { trash_retention_days: next } });
 }
 
+const { confirm } = useDialogs();
+
+async function deleteData() {
+  const confirmed = await confirm({
+    title: t('settings.deleteData'),
+    description: t('settings.deleteDataConfirm'),
+    action: t('settings.deleteData'),
+    expected: me.value?.name,
+  });
+  if (!confirmed) return;
+  await api('/api/me/data', { method: 'DELETE' });
+  toast.add({ title: t('settings.dataDeleted'), color: 'success' });
+  await refreshNuxtData();
+}
+
 async function logout() {
   await api('/api/logout', { method: 'POST' });
   clearNuxtData(); // The next account must not see what this one read.
@@ -137,7 +152,7 @@ async function importZip(event: Event) {
       </div>
     </section>
 
-    <section>
+    <section class="mb-8">
       <h2 class="mb-1 text-sm font-semibold">{{ $t('settings.data') }}</h2>
       <ul>
         <li class="flex items-center gap-4 border-b border-muted py-3">
@@ -157,6 +172,17 @@ async function importZip(event: Event) {
           <UButton :label="$t('settings.import')" :icon="icons.import" color="neutral" variant="outline" :loading="importing" @click="input?.click()" />
         </li>
       </ul>
+    </section>
+
+    <section>
+      <h2 class="mb-1 text-sm font-semibold text-error">{{ $t('settings.danger') }}</h2>
+      <div class="flex items-center gap-4 rounded-md border border-error px-4 py-3">
+        <div class="min-w-0 flex-1">
+          <p class="text-sm">{{ $t('settings.deleteData') }}</p>
+          <p class="text-xs text-muted">{{ $t('settings.deleteDataDescription') }}</p>
+        </div>
+        <UButton :label="$t('settings.deleteData')" :icon="icons.delete" color="error" variant="outline" :disabled="!me" @click="deleteData" />
+      </div>
     </section>
   </div>
 </template>
