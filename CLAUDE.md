@@ -10,11 +10,12 @@ A note-taking app, Obsidian-like: one Go program (`notes-go/`, CLI and HTTP API)
 
 - `make up` / `make down` at the root: Postgres and the API in Docker (Colima), the web app on :3000 (log in `.build/notes-app.log`).
 - `make e2e`: the browser tests against that stack.
+- CI (`.github/workflows/ci.yml`, on push and PR): gofmt, vet and the Go tests on a Postgres service; lint, Prettier, unit tests, typecheck and build of the app. Not the e2e.
 
 ## Working with the user
 
 - Talk to the user in French. Code, comments and commit messages in English; READMEs and wiki in French.
-- One commit per change (`feat:`/`fix:`/`refactor:`/`test:`/`docs:`), an annotated tag per version, the user pushes. Details and issue handling: the `notes-release` skill.
+- One commit per change (`feat:`/`fix:`/`refactor:`/`test:`/`docs:`/`chore:`/`style:`, checked by the lefthook `commit-msg` hook: `make setup` in `notes-go/`), an annotated tag per version, the user pushes. Details and issue handling: the `notes-release` skill.
 - Work left for later goes into GitHub issues (`gh issue list -R cyril-fl/notes`), and known limits into `shortcut:` comments in the code.
 - Before deleting or migrating data: `make backup` in `notes-go/`.
 - Several agents share this checkout: files left uncommitted by another one are not yours (stage paths explicitly), and the branch may have been switched under you (`git branch --show-current` before committing; work goes on `develop`, `main` follows it at releases).
