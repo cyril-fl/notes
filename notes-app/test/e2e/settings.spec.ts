@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { API, APP } from '../../playwright.config';
 import { sandbox } from './helpers';
 
 let box: Awaited<ReturnType<typeof sandbox>>;
@@ -44,5 +45,22 @@ test('the language of the interface is a setting of the account', async ({ page 
   } finally {
     // The other tests read French.
     await box.api.patch('/api/me', { data: { locale: 'fr' } });
+  }
+});
+
+// The view and the trash retention are saved to the account, then set back as they were.
+test('the settings save the view and the trash retention to the account', async ({ page, request }) => {
+  const api = { headers: { Origin: APP } };
+  const before = await (await request.get(`${API}/api/me`, api)).json();
+  try {
+    await page.goto('/settings');
+    await page.getByRole('button', { name: 'Vue', exact: true }).click();
+    await page.getByRole('option', { name: 'Vue mosaïque' }).click();
+    await page.getByRole('button', { name: 'Durée de conservation' }).click();
+    await page.getByRole('option', { name: 'Jamais effacés' }).click();
+
+    await expect.poll(async () => (await (await request.get(`${API}/api/me`, api)).json())).toMatchObject({ view: 'grid', trash_retention_days: 0 });
+  } finally {
+    await request.patch(`${API}/api/me`, { ...api, data: { view: before.view, trash_retention_days: before.trash_retention_days } });
   }
 });

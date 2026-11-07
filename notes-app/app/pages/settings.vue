@@ -23,6 +23,30 @@ async function changeLanguage(next: string) {
   me.value = await api<User>('/api/me', { method: 'PATCH', body: { locale: next } });
 }
 
+// The layout saves theme and view to the account whenever they change.
+const colorMode = useColorMode();
+const view = useView();
+const themes = computed(() => [
+  { label: t('settings.themeSystem'), value: 'system' },
+  { label: t('settings.themeLight'), value: 'light' },
+  { label: t('settings.themeDark'), value: 'dark' },
+]);
+const views = computed(() => [
+  { label: t('folder.listView'), value: 'list' },
+  { label: t('folder.gridView'), value: 'grid' },
+]);
+
+// 0 never purges; a retention set by hand elsewhere stays in the list.
+const retentions = computed(() =>
+  [...new Set([0, 7, 30, 90, 365, me.value?.trash_retention_days ?? 30])]
+    .sort((a, b) => a - b)
+    .map((n) => ({ label: n ? t('settings.retentionDays', n) : t('settings.retentionNever'), value: n })),
+);
+
+async function changeRetention(next: number) {
+  me.value = await api<User>('/api/me', { method: 'PATCH', body: { trash_retention_days: next } });
+}
+
 async function logout() {
   await api('/api/logout', { method: 'POST' });
   clearNuxtData(); // The next account must not see what this one read.
@@ -72,6 +96,45 @@ async function importZip(event: Event) {
       <div class="flex items-center gap-4 py-3">
         <p class="min-w-0 flex-1 text-xs text-muted">{{ $t('settings.languageDescription') }}</p>
         <USelectMenu :model-value="locale" :items="languages" value-key="value" :search-input="false" :aria-label="$t('settings.language')" class="w-56" @update:model-value="changeLanguage" />
+      </div>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="mb-1 text-sm font-semibold">{{ $t('settings.appearance') }}</h2>
+      <ul>
+        <li class="flex items-center gap-4 border-b border-muted py-3">
+          <div class="min-w-0 flex-1">
+            <p class="text-sm">{{ $t('settings.theme') }}</p>
+            <p class="text-xs text-muted">{{ $t('settings.themeDescription') }}</p>
+          </div>
+          <USelectMenu v-model="colorMode.preference" :items="themes" value-key="value" :search-input="false" :aria-label="$t('settings.theme')" class="w-56" />
+        </li>
+        <li class="flex items-center gap-4 py-3">
+          <div class="min-w-0 flex-1">
+            <p class="text-sm">{{ $t('settings.view') }}</p>
+            <p class="text-xs text-muted">{{ $t('settings.viewDescription') }}</p>
+          </div>
+          <USelectMenu v-model="view" :items="views" value-key="value" :search-input="false" :aria-label="$t('settings.view')" class="w-56" />
+        </li>
+      </ul>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="mb-1 text-sm font-semibold">{{ $t('settings.trash') }}</h2>
+      <div class="flex items-center gap-4 py-3">
+        <div class="min-w-0 flex-1">
+          <p class="text-sm">{{ $t('settings.retention') }}</p>
+          <p class="text-xs text-muted">{{ $t('settings.retentionDescription') }}</p>
+        </div>
+        <USelectMenu
+          :model-value="me?.trash_retention_days"
+          :items="retentions"
+          value-key="value"
+          :search-input="false"
+          :aria-label="$t('settings.retention')"
+          class="w-56"
+          @update:model-value="changeRetention"
+        />
       </div>
     </section>
 

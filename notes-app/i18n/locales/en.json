@@ -161,6 +161,19 @@
     "importDescription": "The .md files of a zip (an export, an Obsidian vault…), added to the chosen folder.",
     "importInto": "Import into",
     "importConflict": "A folder of the zip already exists here: import elsewhere, or rename it.",
-    "imported": "{notes} note(s) and {folders} folder(s) imported"
+    "imported": "{notes} note(s) and {folders} folder(s) imported",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "themeDescription": "Light, dark, or the system's.",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "view": "View",
+    "viewDescription": "How folders, tags and search list the notes.",
+    "trash": "Trash",
+    "retention": "Retention",
+    "retentionDescription": "Deleted items are erased for good after this delay.",
+    "retentionDays": "{n} day | {n} days",
+    "retentionNever": "Never erased"
   }
 }

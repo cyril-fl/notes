@@ -151,11 +151,11 @@ function linkClass(link: Link) {
       <div
         v-if="hoveredNote"
         :style="{ left: `${at(hoveredNote.id).x}%`, top: `${at(hoveredNote.id).y}%` }"
-        class="pointer-events-none absolute z-20 ml-4 flex max-w-64 -translate-y-1/2 flex-col gap-1 rounded-md bg-default p-2 text-xs shadow-lg ring ring-default"
+        class="pointer-events-none absolute z-20 ml-4 flex h-40 w-64 -translate-y-1/2 flex-col gap-1 rounded-md bg-default p-2 text-xs shadow-lg ring ring-default"
       >
-        <span class="truncate font-medium">{{ displayTitle(hoveredNote.title, $t('untitled')) }}</span>
-        <span class="truncate text-muted">{{ hoveredNote.path }}</span>
-        <ul v-if="activeLinks.length" class="mt-1 flex flex-col gap-0.5 border-t border-default pt-1">
+        <span class="shrink-0 truncate font-medium">{{ displayTitle(hoveredNote.title, $t('untitled')) }}</span>
+        <span class="shrink-0 truncate text-muted">{{ hoveredNote.path }}</span>
+        <ul v-if="activeLinks.length" class="mt-1 flex min-h-0 flex-col gap-0.5 overflow-hidden border-t border-default pt-1">
           <li v-for="link in activeLinks" :key="`${link.source}-${link.target}`" class="flex gap-2">
             <span class="truncate">{{ displayTitle(titles.get(otherEnd(link)), $t('untitled')) }}</span>
             <span class="ml-auto shrink-0 text-primary">{{ [...(link.linked ? [$t('graph.link')] : []), ...link.tags.map(tag => `#${tag}`)].join(' ') }}</span>

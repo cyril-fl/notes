@@ -12,6 +12,19 @@ const collapsed = ref(false);
 const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
 watch(() => me.value?.locale, (locale) => locale && setLocale(locale as 'fr' | 'en'));
 
+// Theme and view follow the account; a change from anywhere (sidebar, view toggle, settings) is saved to it.
+const colorMode = useColorMode();
+const view = useView();
+watch(me, (user) => {
+  if (!user) return;
+  colorMode.preference = user.theme;
+  view.value = user.view as 'list' | 'grid';
+});
+watch([() => colorMode.preference, view], async ([theme, next]) => {
+  if (!me.value || (theme === me.value.theme && next === me.value.view)) return;
+  me.value = await api<User>('/api/me', { method: 'PATCH', body: { theme, view: next } });
+});
+
 // Single keys, like Notion or Linear: Nuxt UI skips them while typing in a field or the editor.
 defineShortcuts({
   '/': () => (searchOpen.value = true),
