@@ -1811,13 +1811,15 @@ export interface components {
             value: string;
         };
         "domain.User": {
+            /** @description light or dark, one of ColorModes */
+            color_mode: string;
             created_at: string;
             id: string;
             /** @description the language of the web app, one of Locales */
             locale: string;
             /** @description unique case-insensitive, see createschema */
             name: string;
-            /** @description one of Themes */
+            /** @description the colors of the web app, one of Themes */
             theme: string;
             /** @description Days before the trash is purged, 0 to never purge. An insert of 0 gets the default: only an update sets it. */
             trash_retention_days: number;
@@ -1837,6 +1839,7 @@ export interface components {
             value: string;
         };
         "edituser.Input": {
+            color_mode?: string;
             locale?: string;
             theme?: string;
             trash_retention_days?: number;

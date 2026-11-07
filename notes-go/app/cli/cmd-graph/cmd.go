@@ -10,21 +10,17 @@ import (
 	cmdreadnote "main.go/app/cli/cmd-read-note"
 	"main.go/app/shared/services/navigator"
 	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/counttags"
+	"main.go/app/shared/services/process/readgraph"
 	"main.go/app/shared/services/process/readneighbors"
-	"main.go/app/shared/services/process/readtag"
 )
 
-// Target kinds of the graph pages besides notes.
-const (
-	kindTags = "tags"
-	kindTag  = "tag"
-)
+// kindNotes is the start page: every note.
+const kindNotes = "notes"
 
-// Graph walks the notes through the tags they share, from a note (or from the tag list).
+// Graph walks the notes through their [[links]] and the tags they share, from a note (or from every note).
 func Graph(cobra *cobra.Command, args []string) error {
 	ctx := cobra.Context()
-	start := navigator.Target{Kind: kindTags}
+	start := navigator.Target{Kind: kindNotes}
 	if len(args) == 1 {
 		start = navigator.Target{Kind: navigator.KindNote, Key: args[0]}
 	}
@@ -38,38 +34,31 @@ func Graph(cobra *cobra.Command, args []string) error {
 	})
 }
 
-// loadPage builds what a node shows: the tag list, the notes of a tag, or the neighbors of a note.
+// loadPage builds what a node shows: every note, or the neighbors of a note.
 func loadPage(ctx context.Context, target navigator.Target) (navigator.Page, error) {
-	switch target.Kind {
-	case kindTag:
-		return tagPage(ctx, target.Key)
-	case navigator.KindNote:
+	if target.Kind == navigator.KindNote {
 		return notePage(ctx, target.Key)
-	default:
-		return tagsPage(ctx)
 	}
+	return notesPage(ctx)
 }
 
-func tagsPage(ctx context.Context) (navigator.Page, error) {
-	process := counttags.Process(ctx, postgrey.GetDb())
-	process.Run()
-
-	tags := process.GetResult()
-	p := navigator.Page{Title: "Graph", Path: "tags", Info: count(len(tags), "tag"), Empty: "No tag yet"}
-	for _, tag := range tags {
-		p.Rows = append(p.Rows, navigator.Row{Cells: []string{tag.Value, count(tag.Notes, "note")}, Target: navigator.Target{Kind: kindTag, Key: tag.Value}})
-	}
-	return p, process.GetErr()
-}
-
-func tagPage(ctx context.Context, value string) (navigator.Page, error) {
-	process := readtag.Process(ctx, postgrey.GetDb(), value)
+// notesPage lists every note with how many notes it is linked to, like the web graph.
+func notesPage(ctx context.Context) (navigator.Page, error) {
+	process := readgraph.Process(ctx, postgrey.GetDb())
 	process.Run()
 
 	result := process.GetResult()
-	p := navigator.Page{Title: result.Tag.Value, Path: "tag", Info: count(len(result.Notes), "note"), Empty: "No note carries this tag"}
+	linked := map[string]int{}
+	for _, link := range result.Links {
+		linked[link.Source]++
+		linked[link.Target]++
+	}
+	p := navigator.Page{Title: "Graph", Path: "notes", Info: count(len(result.Notes), "note"), Empty: "No note yet"}
 	for _, note := range result.Notes {
-		p.Rows = append(p.Rows, navigator.Row{Cells: []string{untitled(note.Title), note.Path}, Target: navigator.Target{Kind: navigator.KindNote, Key: note.ID}})
+		p.Rows = append(p.Rows, navigator.Row{
+			Cells:  []string{untitled(note.Title), note.Path, count(linked[note.ID], "linked note")},
+			Target: navigator.Target{Kind: navigator.KindNote, Key: note.ID},
+		})
 	}
 	return p, process.GetErr()
 }
@@ -79,7 +68,8 @@ func notePage(ctx context.Context, id string) (navigator.Page, error) {
 	process.Run()
 
 	result := process.GetResult()
-	info := []string{count(len(result.Neighbors), "linked note")}
+	rows := append(linkedRows(result.Links, "link"), linkedRows(result.Backlinks, "backlink")...)
+	info := []string{count(len(rows)+len(result.Neighbors), "linked note")}
 	if len(result.Note.Tags) > 0 {
 		info = append([]string{strings.Join(result.Note.Tags, " · ")}, info...)
 	}
@@ -87,7 +77,8 @@ func notePage(ctx context.Context, id string) (navigator.Page, error) {
 		Title: untitled(result.Note.Item.Title),
 		Path:  result.Note.Path,
 		Info:  strings.Join(info, " — "),
-		Empty: "No note shares a tag with this one",
+		Empty: "No note links to or shares a tag with this one",
+		Rows:  rows,
 	}
 	for _, neighbor := range result.Neighbors {
 		p.Rows = append(p.Rows, navigator.Row{
@@ -96,6 +87,18 @@ func notePage(ctx context.Context, id string) (navigator.Page, error) {
 		})
 	}
 	return p, process.GetErr()
+}
+
+// linkedRows lists the notes at the other end of the [[links]], same columns as the neighbors.
+func linkedRows(notes []readneighbors.Linked, relation string) []navigator.Row {
+	rows := make([]navigator.Row, 0, len(notes))
+	for _, note := range notes {
+		rows = append(rows, navigator.Row{
+			Cells:  []string{untitled(note.Title), note.Path, relation, ""},
+			Target: navigator.Target{Kind: navigator.KindNote, Key: note.ID},
+		})
+	}
+	return rows
 }
 
 // Helpers

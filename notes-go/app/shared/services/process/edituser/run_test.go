@@ -22,6 +22,8 @@ func TestInvalidInput(t *testing.T) {
 		{Input{Locale: text("de")}, ErrInvalidLocale},
 		{Input{Locale: text("FR")}, ErrInvalidLocale},
 		{Input{Theme: text("blue")}, ErrInvalidTheme},
+		{Input{Theme: text("dark")}, ErrInvalidTheme},
+		{Input{ColorMode: text("dim")}, ErrInvalidColorMode},
 		{Input{View: text("table")}, ErrInvalidView},
 		{Input{TrashRetentionDays: days(-1)}, ErrInvalidRetention},
 		{Input{TrashRetentionDays: days(MaxRetentionDays + 1)}, ErrInvalidRetention},
@@ -62,7 +64,7 @@ func TestEditUser(t *testing.T) {
 	if process.HasErr() {
 		t.Fatalf("edit: %v", process.GetErr())
 	}
-	if got := process.GetResult(); got.Locale != "en" || got.ID == "" || got.Theme != "system" || got.TrashRetentionDays != 30 {
+	if got := process.GetResult(); got.Locale != "en" || got.ID == "" || got.Theme != "notes" || got.ColorMode != "system" || got.TrashRetentionDays != 30 {
 		t.Errorf("result = %+v, want locale en with ID and the default settings", got)
 	}
 

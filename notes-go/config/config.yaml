@@ -191,8 +191,8 @@ commands:
     example: "notes finder\nnotes finder /Projects"
   show-graph:
     use: "graph [<uuid|path>]"
-    short: "Walk the notes linked by the tags they share"
-    long: "Center on a note to see the notes sharing its tags, most shared first, and move from note to note. Without a note, start from the tag list."
+    short: "Walk the notes linked by [[links]] and the tags they share"
+    long: "Center on a note to see its [[links]], its backlinks and the notes sharing its tags, most shared first, and move from note to note. Without a note, start from every note."
     example: "notes graph\nnotes graph /Projects/Go/Ideas"
   trash:
     use: "trash"

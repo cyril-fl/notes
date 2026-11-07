@@ -105,6 +105,9 @@ components:
       type: object
     domain.User:
       properties:
+        color_mode:
+          description: light or dark, one of ColorModes
+          type: string
         created_at:
           type: string
         id:
@@ -116,7 +119,7 @@ components:
           description: unique case-insensitive, see createschema
           type: string
         theme:
-          description: one of Themes
+          description: the colors of the web app, one of Themes
           type: string
         trash_retention_days:
           description: 'Days before the trash is purged, 0 to never purge. An insert
@@ -126,6 +129,7 @@ components:
           description: how the web app lists items, one of Views
           type: string
       required:
+      - color_mode
       - created_at
       - id
       - locale
@@ -162,6 +166,8 @@ components:
       type: object
     edituser.Input:
       properties:
+        color_mode:
+          type: string
         locale:
           type: string
         theme:

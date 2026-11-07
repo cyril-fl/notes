@@ -17,6 +17,7 @@ const MaxRetentionDays = 3650
 var (
 	ErrInvalidLocale    = errors.New("unknown locale")
 	ErrInvalidTheme     = errors.New("unknown theme")
+	ErrInvalidColorMode = errors.New("unknown color mode")
 	ErrInvalidView      = errors.New("unknown view")
 	ErrInvalidRetention = fmt.Errorf("the trash retention is between 0 and %d days", MaxRetentionDays)
 )
@@ -25,6 +26,7 @@ var (
 type Input struct {
 	Locale             *string `json:"locale,omitempty" binding:"optional"`
 	Theme              *string `json:"theme,omitempty" binding:"optional"`
+	ColorMode          *string `json:"color_mode,omitempty" binding:"optional"`
 	View               *string `json:"view,omitempty" binding:"optional"`
 	TrashRetentionDays *int    `json:"trash_retention_days,omitempty" binding:"optional"`
 }
@@ -70,6 +72,8 @@ func (p *run) checkInput() {
 		p.SetErr(fmt.Errorf("%w: %q", ErrInvalidLocale, *p.input.Locale))
 	case !valid(p.input.Theme, domain.Themes):
 		p.SetErr(fmt.Errorf("%w: %q", ErrInvalidTheme, *p.input.Theme))
+	case !valid(p.input.ColorMode, domain.ColorModes):
+		p.SetErr(fmt.Errorf("%w: %q", ErrInvalidColorMode, *p.input.ColorMode))
 	case !valid(p.input.View, domain.Views):
 		p.SetErr(fmt.Errorf("%w: %q", ErrInvalidView, *p.input.View))
 	case p.input.TrashRetentionDays != nil && (*p.input.TrashRetentionDays < 0 || *p.input.TrashRetentionDays > MaxRetentionDays):
@@ -93,6 +97,9 @@ func (p *run) updateUser() {
 	}
 	if p.input.Theme != nil {
 		query.Set("theme = ?", *p.input.Theme)
+	}
+	if p.input.ColorMode != nil {
+		query.Set("color_mode = ?", *p.input.ColorMode)
 	}
 	if p.input.View != nil {
 		query.Set("view = ?", *p.input.View)
