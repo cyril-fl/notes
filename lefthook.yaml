@@ -5,3 +5,11 @@ pre-commit:
       glob: "*.go"
       run: gofmt -w {staged_files}
       stage_fixed: true
+
+commit-msg:
+  commands:
+    prefix:
+      # Merge and Revert messages are written by git, not by us.
+      run: >-
+        head -1 {1} | grep -qE '^((feat|fix|refactor|test|docs|chore|style)(\(.+\))?!?: .+|Merge |Revert )' ||
+        { echo "commit message must start with feat:, fix:, refactor:, test:, docs:, chore: or style:"; exit 1; }
