@@ -45,12 +45,8 @@ const isOver = useDropFolder(panel, () => props.folderId ?? null);
 </script>
 
 <template>
-  <div ref="panel" class="min-h-full p-8 transition-shadow duration-150" :class="{ 'ring-2 ring-inset ring-primary/40': isOver }">
-    <PageHeader :title="title" :subtitle="subtitle">
-      <!-- The subtitle is the folder's own path: the breadcrumb leads to its parents. -->
-      <template v-if="subtitle" #subtitle>
-        <PathNav :path="subtitle.slice(0, subtitle.lastIndexOf('/'))" />
-      </template>
+  <div ref="panel" class="flex min-h-full flex-col p-8 transition-shadow duration-150" :class="{ 'ring-2 ring-inset ring-primary/40': isOver }">
+    <PageHeader :title="title">
       <ViewToggle />
       <UTooltip text="Nouveau dossier">
         <UButton icon="i-lucide-folder-plus" color="neutral" variant="ghost" aria-label="Nouveau dossier" @click="createFolder(folderId)" />
@@ -90,5 +86,11 @@ const isOver = useDropFolder(panel, () => props.folderId ?? null);
         { label: 'Nouveau dossier', icon: 'i-lucide-folder-plus', color: 'neutral', variant: 'subtle', onClick: () => createFolder(folderId) },
       ]"
     />
+    <!-- Like a note's footer. The subtitle is the folder's own path: the breadcrumb leads to its parents. -->
+    <footer v-if="subtitle" class="sticky bottom-0 z-10 -mx-8 -mb-8 mt-auto border-t border-default bg-default px-8">
+      <div class="flex h-9 items-center text-xs text-muted">
+        <PathNav :path="subtitle.slice(0, subtitle.lastIndexOf('/'))" />
+      </div>
+    </footer>
   </div>
 </template>
