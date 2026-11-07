@@ -17,6 +17,7 @@ import (
 	"main.go/app/shared/services/process/deleteitems"
 	"main.go/app/shared/services/process/deletetag"
 	"main.go/app/shared/services/process/editfolder"
+	"main.go/app/shared/services/process/editlocale"
 	"main.go/app/shared/services/process/editnote"
 	"main.go/app/shared/services/process/edittag"
 	"main.go/app/shared/services/process/emptytrash"
@@ -47,6 +48,7 @@ var statuses = []struct {
 		deletetag.ErrNoValue,
 		editfolder.ErrNoValue, editfolder.ErrNoTitle,
 		editnote.ErrNoValue, editnote.ErrNoContent,
+		editlocale.ErrInvalidLocale,
 		edittag.ErrNoValue,
 		hashtag.ErrInvalid,
 		listitems.ErrInvalidID,
