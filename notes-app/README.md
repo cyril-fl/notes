@@ -34,7 +34,7 @@ Un clic droit sur un dossier le met en favori, un clic droit sur un tag le renom
 La page Réglages (roue dentée en bas de la barre latérale, ou la palette) regroupe ce qui touche à l'app entière. Pour l'instant :
 
 - **Exporter** télécharge toutes les notes en zip de fichiers `.md`, comme `notes export`.
-- **Importer** ajoute à la racine les `.md` d'un zip, comme `notes import`. Si un dossier du zip existe déjà à la racine, rien n'est importé.
+- **Importer** ajoute les `.md` d'un zip au dossier choisi (la racine par défaut), comme `notes import --parent`. Si un dossier du zip existe déjà à cet endroit, rien n'est importé.
 
 ## Commandes
 

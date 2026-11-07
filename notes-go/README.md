@@ -153,7 +153,7 @@ notes serve --origin http://localhost:3000   # ou directement sur la machine
 | Graphe | `GET /graph` (tags comptés), `GET /graph/notes` (notes et tags qui les relient) | |
 | Recherche | `GET /search?q=<texte>`, `GET /recent` | |
 | Corbeille | `GET`, `DELETE /trash`, `POST /restore` | `ids` (restauration) |
-| Export / import | `GET /export` (zip), `POST /import` (zip en corps, `Content-Type: application/zip`) | |
+| Export / import | `GET /export` (zip), `POST /import?parent=<uuid>` (zip en corps, `Content-Type: application/zip`, racine sans `parent`) | |
 
 - Le titre d'une note vient de son contenu, comme dans la CLI : l'API refuse un champ `title` pour une note.
 - `PATCH /notes/{id}` ne change que les champs envoyés. `{"pinned": true}` seul épingle la note sans toucher à son texte ni à sa date de modification. Sans `tags`, les tags sont les `#mots` du contenu. Avec `tags`, cette liste réécrit le contenu : `"tags": []` efface tous ses `#mots`.
@@ -161,7 +161,7 @@ notes serve --origin http://localhost:3000   # ou directement sur la machine
 - Les erreurs ont la forme `{"error": "..."}`, avec le statut 400, 403, 404, 409, 413 ou 500.
   Seuls une route inconnue (404) et une méthode non gérée (405) répondent en texte brut, car c'est le routeur qui les écrit.
 - Les éléments supprimés passent par la corbeille. Le serveur la purge toutes les heures. `DELETE /trash` la vide tout de suite et définitivement.
-- `GET /export` et `POST /import` font comme `notes export` et `notes import`, en zip, à la racine. L'import répond `{"folders": n, "notes": n}`, ou 409 si un dossier du zip existe déjà à la racine.
+- `GET /export` et `POST /import` font comme `notes export` et `notes import`, en zip. L'import va dans le dossier `parent`, à la racine sans lui. Il répond `{"folders": n, "notes": n}`, ou 409 si un dossier du zip existe déjà à cet endroit.
 - `make openapi` génère le contrat OpenAPI dans `docs/swagger.yaml`, à partir des commentaires `@` des routes.
 
 ### Sécurité

@@ -426,7 +426,10 @@ export interface paths {
         /** Import markdown files from a zip */
         post: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description folder uuid, the root when left out */
+                    parent?: string;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;

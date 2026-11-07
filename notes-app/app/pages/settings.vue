@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ImportResult } from '~/types/items';
+import type { FolderPath, ImportResult } from '~/types/items';
 
 const api = useApi();
 const toast = useToast();
@@ -8,6 +8,12 @@ const exportURL = `${useRuntimeConfig().public.apiBase}/api/export`;
 const input = useTemplateRef('input');
 const importing = ref(false);
 
+// The select refuses '' as a value: ROOT stands for the root, which the API takes as no parent.
+const ROOT = 'root';
+const parent = ref(ROOT);
+const { data: folders } = useLazyAsyncData('folder-paths', () => api<FolderPath[]>('/api/folders'), { default: () => [] as FolderPath[] });
+const destinations = computed(() => [{ label: 'Racine', value: ROOT }, ...folders.value.map((folder) => ({ label: folder.path, value: folder.id }))]);
+
 async function importZip(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0];
   if (!file) return;
@@ -15,9 +21,10 @@ async function importZip(event: Event) {
   try {
     const result = await api<ImportResult>('/api/import', {
       method: 'POST',
+      query: parent.value === ROOT ? {} : { parent: parent.value },
       body: file,
       headers: { 'Content-Type': 'application/zip' },
-      conflict: 'Un dossier du zip existe déjà à la racine : renommez-le avant d\'importer.',
+      conflict: 'Un dossier du zip existe déjà à cet endroit : importez ailleurs, ou renommez-le.',
     });
     toast.add({ title: `${result.notes} note(s) et ${result.folders} dossier(s) importés`, color: 'success' });
     await refreshNuxtData();
@@ -45,8 +52,9 @@ async function importZip(event: Event) {
         <li class="flex items-center gap-4 py-3">
           <div class="min-w-0 flex-1">
             <p class="text-sm">Importer</p>
-            <p class="text-xs text-muted">Les fichiers .md d'un zip (un export, un vault Obsidian…), ajoutés à la racine.</p>
+            <p class="text-xs text-muted">Les fichiers .md d'un zip (un export, un vault Obsidian…), ajoutés au dossier choisi.</p>
           </div>
+          <USelectMenu v-model="parent" :items="destinations" value-key="value" aria-label="Importer dans" class="w-56" />
           <input ref="input" type="file" accept=".zip,application/zip" class="hidden" @change="importZip">
           <UButton label="Importer" icon="i-lucide-upload" color="neutral" variant="outline" :loading="importing" @click="input?.click()" />
         </li>

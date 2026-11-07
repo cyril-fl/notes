@@ -627,6 +627,12 @@ paths:
       - graph
   /api/import:
     post:
+      parameters:
+      - description: folder uuid, the root when left out
+        in: query
+        name: parent
+        schema:
+          type: string
       requestBody:
         content:
           application/json:

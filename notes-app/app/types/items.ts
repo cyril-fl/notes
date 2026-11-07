@@ -13,3 +13,4 @@ export type NotesGraph = Schemas['readgraph.Result'];
 export type Recent = Schemas['listrecent.Recent'];
 export type Pinned = Schemas['listpinned.Pinned'];
 export type ImportResult = Schemas['importnotes.Result'];
+export type FolderPath = Schemas['listfolders.Folder'];

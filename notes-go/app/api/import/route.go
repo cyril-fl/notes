@@ -18,12 +18,13 @@ const (
 	maxContent = 200 << 20
 )
 
-// Handler adds the .md files of a zip as notes, its directories as folders, at the root and all or nothing:
-// POST /api/import with the zip as body.
+// Handler adds the .md files of a zip as notes, its directories as folders, into a folder (the root without
+// parent), all or nothing: POST /api/import?parent= with the zip as body.
 // @Summary  Import markdown files from a zip
 // @Tags     transfer
 // @Accept   application/zip
 // @Produce  json
+// @Param    parent query string false "folder uuid, the root when left out"
 // @Param    body body []byte true "zip of .md files"
 // @Success  200 {object} importnotes.Result
 // @Failure  400 {object} respond.Failure
@@ -33,6 +34,11 @@ const (
 // @Router   /api/import [post]
 func Handler(db bun.IDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		parent := r.URL.Query().Get("parent")
+		if !respond.ValidIDs(w, parent) {
+			return
+		}
+
 		data, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxZip))
 		var tooLarge *http.MaxBytesError
 		if errors.As(err, &tooLarge) {
@@ -58,7 +64,7 @@ func Handler(db bun.IDB) http.HandlerFunc {
 			return
 		}
 
-		process := importnotes.Process(r.Context(), db, importnotes.Input{Dir: archive})
+		process := importnotes.Process(r.Context(), db, importnotes.Input{Dir: archive, ParentID: parent})
 		process.Run()
 		if process.HasErr() {
 			respond.Error(w, process.GetErr())

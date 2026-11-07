@@ -496,6 +496,13 @@ func TestExportAndImport(t *testing.T) {
 	c.do(http.MethodPost, "/api/import", zipped.String(), http.StatusConflict, nil)
 	c.do(http.MethodPost, "/api/import", "pas un zip", http.StatusBadRequest, nil)
 
+	// Into a folder, the same zip goes in again; a parent that is not a folder is refused.
+	var into item
+	c.do(http.MethodPost, "/api/folders", fmt.Sprintf(`{"title":%q}`, folder+"-into"), http.StatusCreated, &into)
+	c.do(http.MethodPost, "/api/import?parent="+into.ID, zipped.String(), http.StatusOK, &result)
+	c.do(http.MethodPost, "/api/import?parent="+unknownID, zipped.String(), http.StatusBadRequest, nil)
+	c.do(http.MethodPost, "/api/import?parent=nope", zipped.String(), http.StatusBadRequest, nil)
+
 	exported := c.raw("/api/export")
 	read, err := zip.NewReader(strings.NewReader(exported), int64(len(exported)))
 	if err != nil {

@@ -18,3 +18,14 @@ test('the settings export the notes and import a zip', async ({ page }) => {
   await page.locator('input[type=file]').setInputFiles(zip);
   await expect(page.getByText('Un dossier du zip existe déjà').first()).toBeVisible();
 });
+
+test('a zip is imported into the chosen folder', async ({ page }) => {
+  await page.goto('/settings');
+  await page.getByRole('button', { name: 'Importer dans' }).click();
+  await page.getByRole('option', { name: `/${box.prefix}` }).click();
+  await page.locator('input[type=file]').setInputFiles('test/e2e/fixtures/notes.zip');
+  await expect(page.getByText('1 note(s) et 1 dossier(s) importés').first()).toBeVisible();
+
+  await page.goto(`/folders/${box.folder.id}`);
+  await expect(page.getByRole('main').getByText('Importé')).toBeVisible();
+});
