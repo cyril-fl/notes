@@ -118,7 +118,7 @@ notes trash
 notes restore <uuid>
 ```
 
-`restore` n'accepte que des UUID, affichés par `notes trash`. Les éléments sont supprimés définitivement au lancement de la CLI, une fois passé le délai de `trash.retention-days` (30 jours, `0` pour ne jamais purger).
+`restore` n'accepte que des UUID, affichés par `notes trash`. Les éléments sont supprimés définitivement au lancement de la CLI, une fois passé le délai de conservation du compte (30 jours par défaut, réglable dans Réglages > Corbeille de l'app, « Jamais » pour ne pas purger).
 
 ### Export et import
 
