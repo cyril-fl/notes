@@ -26,3 +26,11 @@ type NoteLink struct {
 	SourceID string `bun:",pk,type:uuid"`
 	TargetID string `bun:",pk,type:uuid"`
 }
+
+// NoteFile is an image a note cites: purgefiles reads it, the text of the note being sealed.
+type NoteFile struct {
+	bun.BaseModel `bun:"table:notes_on_files,alias:nf"`
+
+	NoteID string `bun:",pk,type:uuid"`
+	FileID string `bun:",pk,type:uuid"`
+}

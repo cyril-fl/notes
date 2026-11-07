@@ -10,6 +10,7 @@ import (
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/hashtag"
+	"main.go/app/shared/services/secret"
 )
 
 var ErrNoValue = errors.New("no tag value given")
@@ -90,7 +91,7 @@ func (p *run) rewriteNotes(ctx context.Context, tx bun.Tx) error {
 	}
 
 	for i := range notes {
-		notes[i].Content = hashtag.Remove(notes[i].Content, p.cache.values...)
+		notes[i].Content = secret.Text(hashtag.Remove(string(notes[i].Content), p.cache.values...))
 		if _, err := tx.NewUpdate().Model(&notes[i]).Column("content").WherePK().Exec(ctx); err != nil {
 			return err
 		}

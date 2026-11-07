@@ -49,6 +49,7 @@ notes user add cyril            # demande le mot de passe deux fois (8 caractèr
 notes login                     # nom et mot de passe, puis toutes les commandes agissent pour ce compte
 notes logout
 notes reset-password cyril      # mot de passe oublié : nouveau mot de passe, tous les appareils déconnectés
+notes encrypt                   # chiffre une fois ce qui a été écrit avant le chiffrement (après make backup)
 notes account purge             # vide le compte connecté (notes, dossiers, tags, images), après avoir tapé son nom
 ```
 
@@ -205,6 +206,17 @@ Chaque requête doit venir d'un compte connecté. Garde quand même l'API sur `1
 - Une requête sans `Origin` (`curl`, scripts) est acceptée si elle porte une session.
 - L'en-tête `Host` doit valoir `localhost`, `127.0.0.1`, `[::1]` ou l'hôte de `--origin`, ce qui bloque le DNS rebinding.
 
+### Chiffrement
+
+Le texte des notes et les snippets sont chiffrés dans la base (AES-256-GCM) avec la clé `NOTES_SECRET`. Une base, une sauvegarde ou un disque volés restent illisibles sans cette clé. Un serveur compromis, lui, la détient : le chiffrement ne protège pas contre ça.
+
+- Génère la clé avec `openssl rand -base64 32` et mets la même dans `.env` (CLI) et `.env.docker` (API).
+- **Garde une copie de la clé dans un gestionnaire de mots de passe, jamais dans une sauvegarde.** Si tu la perds, les notes deviennent illisibles, même avec une sauvegarde.
+- Les données écrites avant le chiffrement restent lisibles. Chiffre-les une fois : `make backup`, puis `notes encrypt`. Un second passage ne fait rien. Ne tarde pas : tant qu'une note n'est pas chiffrée, la purge horaire ne voit pas ses images, et elle les efface une fois le délai de corbeille écoulé.
+- Un mot de passe oublié ne fait rien perdre : `notes reset-password` suffit, car la clé ne dépend pas du mot de passe.
+- `notes export` sort du texte en clair.
+- Ne sont pas encore chiffrés : les titres, les tags, les noms de dossiers et les images.
+
 ## Configuration
 
 | Variable | Rôle | Défaut |
@@ -219,6 +231,7 @@ Chaque requête doit venir d'un compte connecté. Garde quand même l'API sur `1
 | `S3_ACCESS_KEY`, `S3_SECRET_KEY` | Identifiants de Silo, qui le créent aussi au premier `make up` | |
 | `S3_BUCKET` | Bucket des images, créé au premier lancement | |
 | `S3_SECURE` | `true` pour parler à Silo en HTTPS | non |
+| `NOTES_SECRET` | Clé de chiffrement des notes, 32 octets en base64 (voir Chiffrement) | aucune : obligatoire pour écrire |
 
 Les commandes, leurs textes d'aide et leurs flags sont définis dans `config/config.yaml`. Ce fichier est intégré à la compilation : recompile après l'avoir modifié, ou pointe `CONFIG_FILE` vers ton fichier.
 

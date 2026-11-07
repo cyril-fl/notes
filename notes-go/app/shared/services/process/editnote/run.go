@@ -16,6 +16,7 @@ import (
 	"main.go/app/shared/services/notetitle"
 	"main.go/app/shared/services/process/createtag"
 	"main.go/app/shared/services/process/linknotes"
+	"main.go/app/shared/services/secret"
 )
 
 // invalidText is the Postgres SQLSTATE raised when the id is not a uuid.
@@ -144,7 +145,7 @@ func (p *run) updateItem(ctx context.Context, tx bun.Tx) error {
 func (p *run) updateMetadata(ctx context.Context, tx bun.Tx) error {
 	_, err := tx.NewUpdate().
 		Model((*domain.MetadataNote)(nil)).
-		Set("content = ?", p.cache.input.Content).
+		Set("content = ?", secret.Text(p.cache.input.Content)).
 		Where("item_id = ?", p.cache.item.ID).
 		Exec(ctx)
 	return err

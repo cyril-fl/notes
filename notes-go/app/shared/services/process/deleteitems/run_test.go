@@ -12,6 +12,7 @@ import (
 	"main.go/app/shared/services/process/createfolder"
 	"main.go/app/shared/services/process/createnote"
 	"main.go/app/shared/services/process/createschema"
+	"main.go/app/shared/services/secret"
 )
 
 // No DB needed: makeIDs fails first and markDeleted is guarded, so a nil db is never touched.
@@ -149,11 +150,11 @@ func TestTrashResolvesLinks(t *testing.T) {
 		t.Fatal(remove.GetErr())
 	}
 
-	var content string
+	var content secret.Text
 	if err := tx.NewRaw("SELECT content FROM metadata_notes WHERE item_id = ?", a).Scan(ctx, &content); err != nil {
 		t.Fatal(err)
 	}
-	if want := "see [Bee](note:" + kept + ")"; content != want {
+	if want := "see [Bee](note:" + kept + ")"; string(content) != want {
 		t.Errorf("content = %q, want %q", content, want)
 	}
 }

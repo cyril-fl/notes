@@ -12,6 +12,7 @@ import (
 	"github.com/uptrace/bun/driver/pgdriver"
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/process/listitems"
+	"main.go/app/shared/services/secret"
 )
 
 // invalidText is the Postgres SQLSTATE raised when the id is not a uuid.
@@ -100,11 +101,13 @@ func (p *run) loadNote() {
 		return
 	}
 
+	var content secret.Text
 	err := p.db.NewSelect().
 		Model((*domain.MetadataNote)(nil)).
 		Column("content", "pinned").
 		Where("item_id = ?", p.cache.id).
-		Scan(p.ctx, &p.cache.result.Content, &p.cache.result.Pinned)
+		Scan(p.ctx, &content, &p.cache.result.Pinned)
+	p.cache.result.Content = string(content)
 	if err != nil {
 		p.SetErr(err)
 		return

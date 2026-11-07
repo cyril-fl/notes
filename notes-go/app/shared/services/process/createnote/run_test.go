@@ -14,6 +14,7 @@ import (
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/createschema"
 	"main.go/app/shared/services/process/createtag"
+	"main.go/app/shared/services/secret"
 )
 
 // No DB needed: makeNote fails first and saveNote is guarded, so a nil db is never touched.
@@ -70,9 +71,9 @@ func TestCreateNote(t *testing.T) {
 		t.Errorf("links = %d, %v; want 2", links, err)
 	}
 
-	var content string
+	var content secret.Text
 	err = tx.NewSelect().Model((*domain.MetadataNote)(nil)).Column("content").Where("item_id = ?", item.ID).Scan(ctx, &content)
-	if err != nil || !strings.HasPrefix(content, "# Title \n\ncontent\n\n#") {
+	if err != nil || !strings.HasPrefix(string(content), "# Title \n\ncontent\n\n#") {
 		t.Errorf("content = %q, %v; want content then its tags", content, err)
 	}
 

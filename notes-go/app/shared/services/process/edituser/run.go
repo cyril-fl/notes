@@ -156,7 +156,7 @@ func (p *run) updateUser() {
 			if snippets == nil {
 				snippets = []domain.Snippet{} // null would break the not null column
 			}
-			query.Set("snippets = ?", snippets)
+			query.Set("snippets = ?", domain.Snippets(snippets))
 		}
 
 		var pgErr pgdriver.Error

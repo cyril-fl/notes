@@ -27,6 +27,7 @@ jobs:
       POSTGRES_DB: notes_test
       POSTGRES_HOST: localhost
       PORT: 5432
+      NOTES_SECRET: dGVzdCBrZXkgb2YgdGhlIENJLCBub3QgYSBzZWNyZXQ=
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7

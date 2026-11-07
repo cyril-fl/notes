@@ -13,6 +13,7 @@ import (
 	"main.go/app/shared/services/process/createschema"
 	"main.go/app/shared/services/process/deleteitems"
 	"main.go/app/shared/services/process/listtrash"
+	"main.go/app/shared/services/secret"
 )
 
 // No DB needed: makeIDs fails first and restoreItems is guarded, so a nil db is never touched.
@@ -170,7 +171,7 @@ func TestRestoreLinks(t *testing.T) {
 		t.Fatal(restore.GetErr())
 	}
 
-	var content string
+	var content secret.Text
 	var links int
 	if err := tx.NewRaw("SELECT content FROM metadata_notes WHERE item_id = ?", a).Scan(ctx, &content); err != nil {
 		t.Fatal(err)
@@ -178,7 +179,7 @@ func TestRestoreLinks(t *testing.T) {
 	if err := tx.NewRaw("SELECT count(*) FROM notes_on_links WHERE source_id = ? AND target_id = ?", a, b).Scan(ctx, &links); err != nil {
 		t.Fatal(err)
 	}
-	if want := "see [Bee](note:" + b + ")"; content != want || links != 1 {
+	if want := "see [Bee](note:" + b + ")"; string(content) != want || links != 1 {
 		t.Errorf("content = %q, links = %d; want %q, 1", content, links, want)
 	}
 }

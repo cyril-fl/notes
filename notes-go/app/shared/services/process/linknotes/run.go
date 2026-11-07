@@ -10,6 +10,7 @@ import (
 	"github.com/uptrace/bun"
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/notetitle"
+	"main.go/app/shared/services/secret"
 	"main.go/app/shared/services/wikilink"
 )
 
@@ -40,7 +41,7 @@ type cache struct {
 
 // Process makes the [[links]] of a note that name exactly one note point to its id, links the note to the
 // notes its text points to, gives the links to it its new title, and resolves the [[links]] of the other
-// notes that were waiting for its title.
+// notes that were waiting for its title. It also keeps the note's notes_on_files.
 func Process(ctx context.Context, db bun.IDB, input Input) *run {
 	return &run{
 		ctx:   ctx,
@@ -52,6 +53,7 @@ func Process(ctx context.Context, db bun.IDB, input Input) *run {
 func (p *run) Run() {
 	p.resolveLinks()
 	p.replaceLinks()
+	p.replaceFiles()
 	p.relabelBacklinks()
 	p.resolveWaiting()
 }
@@ -124,6 +126,14 @@ func (p *run) replaceLinks() {
 	p.SetErr(err)
 }
 
+func (p *run) replaceFiles() {
+	if p.HasErr() {
+		return
+	}
+
+	p.SetErr(Files(p.ctx, p.db, p.input.ID, p.cache.content))
+}
+
 // relabelBacklinks writes the new title in the links to the note: they still point to it by id,
 // the label is what the CLI and an export show.
 func (p *run) relabelBacklinks() {
@@ -131,12 +141,10 @@ func (p *run) relabelBacklinks() {
 		return
 	}
 
-	var sources []Input
-	err := p.db.NewRaw(`
+	sources, err := loadNotes(p.ctx, p.db, `
 		SELECT mn.item_id AS id, mn.content FROM notes_on_links AS nl
 		JOIN metadata_notes AS mn ON mn.item_id = nl.source_id
-		WHERE nl.target_id = ?`, p.input.ID).
-		Scan(p.ctx, &sources)
+		WHERE nl.target_id = ?`, p.input.ID)
 	if err != nil {
 		p.SetErr(err)
 		return
@@ -152,26 +160,34 @@ func (p *run) relabelBacklinks() {
 	}
 }
 
-// resolveWaiting reads only the notes whose text holds [[title or [[/…/title: resolving every note would
+// resolveWaiting resolves only the notes whose text holds [[title or [[/…/title: resolving every note would
 // be one query per link. Its old title too: shared before, it may now name one note only.
+// shortcut: decrypts every note of the account on each title change, fine for a few thousand notes.
 func (p *run) resolveWaiting() {
+	titles := []string{}
 	for _, title := range []string{p.input.Title, p.input.OldTitle} {
-		if p.HasErr() || title == "" {
-			continue
+		if title != "" {
+			titles = append(titles, strings.ToLower(title)+"]]")
 		}
+	}
+	if p.HasErr() || len(titles) == 0 {
+		return
+	}
 
-		var waiting []Input
-		err := p.db.NewRaw(`
-			SELECT mn.item_id AS id, mn.content FROM metadata_notes AS mn JOIN items AS i ON i.id = mn.item_id
-			WHERE mn.item_id <> ? AND i.user_id = ? AND strpos(lower(mn.content), lower(?)) > 0`,
-			p.input.ID, domain.UserID(p.ctx), title+"]]").
-			Scan(p.ctx, &waiting)
-		if err != nil {
-			p.SetErr(err)
-			return
-		}
+	notes, err := loadNotes(p.ctx, p.db, `
+		SELECT mn.item_id AS id, mn.content FROM metadata_notes AS mn JOIN items AS i ON i.id = mn.item_id
+		WHERE mn.item_id <> ? AND i.user_id = ?`, p.input.ID, domain.UserID(p.ctx))
+	if err != nil {
+		p.SetErr(err)
+		return
+	}
 
-		for _, note := range waiting {
+	for _, title := range titles {
+		for _, note := range notes {
+			if !strings.Contains(strings.ToLower(note.Content), title) {
+				continue
+			}
+
 			// No title: resolving a note must not resolve the notes waiting for it in turn.
 			resolve := Process(p.ctx, p.db, Input{ID: note.ID, Content: note.Content})
 			resolve.Run()
@@ -219,8 +235,8 @@ func Items(ctx context.Context, db bun.IDB, items []domain.Item) error {
 		return nil
 	}
 
-	var notes []Input
-	if err := db.NewRaw("SELECT item_id AS id, content FROM metadata_notes WHERE item_id IN (?)", bun.In(slices.Collect(maps.Keys(titles)))).Scan(ctx, &notes); err != nil {
+	notes, err := loadNotes(ctx, db, "SELECT item_id AS id, content FROM metadata_notes WHERE item_id IN (?)", bun.In(slices.Collect(maps.Keys(titles))))
+	if err != nil {
 		return err
 	}
 	for _, note := range notes {
@@ -234,10 +250,46 @@ func Items(ctx context.Context, db bun.IDB, items []domain.Item) error {
 	return nil
 }
 
+// Files links the note id to the images its content cites, in place of those it cited.
+// Those of its account only: a note may cite the address of another account's.
+func Files(ctx context.Context, db bun.IDB, id, content string) error {
+	if _, err := db.NewDelete().Model((*domain.NoteFile)(nil)).Where("note_id = ?", id).Exec(ctx); err != nil {
+		return err
+	}
+	var files []string
+	for _, match := range domain.FilePattern.FindAllStringSubmatch(content, -1) {
+		files = append(files, match[1])
+	}
+	if len(files) == 0 {
+		return nil
+	}
+	_, err := db.NewRaw(`
+		INSERT INTO notes_on_files (note_id, file_id)
+		SELECT DISTINCT i.id, f.id FROM items AS i JOIN files AS f ON f.user_id = i.user_id
+		WHERE i.id = ? AND f.id::text IN (?)`, id, bun.In(files)).Exec(ctx)
+	return err
+}
+
+// loadNotes runs a query giving id and content, and opens the content.
+func loadNotes(ctx context.Context, db bun.IDB, query string, args ...any) ([]Input, error) {
+	var rows []struct {
+		ID      string      `bun:"id"`
+		Content secret.Text `bun:"content"`
+	}
+	if err := db.NewRaw(query, args...).Scan(ctx, &rows); err != nil {
+		return nil, err
+	}
+	notes := make([]Input, len(rows))
+	for i, row := range rows {
+		notes[i] = Input{ID: row.ID, Content: string(row.Content)}
+	}
+	return notes, nil
+}
+
 // save writes content and the title it gives; updated_at stays, the user did not write this change.
 // WhereAllWithDeleted: a trashed note keeps its links right too.
 func save(ctx context.Context, db bun.IDB, id, content string) error {
-	if _, err := db.NewUpdate().Model((*domain.MetadataNote)(nil)).Set("content = ?", content).Where("item_id = ?", id).Exec(ctx); err != nil {
+	if _, err := db.NewUpdate().Model((*domain.MetadataNote)(nil)).Set("content = ?", secret.Text(content)).Where("item_id = ?", id).Exec(ctx); err != nil {
 		return err
 	}
 	_, err := db.NewUpdate().Model((*domain.Item)(nil)).Set("title = NULLIF(?, '')", notetitle.From(content)).Where("id = ?", id).WhereAllWithDeleted().Exec(ctx)

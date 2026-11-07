@@ -25,9 +25,7 @@ type cache struct {
 }
 
 // cited is true of a file some note of its account cites, trashed notes included, or that is its avatar.
-const cited = `(EXISTS (
-	SELECT 1 FROM metadata_notes AS mn JOIN items AS i ON i.id = mn.item_id
-	WHERE i.user_id = f.user_id AND strpos(mn.content, f.id::text) > 0)
+const cited = `(EXISTS (SELECT 1 FROM notes_on_files AS nf WHERE nf.file_id = f.id)
 	OR EXISTS (SELECT 1 FROM users AS au WHERE au.avatar = f.id))`
 
 // Process deletes the files no note cites any more. Those of a note deleted for good go at once (createschema's

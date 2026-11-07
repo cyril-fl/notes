@@ -133,6 +133,9 @@ func getTables(tx bun.Tx) []*bun.CreateTableQuery {
 		// shortcut: deleting an account leaves its objects in Silo, remove the prefix <user_id>/ if accounts ever get deleted.
 		tx.NewCreateTable().Model((*domain.File)(nil)).
 			ForeignKey(`("user_id") REFERENCES "users" ("id") ON DELETE CASCADE`),
+		tx.NewCreateTable().Model((*domain.NoteFile)(nil)).
+			ForeignKey(`("note_id") REFERENCES "metadata_notes" ("item_id") ON DELETE CASCADE`).
+			ForeignKey(`("file_id") REFERENCES "files" ("id") ON DELETE CASCADE`),
 	}
 }
 
@@ -150,17 +153,18 @@ func getIndexes(tx bun.Tx) []*bun.CreateIndexQuery {
 			Where("kind = ? AND deleted_at IS NULL", domain.FOLDER),
 		// The primary key (source_id, target_id) only covers the links of a note, not its backlinks.
 		tx.NewCreateIndex().Model((*domain.NoteLink)(nil)).Index("idx_notes_on_links_target_id").Column("target_id"),
+		tx.NewCreateIndex().Model((*domain.NoteFile)(nil)).Index("idx_notes_on_files_file_id").Column("file_id"),
 	}
 }
 
 // triggers: an item deleted for good (purge, emptied trash, or a child of either by cascade) hands its images to
-// purgefiles at once with orphaned_at = -infinity. BEFORE: the note's text is still there; the cascade removes it after.
+// purgefiles at once with orphaned_at = -infinity. BEFORE: the note's notes_on_files are still there; the cascade removes them after.
 var triggers = []string{
 	`CREATE OR REPLACE FUNCTION orphan_files_of_item() RETURNS trigger AS $$
 	BEGIN
 		UPDATE files AS f SET orphaned_at = '-infinity'
-		FROM metadata_notes AS mn
-		WHERE mn.item_id = OLD.id AND f.user_id = OLD.user_id AND strpos(mn.content, f.id::text) > 0;
+		FROM notes_on_files AS nf
+		WHERE nf.note_id = OLD.id AND f.id = nf.file_id;
 		RETURN OLD;
 	END $$ LANGUAGE plpgsql`,
 	`CREATE OR REPLACE TRIGGER items_orphan_files BEFORE DELETE ON items FOR EACH ROW EXECUTE FUNCTION orphan_files_of_item()`,

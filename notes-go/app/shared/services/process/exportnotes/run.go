@@ -12,6 +12,7 @@ import (
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 	"main.go/app/shared/domain"
+	"main.go/app/shared/services/secret"
 	"main.go/app/shared/services/wikilink"
 )
 
@@ -35,7 +36,7 @@ type item struct {
 	ParentID string      `bun:"parent_id"`
 	Kind     domain.Kind `bun:"kind"`
 	Title    string      `bun:"title"`
-	Content  string      `bun:"content"`
+	Content  secret.Text `bun:"content"`
 }
 
 type run struct {
@@ -130,7 +131,7 @@ func (p *run) loadImages() {
 	var ids []string
 	for _, items := range p.cache.children {
 		for _, it := range items {
-			for _, match := range domain.FilePattern.FindAllStringSubmatch(it.Content, -1) {
+			for _, match := range domain.FilePattern.FindAllStringSubmatch(string(it.Content), -1) {
 				ids = append(ids, match[1])
 			}
 		}
@@ -162,7 +163,7 @@ func (p *run) makeFiles(parentID, dir string) {
 			ext = ".md"
 		}
 		name := uniqueName(fileName(it.Title), ext, taken)
-		file := File{Path: path.Join(dir, name), Dir: it.Kind == domain.FOLDER, Content: p.citeImages(wikilink.Unresolve(it.Content), dir)}
+		file := File{Path: path.Join(dir, name), Dir: it.Kind == domain.FOLDER, Content: p.citeImages(wikilink.Unresolve(string(it.Content)), dir)}
 		p.cache.files = append(p.cache.files, file)
 		if file.Dir {
 			p.makeFiles(it.ID, file.Path)

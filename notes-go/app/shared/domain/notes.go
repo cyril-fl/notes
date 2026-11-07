@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/uptrace/bun"
+	"main.go/app/shared/services/secret"
 )
 
 type Kind string
@@ -36,10 +37,10 @@ type MetadataNote struct {
 	bun.BaseModel `bun:"table:metadata_notes,alias:mn"`
 	Metadata      `bun:",inline"`
 
-	Content  string `bun:",type:text"`
-	Readonly bool   `bun:",notnull"`
-	Pinned   bool   `bun:",notnull"`
-	Tags     []Tag  `bun:"m2m:notes_on_tags,join:Note=Tag"`
+	Content  secret.Text `bun:",type:text"`
+	Readonly bool        `bun:",notnull"`
+	Pinned   bool        `bun:",notnull"`
+	Tags     []Tag       `bun:"m2m:notes_on_tags,join:Note=Tag"`
 }
 
 type MetadataFolder struct {

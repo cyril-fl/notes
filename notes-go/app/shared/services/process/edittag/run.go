@@ -12,6 +12,7 @@ import (
 	"github.com/uptrace/bun/driver/pgdriver"
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/hashtag"
+	"main.go/app/shared/services/secret"
 )
 
 var (
@@ -114,7 +115,7 @@ func (p *run) rewriteNotes(ctx context.Context, tx bun.Tx) error {
 	}
 
 	for i := range notes {
-		notes[i].Content = hashtag.Rename(notes[i].Content, p.cache.from, p.cache.to)
+		notes[i].Content = secret.Text(hashtag.Rename(string(notes[i].Content), p.cache.from, p.cache.to))
 		if _, err := tx.NewUpdate().Model(&notes[i]).Column("content").WherePK().Exec(ctx); err != nil {
 			return err
 		}

@@ -2,10 +2,13 @@ package domain
 
 import (
 	"context"
+	"database/sql/driver"
+	"encoding/json"
 	"errors"
 	"time"
 
 	"github.com/uptrace/bun"
+	"main.go/app/shared/services/secret"
 )
 
 // User is an account: every item and tag belongs to one.
@@ -22,7 +25,7 @@ type User struct {
 	// Days before the trash is purged, 0 to never purge. An insert of 0 gets the default: only an update sets it.
 	TrashRetentionDays int       `bun:",notnull,default:30" json:"trash_retention_days"`
 	Avatar             string    `bun:",type:uuid,nullzero" json:"avatar,omitempty"` // the id of a File of the account, purgefiles keeps it
-	Snippets           []Snippet `bun:",type:jsonb,notnull,default:'[]'" json:"snippets"`
+	Snippets           Snippets  `bun:",type:jsonb,notnull,default:'[]'" json:"snippets"`
 	CreatedAt          time.Time `bun:",notnull,default:current_timestamp" json:"created_at"`
 }
 
@@ -30,6 +33,45 @@ type User struct {
 type Snippet struct {
 	Name    string `json:"name"`
 	Content string `json:"content"`
+}
+
+// Snippets are kept sealed, as one JSON string in their jsonb column.
+type Snippets []Snippet
+
+func (s Snippets) Value() (driver.Value, error) {
+	if s == nil {
+		s = Snippets{} // null would break the not null column
+	}
+	data, err := json.Marshal([]Snippet(s))
+	if err != nil {
+		return nil, err
+	}
+	sealed, err := secret.Seal(string(data))
+	if err != nil {
+		return nil, err
+	}
+	data, err = json.Marshal(sealed)
+	return string(data), err
+}
+
+// Scan also reads a JSON array in clear: the column's default, or written before notes encrypt.
+func (s *Snippets) Scan(src any) error {
+	var data []byte
+	switch src := src.(type) {
+	case string:
+		data = []byte(src)
+	case []byte:
+		data = src
+	}
+	var sealed string
+	if json.Unmarshal(data, &sealed) == nil {
+		text, err := secret.Open(sealed)
+		if err != nil {
+			return err
+		}
+		data = []byte(text)
+	}
+	return json.Unmarshal(data, (*[]Snippet)(s))
 }
 
 // Locales are the languages of the web app, the first one by default.

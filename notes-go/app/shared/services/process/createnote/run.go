@@ -15,6 +15,7 @@ import (
 	"main.go/app/shared/services/notetitle"
 	"main.go/app/shared/services/process/createtag"
 	"main.go/app/shared/services/process/linknotes"
+	"main.go/app/shared/services/secret"
 )
 
 var (
@@ -128,7 +129,7 @@ func (p *run) insertItem(ctx context.Context, tx bun.Tx) error {
 func (p *run) insertMetadata(ctx context.Context, tx bun.Tx) error {
 	metadata := domain.MetadataNote{
 		Metadata: domain.Metadata{ItemID: p.cache.item.ID},
-		Content:  p.cache.input.Content,
+		Content:  secret.Text(p.cache.input.Content),
 	}
 
 	_, err := tx.NewInsert().Model(&metadata).Exec(ctx)

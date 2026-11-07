@@ -307,6 +307,11 @@ commands:
         value: ""
         usage: "Read the password from the first line of stdin"
         type: "bool"
+  encrypt:
+    use: "encrypt"
+    short: "Encrypt what the accounts wrote before encryption (admin, on the server)"
+    long: "Encrypt with NOTES_SECRET the notes and snippets of every account still kept in clear, once, after make backup. A second run finds nothing left."
+    example: "notes encrypt"
   account:
     use: "account"
     short: "Manage the account logged in"
