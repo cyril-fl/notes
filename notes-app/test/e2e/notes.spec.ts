@@ -64,3 +64,15 @@ test('N opens a new note in the current folder, the theme button switches to dar
   await expect(page.locator('html')).toHaveClass(/dark/);
   await page.getByRole('button', { name: 'Thème clair' }).click();
 });
+
+test('< > & are saved as typed, not as HTML entities', async ({ page }) => {
+  await page.goto(`/notes/new?parent=${box.folder.id}`);
+  await page.locator('.ProseMirror').click();
+  await page.keyboard.type('a >> b & c < d');
+  await expect
+    .poll(async () => {
+      const items = await (await box.api.get(`/api/items?parent=${box.folder.id}`)).json();
+      return items[0] ? box.content(items[0].id) : '';
+    })
+    .toBe('a >> b & c < d');
+});

@@ -94,8 +94,9 @@ load();
 
 function onContent(markdown: string) {
   if (!touched.value) return;
-  // The editor writes blank lines as non-breaking spaces.
-  const content = markdown.replace(/&nbsp;/gi, ' ').replace(/ /g, ' ').trim();
+  // The editor writes blank lines as non-breaking spaces, and & < > as HTML entities.
+  // Spaces first: a typed "&nbsp;" is written "&amp;nbsp;" and must come back as typed.
+  const content = decodeEntities(markdown.replace(/&nbsp;/gi, ' ').replace(/ /g, ' ')).trim();
   isEmpty.value = !content;
   saver.push({ content: content || undefined });
 }
