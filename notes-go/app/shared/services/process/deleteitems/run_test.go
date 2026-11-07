@@ -108,3 +108,52 @@ func TestDeleteFolderTree(t *testing.T) {
 		t.Errorf("invalid uuid: err = nil, want a Postgres error")
 	}
 }
+
+// A [[link]] waiting because two notes shared its title resolves when one goes to the trash.
+func TestTrashResolvesLinks(t *testing.T) {
+	ctx := context.Background()
+	env := postgrey.NewEnvironment()
+	env.ReadEnv()
+	db := env.Connect()
+	defer db.Close()
+
+	schema := createschema.Process(ctx, db)
+	schema.Run()
+	if schema.HasErr() {
+		t.Fatalf("create schema: %v", schema.GetErr())
+	}
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
+
+	note := func(content string) string {
+		process := createnote.Process(ctx, tx, createnote.Input{Content: content})
+		process.Run()
+		if process.HasErr() {
+			t.Fatalf("note %q: %v", content, process.GetErr())
+		}
+		return process.GetResult().ID
+	}
+
+	trashed := note("# Bee")
+	kept := note("# Bee")
+	a := note("see [[Bee]]")
+
+	remove := Process(ctx, tx, domain.NOTE, []string{trashed})
+	remove.Run()
+	if remove.HasErr() {
+		t.Fatal(remove.GetErr())
+	}
+
+	var content string
+	if err := tx.NewRaw("SELECT content FROM metadata_notes WHERE item_id = ?", a).Scan(ctx, &content); err != nil {
+		t.Fatal(err)
+	}
+	if want := "see [Bee](note:" + kept + ")"; content != want {
+		t.Errorf("content = %q, want %q", content, want)
+	}
+}

@@ -2,6 +2,7 @@ package linknotes
 
 import (
 	"context"
+	"maps"
 	"slices"
 	"strings"
 
@@ -203,6 +204,34 @@ func Resolve(ctx context.Context, db bun.IDB, target string) (string, string, er
 		return "", "", err
 	}
 	return notes[0].ID, notes[0].Title, nil
+}
+
+// Items runs Process on the notes among items that a trash or a restore just changed: the [[links]] waiting
+// for their title may now name one note only.
+func Items(ctx context.Context, db bun.IDB, items []domain.Item) error {
+	titles := map[string]string{}
+	for _, item := range items {
+		if item.Kind == domain.NOTE {
+			titles[item.ID] = item.Title
+		}
+	}
+	if len(titles) == 0 {
+		return nil
+	}
+
+	var notes []Input
+	if err := db.NewRaw("SELECT item_id AS id, content FROM metadata_notes WHERE item_id IN (?)", bun.In(slices.Collect(maps.Keys(titles)))).Scan(ctx, &notes); err != nil {
+		return err
+	}
+	for _, note := range notes {
+		note.Title = titles[note.ID]
+		link := Process(ctx, db, note)
+		link.Run()
+		if link.HasErr() {
+			return link.GetErr()
+		}
+	}
+	return nil
 }
 
 // save writes content and the title it gives; updated_at stays, the user did not write this change.

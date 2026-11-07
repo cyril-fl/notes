@@ -8,6 +8,7 @@ import (
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 	"main.go/app/shared/domain"
+	"main.go/app/shared/services/process/linknotes"
 )
 
 var ErrNoValue = errors.New("no id given")
@@ -66,19 +67,27 @@ func (p *run) makeIDs() {
 // markDeleted is one statement: current_timestamp is the same for the whole subtree, so a restore can find it back.
 // Notes never have children, so the recursion is a no-op for them.
 // Unknown, already deleted, or other-kind ids match nothing and are skipped.
+// The [[links]] waiting for a trashed note's title are resolved again in the same transaction: a title it shared
+// may now name one note only. A link to it stays, hidden by the readers until a restore.
 func (p *run) markDeleted() {
 	if p.HasErr() {
 		return
 	}
 
-	p.SetErr(p.db.NewUpdate().
-		Model((*domain.Item)(nil)).
-		Set("deleted_at = current_timestamp").
-		Where(`id IN (
-			WITH RECURSIVE tree AS (
-				SELECT id FROM items WHERE kind = ? AND id IN (?) AND user_id = ? AND deleted_at IS NULL
-				UNION SELECT child.id FROM items AS child JOIN tree ON child.parent_id = tree.id
-			) SELECT id FROM tree)`, p.kind, bun.In(p.cache.ids), domain.UserID(p.ctx)).
-		Returning("id, kind, title").
-		Scan(p.ctx, &p.cache.result))
+	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
+		err := tx.NewUpdate().
+			Model((*domain.Item)(nil)).
+			Set("deleted_at = current_timestamp").
+			Where(`id IN (
+				WITH RECURSIVE tree AS (
+					SELECT id FROM items WHERE kind = ? AND id IN (?) AND user_id = ? AND deleted_at IS NULL
+					UNION SELECT child.id FROM items AS child JOIN tree ON child.parent_id = tree.id
+				) SELECT id FROM tree)`, p.kind, bun.In(p.cache.ids), domain.UserID(p.ctx)).
+			Returning("id, kind, title").
+			Scan(ctx, &p.cache.result)
+		if err != nil {
+			return err
+		}
+		return linknotes.Items(ctx, tx, p.cache.result)
+	}))
 }

@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"maps"
-	"slices"
 	"strings"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
@@ -125,29 +123,7 @@ func (p *run) updateItems(ctx context.Context, tx bun.Tx) error {
 // linkNotes links each restored note again: its own [[links]], and the [[links]] of the notes waiting for its
 // title. A link to a trashed note stays in the text and in notes_on_links, hidden by the readers: it is back here.
 func (p *run) linkNotes(ctx context.Context, tx bun.Tx) error {
-	titles := map[string]string{}
-	for _, item := range p.cache.result {
-		if item.Kind == domain.NOTE {
-			titles[item.ID] = item.Title
-		}
-	}
-	if len(titles) == 0 {
-		return nil
-	}
-
-	var notes []linknotes.Input
-	if err := tx.NewRaw("SELECT item_id AS id, content FROM metadata_notes WHERE item_id IN (?)", bun.In(slices.Collect(maps.Keys(titles)))).Scan(ctx, &notes); err != nil {
-		return err
-	}
-	for _, note := range notes {
-		note.Title = titles[note.ID]
-		link := linknotes.Process(ctx, tx, note)
-		link.Run()
-		if link.HasErr() {
-			return link.GetErr()
-		}
-	}
-	return nil
+	return linknotes.Items(ctx, tx, p.cache.result)
 }
 
 // Helpers
