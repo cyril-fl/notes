@@ -20,8 +20,7 @@ const total = computed(() => sections.value.reduce((sum, section) => sum + secti
 </script>
 
 <template>
-  <!-- mt-auto + sticky: pinned to the bottom of the page, short note or long. -->
-  <UCollapsible v-if="sections.length" class="sticky bottom-0 z-10 -mx-8 -mb-8 mt-auto border-t border-default bg-default px-8">
+  <UCollapsible v-if="sections.length">
     <template #default="{ open }">
       <div class="flex items-center py-2">
         <UButton

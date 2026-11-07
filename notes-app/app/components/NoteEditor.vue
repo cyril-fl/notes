@@ -13,7 +13,7 @@ const ALLOWED_LINKS = ['http', 'https', 'mailto'];
 
 const api = useApi();
 const { prompt, confirm } = useDialogs();
-const { removeItem, pinItem } = useItems();
+const { removeItem } = useItems();
 const baseURL = useRuntimeConfig().public.apiBase;
 const toast = useToast();
 
@@ -21,7 +21,6 @@ const id = ref(props.noteId);
 const parent = ref(props.parentId);
 const path = ref('');
 const tags = ref<string[]>([]);
-const pinned = ref(false);
 const initialContent = ref('');
 const loading = ref(!!props.noteId);
 const notFound = ref(false);
@@ -80,7 +79,6 @@ async function load() {
     const note = await api<ItemDetail>(`/api/notes/${props.noteId}`, { quiet: true });
     initialContent.value = note.content ?? '';
     tags.value = note.tags ?? [];
-    pinned.value = note.pinned ?? false;
     path.value = note.path.slice(0, note.path.lastIndexOf('/')) || '/';
     parent.value = note.item.parent_id ?? undefined;
     isEmpty.value = false;
@@ -142,19 +140,6 @@ onBeforeUnmount(async () => {
   await saver.flush(); // A save in progress would fail on a removed note.
   await removeItem({ id: id.value, kind: 'note' });
 });
-
-async function togglePin() {
-  if (!id.value) return;
-  await pinItem({ id: id.value, kind: 'note' }, !pinned.value);
-  pinned.value = !pinned.value;
-}
-
-async function remove() {
-  saver.take();
-  // Leave first: the views read again after a removal, and this one would ask for a note that is gone.
-  await navigateTo(parent.value ? `/folders/${parent.value}` : '/');
-  if (id.value && !isEmpty.value) await removeItem({ id: id.value, kind: 'note' }); // An empty one removes itself.
-}
 
 async function askLink(editor: Editor) {
   const current = editor.getAttributes('link').href as string | undefined;
@@ -253,24 +238,6 @@ const status = computed(() => {
 
   <!-- UEditor hands its listeners to TipTap, not to the page: clicks on links are caught here. -->
   <article v-else-if="!loading" class="flex flex-1 flex-col p-8" @focusin="touched = true" @pointerdown.capture="touched = true" @click="openLink">
-    <div class="mb-2 flex h-6 items-center gap-2 text-xs text-muted">
-      <PathNav :path="path" />
-      <span class="ml-auto shrink-0" :class="{ 'text-error': failed }" role="status">{{ status }}</span>
-      <UTooltip v-if="id" :text="pinned ? 'Désépingler' : 'Épingler'">
-        <UButton
-          :icon="pinned ? 'i-lucide-pin-off' : 'i-lucide-pin'"
-          color="neutral"
-          variant="ghost"
-          size="xs"
-          :aria-label="pinned ? 'Désépingler la note' : 'Épingler la note'"
-          @click="togglePin"
-        />
-      </UTooltip>
-      <UTooltip text="Supprimer">
-        <UButton icon="i-lucide-trash-2" color="neutral" variant="ghost" size="xs" aria-label="Supprimer la note" @click="remove" />
-      </UTooltip>
-    </div>
-
     <UEditor
       v-slot="{ editor }"
       :model-value="initialContent"
@@ -301,6 +268,13 @@ const status = computed(() => {
       />
     </UEditor>
 
-    <RelatedNotes v-if="id" :key="id" :note-id="id" />
+    <!-- mt-auto + sticky: pinned to the bottom of the page, short note or long. -->
+    <footer class="sticky bottom-0 z-10 -mx-8 -mb-8 mt-auto border-t border-default bg-default px-8">
+      <RelatedNotes v-if="id" :key="id" :note-id="id" />
+      <div class="flex h-9 items-center gap-2 text-xs text-muted">
+        <PathNav :path="path" />
+        <span class="ml-auto shrink-0" :class="{ 'text-error': failed }" role="status">{{ status }}</span>
+      </div>
+    </footer>
   </article>
 </template>
