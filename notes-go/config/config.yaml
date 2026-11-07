@@ -235,26 +235,6 @@ commands:
         value: ""
         usage: "Display the result as JSON"
         type: "bool"
-  sync-tags:
-    use: "sync-tags"
-    short: "Make the tags of every note match the #tags of its text"
-    long: "Make the tags of every note match the #tags of its text: a tag missing from the text is written at its end, a #tag with no link gets one. Only needed once, for notes made before tags came from the text."
-    example: "notes sync-tags"
-  sync-titles:
-    use: "sync-titles"
-    short: "Make the title of every note come from its text"
-    long: "Make the title of every note come from its text: a title missing from the text is written at its top as a heading, an untitled note takes its first words. Only needed once, for notes made before titles came from the text."
-    example: "notes sync-titles"
-  sync-links:
-    use: "sync-links"
-    short: "Link every note to the notes its [[links]] name"
-    long: "Link every note to the notes its [[links]] name: a [[Title]], or a [[/Folder/Title]] when several notes share the title. Only needed once, for notes written before links were read from the text."
-    example: "notes sync-links"
-  sync-entities:
-    use: "sync-entities"
-    short: "Repair the & < > the web editor saved as &amp; &lt; &gt;"
-    long: "Write back as < > & the &lt; &gt; &amp; that the web editor saved in the text of notes before v0.16.0, outside code, and the titles with them. Only needed once."
-    example: "notes sync-entities"
   export:
     use: "export <directory> [<uuid|path>]"
     short: "Write notes out as markdown files"
@@ -301,7 +281,7 @@ commands:
   user-add:
     use: "add <name>"
     short: "Create an account"
-    long: "Create an account; the password is asked twice, or read from stdin with --password-stdin. The first account takes the notes, folders and tags made before accounts existed."
+    long: "Create an account; the password is asked twice, or read from stdin with --password-stdin."
     example: "notes user add cyril\necho \"$PASSWORD\" | notes user add cyril --password-stdin"
     args:
       - name: "password-stdin"

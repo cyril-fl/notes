@@ -6,7 +6,6 @@ import (
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 	"main.go/app/shared/domain"
-	"main.go/app/shared/services/process/readitem"
 )
 
 // Note is a node of the graph.
@@ -65,7 +64,7 @@ func (p *run) GetResult() Result {
 
 // loadNotes joins the paths to keep live notes only.
 func (p *run) loadNotes() {
-	p.SetErr(p.db.NewRaw(readitem.PathsCTE+`
+	p.SetErr(p.db.NewRaw(domain.PathsCTE+`
 		SELECT i.id, coalesce(i.title, '') AS title, paths.path
 		FROM items AS i
 		JOIN paths ON paths.id = i.id
@@ -81,7 +80,7 @@ func (p *run) loadLinks() {
 		return
 	}
 
-	p.SetErr(p.db.NewRaw(readitem.PathsCTE+`,
+	p.SetErr(p.db.NewRaw(domain.PathsCTE+`,
 		shared AS (
 			SELECT a.note_id AS source, b.note_id AS target, array_agg(t.value ORDER BY lower(t.value)) AS tags
 			FROM notes_on_tags AS a

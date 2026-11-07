@@ -10,7 +10,6 @@ import (
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 	"main.go/app/shared/domain"
-	"main.go/app/shared/services/process/readitem"
 )
 
 var (
@@ -96,7 +95,7 @@ func (p *run) loadNotes() {
 		return
 	}
 
-	p.SetErr(p.db.NewRaw(readitem.PathsCTE+`
+	p.SetErr(p.db.NewRaw(domain.PathsCTE+`
 		SELECT i.id, coalesce(i.title, '') AS title, paths.path
 		FROM notes_on_tags AS nt
 		JOIN items AS i ON i.id = nt.note_id

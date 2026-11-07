@@ -6,7 +6,6 @@ import (
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 	"main.go/app/shared/domain"
-	"main.go/app/shared/services/process/readitem"
 )
 
 // Folder is a live folder with its path from the root.
@@ -50,7 +49,7 @@ func (p *run) GetResult() []Folder {
 // loadFolders joins on paths, which only holds live items: a folder inside a trashed one drops out too.
 // shortcut: loads every folder at once, page it if folders reach the thousands.
 func (p *run) loadFolders() {
-	p.SetErr(p.db.NewRaw(readitem.PathsCTE+`
+	p.SetErr(p.db.NewRaw(domain.PathsCTE+`
 		SELECT i.id, paths.path
 		FROM items AS i JOIN paths ON paths.id = i.id
 		WHERE i.kind = ?

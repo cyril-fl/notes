@@ -17,9 +17,6 @@ import (
 // invalidText is the Postgres SQLSTATE raised when the id is not a uuid.
 const invalidText = "22P02"
 
-// PathsCTE is domain.PathsCTE, kept here for the queries that already read it from readitem.
-const PathsCTE = domain.PathsCTE
-
 var (
 	ErrNoValue  = errors.New("no id given")
 	ErrNotFound = errors.New("item not found")
@@ -127,7 +124,7 @@ func (p *run) loadPath() {
 		return
 	}
 
-	p.SetErr(p.db.NewRaw(PathsCTE+"SELECT path FROM paths WHERE id = ?", domain.UserID(p.ctx), p.cache.id).Scan(p.ctx, &p.cache.result.Path))
+	p.SetErr(p.db.NewRaw(domain.PathsCTE+"SELECT path FROM paths WHERE id = ?", domain.UserID(p.ctx), p.cache.id).Scan(p.ctx, &p.cache.result.Path))
 }
 
 func (p *run) loadChildren() {

@@ -9,7 +9,6 @@ import (
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 	"main.go/app/shared/domain"
-	"main.go/app/shared/services/process/readitem"
 )
 
 var (
@@ -72,7 +71,7 @@ func (p *run) resolveRefs() {
 // resolvePath fails on several matches: titles are not unique, and acting on the wrong note is worse than an error.
 func (p *run) resolvePath(path string) {
 	var ids []string
-	if err := p.db.NewRaw(readitem.PathsCTE+`
+	if err := p.db.NewRaw(domain.PathsCTE+`
 		SELECT i.id
 		FROM paths
 		JOIN items AS i ON i.id = paths.id

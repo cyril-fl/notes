@@ -7,7 +7,6 @@ import (
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 	"main.go/app/shared/domain"
-	"main.go/app/shared/services/process/readitem"
 )
 
 // limit is how many notes the list shows.
@@ -55,7 +54,7 @@ func (p *run) GetResult() []Recent {
 
 // loadNotes falls back on created_at: a note never edited has no updated_at. Joining paths keeps live notes only.
 func (p *run) loadNotes() {
-	p.SetErr(p.db.NewRaw(readitem.PathsCTE+`
+	p.SetErr(p.db.NewRaw(domain.PathsCTE+`
 		SELECT i.id, coalesce(i.title, '') AS title, paths.path, coalesce(i.updated_at, i.created_at) AS updated_at
 		FROM items AS i
 		JOIN paths ON paths.id = i.id

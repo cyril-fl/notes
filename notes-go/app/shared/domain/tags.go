@@ -6,7 +6,7 @@ type Tag struct {
 	bun.BaseModel `bun:"table:tags,alias:t" json:"-" yaml:"-"`
 
 	ID     string `bun:",pk,type:uuid,default:gen_random_uuid()" json:"id" yaml:"id"`
-	UserID string `bun:",type:uuid,nullzero" json:"-" yaml:"-"`
+	UserID string `bun:",type:uuid,notnull,nullzero" json:"-" yaml:"-"`
 	Value  string `bun:",notnull" json:"value" yaml:"value"` // unique case-insensitive, see CreateTables
 }
 

@@ -55,10 +55,6 @@ type commands struct {
 	Restore       plumcliconfig.Cmdparams `yaml:"restore"`
 	Search        plumcliconfig.Cmdparams `yaml:"search"`
 	Recent        plumcliconfig.Cmdparams `yaml:"recent"`
-	SyncTags      plumcliconfig.Cmdparams `yaml:"sync-tags"`
-	SyncTitles    plumcliconfig.Cmdparams `yaml:"sync-titles"`
-	SyncLinks     plumcliconfig.Cmdparams `yaml:"sync-links"`
-	SyncEntities  plumcliconfig.Cmdparams `yaml:"sync-entities"`
 	Export        plumcliconfig.Cmdparams `yaml:"export"`
 	Import        plumcliconfig.Cmdparams `yaml:"import"`
 	Serve         plumcliconfig.Cmdparams `yaml:"serve"`

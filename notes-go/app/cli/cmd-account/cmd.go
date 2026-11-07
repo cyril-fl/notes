@@ -99,7 +99,7 @@ func Logout(cobra *cobra.Command, args []string) error {
 	return nil
 }
 
-// AddUser creates an account; the first one takes what the base held before accounts.
+// AddUser creates an account.
 func AddUser(cobra *cobra.Command, args []string) error {
 	password, err := newPassword(cobra)
 	if err != nil {
@@ -111,11 +111,7 @@ func AddUser(cobra *cobra.Command, args []string) error {
 	if process.HasErr() {
 		return process.GetErr()
 	}
-	fmt.Printf("Successfully created account %s", process.GetResult().Name)
-	if adopted := process.GetAdopted(); adopted > 0 {
-		fmt.Printf(", owner of the %d items and tags made before accounts", adopted)
-	}
-	fmt.Println()
+	fmt.Printf("Successfully created account %s\n", process.GetResult().Name)
 	return nil
 }
 

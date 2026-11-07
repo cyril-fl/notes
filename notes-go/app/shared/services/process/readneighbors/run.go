@@ -83,7 +83,7 @@ func (p *run) loadNeighbors() {
 		return
 	}
 
-	p.SetErr(p.db.NewRaw(readitem.PathsCTE+`
+	p.SetErr(p.db.NewRaw(domain.PathsCTE+`
 		SELECT i.id, coalesce(i.title, '') AS title, paths.path,
 			array_agg(t.value ORDER BY lower(t.value)) AS tags, count(*) AS shared
 		FROM notes_on_tags AS center
@@ -109,7 +109,7 @@ func (p *run) loadLinks() {
 		from, to string
 		dest     *[]Linked
 	}{{"source_id", "target_id", &p.cache.result.Links}, {"target_id", "source_id", &p.cache.result.Backlinks}} {
-		err := p.db.NewRaw(readitem.PathsCTE+`
+		err := p.db.NewRaw(domain.PathsCTE+`
 			SELECT i.id, coalesce(i.title, '') AS title, paths.path
 			FROM notes_on_links AS nl
 			JOIN items AS i ON i.id = nl.`+side.to+`

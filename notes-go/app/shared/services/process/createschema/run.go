@@ -31,9 +31,6 @@ func Process(ctx context.Context, db *bun.DB) *run {
 func (p *run) Run() {
 	p.registerModels()
 	p.createTables()
-	p.addColumns()
-	p.requireUsers()
-	p.renameDuplicateFolders()
 	p.createIndexes()
 	p.runInTx()
 }
@@ -47,77 +44,6 @@ func (p *run) registerModels() {
 func (p *run) createTables() {
 	p.cache.steps = append(p.cache.steps, func(tx bun.Tx) {
 		p.execQueries(getTables(tx))
-	})
-}
-
-// addColumns adds to a base made before them the columns its tables gained since: CREATE TABLE IF NOT EXISTS skips them.
-func (p *run) addColumns() {
-	p.cache.steps = append(p.cache.steps, func(tx bun.Tx) {
-		if p.HasErr() {
-			return
-		}
-		for _, statement := range []string{
-			`ALTER TABLE metadata_folders ADD COLUMN IF NOT EXISTS pinned boolean NOT NULL DEFAULT false`,
-			// Accounts: rows made before them have none until the first account adopts them (adduser).
-			`ALTER TABLE items ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES users (id) ON DELETE CASCADE`,
-			`ALTER TABLE tags ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES users (id) ON DELETE CASCADE`,
-			// A parent of another account is refused like a missing one: the parent FK holds user_id too.
-			`ALTER TABLE items DROP CONSTRAINT IF EXISTS items_parent_id_parent_kind_fkey`,
-			`DO $$ BEGIN
-				IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'items_parent_user_fkey') THEN
-					ALTER TABLE items ADD CONSTRAINT items_id_kind_user_key UNIQUE (id, kind, user_id);
-					ALTER TABLE items ADD CONSTRAINT items_parent_user_fkey FOREIGN KEY (parent_id, parent_kind, user_id)
-						REFERENCES items (id, kind, user_id) ON DELETE CASCADE;
-				END IF;
-			END $$`,
-		} {
-			if p.HasErr() {
-				return
-			}
-			_, err := tx.ExecContext(p.ctx, statement)
-			p.SetErr(err)
-		}
-	})
-}
-
-// requireUsers makes user_id NOT NULL once every row has an account: at once on a new base, after adduser on an old one.
-// Only then the indexes unique for the whole base go (createIndexes makes them per account): an API still running the
-// code from before accounts relies on them until its base has one.
-func (p *run) requireUsers() {
-	p.cache.steps = append(p.cache.steps, func(tx bun.Tx) {
-		for table, legacyIndex := range map[string]string{"items": "ux_folders_parent_title", "tags": "ux_tags_value_lower"} {
-			if p.HasErr() {
-				return
-			}
-			_, err := tx.ExecContext(p.ctx, `
-				DO $$ BEGIN
-					IF NOT EXISTS (SELECT 1 FROM `+table+` WHERE user_id IS NULL) THEN
-						ALTER TABLE `+table+` ALTER COLUMN user_id SET NOT NULL;
-						DROP INDEX IF EXISTS `+legacyIndex+`;
-					END IF;
-				END $$`)
-			p.SetErr(err)
-		}
-	})
-}
-
-// renameDuplicateFolders makes room for domain.FolderNameIndex in a base made before it: the second folder of
-// a name becomes "Name (2)", the third "Name (3)"… by creation date. A no-op once the index exists.
-// shortcut: a "Name (2)" already there makes the index fail and the schema with it; loop on the suffix if it ever happens.
-func (p *run) renameDuplicateFolders() {
-	p.cache.steps = append(p.cache.steps, func(tx bun.Tx) {
-		if p.HasErr() {
-			return
-		}
-		_, err := tx.NewRaw(`
-			WITH ranked AS (
-				SELECT id, row_number() OVER (PARTITION BY user_id, parent_id, lower(title) ORDER BY created_at, id) AS n
-				FROM items WHERE kind = ? AND deleted_at IS NULL
-			)
-			UPDATE items SET title = items.title || ' (' || ranked.n || ')'
-			FROM ranked WHERE ranked.id = items.id AND ranked.n > 1`, domain.FOLDER).
-			Exec(p.ctx)
-		p.SetErr(err)
 	})
 }
 
@@ -172,8 +98,10 @@ func getTables(tx bun.Tx) []*bun.CreateTableQuery {
 			ColumnExpr("CONSTRAINT items_kind_check CHECK (kind IN (?))", bun.List([]domain.Kind{domain.NOTE, domain.FOLDER})).
 			ColumnExpr("parent_kind VARCHAR NOT NULL DEFAULT ? CHECK (parent_kind = ?)", domain.FOLDER, domain.FOLDER).
 			ColumnExpr("UNIQUE (id, kind)").
+			ColumnExpr("CONSTRAINT items_id_kind_user_key UNIQUE (id, kind, user_id)").
+			// The parent is a folder of the same account: one of another account is refused like a missing one.
 			// MATCH SIMPLE: a NULL parent_id (root item) skips the check.
-			ForeignKey(`("parent_id", "parent_kind") REFERENCES "items" ("id", "kind") ON DELETE CASCADE`),
+			ColumnExpr(`CONSTRAINT items_parent_user_fkey FOREIGN KEY ("parent_id", "parent_kind", "user_id") REFERENCES "items" ("id", "kind", "user_id") ON DELETE CASCADE`),
 		tx.NewCreateTable().Model((*domain.MetadataNote)(nil)).
 			ColumnExpr("kind VARCHAR NOT NULL DEFAULT ? CHECK (kind = ?)", domain.NOTE, domain.NOTE).
 			ForeignKey(`("item_id", "kind") REFERENCES "items" ("id", "kind") ON DELETE CASCADE`),

@@ -8,7 +8,6 @@ import (
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 	"main.go/app/shared/domain"
-	"main.go/app/shared/services/process/readitem"
 )
 
 // snippetWidth is how many characters of content a match shows around the text found.
@@ -85,7 +84,7 @@ func (p *run) searchNotes() {
 	}
 
 	pattern := "%" + escapeLike(p.cache.text) + "%"
-	p.SetErr(p.db.NewRaw(readitem.PathsCTE+`
+	p.SetErr(p.db.NewRaw(domain.PathsCTE+`
 		SELECT i.id, coalesce(i.title, '') AS title, paths.path, mn.content
 		FROM items AS i
 		JOIN metadata_notes AS mn ON mn.item_id = i.id

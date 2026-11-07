@@ -38,11 +38,10 @@ type run struct {
 }
 
 type cache struct {
-	user    domain.User
-	adopted int64
+	user domain.User
 }
 
-// Process creates an account. The first one adopts what the base held before accounts: nothing is left without one.
+// Process creates an account.
 func Process(ctx context.Context, db bun.IDB, input Input) *run {
 	return &run{
 		ctx:   ctx,
@@ -62,11 +61,6 @@ func (p *run) GetResult() domain.User {
 	return p.cache.user
 }
 
-// GetAdopted returns how many items and tags made before accounts the new account took.
-func (p *run) GetAdopted() int64 {
-	return p.cache.adopted
-}
-
 // Methods
 
 func (p *run) checkInput() {
@@ -83,25 +77,14 @@ func (p *run) saveUser() {
 		return
 	}
 
+	p.cache.user = domain.User{Name: strings.TrimSpace(p.input.Name), PasswordHash: password.Hash(p.input.Password)}
+	// In a transaction, a savepoint: a name already taken must not abort the caller's.
 	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
-		p.cache.user = domain.User{Name: strings.TrimSpace(p.input.Name), PasswordHash: password.Hash(p.input.Password)}
 		var pgErr pgdriver.Error
 		err := tx.NewInsert().Model(&p.cache.user).Returning("id, created_at").Scan(ctx)
 		if errors.As(err, &pgErr) && pgErr.Field('C') == "23505" {
 			return fmt.Errorf("%w: %q", ErrNameTaken, p.cache.user.Name)
 		}
-		if err != nil {
-			return err
-		}
-
-		for _, table := range []string{"items", "tags"} {
-			result, err := tx.NewRaw("UPDATE ? SET user_id = ? WHERE user_id IS NULL", bun.Ident(table), p.cache.user.ID).Exec(ctx)
-			if err != nil {
-				return err
-			}
-			rows, _ := result.RowsAffected()
-			p.cache.adopted += rows
-		}
-		return nil
+		return err
 	}))
 }

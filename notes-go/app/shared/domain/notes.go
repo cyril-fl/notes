@@ -17,7 +17,7 @@ type Item struct {
 	bun.BaseModel `bun:"table:items,alias:i" json:"-"`
 
 	ID        string    `bun:",pk,type:uuid,default:gen_random_uuid()" json:"id"`
-	UserID    string    `bun:",type:uuid,nullzero" json:"-"`
+	UserID    string    `bun:",type:uuid,notnull,nullzero" json:"-"`
 	ParentID  *string   `bun:",type:uuid,nullzero" json:"parent_id" binding:"optional"`
 	Parent    *Item     `bun:"rel:belongs-to,join:parent_id=id" json:"-"`
 	CreatedAt time.Time `bun:",notnull,default:current_timestamp" json:"created_at"`

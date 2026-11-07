@@ -46,7 +46,6 @@ notes logout
 notes reset-password cyril      # mot de passe oublié : nouveau mot de passe, tous les appareils déconnectés
 ```
 
-- **Base existante :** le premier compte créé reprend les notes, dossiers et tags faits avant les comptes.
 - **Scripts :** `--password-stdin` lit le mot de passe sur l'entrée standard, pour `user add` et `reset-password`.
 - **Session de la CLI :** elle est gardée dans `~/.config/notes/session` sous Linux et `~/Library/Application Support/notes/session` sous macOS, lisible par l'utilisateur seul. Elle dure 30 jours, prolongés à chaque usage.
 
@@ -83,8 +82,6 @@ Deux dossiers d'un même dossier ne peuvent pas porter le même nom, majuscules 
 
 Une note n'a pas de titre à part : c'est son premier titre markdown (`#`, `##`…, quel que soit le niveau), sinon les 50 premiers caractères de sa première ligne de texte, sans la mise en forme, le code ni les lignes faites seulement de `#tags`. Une note sans texte reste sans titre. Le titre suit le contenu à chaque modification, et le chemin d'une note (`/Projets/Idées`) avec lui.
 
-Pour une base créée avant cette règle, `notes sync-titles` écrit une fois pour toutes en tête de chaque note le titre qu'elle avait, sous la forme `# Titre`, s'il n'est pas déjà son premier titre, et nomme les notes sans titre d'après leur texte.
-
 ### Parcourir et chercher
 
 ```sh
@@ -106,17 +103,11 @@ notes remove tag sql
 
 Les tags d'une note sont les `#mots` de son texte, code et liens exclus : `#idée` dans le contenu crée le tag et le lie à la note, et l'effacer l'en retire. `--tag` écrit `#tag` à la fin du texte et `--untag` l'efface. Renommer ou supprimer un tag corrige le texte de toutes ses notes, et une note qui se retrouve vide part à la corbeille. Un tag sans plus aucune note disparaît. Un tag contient des lettres, chiffres, `_` ou `-`, avec au moins une lettre.
 
-Pour une base créée avant cette règle, `notes sync-tags` aligne une fois pour toutes les tags et le texte des notes.
-
 ### Liens entre notes
 
 Écris `[[Titre]]` dans une note pour la relier à la note de ce titre, majuscules ou non, hors code. À l'enregistrement, un `[[Titre]]` qui désigne une seule note devient `[Titre](note:<uuid>)` : le lien suit désormais cette note par son id, même si une autre prend son titre, et le texte entre crochets se met à jour quand elle change de titre. Si aucune note, ou plusieurs, ont ce titre, `[[Titre]]` attend : il sera relié dès qu'une seule note portera ce titre. Pour départager, écris son chemin, `[[/Projets/Idées]]`.
 
 `GET /api/notes/{id}/neighbors` donne ses liens (`links`) et ses rétroliens (`backlinks`), et le graphe relie aussi les notes liées. Dans l'app, taper `[[` propose les notes, et un clic sur un lien l'ouvre.
-
-Pour une base créée avant cette règle, `notes sync-links` relie une fois pour toutes les `[[liens]]` des notes.
-
-Avant la v0.16.0, l'éditeur de l'app enregistrait `<`, `>` et `&` sous la forme `&lt;`, `&gt;` et `&amp;`. `notes sync-entities` répare une fois pour toutes le texte et le titre des notes touchées, hors blocs de code.
 
 ### Corbeille
 
