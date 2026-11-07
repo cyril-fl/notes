@@ -93,6 +93,11 @@ function swallowClickAfterDrag(event: MouseEvent) {
   moved = false;
 }
 
+function dotClass(id: string) {
+  if (id === active.value) return 'bg-primary';
+  return isDimmed(id) ? 'bg-(--ui-border-accented)' : 'bg-(--ui-text-dimmed)';
+}
+
 function linkClass(link: Link) {
   if (active.value === null) return 'stroke-(--ui-border-accented)';
   return isActiveLink(link) ? 'stroke-(--ui-primary)' : 'stroke-(--ui-border-muted)';
@@ -129,15 +134,16 @@ function linkClass(link: Link) {
         :to="`/notes/${note.id}`"
         draggable="false"
         :style="{ left: `${at(note.id).x}%`, top: `${at(note.id).y}%` }"
-        :class="{ 'opacity-30': isDimmed(note.id), 'z-10': note.id === active }"
-        class="absolute flex max-w-32 -translate-x-1/2 -translate-y-[5px] flex-col items-center gap-1 rounded-md transition-opacity duration-150"
+        :class="{ 'z-10': note.id === active }"
+        class="absolute flex max-w-32 -translate-x-1/2 -translate-y-[5px] flex-col items-center gap-1 rounded-md"
         @mouseenter="hovered = note.id"
         @mouseleave="hovered = null"
         @focus="hovered = note.id"
         @blur="hovered = null"
       >
-        <span class="size-2.5 shrink-0 rounded-full" :class="note.id === active ? 'bg-primary' : 'bg-inverted/40'" />
-        <span class="max-w-full truncate text-xs" :class="{ 'font-medium': note.id === active }">{{ displayTitle(note.title) }}</span>
+        <!-- Solid colors, not opacity: links drawn under the dot must not show through it. -->
+        <span class="size-2.5 shrink-0 rounded-full transition-colors duration-150" :class="dotClass(note.id)" />
+        <span class="max-w-full truncate text-xs transition-opacity duration-150" :class="{ 'font-medium': note.id === active, 'opacity-30': isDimmed(note.id) }">{{ displayTitle(note.title) }}</span>
       </NuxtLink>
 
       <div
