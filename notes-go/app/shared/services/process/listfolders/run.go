@@ -2,6 +2,7 @@ package listfolders
 
 import (
 	"context"
+	"slices"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
@@ -46,13 +47,24 @@ func (p *run) GetResult() []Folder {
 
 // Methods
 
-// loadFolders joins on paths, which only holds live items: a folder inside a trashed one drops out too.
+// loadFolders keeps the folders domain.Paths gives, which only holds live items: a folder inside a trashed one drops out too.
 // shortcut: loads every folder at once, page it if folders reach the thousands.
 func (p *run) loadFolders() {
-	p.SetErr(p.db.NewRaw(domain.PathsCTE+`
-		SELECT i.id, paths.path
-		FROM items AS i JOIN paths ON paths.id = i.id
-		WHERE i.kind = ?
-		ORDER BY lower(paths.path)`, domain.UserID(p.ctx), domain.FOLDER).
-		Scan(p.ctx, &p.cache.result))
+	paths, err := domain.Paths(p.ctx, p.db)
+	if err != nil {
+		p.SetErr(err)
+		return
+	}
+	var ids []string
+	if err := p.db.NewRaw("SELECT id FROM items WHERE user_id = ? AND kind = ?", domain.UserID(p.ctx), domain.FOLDER).Scan(p.ctx, &ids); err != nil {
+		p.SetErr(err)
+		return
+	}
+
+	for _, id := range ids {
+		if path, ok := paths[id]; ok {
+			p.cache.result = append(p.cache.result, Folder{ID: id, Path: path})
+		}
+	}
+	slices.SortFunc(p.cache.result, func(a, b Folder) int { return domain.CompareFold(a.Path, b.Path) })
 }

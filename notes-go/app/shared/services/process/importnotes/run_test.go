@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"main.go/app/shared/services/secret"
 	"main.go/app/shared/services/testaccount"
 	"strings"
 	"testing"
@@ -87,8 +88,9 @@ func TestImportNotes(t *testing.T) {
 		t.Errorf("export = %q, want %q", got, want)
 	}
 
+	plan, _ := secret.Blind(domain.UserID(ctx), "Plan unique 7f3")
 	linked, err := tx.NewSelect().Model((*domain.NoteLink)(nil)).
-		Join("JOIN items AS t ON t.id = nl.target_id").Where("t.title = ? AND t.parent_id IS NOT NULL", "Plan unique 7f3").
+		Join("JOIN items AS t ON t.id = nl.target_id").Where("t.title_hash = ? AND t.parent_id IS NOT NULL", plan).
 		Count(ctx)
 	if err != nil {
 		t.Fatal(err)

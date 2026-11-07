@@ -57,7 +57,7 @@ func TestListSortedCaseInsensitive(t *testing.T) {
 
 func indexOf(tags []domain.Tag, value string) int {
 	for i, tag := range tags {
-		if tag.Value == value {
+		if string(tag.Value) == value {
 			return i
 		}
 	}

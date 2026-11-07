@@ -215,7 +215,7 @@ func (m *model) visible() []domain.Item {
 
 	var matches []domain.Item
 	for _, child := range m.folder.Children {
-		if strings.Contains(strings.ToLower(child.Title), query) {
+		if strings.Contains(strings.ToLower(string(child.Title)), query) {
 			matches = append(matches, child)
 		}
 	}
@@ -276,7 +276,7 @@ func (m *model) statusLine() string {
 	case m.failed:
 		return style.Error().Render(m.status)
 	case m.clipboard != nil:
-		return style.Muted().Render(fmt.Sprintf("✂ %s · ^V pastes it here, ⎋ cancels", untitled(m.clipboard.Title)))
+		return style.Muted().Render(fmt.Sprintf("✂ %s · ^V pastes it here, ⎋ cancels", untitled(string(m.clipboard.Title))))
 	case m.status != "":
 		return style.Muted().Render(m.status)
 	}

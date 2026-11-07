@@ -1,6 +1,7 @@
 package exportnotes
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -35,7 +36,7 @@ type item struct {
 	ID       string      `bun:"id"`
 	ParentID string      `bun:"parent_id"`
 	Kind     domain.Kind `bun:"kind"`
-	Title    string      `bun:"title"`
+	Title    secret.Text `bun:"title"`
 	Content  secret.Text `bun:"content"`
 }
 
@@ -104,11 +105,11 @@ func (p *run) loadTree() {
 			SELECT id FROM items WHERE deleted_at IS NULL AND user_id = ? AND (CASE WHEN ? = '' THEN parent_id IS NULL ELSE parent_id::text = ? END)
 			UNION ALL SELECT child.id FROM items AS child JOIN tree ON child.parent_id = tree.id WHERE child.deleted_at IS NULL
 		)
-		SELECT i.id, coalesce(i.parent_id::text, '') AS parent_id, i.kind, coalesce(i.title, '') AS title, mn.content
+		SELECT i.id, coalesce(i.parent_id::text, '') AS parent_id, i.kind, i.title, mn.content
 		FROM tree
 		JOIN items AS i ON i.id = tree.id
 		LEFT JOIN metadata_notes AS mn ON mn.item_id = i.id
-		ORDER BY i.kind, lower(i.title), i.created_at`,
+		ORDER BY i.kind, i.created_at`,
 		domain.UserID(p.ctx), p.folderID, p.folderID).
 		Scan(p.ctx, &items)
 	if err != nil {
@@ -116,6 +117,10 @@ func (p *run) loadTree() {
 		return
 	}
 
+	// Titles are sealed: ordered here, the oldest first among the same title, as uniqueName numbers them.
+	slices.SortStableFunc(items, func(a, b item) int {
+		return cmp.Or(strings.Compare(string(a.Kind), string(b.Kind)), domain.CompareFold(string(a.Title), string(b.Title)))
+	})
 	p.cache.children = map[string][]item{}
 	for _, it := range items {
 		p.cache.children[it.ParentID] = append(p.cache.children[it.ParentID], it)
@@ -162,7 +167,7 @@ func (p *run) makeFiles(parentID, dir string) {
 		if it.Kind == domain.NOTE {
 			ext = ".md"
 		}
-		name := uniqueName(fileName(it.Title), ext, taken)
+		name := uniqueName(fileName(string(it.Title)), ext, taken)
 		file := File{Path: path.Join(dir, name), Dir: it.Kind == domain.FOLDER, Content: p.citeImages(wikilink.Unresolve(string(it.Content)), dir)}
 		p.cache.files = append(p.cache.files, file)
 		if file.Dir {

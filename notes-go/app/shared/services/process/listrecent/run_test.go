@@ -77,7 +77,7 @@ func TestListRecent(t *testing.T) {
 	if len(result) != limit {
 		t.Fatalf("len = %d, want %d", len(result), limit)
 	}
-	if result[0].Title != "edited" || result[1].Title != "note-00" || result[limit-1].Title != fmt.Sprintf("note-%02d", limit-2) {
+	if result[0].Title != "edited" || result[1].Title != "note-00" || string(result[limit-1].Title) != fmt.Sprintf("note-%02d", limit-2) {
 		t.Errorf("order = %s, %s, ... %s", result[0].Title, result[1].Title, result[limit-1].Title)
 	}
 	if result[1].Path != "/note-00" {

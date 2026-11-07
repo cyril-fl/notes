@@ -1,13 +1,57 @@
 package domain
 
-import "github.com/uptrace/bun"
+import (
+	"context"
+	"slices"
+
+	"github.com/uptrace/bun"
+	"main.go/app/shared/services/secret"
+)
 
 type Tag struct {
 	bun.BaseModel `bun:"table:tags,alias:t" json:"-" yaml:"-"`
 
-	ID     string `bun:",pk,type:uuid,default:gen_random_uuid()" json:"id" yaml:"id"`
-	UserID string `bun:",type:uuid,notnull,nullzero" json:"-" yaml:"-"`
-	Value  string `bun:",notnull" json:"value" yaml:"value"` // unique case-insensitive, see CreateTables
+	ID        string      `bun:",pk,type:uuid,default:gen_random_uuid()" json:"id" yaml:"id"`
+	UserID    string      `bun:",type:uuid,notnull,nullzero" json:"-" yaml:"-"`
+	Value     secret.Text `bun:",type:text,notnull" json:"value" yaml:"value" swaggertype:"string"`
+	ValueHash string      `bun:",notnull" json:"-" yaml:"-"` // its Blind, unique per account, see createschema
+}
+
+// SealTag gives a tag of the account of ctx to insert, its value sealed.
+func SealTag(ctx context.Context, value string) (Tag, error) {
+	sealed, err := secret.Seal(UserID(ctx), value)
+	if err != nil {
+		return Tag{}, err
+	}
+	hash, err := secret.Blind(UserID(ctx), value)
+	return Tag{UserID: UserID(ctx), Value: sealed, ValueHash: hash}, err
+}
+
+// OpenTags opens the tag values a query gave sealed (an array_agg), ordered whatever their case.
+func OpenTags(sealed []string) ([]string, error) {
+	values := make([]string, len(sealed))
+	for i, value := range sealed {
+		text, err := secret.Open(value)
+		if err != nil {
+			return nil, err
+		}
+		values[i] = text
+	}
+	slices.SortFunc(values, CompareFold)
+	return values, nil
+}
+
+// BlindTags gives the value_hash of each value: tags are found by it, whatever their case.
+func BlindTags(ctx context.Context, values []string) ([]string, error) {
+	hashes := make([]string, len(values))
+	for i, value := range values {
+		hash, err := secret.Blind(UserID(ctx), value)
+		if err != nil {
+			return nil, err
+		}
+		hashes[i] = hash
+	}
+	return hashes, nil
 }
 
 type NoteTag struct {

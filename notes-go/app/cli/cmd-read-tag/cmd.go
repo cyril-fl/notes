@@ -63,7 +63,7 @@ func loadTag(ctx context.Context, value string) (string, error) {
 	}
 
 	result := process.GetResult()
-	header := style.Title().Render(result.Tag.Value) + "\n\n"
+	header := style.Title().Render(string(result.Tag.Value)) + "\n\n"
 	if len(result.Notes) == 0 {
 		return header + style.Empty().Render("No note carries this tag"), nil
 	}

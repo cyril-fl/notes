@@ -55,7 +55,7 @@ func (m *mill) loadFolder() {
 	process := readitem.Process(m.ctx, m.db, domain.FOLDER, m.id)
 	process.Run()
 	current := process.GetResult()
-	m.cache.input = editfolder.Input{ID: current.Item.ID, Title: current.Item.Title}
+	m.cache.input = editfolder.Input{ID: current.Item.ID, Title: string(current.Item.Title)}
 	m.SetErr(process.GetErr())
 }
 

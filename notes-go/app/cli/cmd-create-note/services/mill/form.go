@@ -39,7 +39,7 @@ func (m *mill) askMissing() {
 func tagOptions(tags []domain.Tag) []huh.Option[string] {
 	values := make([]string, len(tags))
 	for i, tag := range tags {
-		values[i] = tag.Value
+		values[i] = string(tag.Value)
 	}
 
 	return huh.NewOptions(values...)

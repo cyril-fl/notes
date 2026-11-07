@@ -8,7 +8,6 @@ import (
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/hashtag"
@@ -116,13 +115,18 @@ func (p *run) saveNote() {
 }
 
 func (p *run) insertItem(ctx context.Context, tx bun.Tx) error {
-	p.cache.item = domain.Item{UserID: domain.UserID(p.ctx), Kind: domain.NOTE, Title: p.cache.title}
+	title, hash, err := domain.SealTitle(p.ctx, p.cache.title)
+	if err != nil {
+		return err
+	}
+	p.cache.item = domain.Item{UserID: domain.UserID(p.ctx), Kind: domain.NOTE, Title: title, TitleHash: hash}
 	if p.cache.input.ParentID != "" {
 		p.cache.item.ParentID = &p.cache.input.ParentID
 	}
 
 	// Not "*": parent_kind is a DB-only column, Item cannot scan it.
-	err := tx.NewInsert().Model(&p.cache.item).Returning("id, created_at").Scan(ctx)
+	err = tx.NewInsert().Model(&p.cache.item).Returning("id, created_at").Scan(ctx)
+	p.cache.item.Title = secret.Text(p.cache.title)
 	return toDomainErr(err, p.cache.input.ParentID)
 }
 
@@ -153,9 +157,13 @@ func (p *run) linkTags(ctx context.Context, tx bun.Tx) error {
 	}
 
 	// createtag only returns new tags: select again to get the ids of existing ones too.
-	err := tx.NewSelect().
+	hashes, err := domain.BlindTags(p.ctx, p.cache.input.Tags)
+	if err != nil {
+		return err
+	}
+	err = tx.NewSelect().
 		Model(&p.cache.tags).
-		Where("user_id = ? AND lower(value) IN (SELECT lower(v) FROM unnest(?::text[]) AS v)", domain.UserID(p.ctx), pgdialect.Array(p.cache.input.Tags)).
+		Where("user_id = ? AND value_hash IN (?)", domain.UserID(p.ctx), bun.In(hashes)).
 		Scan(ctx)
 	if err != nil {
 		return err

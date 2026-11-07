@@ -61,7 +61,7 @@ func TestDeleteIgnoresCaseAndUnknown(t *testing.T) {
 		t.Fatalf("first run: %v", first.GetErr())
 	}
 	got := first.GetResult()
-	if len(got) != 1 || got[0].Value != value {
+	if len(got) != 1 || string(got[0].Value) != value {
 		t.Fatalf("first result = %+v, want [%s]", got, value)
 	}
 

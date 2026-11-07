@@ -76,7 +76,7 @@ const EmptyFolder = "This folder is empty"
 // Output renders a folder like `show folder`: the header from the whole folder, then rows (the finder
 // passes its filtered, scrolled window); cursor >= 0 marks that row as selected, empty shows when no row.
 func Output(folder readitem.Result, rows []domain.Item, cursor int, empty string) string {
-	header := style.Header(folder.Item.Title, folder.Path, info(folder)) + "\n"
+	header := style.Header(string(folder.Item.Title), folder.Path, info(folder)) + "\n"
 	if len(rows) == 0 {
 		return header + style.Empty().Render(empty)
 	}
@@ -87,7 +87,7 @@ func Output(folder readitem.Result, rows []domain.Item, cursor int, empty string
 		if title == "" {
 			title = "untitled"
 		}
-		cells[i] = []string{string(child.Kind), title, child.ID}
+		cells[i] = []string{string(child.Kind), string(title), child.ID}
 	}
 	return header + style.Table(cells, cursor, 1)
 }

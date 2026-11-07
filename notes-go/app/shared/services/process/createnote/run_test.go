@@ -77,6 +77,14 @@ func TestCreateNote(t *testing.T) {
 		t.Errorf("content = %q, %v; want content then its tags", content, err)
 	}
 
+	// The base keeps the title and the tags sealed: nothing of them in clear.
+	var clear int
+	err = tx.NewRaw("SELECT count(*) FROM items AS i, tags AS t WHERE i.id = ? AND t.user_id = i.user_id AND (i.title NOT LIKE 'enc1:%' OR t.value NOT LIKE 'enc1:%' OR t.value ILIKE ?)",
+		item.ID, "%"+existing+"%").Scan(ctx, &clear)
+	if err != nil || clear != 0 {
+		t.Errorf("rows in clear = %d, %v; want 0", clear, err)
+	}
+
 	parsed := Process(ctx, tx, Input{Content: "avec #" + "testparsed"})
 	parsed.Run()
 	if parsed.HasErr() {

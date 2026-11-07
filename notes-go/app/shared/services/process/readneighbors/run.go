@@ -1,7 +1,10 @@
 package readneighbors
 
 import (
+	"cmp"
 	"context"
+	"main.go/app/shared/services/secret"
+	"slices"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
@@ -11,18 +14,18 @@ import (
 
 // Neighbor is a note sharing at least one tag with the center, with the shared tags.
 type Neighbor struct {
-	ID     string   `json:"id"`
-	Title  string   `json:"title"`
-	Path   string   `json:"path"`
-	Tags   []string `bun:",array" json:"tags"`
-	Shared int      `json:"shared"`
+	ID     string      `json:"id"`
+	Title  secret.Text `json:"title" swaggertype:"string"`
+	Path   string      `json:"path"`
+	Tags   []string    `bun:",array" json:"tags"`
+	Shared int         `json:"shared"`
 }
 
 // Linked is a note at the other end of a [[link]].
 type Linked struct {
-	ID    string `json:"id"`
-	Title string `json:"title"`
-	Path  string `json:"path"`
+	ID    string      `json:"id"`
+	Title secret.Text `json:"title" swaggertype:"string"`
+	Path  string      `json:"path"`
 }
 
 // Result is the center note (path, content, tags), its neighbors (most shared tags first),
@@ -77,27 +80,43 @@ func (p *run) loadNote() {
 	p.SetErr(process.GetErr())
 }
 
-// loadNeighbors joins the tag links with themselves: same tag, other note. Joining paths keeps live notes only.
+// loadNeighbors joins the tag links with themselves: same tag, other note. Joining live keeps live notes only.
+// The tags come sealed, opened and ordered here.
 func (p *run) loadNeighbors() {
 	if p.HasErr() {
 		return
 	}
 
-	p.SetErr(p.db.NewRaw(domain.PathsCTE+`
-		SELECT i.id, coalesce(i.title, '') AS title, paths.path,
-			array_agg(t.value ORDER BY lower(t.value)) AS tags, count(*) AS shared
+	p.SetErr(p.db.NewRaw(domain.LiveCTE+`
+		SELECT i.id, i.title, array_agg(t.value) AS tags, count(*) AS shared
 		FROM notes_on_tags AS center
 		JOIN notes_on_tags AS other ON other.tag_id = center.tag_id AND other.note_id <> center.note_id
 		JOIN tags AS t ON t.id = center.tag_id
 		JOIN items AS i ON i.id = other.note_id
-		JOIN paths ON paths.id = i.id
+		JOIN live ON live.id = i.id
 		WHERE center.note_id = ?
-		GROUP BY i.id, i.title, paths.path
-		ORDER BY shared DESC, lower(paths.path)`, domain.UserID(p.ctx), p.cache.result.Note.Item.ID).
+		GROUP BY i.id, i.title`, domain.UserID(p.ctx), p.cache.result.Note.Item.ID).
 		Scan(p.ctx, &p.cache.result.Neighbors))
+	if p.HasErr() {
+		return
+	}
+
+	paths, err := domain.Paths(p.ctx, p.db)
+	p.SetErr(err)
+	for i := range p.cache.result.Neighbors {
+		neighbor := &p.cache.result.Neighbors[i]
+		neighbor.Path = paths[neighbor.ID]
+		if !p.HasErr() {
+			neighbor.Tags, err = domain.OpenTags(neighbor.Tags)
+			p.SetErr(err)
+		}
+	}
+	slices.SortFunc(p.cache.result.Neighbors, func(a, b Neighbor) int {
+		return cmp.Or(b.Shared-a.Shared, domain.CompareFold(a.Path, b.Path))
+	})
 }
 
-// loadLinks reads both ends of the [[links]]; joining paths keeps live notes only. Empty, not null, in JSON.
+// loadLinks reads both ends of the [[links]]; joining live keeps live notes only. Empty, not null, in JSON.
 func (p *run) loadLinks() {
 	if p.HasErr() {
 		return
@@ -109,17 +128,25 @@ func (p *run) loadLinks() {
 		from, to string
 		dest     *[]Linked
 	}{{"source_id", "target_id", &p.cache.result.Links}, {"target_id", "source_id", &p.cache.result.Backlinks}} {
-		err := p.db.NewRaw(domain.PathsCTE+`
-			SELECT i.id, coalesce(i.title, '') AS title, paths.path
+		err := p.db.NewRaw(domain.LiveCTE+`
+			SELECT i.id, i.title
 			FROM notes_on_links AS nl
 			JOIN items AS i ON i.id = nl.`+side.to+`
-			JOIN paths ON paths.id = i.id
-			WHERE nl.`+side.from+` = ?
-			ORDER BY lower(paths.path)`, domain.UserID(p.ctx), id).
+			JOIN live ON live.id = i.id
+			WHERE nl.`+side.from+` = ?`, domain.UserID(p.ctx), id).
 			Scan(p.ctx, side.dest)
 		if err != nil {
 			p.SetErr(err)
 			return
 		}
+	}
+
+	paths, err := domain.Paths(p.ctx, p.db)
+	p.SetErr(err)
+	for _, linked := range [][]Linked{p.cache.result.Links, p.cache.result.Backlinks} {
+		for i := range linked {
+			linked[i].Path = paths[linked[i].ID]
+		}
+		slices.SortFunc(linked, func(a, b Linked) int { return domain.CompareFold(a.Path, b.Path) })
 	}
 }

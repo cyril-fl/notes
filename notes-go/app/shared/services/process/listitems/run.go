@@ -1,9 +1,11 @@
 package listitems
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
@@ -57,13 +59,13 @@ func (p *run) makeParentID() {
 	p.cache.parentID = strings.TrimSpace(p.parentID)
 }
 
-// loadItems lists folders first, then notes, by title; soft_delete hides the trashed ones.
+// loadItems lists folders first, then notes, by title (sealed: ordered here); soft_delete hides the trashed ones.
 func (p *run) loadItems() {
 	query := p.db.NewSelect().
 		Model(&p.cache.result).
 		Column("id", "parent_id", "created_at", "updated_at", "kind", "title").
 		Where("user_id = ?", domain.UserID(p.ctx)).
-		OrderExpr("kind = ? DESC, lower(title)", domain.FOLDER)
+		OrderExpr("kind = ? DESC, id", domain.FOLDER)
 
 	if p.cache.parentID == "" {
 		query.Where("parent_id IS NULL")
@@ -72,6 +74,9 @@ func (p *run) loadItems() {
 	}
 
 	p.SetErr(toDomainErr(query.Scan(p.ctx)))
+	slices.SortStableFunc(p.cache.result, func(a, b domain.Item) int {
+		return cmp.Or(boolOrder(b.Kind == domain.FOLDER)-boolOrder(a.Kind == domain.FOLDER), domain.CompareFold(string(a.Title), string(b.Title)))
+	})
 }
 
 // Helpers
@@ -83,4 +88,11 @@ func toDomainErr(err error) error {
 		return fmt.Errorf("%w: %s", ErrInvalidID, pgErr.Field('M'))
 	}
 	return err
+}
+
+func boolOrder(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
 }

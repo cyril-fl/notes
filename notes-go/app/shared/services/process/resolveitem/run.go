@@ -70,14 +70,21 @@ func (p *run) resolveRefs() {
 
 // resolvePath fails on several matches: titles are not unique, and acting on the wrong note is worse than an error.
 func (p *run) resolvePath(path string) {
+	paths, err := domain.Paths(p.ctx, p.db)
+	if err != nil {
+		p.SetErr(err)
+		return
+	}
 	var ids []string
-	if err := p.db.NewRaw(domain.PathsCTE+`
-		SELECT i.id
-		FROM paths
-		JOIN items AS i ON i.id = paths.id
-		WHERE paths.path = ? AND (? = '' OR i.kind = ?)`,
-		domain.UserID(p.ctx), path, p.kind, p.kind).
-		Scan(p.ctx, &ids); err != nil {
+	for id, at := range paths {
+		if at == path {
+			ids = append(ids, id)
+		}
+	}
+	if len(ids) > 0 {
+		err = p.db.NewRaw("SELECT id FROM items WHERE id IN (?) AND (? = '' OR kind = ?) ORDER BY id", bun.In(ids), p.kind, p.kind).Scan(p.ctx, &ids)
+	}
+	if err != nil {
 		p.SetErr(err)
 		return
 	}

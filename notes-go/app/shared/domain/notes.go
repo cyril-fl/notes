@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"time"
 
 	"github.com/uptrace/bun"
@@ -17,15 +18,29 @@ const (
 type Item struct {
 	bun.BaseModel `bun:"table:items,alias:i" json:"-"`
 
-	ID        string    `bun:",pk,type:uuid,default:gen_random_uuid()" json:"id"`
-	UserID    string    `bun:",type:uuid,notnull,nullzero" json:"-"`
-	ParentID  *string   `bun:",type:uuid,nullzero" json:"parent_id" binding:"optional"`
-	Parent    *Item     `bun:"rel:belongs-to,join:parent_id=id" json:"-"`
-	CreatedAt time.Time `bun:",notnull,default:current_timestamp" json:"created_at"`
-	UpdatedAt time.Time `bun:",nullzero" json:"updated_at,omitzero" binding:"optional"`
-	DeletedAt time.Time `bun:",soft_delete,nullzero" json:"-"`
-	Kind      Kind      `bun:",notnull" json:"kind"`
-	Title     string    `bun:",nullzero" json:"title"` // NULL = untitled note (--no-title)
+	ID        string      `bun:",pk,type:uuid,default:gen_random_uuid()" json:"id"`
+	UserID    string      `bun:",type:uuid,notnull,nullzero" json:"-"`
+	ParentID  *string     `bun:",type:uuid,nullzero" json:"parent_id" binding:"optional"`
+	Parent    *Item       `bun:"rel:belongs-to,join:parent_id=id" json:"-"`
+	CreatedAt time.Time   `bun:",notnull,default:current_timestamp" json:"created_at"`
+	UpdatedAt time.Time   `bun:",nullzero" json:"updated_at,omitzero" binding:"optional"`
+	DeletedAt time.Time   `bun:",soft_delete,nullzero" json:"-"`
+	Kind      Kind        `bun:",notnull" json:"kind"`
+	Title     secret.Text `bun:",type:text,nullzero" json:"title" swaggertype:"string"` // NULL = untitled note (--no-title)
+	TitleHash string      `bun:",nullzero" json:"-"`                                    // its Blind: unique folder names, [[links]] by title
+}
+
+// SealTitle gives a title sealed, and its blind for title_hash: both "" for an untitled note, written NULL.
+func SealTitle(ctx context.Context, title string) (secret.Text, string, error) {
+	if title == "" {
+		return "", "", nil
+	}
+	sealed, err := secret.Seal(UserID(ctx), title)
+	if err != nil {
+		return "", "", err
+	}
+	hash, err := secret.Blind(UserID(ctx), title)
+	return sealed, hash, err
 }
 
 type Metadata struct {

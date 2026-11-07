@@ -2,6 +2,8 @@ package readgraph
 
 import (
 	"context"
+	"main.go/app/shared/services/secret"
+	"slices"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
@@ -10,9 +12,9 @@ import (
 
 // Note is a node of the graph.
 type Note struct {
-	ID    string `json:"id"`
-	Title string `json:"title"`
-	Path  string `json:"path"`
+	ID    string      `json:"id"`
+	Title secret.Text `json:"title" swaggertype:"string"`
+	Path  string      `json:"path"`
 }
 
 // Link joins two notes once per pair (Source < Target): Linked when a [[link]] goes from one to the
@@ -62,27 +64,37 @@ func (p *run) GetResult() Result {
 
 // Methods
 
-// loadNotes joins the paths to keep live notes only.
+// loadNotes joins live to keep live notes only.
 func (p *run) loadNotes() {
-	p.SetErr(p.db.NewRaw(domain.PathsCTE+`
-		SELECT i.id, coalesce(i.title, '') AS title, paths.path
+	p.SetErr(p.db.NewRaw(domain.LiveCTE+`
+		SELECT i.id, i.title
 		FROM items AS i
-		JOIN paths ON paths.id = i.id
+		JOIN live ON live.id = i.id
 		WHERE i.kind = ?
-		ORDER BY lower(paths.path), i.id`, domain.UserID(p.ctx), domain.NOTE).
+		ORDER BY i.id`, domain.UserID(p.ctx), domain.NOTE).
 		Scan(p.ctx, &p.cache.result.Notes))
+	if p.HasErr() {
+		return
+	}
+
+	paths, err := domain.Paths(p.ctx, p.db)
+	p.SetErr(err)
+	for i := range p.cache.result.Notes {
+		p.cache.result.Notes[i].Path = paths[p.cache.result.Notes[i].ID]
+	}
+	slices.SortStableFunc(p.cache.result.Notes, func(a, b Note) int { return domain.CompareFold(a.Path, b.Path) })
 }
 
 // loadLinks pairs the notes sharing a tag (the tag links joined with themselves) with the notes joined by
-// a [[link]] in either direction, each pair once.
+// a [[link]] in either direction, each pair once. The tags come sealed, opened and ordered here.
 func (p *run) loadLinks() {
 	if p.HasErr() {
 		return
 	}
 
-	p.SetErr(p.db.NewRaw(domain.PathsCTE+`,
+	p.SetErr(p.db.NewRaw(domain.LiveCTE+`,
 		shared AS (
-			SELECT a.note_id AS source, b.note_id AS target, array_agg(t.value ORDER BY lower(t.value)) AS tags
+			SELECT a.note_id AS source, b.note_id AS target, array_agg(t.value) AS tags
 			FROM notes_on_tags AS a
 			JOIN notes_on_tags AS b ON b.tag_id = a.tag_id AND a.note_id < b.note_id
 			JOIN tags AS t ON t.id = a.tag_id
@@ -95,8 +107,17 @@ func (p *run) loadLinks() {
 		SELECT coalesce(shared.source, linked.source) AS source, coalesce(shared.target, linked.target) AS target,
 			coalesce(shared.tags, '{}') AS tags, linked.source IS NOT NULL AS linked
 		FROM shared FULL JOIN linked ON linked.source = shared.source AND linked.target = shared.target
-		JOIN paths AS source_path ON source_path.id = coalesce(shared.source, linked.source)
-		JOIN paths AS target_path ON target_path.id = coalesce(shared.target, linked.target)
+		JOIN live AS source_live ON source_live.id = coalesce(shared.source, linked.source)
+		JOIN live AS target_live ON target_live.id = coalesce(shared.target, linked.target)
 		ORDER BY 1, 2`, domain.UserID(p.ctx)).
 		Scan(p.ctx, &p.cache.result.Links))
+
+	for i := range p.cache.result.Links {
+		if p.HasErr() {
+			return
+		}
+		tags, err := domain.OpenTags(p.cache.result.Links[i].Tags)
+		p.cache.result.Links[i].Tags = tags
+		p.SetErr(err)
+	}
 }

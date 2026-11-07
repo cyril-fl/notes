@@ -126,7 +126,6 @@ components:
         id:
           type: string
         value:
-          description: unique case-insensitive, see CreateTables
           type: string
       required:
       - id

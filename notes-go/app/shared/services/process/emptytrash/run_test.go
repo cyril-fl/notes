@@ -122,11 +122,11 @@ func TestEmptyTrashDropsUnusedTags(t *testing.T) {
 		t.Fatalf("purge: %v", purge.GetErr())
 	}
 
-	var tags []string
-	if err := tx.NewRaw("SELECT value FROM tags WHERE user_id = ? ORDER BY value", domain.UserID(ctx)).Scan(ctx, &tags); err != nil {
+	var sealed []string
+	if err := tx.NewRaw("SELECT value FROM tags WHERE user_id = ?", domain.UserID(ctx)).Scan(ctx, &sealed); err != nil {
 		t.Fatal(err)
 	}
-	if !slices.Equal(tags, []string{"alone", "shared"}) {
+	if tags, err := domain.OpenTags(sealed); err != nil || !slices.Equal(tags, []string{"alone", "shared"}) {
 		t.Errorf("tags = %v, want [alone shared]: #gone had no note left", tags)
 	}
 }

@@ -1,7 +1,10 @@
 package listrecent
 
 import (
+	"cmp"
 	"context"
+	"main.go/app/shared/services/secret"
+	"slices"
 	"time"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
@@ -14,10 +17,10 @@ const limit = 20
 
 // Recent is a note and when it last changed.
 type Recent struct {
-	ID        string    `json:"id"`
-	Title     string    `json:"title"`
-	Path      string    `json:"path"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        string      `json:"id"`
+	Title     secret.Text `json:"title" swaggertype:"string"`
+	Path      string      `json:"path"`
+	UpdatedAt time.Time   `json:"updated_at"`
 }
 
 type run struct {
@@ -52,15 +55,27 @@ func (p *run) GetResult() []Recent {
 
 // Methods
 
-// loadNotes falls back on created_at: a note never edited has no updated_at. Joining paths keeps live notes only.
+// loadNotes falls back on created_at: a note never edited has no updated_at. Joining live keeps live notes only.
 func (p *run) loadNotes() {
-	p.SetErr(p.db.NewRaw(domain.PathsCTE+`
-		SELECT i.id, coalesce(i.title, '') AS title, paths.path, coalesce(i.updated_at, i.created_at) AS updated_at
+	p.SetErr(p.db.NewRaw(domain.LiveCTE+`
+		SELECT i.id, i.title, coalesce(i.updated_at, i.created_at) AS updated_at
 		FROM items AS i
-		JOIN paths ON paths.id = i.id
+		JOIN live ON live.id = i.id
 		WHERE i.kind = ?
-		ORDER BY updated_at DESC, lower(paths.path)
+		ORDER BY updated_at DESC, i.id
 		LIMIT ?`,
 		domain.UserID(p.ctx), domain.NOTE, limit).
 		Scan(p.ctx, &p.cache.result))
+	if p.HasErr() {
+		return
+	}
+
+	paths, err := domain.Paths(p.ctx, p.db)
+	p.SetErr(err)
+	for i := range p.cache.result {
+		p.cache.result[i].Path = paths[p.cache.result[i].ID]
+	}
+	slices.SortStableFunc(p.cache.result, func(a, b Recent) int {
+		return cmp.Or(b.UpdatedAt.Compare(a.UpdatedAt), domain.CompareFold(a.Path, b.Path))
+	})
 }

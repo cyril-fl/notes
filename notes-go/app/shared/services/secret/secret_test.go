@@ -11,7 +11,8 @@ func TestSealOpen(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	keys.Store("a", account)
+	keys.Store("a", accountKey{gcm: account, blind: []byte("a")})
+	keys.Store("c", accountKey{gcm: account, blind: []byte("c")})
 
 	if _, err := Seal("b", "x"); !errors.Is(err, ErrNotLoaded) {
 		t.Errorf("Seal(unloaded) err = %v, want ErrNotLoaded", err)
@@ -32,6 +33,13 @@ func TestSealOpen(t *testing.T) {
 	}
 	if _, err := Text("in clear").Value(); err == nil {
 		t.Error("Text(clear).Value() err = nil, want a refusal")
+	}
+
+	blind, err := Blind("a", "Idée")
+	again2, _ := Blind("a", "IDÉE")
+	other, _ := Blind("c", "Idée")
+	if err != nil || blind != again2 || blind == other || strings.Contains(blind, "Id") {
+		t.Errorf("Blind() = %q, %q, %q, %v; want the same value whatever the case, another for another account", blind, again2, other, err)
 	}
 
 	image := []byte("\x89PNG bytes")

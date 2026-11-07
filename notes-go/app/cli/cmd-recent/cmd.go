@@ -57,7 +57,7 @@ func recentPage(ctx context.Context) (navigator.Page, error) {
 			title = "untitled"
 		}
 		page.Rows = append(page.Rows, navigator.Row{
-			Cells:  []string{title, note.Path, note.UpdatedAt.Format("2 Jan 2006")},
+			Cells:  []string{string(title), note.Path, note.UpdatedAt.Format("2 Jan 2006")},
 			Target: navigator.Target{Kind: navigator.KindNote, Key: note.ID},
 		})
 	}

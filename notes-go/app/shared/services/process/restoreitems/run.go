@@ -1,9 +1,11 @@
 package restoreitems
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
+	"main.go/app/shared/services/secret"
 	"strings"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
@@ -92,13 +94,17 @@ func (p *run) restoreItems() {
 // checkParents refuses an item whose parent stays in the trash: it would be live under a trashed folder,
 // invisible everywhere. A parent restored in the same call is fine.
 func (p *run) checkParents(ctx context.Context, tx bun.Tx) error {
-	var titles []string
+	var sealed []secret.Text
 	err := tx.NewRaw(`
-		SELECT coalesce(i.title, 'untitled')
+		SELECT i.title
 		FROM items AS i JOIN items AS parent ON parent.id = i.parent_id
 		WHERE i.id IN (?) AND i.user_id = ? AND i.deleted_at IS NOT NULL AND parent.deleted_at IS NOT NULL AND parent.id NOT IN (?)`,
 		bun.In(p.cache.ids), domain.UserID(p.ctx), bun.In(p.cache.ids)).
-		Scan(ctx, &titles)
+		Scan(ctx, &sealed)
+	titles := make([]string, len(sealed))
+	for i, title := range sealed {
+		titles[i] = cmp.Or(string(title), "untitled")
+	}
 	if err == nil && len(titles) > 0 {
 		err = fmt.Errorf("%w: %s", ErrParentInTrash, strings.Join(titles, ", "))
 	}

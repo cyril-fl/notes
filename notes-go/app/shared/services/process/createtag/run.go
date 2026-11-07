@@ -58,7 +58,12 @@ func (p *run) makeTags() {
 			p.SetErr(fmt.Errorf("%w: %q", hashtag.ErrInvalid, value))
 			return
 		}
-		p.cache.tags = append(p.cache.tags, domain.Tag{UserID: domain.UserID(p.ctx), Value: value})
+		tag, err := domain.SealTag(p.ctx, value)
+		if err != nil {
+			p.SetErr(err)
+			return
+		}
+		p.cache.tags = append(p.cache.tags, tag)
 	}
 
 	if len(p.cache.tags) == 0 {
@@ -68,7 +73,7 @@ func (p *run) makeTags() {
 
 // insertTags scans into result, not tags: RETURNING only yields inserted rows
 // and bun would overwrite the first elements of tags in order.
-// Conflict target must match the ux_tags_user_value_lower expression index.
+// Conflict target must match the ux_tags_user_value_hash index.
 func (p *run) insertTags() {
 	if p.HasErr() {
 		return
@@ -76,7 +81,7 @@ func (p *run) insertTags() {
 
 	p.SetErr(p.db.NewInsert().
 		Model(&p.cache.tags).
-		On("CONFLICT (user_id, (lower(value))) DO NOTHING").
+		On("CONFLICT (user_id, value_hash) DO NOTHING").
 		Returning("*").
 		Scan(p.ctx, &p.cache.result))
 }

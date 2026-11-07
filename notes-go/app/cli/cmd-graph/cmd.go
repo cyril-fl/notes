@@ -56,7 +56,7 @@ func notesPage(ctx context.Context) (navigator.Page, error) {
 	p := navigator.Page{Title: "Graph", Path: "notes", Info: count(len(result.Notes), "note"), Empty: "No note yet"}
 	for _, note := range result.Notes {
 		p.Rows = append(p.Rows, navigator.Row{
-			Cells:  []string{untitled(note.Title), note.Path, count(linked[note.ID], "linked note")},
+			Cells:  []string{untitled(string(note.Title)), note.Path, count(linked[note.ID], "linked note")},
 			Target: navigator.Target{Kind: navigator.KindNote, Key: note.ID},
 		})
 	}
@@ -74,7 +74,7 @@ func notePage(ctx context.Context, id string) (navigator.Page, error) {
 		info = append([]string{strings.Join(result.Note.Tags, " · ")}, info...)
 	}
 	p := navigator.Page{
-		Title: untitled(result.Note.Item.Title),
+		Title: untitled(string(result.Note.Item.Title)),
 		Path:  result.Note.Path,
 		Info:  strings.Join(info, " — "),
 		Empty: "No note links to or shares a tag with this one",
@@ -82,7 +82,7 @@ func notePage(ctx context.Context, id string) (navigator.Page, error) {
 	}
 	for _, neighbor := range result.Neighbors {
 		p.Rows = append(p.Rows, navigator.Row{
-			Cells:  []string{untitled(neighbor.Title), neighbor.Path, count(neighbor.Shared, "tag"), strings.Join(neighbor.Tags, " · ")},
+			Cells:  []string{untitled(string(neighbor.Title)), neighbor.Path, count(neighbor.Shared, "tag"), strings.Join(neighbor.Tags, " · ")},
 			Target: navigator.Target{Kind: navigator.KindNote, Key: neighbor.ID},
 		})
 	}
@@ -94,7 +94,7 @@ func linkedRows(notes []readneighbors.Linked, relation string) []navigator.Row {
 	rows := make([]navigator.Row, 0, len(notes))
 	for _, note := range notes {
 		rows = append(rows, navigator.Row{
-			Cells:  []string{untitled(note.Title), note.Path, relation, ""},
+			Cells:  []string{untitled(string(note.Title)), note.Path, relation, ""},
 			Target: navigator.Target{Kind: navigator.KindNote, Key: note.ID},
 		})
 	}

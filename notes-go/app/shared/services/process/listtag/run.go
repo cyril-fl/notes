@@ -2,6 +2,7 @@ package listtag
 
 import (
 	"context"
+	"slices"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
@@ -45,6 +46,6 @@ func (p *run) loadTags() {
 	p.SetErr(p.db.NewSelect().
 		Model(&p.cache.result).
 		Where("user_id = ?", domain.UserID(p.ctx)).
-		OrderExpr("lower(value)").
 		Scan(p.ctx))
+	slices.SortFunc(p.cache.result, func(a, b domain.Tag) int { return domain.CompareFold(string(a.Value), string(b.Value)) })
 }

@@ -43,7 +43,7 @@ type cache struct {
 // row is what the query returns: the whole content, cut down to a snippet in makeMatches.
 type row struct {
 	ID      string
-	Title   string
+	Title   secret.Text
 	Path    string
 	Content secret.Text
 }
@@ -79,22 +79,31 @@ func (p *run) makeText() {
 }
 
 // searchNotes loads every live note, by path: the content is sealed, makeMatches searches it once opened.
-// Joining paths keeps live notes only.
+// Joining live keeps live notes only.
 // shortcut: decrypts every note of the account on each search, fine for a few thousand notes.
 func (p *run) searchNotes() {
 	if p.HasErr() {
 		return
 	}
 
-	p.SetErr(p.db.NewRaw(domain.PathsCTE+`
-		SELECT i.id, coalesce(i.title, '') AS title, paths.path, mn.content
+	p.SetErr(p.db.NewRaw(domain.LiveCTE+`
+		SELECT i.id, i.title, mn.content
 		FROM items AS i
 		JOIN metadata_notes AS mn ON mn.item_id = i.id
-		JOIN paths ON paths.id = i.id
-		WHERE i.kind = ?
-		ORDER BY lower(paths.path)`,
+		JOIN live ON live.id = i.id
+		WHERE i.kind = ?`,
 		domain.UserID(p.ctx), domain.NOTE).
 		Scan(p.ctx, &p.cache.rows))
+	if p.HasErr() {
+		return
+	}
+
+	paths, err := domain.Paths(p.ctx, p.db)
+	p.SetErr(err)
+	for i := range p.cache.rows {
+		p.cache.rows[i].Path = paths[p.cache.rows[i].ID]
+	}
+	slices.SortFunc(p.cache.rows, func(a, b row) int { return domain.CompareFold(a.Path, b.Path) })
 }
 
 // makeMatches keeps the notes holding the text whatever its case, those with it in their title first.
@@ -104,10 +113,10 @@ func (p *run) makeMatches() {
 	}
 
 	text := strings.ToLower(p.cache.text)
-	inTitle := func(r row) bool { return strings.Contains(strings.ToLower(r.Title), text) }
+	inTitle := func(r row) bool { return strings.Contains(strings.ToLower(string(r.Title)), text) }
 	for _, r := range p.cache.rows {
 		if inTitle(r) || strings.Contains(strings.ToLower(string(r.Content)), text) {
-			p.cache.result = append(p.cache.result, Match{ID: r.ID, Title: r.Title, Path: r.Path, Snippet: snippet(string(r.Content), p.cache.text)})
+			p.cache.result = append(p.cache.result, Match{ID: r.ID, Title: string(r.Title), Path: r.Path, Snippet: snippet(string(r.Content), p.cache.text)})
 		}
 	}
 	slices.SortStableFunc(p.cache.result, func(a, b Match) int {

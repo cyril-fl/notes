@@ -7,7 +7,6 @@ import (
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/pgdialect"
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/hashtag"
 	"main.go/app/shared/services/secret"
@@ -26,6 +25,7 @@ type run struct {
 
 type cache struct {
 	values []string
+	hashes []string // the value_hash of values
 	result []domain.Tag
 }
 
@@ -59,7 +59,11 @@ func (p *run) makeValues() {
 
 	if len(p.cache.values) == 0 {
 		p.SetErr(ErrNoValue)
+		return
 	}
+	var err error
+	p.cache.hashes, err = domain.BlindTags(p.ctx, p.cache.values)
+	p.SetErr(err)
 }
 
 // deleteInTx erases the tags from their notes' text and deletes them together: a failure changes neither.
@@ -84,7 +88,7 @@ func (p *run) rewriteNotes(ctx context.Context, tx bun.Tx) error {
 		Column("item_id", "content").
 		Where(`item_id IN (
 			SELECT nt.note_id FROM notes_on_tags AS nt JOIN tags AS t ON t.id = nt.tag_id
-			WHERE t.user_id = ? AND lower(t.value) IN (SELECT lower(v) FROM unnest(?::text[]) AS v))`, domain.UserID(p.ctx), pgdialect.Array(p.cache.values)).
+			WHERE t.user_id = ? AND t.value_hash IN (?))`, domain.UserID(p.ctx), bun.In(p.cache.hashes)).
 		Scan(ctx)
 	if err != nil {
 		return err
@@ -118,12 +122,12 @@ func trashNote(ctx context.Context, tx bun.Tx, id string) error {
 	return err
 }
 
-// deleteTags lowers both sides in SQL so matching uses the same lower() as ux_tags_value_lower.
+// deleteTags matches by the blinds of ux_tags_user_value_hash, whatever the case.
 // notes_on_tags rows go with it through ON DELETE CASCADE.
 func (p *run) deleteTags(ctx context.Context, tx bun.Tx) error {
 	return tx.NewDelete().
 		Model((*domain.Tag)(nil)).
-		Where("user_id = ? AND lower(value) IN (SELECT lower(v) FROM unnest(?::text[]) AS v)", domain.UserID(p.ctx), pgdialect.Array(p.cache.values)).
+		Where("user_id = ? AND value_hash IN (?)", domain.UserID(p.ctx), bun.In(p.cache.hashes)).
 		Returning("*").
 		Scan(ctx, &p.cache.result)
 }

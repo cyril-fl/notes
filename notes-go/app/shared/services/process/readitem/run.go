@@ -113,13 +113,19 @@ func (p *run) loadNote() {
 		return
 	}
 
-	p.SetErr(p.db.NewSelect().
+	var tags []string
+	err = p.db.NewSelect().
 		Model((*domain.Tag)(nil)).
 		Column("t.value").
 		Join("JOIN notes_on_tags AS nt ON nt.tag_id = t.id").
 		Where("nt.note_id = ?", p.cache.id).
-		OrderExpr("lower(t.value)").
-		Scan(p.ctx, &p.cache.result.Tags))
+		Scan(p.ctx, &tags)
+	if err != nil {
+		p.SetErr(err)
+		return
+	}
+	p.cache.result.Tags, err = domain.OpenTags(tags)
+	p.SetErr(err)
 }
 
 func (p *run) loadPath() {
@@ -127,7 +133,12 @@ func (p *run) loadPath() {
 		return
 	}
 
-	p.SetErr(p.db.NewRaw(domain.PathsCTE+"SELECT path FROM paths WHERE id = ?", domain.UserID(p.ctx), p.cache.id).Scan(p.ctx, &p.cache.result.Path))
+	paths, err := domain.Paths(p.ctx, p.db)
+	p.cache.result.Path = paths[p.cache.result.Item.ID]
+	if err == nil && p.cache.result.Path == "" {
+		err = fmt.Errorf("%w: %q", ErrNotFound, p.cache.id) // in a trashed folder
+	}
+	p.SetErr(err)
 }
 
 func (p *run) loadChildren() {

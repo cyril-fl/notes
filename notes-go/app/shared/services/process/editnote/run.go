@@ -9,7 +9,6 @@ import (
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/hashtag"
@@ -123,7 +122,9 @@ func (p *run) saveNote() {
 
 // readOldTitle finds nothing for an unknown id: updateItem then reports it.
 func (p *run) readOldTitle(ctx context.Context, tx bun.Tx) error {
-	err := tx.NewRaw("SELECT coalesce(title, '') FROM items WHERE id::text = ? AND kind = ? AND user_id = ?", p.cache.input.ID, domain.NOTE, domain.UserID(p.ctx)).Scan(ctx, &p.cache.oldTitle)
+	var title secret.Text
+	err := tx.NewRaw("SELECT title FROM items WHERE id::text = ? AND kind = ? AND user_id = ?", p.cache.input.ID, domain.NOTE, domain.UserID(p.ctx)).Scan(ctx, &title)
+	p.cache.oldTitle = string(title)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil
 	}
@@ -132,9 +133,13 @@ func (p *run) readOldTitle(ctx context.Context, tx bun.Tx) error {
 
 // updateItem matches a note not in the trash (soft_delete adds deleted_at IS NULL): anything else is not found.
 func (p *run) updateItem(ctx context.Context, tx bun.Tx) error {
-	err := tx.NewUpdate().
+	title, hash, err := domain.SealTitle(p.ctx, notetitle.From(p.cache.input.Content))
+	if err != nil {
+		return err
+	}
+	err = tx.NewUpdate().
 		Model(&p.cache.item).
-		Set("title = NULLIF(?, '')", notetitle.From(p.cache.input.Content)). // NULL = untitled, like createnote's nullzero
+		Set("title = ?, title_hash = NULLIF(?, '')", title, hash). // NULL = untitled, like createnote's nullzero
 		Set("updated_at = current_timestamp").
 		Where("id = ? AND kind = ? AND user_id = ?", p.cache.input.ID, domain.NOTE, domain.UserID(p.ctx)).
 		Returning("id, parent_id, created_at, updated_at, kind, title").
@@ -169,9 +174,13 @@ func (p *run) replaceTags(ctx context.Context, tx bun.Tx) error {
 	}
 
 	// createtag only returns new tags: select again to get the ids of existing ones too.
+	hashes, err := domain.BlindTags(p.ctx, p.cache.input.Tags)
+	if err != nil {
+		return err
+	}
 	err = tx.NewSelect().
 		Model(&p.cache.tags).
-		Where("user_id = ? AND lower(value) IN (SELECT lower(v) FROM unnest(?::text[]) AS v)", domain.UserID(p.ctx), pgdialect.Array(p.cache.input.Tags)).
+		Where("user_id = ? AND value_hash IN (?)", domain.UserID(p.ctx), bun.In(hashes)).
 		Scan(ctx)
 	if err != nil {
 		return err
@@ -207,7 +216,7 @@ func DropUnusedTags(ctx context.Context, db bun.IDB, ids []string) error {
 
 // linkNotes resolves the [[links]] of the note, links it, and gives the links to it its new title.
 func (p *run) linkNotes(ctx context.Context, tx bun.Tx) error {
-	input := linknotes.Input{ID: p.cache.item.ID, Content: p.cache.input.Content, Title: p.cache.item.Title}
+	input := linknotes.Input{ID: p.cache.item.ID, Content: p.cache.input.Content, Title: string(p.cache.item.Title)}
 	if p.cache.oldTitle != input.Title {
 		input.OldTitle = p.cache.oldTitle
 	}

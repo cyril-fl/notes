@@ -38,7 +38,7 @@ func rename(ctx context.Context, from string, to string) (string, error) {
 	}
 
 	fmt.Printf("Successfully renamed %q to %q\n", from, process.GetResult().Value)
-	return process.GetResult().Value, nil
+	return string(process.GetResult().Value), nil
 }
 
 func notBlank(value string) error {

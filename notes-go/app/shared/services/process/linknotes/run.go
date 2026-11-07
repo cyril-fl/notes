@@ -205,21 +205,46 @@ func (p *run) resolveWaiting() {
 // else by title whatever its case; "" when no note, or several, match: the link waits.
 func Resolve(ctx context.Context, db bun.IDB, target string) (string, string, error) {
 	var notes []struct {
-		ID    string `bun:"id"`
-		Title string `bun:"title"`
+		ID    string      `bun:"id"`
+		Title secret.Text `bun:"title"`
 	}
-	query := domain.PathsCTE + `
-		SELECT i.id, i.title FROM items AS i JOIN paths ON paths.id = i.id
-		WHERE i.kind = ? AND lower(i.title) = lower(?) LIMIT 2`
 	if strings.HasPrefix(target, "/") {
-		query = domain.PathsCTE + `
-		SELECT i.id, i.title FROM items AS i JOIN paths ON paths.id = i.id
-		WHERE i.kind = ? AND paths.path = ? LIMIT 2`
+		return resolvePath(ctx, db, target)
 	}
-	if err := db.NewRaw(query, domain.UserID(ctx), domain.NOTE, target).Scan(ctx, &notes); err != nil || len(notes) != 1 {
+	hash, err := secret.Blind(domain.UserID(ctx), target)
+	if err != nil {
 		return "", "", err
 	}
-	return notes[0].ID, notes[0].Title, nil
+	err = db.NewRaw(domain.LiveCTE+`
+		SELECT i.id, i.title FROM items AS i JOIN live ON live.id = i.id
+		WHERE i.kind = ? AND i.title_hash = ? LIMIT 2`, domain.UserID(ctx), domain.NOTE, hash).Scan(ctx, &notes)
+	if err != nil || len(notes) != 1 {
+		return "", "", err
+	}
+	return notes[0].ID, string(notes[0].Title), nil
+}
+
+// resolvePath finds the one live note at path: paths are made in Go, titles being sealed.
+func resolvePath(ctx context.Context, db bun.IDB, path string) (string, string, error) {
+	paths, err := domain.Paths(ctx, db)
+	if err != nil {
+		return "", "", err
+	}
+	var ids []string
+	for id, p := range paths {
+		if p == path {
+			ids = append(ids, id)
+		}
+	}
+	if len(ids) == 0 {
+		return "", "", nil
+	}
+	var notes []domain.Item
+	err = db.NewSelect().Model(&notes).Column("id", "title").Where("id IN (?) AND kind = ?", bun.In(ids), domain.NOTE).Limit(2).Scan(ctx)
+	if err != nil || len(notes) != 1 {
+		return "", "", err
+	}
+	return notes[0].ID, string(notes[0].Title), nil
 }
 
 // Items runs Process on the notes among items that a trash or a restore just changed: the [[links]] waiting
@@ -228,7 +253,7 @@ func Items(ctx context.Context, db bun.IDB, items []domain.Item) error {
 	titles := map[string]string{}
 	for _, item := range items {
 		if item.Kind == domain.NOTE {
-			titles[item.ID] = item.Title
+			titles[item.ID] = string(item.Title)
 		}
 	}
 	if len(titles) == 0 {
@@ -296,7 +321,11 @@ func save(ctx context.Context, db bun.IDB, id, content string) error {
 	if _, err := db.NewUpdate().Model((*domain.MetadataNote)(nil)).Set("content = ?", sealed).Where("item_id = ?", id).Exec(ctx); err != nil {
 		return err
 	}
-	_, err = db.NewUpdate().Model((*domain.Item)(nil)).Set("title = NULLIF(?, '')", notetitle.From(content)).Where("id = ?", id).WhereAllWithDeleted().Exec(ctx)
+	title, hash, err := domain.SealTitle(ctx, notetitle.From(content))
+	if err != nil {
+		return err
+	}
+	_, err = db.NewUpdate().Model((*domain.Item)(nil)).Set("title = ?, title_hash = NULLIF(?, '')", title, hash).Where("id = ?", id).WhereAllWithDeleted().Exec(ctx)
 	return err
 }
 

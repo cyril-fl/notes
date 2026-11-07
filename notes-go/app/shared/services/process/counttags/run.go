@@ -1,7 +1,10 @@
 package counttags
 
 import (
+	"cmp"
 	"context"
+	"main.go/app/shared/services/secret"
+	"slices"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
@@ -10,8 +13,8 @@ import (
 
 // TagCount is a tag with the number of live notes carrying it.
 type TagCount struct {
-	Value string `json:"value"`
-	Notes int    `json:"notes"`
+	Value secret.Text `json:"value" swaggertype:"string"`
+	Notes int         `json:"notes"`
 }
 
 type run struct {
@@ -54,7 +57,9 @@ func (p *run) countTags() {
 		LEFT JOIN notes_on_tags AS nt ON nt.tag_id = t.id
 		LEFT JOIN items AS i ON i.id = nt.note_id AND i.deleted_at IS NULL
 		WHERE t.user_id = ?
-		GROUP BY t.id, t.value
-		ORDER BY notes DESC, lower(t.value)`, domain.UserID(p.ctx)).
+		GROUP BY t.id, t.value`, domain.UserID(p.ctx)).
 		Scan(p.ctx, &p.cache.result))
+	slices.SortFunc(p.cache.result, func(a, b TagCount) int {
+		return cmp.Or(b.Notes-a.Notes, domain.CompareFold(string(a.Value), string(b.Value)))
+	})
 }

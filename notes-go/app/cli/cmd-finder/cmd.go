@@ -62,7 +62,7 @@ func Finder(cobra *cobra.Command, args []string) error {
 			if err := move(ctx, m.action.item, m.folder.Item.ID); err != nil {
 				status, failed = err.Error(), true
 			} else {
-				clipboard, status = nil, fmt.Sprintf("Moved %q here", untitled(m.action.item.Title))
+				clipboard, status = nil, fmt.Sprintf("Moved %q here", untitled(string(m.action.item.Title)))
 			}
 		} else if err := do(ctx, m.action, m.folder.Item.ID); err != nil && !errors.Is(err, huh.ErrUserAborted) {
 			// An aborted form comes back to the finder unchanged.

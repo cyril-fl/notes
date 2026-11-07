@@ -57,7 +57,7 @@ func TestCountTags(t *testing.T) {
 	process.Run()
 	counts := map[string]int{}
 	for _, tag := range process.GetResult() {
-		counts[tag.Value] = tag.Notes
+		counts[string(tag.Value)] = tag.Notes
 	}
 	if process.HasErr() || counts[used] != 2 || counts[unused] != 0 {
 		t.Errorf("counts = used %d, unused %d, %v; want 2 and 0", counts[used], counts[unused], process.GetErr())

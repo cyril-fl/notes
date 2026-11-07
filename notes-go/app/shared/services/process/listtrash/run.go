@@ -1,7 +1,10 @@
 package listtrash
 
 import (
+	"cmp"
 	"context"
+	"main.go/app/shared/services/secret"
+	"slices"
 	"time"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
@@ -13,7 +16,7 @@ import (
 type Trashed struct {
 	ID        string      `json:"id"`
 	Kind      domain.Kind `json:"kind"`
-	Title     string      `json:"title"`
+	Title     secret.Text `json:"title" swaggertype:"string"`
 	DeletedAt time.Time   `json:"deleted_at"`
 	Inside    int         `json:"inside"`
 }
@@ -54,7 +57,7 @@ func (p *run) GetResult() []Trashed {
 // parent was removed at the same time is inside that removal, not one of its own. Raw SQL: bun's soft_delete would hide them.
 func (p *run) loadTrash() {
 	p.SetErr(p.db.NewRaw(`
-		SELECT i.id, i.kind, coalesce(i.title, '') AS title, i.deleted_at,
+		SELECT i.id, i.kind, i.title, i.deleted_at,
 			(WITH RECURSIVE inside AS (
 				SELECT child.id FROM items AS child WHERE child.parent_id = i.id AND child.deleted_at = i.deleted_at
 				UNION SELECT child.id FROM items AS child JOIN inside ON child.parent_id = inside.id WHERE child.deleted_at = i.deleted_at
@@ -62,6 +65,9 @@ func (p *run) loadTrash() {
 		FROM items AS i
 		LEFT JOIN items AS parent ON parent.id = i.parent_id
 		WHERE i.user_id = ? AND i.deleted_at IS NOT NULL AND parent.deleted_at IS DISTINCT FROM i.deleted_at
-		ORDER BY i.deleted_at DESC, lower(i.title)`, domain.UserID(p.ctx)).
+		ORDER BY i.deleted_at DESC`, domain.UserID(p.ctx)).
 		Scan(p.ctx, &p.cache.result))
+	slices.SortStableFunc(p.cache.result, func(a, b Trashed) int {
+		return cmp.Or(b.DeletedAt.Compare(a.DeletedAt), domain.CompareFold(string(a.Title), string(b.Title)))
+	})
 }

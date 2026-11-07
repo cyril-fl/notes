@@ -67,7 +67,7 @@ func TestRename(t *testing.T) {
 	if rename.HasErr() {
 		t.Fatalf("rename: %v", rename.GetErr())
 	}
-	if got := rename.GetResult(); got.Value != upper || got.ID == "" {
+	if got := rename.GetResult(); string(got.Value) != upper || got.ID == "" {
 		t.Errorf("rename result = %+v, want value %s with ID", got, upper)
 	}
 

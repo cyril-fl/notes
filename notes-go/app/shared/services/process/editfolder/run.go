@@ -84,9 +84,14 @@ func (p *run) updateFolder() {
 		return
 	}
 
-	err := p.db.NewUpdate().
+	title, hash, err := domain.SealTitle(p.ctx, p.cache.input.Title)
+	if err != nil {
+		p.SetErr(err)
+		return
+	}
+	err = p.db.NewUpdate().
 		Model(&p.cache.item).
-		Set("title = ?", p.cache.input.Title).
+		Set("title = ?, title_hash = ?", title, hash).
 		Set("updated_at = current_timestamp").
 		Where("id = ? AND kind = ? AND user_id = ?", p.cache.input.ID, domain.FOLDER, domain.UserID(p.ctx)).
 		Returning("id, parent_id, created_at, updated_at, kind, title").

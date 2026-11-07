@@ -48,7 +48,7 @@ func output(trash []listtrash.Trashed, retention int, now time.Time) string {
 
 	cells := make([][]string, len(trash))
 	for i, item := range trash {
-		title := item.Title
+		title := string(item.Title)
 		if title == "" {
 			title = "untitled"
 		}

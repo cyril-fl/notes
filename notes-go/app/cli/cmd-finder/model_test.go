@@ -6,6 +6,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/process/readitem"
+	"main.go/app/shared/services/secret"
 )
 
 // tree: root holds folder A (with note N inside) and note R.
@@ -132,7 +133,7 @@ func TestFilter(t *testing.T) {
 func TestScroll(t *testing.T) {
 	folder := readitem.Result{Path: "/"}
 	for i := 0; i < 20; i++ {
-		folder.Children = append(folder.Children, domain.Item{ID: string(rune('a' + i)), Kind: domain.NOTE, Title: string(rune('a' + i))})
+		folder.Children = append(folder.Children, domain.Item{ID: string(rune('a' + i)), Kind: domain.NOTE, Title: secret.Text(rune('a' + i))})
 	}
 	m := newModel(fakeLoad, folder, 0, nil, "", false)
 	m.Update(tea.WindowSizeMsg{Width: 80, Height: 12}) // 12 - 1 - 3 - 2 = 6 rows

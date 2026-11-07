@@ -2095,7 +2095,6 @@ export interface components {
         };
         "domain.Tag": {
             id: string;
-            /** @description unique case-insensitive, see CreateTables */
             value: string;
         };
         "domain.User": {

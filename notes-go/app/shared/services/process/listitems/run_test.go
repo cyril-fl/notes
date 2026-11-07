@@ -59,7 +59,7 @@ func TestListItems(t *testing.T) {
 	children.Run()
 	var got []string
 	for _, item := range children.GetResult() {
-		got = append(got, item.Title)
+		got = append(got, string(item.Title))
 	}
 	if children.HasErr() || !slices.Equal(got, []string{"Z folder", "A note"}) {
 		t.Errorf("children = %v, %v; want [Z folder, A note]", got, children.GetErr())

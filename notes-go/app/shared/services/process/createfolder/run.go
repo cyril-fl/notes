@@ -10,6 +10,7 @@ import (
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"main.go/app/shared/domain"
+	"main.go/app/shared/services/secret"
 )
 
 var (
@@ -90,13 +91,18 @@ func (p *run) saveFolder() {
 }
 
 func (p *run) insertItem(ctx context.Context, tx bun.Tx) error {
-	p.cache.item = domain.Item{UserID: domain.UserID(p.ctx), Kind: domain.FOLDER, Title: p.cache.input.Title}
+	title, hash, err := domain.SealTitle(p.ctx, p.cache.input.Title)
+	if err != nil {
+		return err
+	}
+	p.cache.item = domain.Item{UserID: domain.UserID(p.ctx), Kind: domain.FOLDER, Title: title, TitleHash: hash}
 	if p.cache.input.ParentID != "" {
 		p.cache.item.ParentID = &p.cache.input.ParentID
 	}
 
 	// Not "*": parent_kind is a DB-only column, Item cannot scan it.
-	err := tx.NewInsert().Model(&p.cache.item).Returning("id, created_at").Scan(ctx)
+	err = tx.NewInsert().Model(&p.cache.item).Returning("id, created_at").Scan(ctx)
+	p.cache.item.Title = secret.Text(p.cache.input.Title)
 	return toDomainErr(err, p.cache.input.ParentID)
 }
 

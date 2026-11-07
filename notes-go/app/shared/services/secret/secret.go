@@ -8,9 +8,12 @@ import (
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha256"
 	"database/sql/driver"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
@@ -35,6 +38,12 @@ var master = sync.OnceValues(func() (cipher.AEAD, error) {
 
 // keys are the keys of the accounts loaded, by account id: they never change, Rewrap only seals them again.
 var keys sync.Map
+
+// accountKey seals with gcm and blinds with blind, an HMAC key derived from the same key of the account.
+type accountKey struct {
+	gcm   cipher.AEAD
+	blind []byte
+}
 
 // Load reads the key of an account into memory, made on its first use: Seal and Open need it.
 func Load(ctx context.Context, db bun.IDB, userID string) error {
@@ -69,7 +78,7 @@ func Load(ctx context.Context, db bun.IDB, userID string) error {
 	if err != nil {
 		return err
 	}
-	keys.Store(userID, account)
+	keys.Store(userID, accountKey{gcm: account, blind: mac(key, "blind")})
 	return nil
 }
 
@@ -101,6 +110,16 @@ func Seal(userID, text string) (Text, error) {
 		return "", err
 	}
 	return Text(Prefix + userID + ":" + seal(gcm, []byte(text))), nil
+}
+
+// Blind gives what the base keeps to find or keep unique a sealed text whatever its case: an HMAC of the text
+// lowered, with the key of the account, loaded. The same text always gives the same value, of that account only.
+func Blind(userID, text string) (string, error) {
+	key, err := load(userID)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(mac(key.blind, strings.ToLower(text))), nil
 }
 
 // SealBytes encrypts the bytes of a file with the key of the account, loaded: nonce then ciphertext, no base64.
@@ -148,7 +167,11 @@ func Open(value string) (string, error) {
 // Text is a string the base keeps sealed: bun opens it on scan. To write one, Seal it: bun refuses it in clear.
 type Text string
 
+// Value writes "" as NULL.
 func (t Text) Value() (driver.Value, error) {
+	if t == "" {
+		return nil, nil
+	}
 	if !strings.HasPrefix(string(t), Prefix) {
 		return nil, errors.New("secret.Text written in clear: Seal it first")
 	}
@@ -176,11 +199,22 @@ func (t *Text) Scan(src any) error {
 // Helpers
 
 func account(userID string) (cipher.AEAD, error) {
-	gcm, ok := keys.Load(userID)
+	key, err := load(userID)
+	return key.gcm, err
+}
+
+func load(userID string) (accountKey, error) {
+	key, ok := keys.Load(userID)
 	if !ok {
-		return nil, fmt.Errorf("%w: %s", ErrNotLoaded, userID)
+		return accountKey{}, fmt.Errorf("%w: %s", ErrNotLoaded, userID)
 	}
-	return gcm.(cipher.AEAD), nil
+	return key.(accountKey), nil
+}
+
+func mac(key []byte, text string) []byte {
+	h := hmac.New(sha256.New, key)
+	h.Write([]byte(text))
+	return h.Sum(nil)
 }
 
 func newAEAD(secret string) (cipher.AEAD, error) {

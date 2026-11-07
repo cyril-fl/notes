@@ -7,7 +7,7 @@ import (
 )
 
 // FolderNameIndex keeps two live folders of one folder (or of an account's root) from sharing a name, whatever its case.
-const FolderNameIndex = "ux_folders_user_parent_title"
+const FolderNameIndex = "ux_folders_user_parent_title_hash"
 
 // uniqueViolation is the Postgres SQLSTATE raised by FolderNameIndex.
 const uniqueViolation = "23505"

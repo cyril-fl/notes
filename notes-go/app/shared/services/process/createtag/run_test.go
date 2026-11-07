@@ -51,7 +51,7 @@ func TestCreateSkipsExisting(t *testing.T) {
 		t.Fatalf("first run: %v", first.GetErr())
 	}
 	got := first.GetResult()
-	if len(got) != 2 || got[0].Value != value || got[1].Value != value+"-b" {
+	if len(got) != 2 || string(got[0].Value) != value || string(got[1].Value) != value+"-b" {
 		t.Fatalf("first result = %+v, want [%s %s-b]", got, value, value)
 	}
 	if got[0].ID == "" {

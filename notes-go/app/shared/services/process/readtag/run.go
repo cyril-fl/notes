@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"main.go/app/shared/services/secret"
+	"slices"
 	"strings"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
@@ -19,9 +21,9 @@ var (
 
 // Note is a note carrying the tag, with its path.
 type Note struct {
-	ID    string `json:"id"`
-	Title string `json:"title"`
-	Path  string `json:"path"`
+	ID    string      `json:"id"`
+	Title secret.Text `json:"title" swaggertype:"string"`
+	Path  string      `json:"path"`
 }
 
 // Result is the tag and its live notes, by path.
@@ -73,15 +75,20 @@ func (p *run) makeValue() {
 	}
 }
 
-// loadTag matches with the same lower() as ux_tags_value_lower.
+// loadTag matches by the blind of ux_tags_user_value_hash, whatever the case.
 func (p *run) loadTag() {
 	if p.HasErr() {
 		return
 	}
 
-	err := p.db.NewSelect().
+	hash, err := secret.Blind(domain.UserID(p.ctx), p.cache.value)
+	if err != nil {
+		p.SetErr(err)
+		return
+	}
+	err = p.db.NewSelect().
 		Model(&p.cache.result.Tag).
-		Where("user_id = ? AND lower(value) = lower(?)", domain.UserID(p.ctx), p.cache.value).
+		Where("user_id = ? AND value_hash = ?", domain.UserID(p.ctx), hash).
 		Scan(p.ctx)
 	if errors.Is(err, sql.ErrNoRows) {
 		err = fmt.Errorf("%w: %q", ErrNotFound, p.cache.value)
@@ -89,18 +96,27 @@ func (p *run) loadTag() {
 	p.SetErr(err)
 }
 
-// loadNotes joins on paths, which only holds live items: trashed notes drop out.
+// loadNotes joins on live, which only holds live items: trashed notes drop out.
 func (p *run) loadNotes() {
 	if p.HasErr() {
 		return
 	}
 
-	p.SetErr(p.db.NewRaw(domain.PathsCTE+`
-		SELECT i.id, coalesce(i.title, '') AS title, paths.path
+	p.SetErr(p.db.NewRaw(domain.LiveCTE+`
+		SELECT i.id, i.title
 		FROM notes_on_tags AS nt
 		JOIN items AS i ON i.id = nt.note_id
-		JOIN paths ON paths.id = i.id
-		WHERE nt.tag_id = ?
-		ORDER BY lower(paths.path)`, domain.UserID(p.ctx), p.cache.result.Tag.ID).
+		JOIN live ON live.id = i.id
+		WHERE nt.tag_id = ?`, domain.UserID(p.ctx), p.cache.result.Tag.ID).
 		Scan(p.ctx, &p.cache.result.Notes))
+	if p.HasErr() {
+		return
+	}
+
+	paths, err := domain.Paths(p.ctx, p.db)
+	p.SetErr(err)
+	for i := range p.cache.result.Notes {
+		p.cache.result.Notes[i].Path = paths[p.cache.result.Notes[i].ID]
+	}
+	slices.SortFunc(p.cache.result.Notes, func(a, b Note) int { return domain.CompareFold(a.Path, b.Path) })
 }

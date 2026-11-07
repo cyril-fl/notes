@@ -88,13 +88,21 @@ func (p *run) renameInTx() {
 	}))
 }
 
-// updateTag matches with the same lower() as ux_tags_value_lower.
+// updateTag matches by the blind of ux_tags_user_value_hash, whatever the case.
 // A case-only rename (go -> Go) passes: the row does not conflict with itself.
 func (p *run) updateTag(ctx context.Context, tx bun.Tx) error {
-	err := tx.NewUpdate().
+	from, err := secret.Blind(domain.UserID(p.ctx), p.cache.from)
+	if err != nil {
+		return err
+	}
+	to, err := domain.SealTag(p.ctx, p.cache.to)
+	if err != nil {
+		return err
+	}
+	err = tx.NewUpdate().
 		Model((*domain.Tag)(nil)).
-		Set("value = ?", p.cache.to).
-		Where("user_id = ? AND lower(value) = lower(?)", domain.UserID(p.ctx), p.cache.from).
+		Set("value = ?, value_hash = ?", to.Value, to.ValueHash).
+		Where("user_id = ? AND value_hash = ?", domain.UserID(p.ctx), from).
 		Returning("*").
 		Scan(ctx, &p.cache.result)
 

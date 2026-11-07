@@ -46,7 +46,7 @@ func (m *mill) askMissing() {
 func tagOptions(tags []domain.Tag, selected []string) []string {
 	options := make([]string, len(tags))
 	for i, tag := range tags {
-		options[i] = tag.Value
+		options[i] = string(tag.Value)
 	}
 
 	for i, value := range selected {

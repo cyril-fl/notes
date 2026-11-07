@@ -75,7 +75,7 @@ func TestReadTag(t *testing.T) {
 	read := Process(ctx, tx, strings.ToUpper(tag))
 	read.Run()
 	got := read.GetResult()
-	if read.HasErr() || got.Tag.Value != tag || len(got.Notes) != 2 || got.Notes[0].Path != "/F-"+tag+"/Inside" || got.Notes[1].Path != "/Root" {
+	if read.HasErr() || string(got.Tag.Value) != tag || len(got.Notes) != 2 || got.Notes[0].Path != "/F-"+tag+"/Inside" || got.Notes[1].Path != "/Root" {
 		t.Errorf("result = %+v, %v; want %s with /F/Inside, /Root", got, read.GetErr(), tag)
 	}
 
