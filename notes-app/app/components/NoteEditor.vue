@@ -309,10 +309,11 @@ const status = computed(() => {
     :actions="[{ label: $t('common.backToNotes'), icon: icons.home, color: 'neutral', variant: 'subtle', to: '/' }]"
   />
 
-  <!-- UEditor hands its listeners to TipTap, not to the page: clicks on links are caught here. -->
+  <!-- UEditor hands its listeners to TipTap, not to the page: clicks on links are caught here.
+       Only the text scrolls: a sticky toolbar inside the scroll moves with Safari's elastic bounce. -->
   <article
     v-else-if="!loading"
-    class="flex flex-1 flex-col p-8"
+    class="flex min-h-0 flex-1 flex-col pt-4"
     @focusin="touched = true"
     @pointerdown.capture="touched = true"
     @click="openLink"
@@ -329,15 +330,11 @@ const status = computed(() => {
       :starter-kit="starterKit"
       :extensions="extensions"
       :handlers="handlers"
-      class="mt-2 w-full"
-      :ui="{ base: 'sm:px-0 px-0' }"
+      class="flex min-h-0 w-full flex-1 flex-col"
+      :ui="{ content: 'min-h-0 overflow-y-auto px-8 pb-8', base: 'sm:px-0 px-0' }"
       @update:model-value="onContent"
     >
-      <UEditorToolbar
-        :editor="editor"
-        :items="toolbar"
-        class="sticky top-0 z-10 -mx-1 border-b border-muted bg-default py-1"
-      />
+      <UEditorToolbar :editor="editor" :items="toolbar" class="mx-7 shrink-0 border-b border-muted py-1" />
       <UEditorSuggestionMenu
         :editor="editor"
         :items="noteItems"
@@ -355,8 +352,7 @@ const status = computed(() => {
       />
     </UEditor>
 
-    <!-- mt-auto + sticky: pinned to the bottom of the page, short note or long. -->
-    <footer class="sticky bottom-0 z-10 -mx-8 -mb-8 mt-auto border-t border-default bg-default px-8">
+    <footer class="shrink-0 border-t border-default px-8">
       <RelatedNotes v-if="id" :key="id" :note-id="id" />
       <div class="flex h-9 items-center gap-2 text-xs text-muted">
         <PathNav :path="path" />
