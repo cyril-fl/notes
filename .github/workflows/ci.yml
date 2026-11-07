@@ -60,3 +60,60 @@ jobs:
       - run: pnpm test
       - run: pnpm typecheck
       - run: pnpm build
+
+  # The stack of `make up`, from the same compose file: the e2e helpers reach its containers (note-api, note-postgres).
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: notes-go/go.mod
+          cache-dependency-path: notes-go/go.sum
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: notes-app/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+        working-directory: notes-app
+      - name: swagger.yaml and api.d.ts match the code
+        run: |
+          make -C notes-go openapi
+          (cd notes-app && pnpm types)
+          git diff --exit-code
+      # .env.docker for the API, .env for the interpolation of compose.yaml. Not secrets: a throwaway base.
+      - name: Start Postgres, Silo and the API
+        working-directory: notes-go
+        run: |
+          cat > .env.docker <<'ENV'
+          POSTGRES_USER=app
+          POSTGRES_PASSWORD=password
+          POSTGRES_DB=notes
+          POSTGRES_HOST=note-postgres
+          PORT=5432
+          S3_ENDPOINT=note-silo:9000
+          S3_ACCESS_KEY=notes
+          S3_SECRET_KEY=silo-password-of-the-ci
+          S3_BUCKET=notes
+          NOTES_SECRET=dGVzdCBrZXkgb2YgdGhlIENJLCBub3QgYSBzZWNyZXQ=
+          ENV
+          { cat .env.docker; echo WEB_ORIGIN=http://localhost:3000; } > .env
+          docker compose --profile api up -d --wait --build postgres silo api
+          echo e2e-password | docker exec -i note-api /notes user add e2e --password-stdin
+      - name: Start the web app
+        working-directory: notes-app
+        run: |
+          pnpm build
+          nohup node .output/server/index.mjs > /tmp/notes-app.log 2>&1 &
+          curl -fs --retry 20 --retry-delay 1 --retry-all-errors -o /dev/null http://localhost:3000
+          curl -s --retry 20 --retry-delay 1 --retry-all-errors -o /dev/null http://localhost:8080/api/me
+      # The Chrome of the runner, as `channel: 'chrome'` asks: no browser to download.
+      - run: pnpm e2e
+        working-directory: notes-app
+      - if: failure()
+        working-directory: notes-go
+        run: docker compose --profile api logs api; cat /tmp/notes-app.log
