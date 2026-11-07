@@ -94,3 +94,56 @@ func TestPurgeOldOnly(t *testing.T) {
 		t.Errorf("metadata of purged note = %d, %v; want 0 (cascade)", metadata, err)
 	}
 }
+
+func TestPurgeDropsUnusedTags(t *testing.T) {
+	ctx := context.Background()
+	env := postgrey.NewEnvironment()
+	env.ReadEnv()
+	db := env.Connect()
+	defer db.Close()
+
+	schema := createschema.Process(ctx, db)
+	schema.Run()
+	if schema.HasErr() {
+		t.Fatalf("create schema: %v", schema.GetErr())
+	}
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
+
+	note := createnote.Process(ctx, tx, createnote.Input{Content: "# Old #gone"})
+	note.Run()
+	if note.HasErr() {
+		t.Fatalf("note: %v", note.GetErr())
+	}
+	id := note.GetResult().ID
+	trash := deleteitems.Process(ctx, tx, domain.NOTE, []string{id})
+	trash.Run()
+	if trash.HasErr() {
+		t.Fatalf("delete: %v", trash.GetErr())
+	}
+	_, err = tx.NewUpdate().Model((*domain.Item)(nil)).WhereAllWithDeleted().
+		Set("deleted_at = deleted_at - interval '40 days'").Where("id = ?", id).Exec(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = tx.NewUpdate().Model((*domain.User)(nil)).Set("trash_retention_days = 30").Where("id = ?", domain.UserID(ctx)).Exec(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	purge := Process(ctx, tx)
+	purge.Run()
+	if purge.HasErr() {
+		t.Fatalf("purge: %v", purge.GetErr())
+	}
+
+	left, err := tx.NewSelect().Model((*domain.Tag)(nil)).Where("user_id = ?", domain.UserID(ctx)).Count(ctx)
+	if err != nil || left != 0 {
+		t.Errorf("tags left = %d, %v; want 0: #gone had no note left", left, err)
+	}
+}

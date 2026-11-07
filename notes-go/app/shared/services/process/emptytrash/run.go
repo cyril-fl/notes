@@ -8,6 +8,7 @@ import (
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 	"main.go/app/shared/domain"
+	"main.go/app/shared/services/process/editnote"
 )
 
 var ErrNotFound = errors.New("item not found in the trash")
@@ -37,21 +38,36 @@ func (p *run) Run() {
 
 // empty hard deletes: the ON DELETE CASCADE FKs remove metadata, tag links and children. Only trashed items:
 // a live id is not found. id::text, so an id that is not a uuid is not found rather than a SQL error.
+// The tags of the trashed notes are read first, then dropped if the delete left them without any note.
 func (p *run) empty() {
-	query := p.db.NewDelete().
-		Model((*domain.Item)(nil)).
-		ForceDelete().
-		Where("deleted_at IS NOT NULL AND user_id = ?", domain.UserID(p.ctx))
-	if len(p.ids) > 0 {
-		query = query.Where("id::text IN (?)", bun.List(p.ids))
-	}
+	var rows int64
+	err := p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
+		var tags []string
+		err := tx.NewRaw("SELECT DISTINCT nt.tag_id FROM notes_on_tags AS nt JOIN items AS i ON i.id = nt.note_id WHERE i.deleted_at IS NOT NULL AND i.user_id = ?", domain.UserID(ctx)).Scan(ctx, &tags)
+		if err != nil {
+			return err
+		}
 
-	result, err := query.Exec(p.ctx)
+		query := tx.NewDelete().
+			Model((*domain.Item)(nil)).
+			ForceDelete().
+			Where("deleted_at IS NOT NULL AND user_id = ?", domain.UserID(ctx))
+		if len(p.ids) > 0 {
+			query = query.Where("id::text IN (?)", bun.List(p.ids))
+		}
+
+		result, err := query.Exec(ctx)
+		if err != nil {
+			return err
+		}
+		rows, _ = result.RowsAffected()
+		return editnote.DropUnusedTags(ctx, tx, tags)
+	})
 	if err != nil {
 		p.SetErr(err)
 		return
 	}
-	if rows, _ := result.RowsAffected(); len(p.ids) > 0 && rows < int64(len(p.ids)) {
+	if len(p.ids) > 0 && rows < int64(len(p.ids)) {
 		p.SetErr(fmt.Errorf("%w: %q", ErrNotFound, p.ids))
 	}
 }

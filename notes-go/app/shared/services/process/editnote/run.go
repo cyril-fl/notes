@@ -183,13 +183,18 @@ func (p *run) replaceTags(ctx context.Context, tx bun.Tx) error {
 // dropUnusedTags deletes the tags this edit left without any note, or each pause while typing #golang would
 // leave #g and #go behind. A tag created on its own stays: it was never linked here.
 func (p *run) dropUnusedTags(ctx context.Context, tx bun.Tx) error {
-	if len(p.cache.unlinked) == 0 {
+	return DropUnusedTags(ctx, tx, p.cache.unlinked)
+}
+
+// DropUnusedTags deletes, among ids, the tags left without any note. Also used by the purges of the trash.
+func DropUnusedTags(ctx context.Context, db bun.IDB, ids []string) error {
+	if len(ids) == 0 {
 		return nil
 	}
 
-	_, err := tx.NewDelete().
+	_, err := db.NewDelete().
 		Model((*domain.Tag)(nil)).
-		Where("t.id IN (?)", bun.In(p.cache.unlinked)).
+		Where("t.id IN (?)", bun.In(ids)).
 		Where("NOT EXISTS (SELECT 1 FROM notes_on_tags AS nt WHERE nt.tag_id = t.id)").
 		Exec(ctx)
 	return err

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"main.go/app/shared/services/testaccount"
+	"slices"
 	"testing"
 
 	"github.com/uptrace/bun"
@@ -12,6 +13,7 @@ import (
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/createnote"
 	"main.go/app/shared/services/process/createschema"
+	"main.go/app/shared/services/process/createtag"
 	"main.go/app/shared/services/process/deleteitems"
 )
 
@@ -71,5 +73,60 @@ func TestEmptyTrashOfIDs(t *testing.T) {
 		if !errors.Is(missing.GetErr(), ErrNotFound) {
 			t.Errorf("purge %q: err = %v, want %v", id, missing.GetErr(), ErrNotFound)
 		}
+	}
+}
+
+func TestEmptyTrashDropsUnusedTags(t *testing.T) {
+	ctx := context.Background()
+	env := postgrey.NewEnvironment()
+	env.ReadEnv()
+	db := env.Connect()
+	defer db.Close()
+
+	schema := createschema.Process(ctx, db)
+	schema.Run()
+	if schema.HasErr() {
+		t.Fatalf("create schema: %v", schema.GetErr())
+	}
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
+
+	alone := createtag.Process(ctx, tx, []string{"alone"})
+	alone.Run()
+	if alone.HasErr() {
+		t.Fatalf("tag: %v", alone.GetErr())
+	}
+	var ids []string
+	for _, content := range []string{"# Purged #gone #shared", "# Kept in the trash #shared"} {
+		note := createnote.Process(ctx, tx, createnote.Input{Content: content})
+		note.Run()
+		if note.HasErr() {
+			t.Fatalf("note: %v", note.GetErr())
+		}
+		ids = append(ids, note.GetResult().ID)
+	}
+	trash := deleteitems.Process(ctx, tx, domain.NOTE, ids)
+	trash.Run()
+	if trash.HasErr() {
+		t.Fatalf("trash: %v", trash.GetErr())
+	}
+
+	purge := Process(ctx, tx, ids[0])
+	purge.Run()
+	if purge.HasErr() {
+		t.Fatalf("purge: %v", purge.GetErr())
+	}
+
+	var tags []string
+	if err := tx.NewRaw("SELECT value FROM tags WHERE user_id = ? ORDER BY value", domain.UserID(ctx)).Scan(ctx, &tags); err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(tags, []string{"alone", "shared"}) {
+		t.Errorf("tags = %v, want [alone shared]: #gone had no note left", tags)
 	}
 }
