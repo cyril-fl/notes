@@ -21,7 +21,7 @@ const LiveCTE = `WITH RECURSIVE live AS (
 
 // Paths gives every live item of the account of ctx its path from its root (/Projects/Go/Ideas), by id: a trashed
 // folder hides its whole subtree, so an id missing from it is not live. Titles are sealed: paths are made here, not in SQL.
-// shortcut: loads and decrypts every item of the account on each call, fine for a few thousand items.
+// shortcut: loads and decrypts every item of the account on each call, 7 ms for 5,000 notes (#23); cache it per account past ~50,000.
 func Paths(ctx context.Context, db bun.IDB) (map[string]string, error) {
 	var items []Item
 	err := db.NewSelect().Model(&items).Column("id", "parent_id", "title").Where("user_id = ?", UserID(ctx)).Scan(ctx)

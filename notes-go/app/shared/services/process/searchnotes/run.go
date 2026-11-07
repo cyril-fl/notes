@@ -80,7 +80,7 @@ func (p *run) makeText() {
 
 // searchNotes loads every live note, by path: the content is sealed, makeMatches searches it once opened.
 // Joining live keeps live notes only.
-// shortcut: decrypts every note of the account on each search, fine for a few thousand notes.
+// shortcut: decrypts every note of the account on each search, 50 ms for 5,000 notes (#23); index the words past ~50,000.
 func (p *run) searchNotes() {
 	if p.HasErr() {
 		return
