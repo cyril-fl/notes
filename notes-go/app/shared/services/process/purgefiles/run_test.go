@@ -3,6 +3,7 @@ package purgefiles
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -82,13 +83,14 @@ func TestPurgeFiles(t *testing.T) {
 	}
 
 	var left []domain.File
-	if err := tx.NewSelect().Model(&left).Where("user_id = ?", domain.UserID(ctx)).Order("name").Scan(ctx); err != nil {
+	if err := tx.NewSelect().Model(&left).Where("user_id = ?", domain.UserID(ctx)).Scan(ctx); err != nil {
 		t.Fatal(err)
 	}
 	var got []string
 	for _, file := range left {
 		got = append(got, fmt.Sprintf("%s:%t", file.Name, file.OrphanedAt.IsZero()))
 	}
+	slices.Sort(got) // names are sealed: sorted here
 	// removed waits, its clock started; back is cited again and avatar is the account's, their clocks stopped.
 	if want := "avatar:true back:true live:true removed:false trashed:true"; strings.Join(got, " ") != want {
 		t.Errorf("left = %v, want %s", got, want)

@@ -208,7 +208,7 @@ Chaque requête doit venir d'un compte connecté. Garde quand même l'API sur `1
 
 ### Chiffrement
 
-Le texte et les titres des notes, les noms des dossiers, les tags et les snippets sont chiffrés dans la base, et les images dans Silo (AES-256-GCM). Chaque compte a sa propre clé, tirée au hasard à sa première connexion et rangée dans `users.data_key`, elle-même chiffrée par le secret du serveur `NOTES_SECRET`. Une base, une sauvegarde ou un disque volés restent illisibles sans ce secret. Un serveur compromis, lui, le détient : le chiffrement ne protège pas contre ça.
+Le texte et les titres des notes, les noms des dossiers, les tags, les snippets et les noms des images sont chiffrés dans la base, et les images dans Silo (AES-256-GCM). Chaque compte a sa propre clé, tirée au hasard à sa première connexion et rangée dans `users.data_key`, elle-même chiffrée par le secret du serveur `NOTES_SECRET`. Une base, une sauvegarde ou un disque volés restent illisibles sans ce secret. Un serveur compromis, lui, le détient : le chiffrement ne protège pas contre ça.
 
 - Génère la clé avec `openssl rand -base64 32` et mets la même dans `.env` (CLI) et `.env.docker` (API).
 - **Garde une copie de la clé dans un gestionnaire de mots de passe, jamais dans une sauvegarde.** Si tu la perds, les notes deviennent illisibles, même avec une sauvegarde.
@@ -216,7 +216,7 @@ Le texte et les titres des notes, les noms des dossiers, les tags et les snippet
 - Changer le secret : `make backup`, mets le nouveau dans `NOTES_SECRET` (`.env`), puis `NOTES_OLD_SECRET=<ancien> notes rotate-secret`. Seules les clés des comptes sont rechiffrées, pas les notes. Mets ensuite le nouveau secret dans `.env.docker` et lance `make api`. Un second passage ne fait rien.
 - `notes export` sort du texte en clair.
 - Pour retrouver un tag, un dossier ou une note par son nom, et garder ces noms uniques, la base garde une empreinte HMAC du nom en minuscules (`title_hash`, `value_hash`). Elle ne se lit pas, mais deux noms identiques ont la même empreinte. Les chemins, les tris et la recherche se font dans l'API, après déchiffrement.
-- Ne sont pas chiffrés : les noms des images, les dates et l'arborescence (quel élément est dans quel dossier).
+- Ne sont pas chiffrés : les dates et l'arborescence (quel élément est dans quel dossier).
 
 ## Configuration
 

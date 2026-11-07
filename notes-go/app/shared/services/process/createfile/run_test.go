@@ -10,6 +10,7 @@ import (
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/createschema"
+	"main.go/app/shared/services/secret"
 	"main.go/app/shared/services/silo"
 	"main.go/app/shared/services/testaccount"
 )
@@ -44,6 +45,10 @@ func TestCreateFile(t *testing.T) {
 	file := create.GetResult()
 	if file.ID == "" || file.Name != "chat.jpg" || file.ContentType != "image/jpeg" || file.Size != 9 {
 		t.Errorf("file = %+v", file)
+	}
+	var stored string
+	if err := tx.NewSelect().Table("files").Column("name").Where("id = ?", file.ID).Scan(ctx, &stored); err != nil || !strings.HasPrefix(stored, secret.Prefix) {
+		t.Errorf("stored name = %q, %v, want it sealed", stored, err)
 	}
 	if string(store.Objects[domain.UserID(ctx)+"/"+file.ID]) != "\xff\xd8\xff\xe0 jpeg" {
 		t.Errorf("objects = %v", store.Objects)

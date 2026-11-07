@@ -11,6 +11,7 @@ import (
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 	"main.go/app/shared/domain"
+	"main.go/app/shared/services/secret"
 	"main.go/app/shared/services/silo"
 )
 
@@ -79,7 +80,9 @@ func (p *run) makeFile() {
 	if name == "" || name == "." || name == "/" {
 		name = "image" + domain.FileTypes[contentType]
 	}
-	p.cache.file = domain.File{UserID: domain.UserID(p.ctx), Name: name, ContentType: contentType, Size: int64(len(p.input.Data))}
+	sealed, err := secret.Seal(domain.UserID(p.ctx), name)
+	p.cache.file = domain.File{UserID: domain.UserID(p.ctx), Name: sealed, ContentType: contentType, Size: int64(len(p.input.Data))}
+	p.SetErr(err)
 }
 
 // saveFile puts the bytes inside the transaction of the row: a failed upload leaves no row. A failed commit
@@ -91,7 +94,7 @@ func (p *run) saveFile() {
 
 	put := false
 	err := p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
-		if err := tx.NewInsert().Model(&p.cache.file).Returning("id, created_at").Scan(ctx); err != nil {
+		if err := tx.NewInsert().Model(&p.cache.file).Returning("*").Scan(ctx); err != nil {
 			return err
 		}
 		put = true

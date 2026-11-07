@@ -2075,6 +2075,7 @@ export interface components {
             content_type: string;
             created_at: string;
             id: string;
+            /** @description "" (NULL) for the images uploaded before names were sealed */
             name: string;
             size: number;
         };
