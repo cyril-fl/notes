@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: notes-go
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: notes_test
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    # What `make test` reads from .env. No Silo: the tests use silo.NewMemory().
+    env:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: notes_test
+      POSTGRES_HOST: localhost
+      PORT: 5432
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: notes-go/go.mod
+          cache-dependency-path: notes-go/go.sum
+      - run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+      - run: go vet ./...
+      # -p 1: the packages share the test base, see `make test`.
+      - run: CONFIG_FILE=$PWD/config/config.yaml go test -p 1 ./...
+
+  app:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: notes-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: notes-app/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm test
+      - run: pnpm typecheck
+      - run: pnpm build
