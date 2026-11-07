@@ -74,7 +74,7 @@ test('the settings save the theme and the trash retention to the account', async
 test('deleting all the data asks to type the name of the account', async ({ page, request }) => {
   const me = await (await request.get(`${API}/api/me`, { headers: { Origin: APP } })).json();
   await page.goto('/settings');
-  await page.getByRole('button', { name: 'Supprimer toutes mes données' }).click();
+  await page.getByRole('button', { name: 'Supprimer', exact: true }).click();
 
   const dialog = page.getByRole('dialog');
   const action = dialog.getByRole('button', { name: 'Supprimer toutes mes données' });

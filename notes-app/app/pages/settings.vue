@@ -171,13 +171,13 @@ async function importZip(event: Event) {
     </section>
 
     <section>
-      <h2 class="mb-1 text-sm font-semibold text-error">{{ $t('settings.danger') }}</h2>
-      <div class="flex items-center gap-4 rounded-md border border-error px-4 py-3">
+      <h2 class="mb-1 text-sm font-semibold">{{ $t('settings.danger') }}</h2>
+      <div class="flex items-center gap-4 rounded-md border border-error/25 bg-error/5 px-4 py-3">
         <div class="min-w-0 flex-1">
           <p class="text-sm">{{ $t('settings.deleteData') }}</p>
           <p class="text-xs text-muted">{{ $t('settings.deleteDataDescription') }}</p>
         </div>
-        <UButton :label="$t('settings.deleteData')" :icon="icons.delete" color="error" variant="outline" :disabled="!me" @click="deleteData" />
+        <UButton :label="$t('common.delete')" color="error" variant="ghost" :disabled="!me" @click="deleteData" />
       </div>
     </section>
   </div>
