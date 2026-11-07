@@ -35,7 +35,7 @@ purge:
 	@printf 'Delete the notes, folders, tags and images of every account? Type purge: ' && read answer && [ "$$answer" = purge ]
 	@$(MAKE) --no-print-directory backup
 	@set -a && . ./.env && set +a && \
-	docker compose exec -T postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$$POSTGRES_USER" "$$POSTGRES_DB" -c "TRUNCATE items, tags, files CASCADE"' && \
+	docker compose exec -T postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$$POSTGRES_USER" "$$POSTGRES_DB" -c "TRUNCATE items, tags, files CASCADE" -c "UPDATE users SET avatar = NULL"' && \
 	docker compose exec -T silo sh -c 'mcli alias set local http://127.0.0.1:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" >/dev/null \
 		&& mcli rm --recursive --force --quiet local/'"$$S3_BUCKET"
 
