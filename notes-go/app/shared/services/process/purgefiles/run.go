@@ -24,10 +24,11 @@ type cache struct {
 	purged  int
 }
 
-// cited is true of a file some note of its account cites, trashed notes included.
-const cited = `EXISTS (
+// cited is true of a file some note of its account cites, trashed notes included, or that is its avatar.
+const cited = `(EXISTS (
 	SELECT 1 FROM metadata_notes AS mn JOIN items AS i ON i.id = mn.item_id
-	WHERE i.user_id = f.user_id AND strpos(mn.content, f.id::text) > 0)`
+	WHERE i.user_id = f.user_id AND strpos(mn.content, f.id::text) > 0)
+	OR EXISTS (SELECT 1 FROM users AS au WHERE au.avatar = f.id))`
 
 // Process deletes the files no note cites any more. Those of a note deleted for good go at once (createschema's
 // trigger dates them -infinity), unless another note still cites them. Those removed from a text wait the trash

@@ -12,6 +12,7 @@ import (
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/process/createsession"
 	"main.go/app/shared/services/process/deletesession"
+	"main.go/app/shared/services/process/editpassword"
 	"main.go/app/shared/services/process/edituser"
 )
 
@@ -151,5 +152,32 @@ func EditMe(db bun.IDB) http.HandlerFunc {
 			return
 		}
 		respond.JSON(w, http.StatusOK, process.GetResult())
+	}
+}
+
+// EditPassword changes the password of the account logged in, and logs its other devices out: PATCH /api/me/password.
+// @Summary  Change the password of the account logged in
+// @Tags     account
+// @Accept   json
+// @Param    body body editpassword.Input true "body"
+// @Success  204
+// @Failure  400 {object} respond.Failure
+// @Failure  401 {object} respond.Failure
+// @Failure  500 {object} respond.Failure
+// @Router   /api/me/password [patch]
+func EditPassword(db bun.IDB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var input editpassword.Input
+		if !respond.Decode(w, r, &input) {
+			return
+		}
+
+		process := editpassword.Process(r.Context(), db, input, auth.Token(r))
+		process.Run()
+		if process.HasErr() {
+			respond.Error(w, process.GetErr())
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
 	}
 }

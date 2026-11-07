@@ -690,6 +690,31 @@ func TestLogin(t *testing.T) {
 		!strings.Contains(w.Body.String(), `"locale":"en","theme":"dracula","color_mode":"dark","view":"grid","trash_retention_days":7`) {
 		t.Errorf("edit settings: status = %d, body = %s", w.Code, w.Body)
 	}
+	if w := send("PATCH", "/api/me", `{"avatar":"00000000-0000-0000-0000-000000000000"}`, cookies[0]); w.Code != http.StatusBadRequest {
+		t.Errorf("avatar of no image: status = %d, want 400", w.Code)
+	}
+	name += "-renamed"
+	if w := send("PATCH", "/api/me", fmt.Sprintf(`{"name":%q}`, name), cookies[0]); w.Code != http.StatusOK || !strings.Contains(w.Body.String(), name) {
+		t.Errorf("rename: status = %d, body = %s", w.Code, w.Body)
+	}
+
+	// A new password logs the other devices out, not this one.
+	other := send("POST", "/api/login", fmt.Sprintf(`{"name":%q,"password":"correct horse"}`, name), nil).Result().Cookies()
+	if len(other) != 1 {
+		t.Fatalf("second login: cookies = %v", other)
+	}
+	if w := send("PATCH", "/api/me/password", `{"current":"wrong horse","new":"battery staple"}`, cookies[0]); w.Code != http.StatusBadRequest {
+		t.Errorf("wrong current password: status = %d, want 400", w.Code)
+	}
+	if w := send("PATCH", "/api/me/password", `{"current":"correct horse","new":"battery staple"}`, cookies[0]); w.Code != http.StatusNoContent {
+		t.Errorf("new password: status = %d, body = %s", w.Code, w.Body)
+	}
+	if w := send("GET", "/api/me", "", other[0]); w.Code != http.StatusUnauthorized {
+		t.Errorf("other device after a new password: status = %d, want 401", w.Code)
+	}
+	if w := send("GET", "/api/me", "", cookies[0]); w.Code != http.StatusOK {
+		t.Errorf("this device after a new password: status = %d, want 200", w.Code)
+	}
 	send("POST", "/api/logout", "", cookies[0])
 	if w := send("GET", "/api/me", "", cookies[0]); w.Code != http.StatusUnauthorized {
 		t.Errorf("me after logout: status = %d, want 401", w.Code)

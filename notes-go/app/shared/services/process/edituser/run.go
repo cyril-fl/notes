@@ -5,10 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strings"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/driver/pgdriver"
 	"main.go/app/shared/domain"
+	"main.go/app/shared/services/process/adduser"
 )
 
 // MaxRetentionDays keeps the trash retention a sane number of days, ten years.
@@ -20,6 +23,7 @@ var (
 	ErrInvalidColorMode = errors.New("unknown color mode")
 	ErrInvalidView      = errors.New("unknown view")
 	ErrInvalidRetention = fmt.Errorf("the trash retention is between 0 and %d days", MaxRetentionDays)
+	ErrInvalidAvatar    = errors.New("the avatar is not an image of the account")
 )
 
 // Input holds the settings to change: a nil one is kept.
@@ -29,6 +33,8 @@ type Input struct {
 	ColorMode          *string `json:"color_mode,omitempty" binding:"optional"`
 	View               *string `json:"view,omitempty" binding:"optional"`
 	TrashRetentionDays *int    `json:"trash_retention_days,omitempty" binding:"optional"`
+	Name               *string `json:"name,omitempty" binding:"optional"`
+	Avatar             *string `json:"avatar,omitempty" binding:"optional"` // the id of an image of the account, "" for none
 }
 
 type run struct {
@@ -55,6 +61,7 @@ func Process(ctx context.Context, db bun.IDB, input Input) *run {
 
 func (p *run) Run() {
 	p.checkInput()
+	p.checkAvatar()
 	p.updateUser()
 }
 
@@ -78,7 +85,24 @@ func (p *run) checkInput() {
 		p.SetErr(fmt.Errorf("%w: %q", ErrInvalidView, *p.input.View))
 	case p.input.TrashRetentionDays != nil && (*p.input.TrashRetentionDays < 0 || *p.input.TrashRetentionDays > MaxRetentionDays):
 		p.SetErr(fmt.Errorf("%w: %d", ErrInvalidRetention, *p.input.TrashRetentionDays))
+	case p.input.Name != nil && strings.TrimSpace(*p.input.Name) == "":
+		p.SetErr(adduser.ErrNoName)
 	}
+}
+
+func (p *run) checkAvatar() {
+	if p.HasErr() || p.input.Avatar == nil || *p.input.Avatar == "" {
+		return
+	}
+
+	// id::text: a value that is not a uuid is not found, rather than a failed query.
+	found, err := p.db.NewSelect().Model((*domain.File)(nil)).
+		Where("id::text = ? AND user_id = ?", *p.input.Avatar, domain.UserID(p.ctx)).
+		Exists(p.ctx)
+	if err == nil && !found {
+		err = fmt.Errorf("%w: %q", ErrInvalidAvatar, *p.input.Avatar)
+	}
+	p.SetErr(err)
 }
 
 func (p *run) updateUser() {
@@ -86,28 +110,43 @@ func (p *run) updateUser() {
 		return
 	}
 
-	// "id = id" keeps the query valid when nothing is set: it then only reads the account back.
-	query := p.db.NewUpdate().
-		Model(&p.cache.result).
-		Set("id = id").
-		Where("id = ?", domain.UserID(p.ctx)).
-		Returning("*")
-	if p.input.Locale != nil {
-		query.Set("locale = ?", *p.input.Locale)
-	}
-	if p.input.Theme != nil {
-		query.Set("theme = ?", *p.input.Theme)
-	}
-	if p.input.ColorMode != nil {
-		query.Set("color_mode = ?", *p.input.ColorMode)
-	}
-	if p.input.View != nil {
-		query.Set("view = ?", *p.input.View)
-	}
-	if p.input.TrashRetentionDays != nil {
-		query.Set("trash_retention_days = ?", *p.input.TrashRetentionDays)
-	}
-	p.SetErr(query.Scan(p.ctx))
+	// In a transaction, a savepoint: a name already taken must not abort the caller's.
+	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
+		// "id = id" keeps the query valid when nothing is set: it then only reads the account back.
+		query := tx.NewUpdate().
+			Model(&p.cache.result).
+			Set("id = id").
+			Where("id = ?", domain.UserID(p.ctx)).
+			Returning("*")
+		if p.input.Locale != nil {
+			query.Set("locale = ?", *p.input.Locale)
+		}
+		if p.input.Theme != nil {
+			query.Set("theme = ?", *p.input.Theme)
+		}
+		if p.input.ColorMode != nil {
+			query.Set("color_mode = ?", *p.input.ColorMode)
+		}
+		if p.input.View != nil {
+			query.Set("view = ?", *p.input.View)
+		}
+		if p.input.TrashRetentionDays != nil {
+			query.Set("trash_retention_days = ?", *p.input.TrashRetentionDays)
+		}
+		if p.input.Name != nil {
+			query.Set("name = ?", strings.TrimSpace(*p.input.Name))
+		}
+		if p.input.Avatar != nil {
+			query.Set("avatar = NULLIF(?, '')::uuid", *p.input.Avatar)
+		}
+
+		var pgErr pgdriver.Error
+		err := query.Scan(ctx)
+		if errors.As(err, &pgErr) && pgErr.Field('C') == "23505" {
+			return fmt.Errorf("%w: %q", adduser.ErrNameTaken, strings.TrimSpace(*p.input.Name))
+		}
+		return err
+	}))
 }
 
 // Helpers

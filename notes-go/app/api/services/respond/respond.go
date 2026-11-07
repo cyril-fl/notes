@@ -10,6 +10,7 @@ import (
 
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/hashtag"
+	"main.go/app/shared/services/process/adduser"
 	"main.go/app/shared/services/process/createfile"
 	"main.go/app/shared/services/process/createfolder"
 	"main.go/app/shared/services/process/createnote"
@@ -19,6 +20,7 @@ import (
 	"main.go/app/shared/services/process/deletetag"
 	"main.go/app/shared/services/process/editfolder"
 	"main.go/app/shared/services/process/editnote"
+	"main.go/app/shared/services/process/editpassword"
 	"main.go/app/shared/services/process/edittag"
 	"main.go/app/shared/services/process/edituser"
 	"main.go/app/shared/services/process/emptytrash"
@@ -51,7 +53,8 @@ var statuses = []struct {
 		deletetag.ErrNoValue,
 		editfolder.ErrNoValue, editfolder.ErrNoTitle,
 		editnote.ErrNoValue, editnote.ErrNoContent,
-		edituser.ErrInvalidLocale, edituser.ErrInvalidTheme, edituser.ErrInvalidColorMode, edituser.ErrInvalidView, edituser.ErrInvalidRetention,
+		edituser.ErrInvalidLocale, edituser.ErrInvalidTheme, edituser.ErrInvalidColorMode, edituser.ErrInvalidView, edituser.ErrInvalidRetention, edituser.ErrInvalidAvatar,
+		adduser.ErrNoName, adduser.ErrShortPassword, editpassword.ErrWrongPassword,
 		edittag.ErrNoValue,
 		hashtag.ErrInvalid,
 		listitems.ErrInvalidID,
@@ -71,7 +74,7 @@ var statuses = []struct {
 		createfile.ErrNotImage,
 	}},
 	{http.StatusConflict, []error{
-		domain.ErrFolderExists, edittag.ErrAlreadyExists, moveitems.ErrCycle, restoreitems.ErrParentInTrash,
+		domain.ErrFolderExists, edittag.ErrAlreadyExists, adduser.ErrNameTaken, moveitems.ErrCycle, restoreitems.ErrParentInTrash,
 	}},
 }
 

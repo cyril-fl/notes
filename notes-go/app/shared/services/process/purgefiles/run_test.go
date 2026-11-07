@@ -40,8 +40,8 @@ func TestPurgeFiles(t *testing.T) {
 	ctx, tx = testaccount.New(t, ctx, tx)
 	store := silo.NewMemory()
 
-	// cited by a live note, by a trashed one, by none for long, by none since just now, cited again.
-	names := []string{"live", "trashed", "orphan", "removed", "back"}
+	// cited by a live note, by a trashed one, by none for long, by none since just now, cited again, the avatar.
+	names := []string{"live", "trashed", "orphan", "removed", "back", "avatar"}
 	files := map[string]domain.File{}
 	for _, name := range names {
 		create := createfile.Process(ctx, tx, store, createfile.Input{Name: name, Data: []byte("\x89PNG\r\n\x1a\n")})
@@ -65,10 +65,13 @@ func TestPurgeFiles(t *testing.T) {
 	if trash.HasErr() {
 		t.Fatal(trash.GetErr())
 	}
-	// The account keeps its trash 30 days: orphan and back were left uncited 40 days ago.
+	// The account keeps its trash 30 days: orphan, back and avatar were left uncited 40 days ago.
 	_, err = tx.NewUpdate().Model((*domain.File)(nil)).Set("orphaned_at = current_timestamp - interval '40 days'").
-		Where("id IN (?, ?)", files["orphan"].ID, files["back"].ID).Exec(ctx)
+		Where("id IN (?, ?, ?)", files["orphan"].ID, files["back"].ID, files["avatar"].ID).Exec(ctx)
 	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tx.NewUpdate().Model((*domain.User)(nil)).Set("avatar = ?", files["avatar"].ID).Where("id = ?", domain.UserID(ctx)).Exec(ctx); err != nil {
 		t.Fatal(err)
 	}
 
@@ -86,11 +89,11 @@ func TestPurgeFiles(t *testing.T) {
 	for _, file := range left {
 		got = append(got, fmt.Sprintf("%s:%t", file.Name, file.OrphanedAt.IsZero()))
 	}
-	// removed waits, its clock started; back is cited again, its clock stopped.
-	if want := "back:true live:true removed:false trashed:true"; strings.Join(got, " ") != want {
+	// removed waits, its clock started; back is cited again and avatar is the account's, their clocks stopped.
+	if want := "avatar:true back:true live:true removed:false trashed:true"; strings.Join(got, " ") != want {
 		t.Errorf("left = %v, want %s", got, want)
 	}
-	if _, ok := store.Objects[files["orphan"].Key()]; ok || len(store.Objects) != 4 {
+	if _, ok := store.Objects[files["orphan"].Key()]; ok || len(store.Objects) != 5 {
 		t.Errorf("objects = %v, want the orphan removed", store.Objects)
 	}
 
