@@ -2,6 +2,8 @@ package purgefiles
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"testing"
 
 	"main.go/app/shared/domain"
@@ -35,9 +37,10 @@ func TestPurgeFiles(t *testing.T) {
 	ctx, tx = testaccount.New(t, ctx, tx)
 	store := silo.NewMemory()
 
-	// cited by a live note, cited by a trashed one, cited by none (old), cited by none (just pasted).
+	// cited by a live note, by a trashed one, by none for long, by none since just now, cited again.
+	names := []string{"live", "trashed", "orphan", "removed", "back"}
 	files := map[string]domain.File{}
-	for _, name := range []string{"live", "trashed", "orphan", "fresh"} {
+	for _, name := range names {
 		create := createfile.Process(ctx, tx, store, createfile.Input{Name: name, Data: []byte("\x89PNG\r\n\x1a\n")})
 		create.Run()
 		if create.HasErr() {
@@ -46,7 +49,7 @@ func TestPurgeFiles(t *testing.T) {
 		files[name] = create.GetResult()
 	}
 	var notes []string
-	for _, name := range []string{"live", "trashed"} {
+	for _, name := range []string{"live", "trashed", "back"} {
 		note := createnote.Process(ctx, tx, createnote.Input{Content: "# " + name + "\n\n![](" + domain.FileURL(files[name].ID) + ")"})
 		note.Run()
 		if note.HasErr() {
@@ -54,13 +57,14 @@ func TestPurgeFiles(t *testing.T) {
 		}
 		notes = append(notes, note.GetResult().ID)
 	}
-	trash := deleteitems.Process(ctx, tx, domain.NOTE, notes[1:])
+	trash := deleteitems.Process(ctx, tx, domain.NOTE, notes[1:2])
 	trash.Run()
 	if trash.HasErr() {
 		t.Fatal(trash.GetErr())
 	}
-	_, err = tx.NewUpdate().Model((*domain.File)(nil)).Set("created_at = created_at - interval '2 hours'").
-		Where("id != ? AND user_id = ?", files["fresh"].ID, domain.UserID(ctx)).Exec(ctx)
+	// The account keeps its trash 30 days: orphan and back were left uncited 40 days ago.
+	_, err = tx.NewUpdate().Model((*domain.File)(nil)).Set("orphaned_at = current_timestamp - interval '40 days'").
+		Where("id IN (?, ?)", files["orphan"].ID, files["back"].ID).Exec(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,14 +75,34 @@ func TestPurgeFiles(t *testing.T) {
 		t.Fatalf("purge: %v", purge.GetErr())
 	}
 
-	var left []string
-	if err := tx.NewSelect().Model((*domain.File)(nil)).Column("name").Where("user_id = ?", domain.UserID(ctx)).Order("name").Scan(ctx, &left); err != nil {
+	var left []domain.File
+	if err := tx.NewSelect().Model(&left).Where("user_id = ?", domain.UserID(ctx)).Order("name").Scan(ctx); err != nil {
 		t.Fatal(err)
 	}
-	if got := len(left); got != 3 || left[0] != "fresh" || left[1] != "live" || left[2] != "trashed" {
-		t.Errorf("left = %v, want [fresh live trashed]", left)
+	var got []string
+	for _, file := range left {
+		got = append(got, fmt.Sprintf("%s:%t", file.Name, file.OrphanedAt.IsZero()))
 	}
-	if _, ok := store.Objects[files["orphan"].Key()]; ok || len(store.Objects) != 3 {
+	// removed waits, its clock started; back is cited again, its clock stopped.
+	if want := "back:true live:true removed:false trashed:true"; strings.Join(got, " ") != want {
+		t.Errorf("left = %v, want %s", got, want)
+	}
+	if _, ok := store.Objects[files["orphan"].Key()]; ok || len(store.Objects) != 4 {
 		t.Errorf("objects = %v, want the orphan removed", store.Objects)
+	}
+
+	// With a retention of 0, nothing goes.
+	if _, err := tx.NewUpdate().Model((*domain.User)(nil)).Set("trash_retention_days = 0").Where("id = ?", domain.UserID(ctx)).Exec(ctx); err != nil {
+		t.Fatal(err)
+	}
+	_, err = tx.NewUpdate().Model((*domain.File)(nil)).Set("orphaned_at = current_timestamp - interval '400 days'").
+		Where("id = ?", files["removed"].ID).Exec(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	keep := Process(ctx, tx, store)
+	keep.Run()
+	if keep.HasErr() || keep.GetResult() != 0 {
+		t.Errorf("purge with no retention = %d, %v, want 0", keep.GetResult(), keep.GetErr())
 	}
 }

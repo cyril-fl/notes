@@ -146,7 +146,7 @@ Les images suivent les notes. À l'export, celles qu'une note cite sont copiées
 Coller ou glisser une image dans l'éditeur de l'app l'envoie à l'API, qui la range dans [Silo](https://github.com/pgsty/silo) (un stockage S3, fork de MinIO, démarré par `make up`) et la décrit dans la table `files`. La note la cite en markdown : `![nom](/api/files/<uuid>)`.
 
 - PNG, JPEG, GIF et WebP seulement (pas de SVG, qui peut contenir des scripts), 20 Mo au plus. Le type est lu dans le fichier, pas dans ce qu'envoie le navigateur.
-- Une image ne part pas à la corbeille avec sa note : le serveur efface, toutes les heures, celles qu'aucune note ne cite plus, corbeille comprise, une heure au moins après leur envoi. Une note purgée libère donc ses images, comme une image retirée de son texte.
+- Une image qu'aucune note ne cite plus (corbeille comprise) est effacée par le serveur une fois passé le délai de corbeille du compte, compté depuis qu'elle n'est plus citée : jamais si la corbeille garde tout. D'ici là, l'annulation ou le lien recollé la font revenir. Une note purgée libère donc ses images, comme une image retirée de son texte.
 - Le navigateur ne parle jamais à Silo : il passe par `GET /api/files/{id}`, protégé par la session. La console de Silo est sur http://localhost:9001 (identifiants `S3_ACCESS_KEY` / `S3_SECRET_KEY`).
 
 ### Scripts

@@ -17,6 +17,7 @@ type File struct {
 	ContentType string    `bun:",notnull" json:"content_type"`
 	Size        int64     `bun:",notnull" json:"size"`
 	CreatedAt   time.Time `bun:",notnull,default:current_timestamp" json:"created_at"`
+	OrphanedAt  time.Time `bun:",nullzero" json:"-"` // since no note cites it; purgefiles sets it
 }
 
 // FilePattern finds the files a note cites: the uuid is its first group.

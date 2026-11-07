@@ -24,9 +24,14 @@ type cache struct {
 	purged  int
 }
 
-// Process deletes, for every account, the files no note cites any more, trashed notes included: a note purged
-// from the trash, or an image removed from its text. An hour old at least: a pasted image waits for its note's save.
-// shortcut: an image removed then brought back by undo more than an hour later stays broken, keep files longer if it bites.
+// cited is true of a file some note of its account cites, trashed notes included.
+const cited = `EXISTS (
+	SELECT 1 FROM metadata_notes AS mn JOIN items AS i ON i.id = mn.item_id
+	WHERE i.user_id = f.user_id AND strpos(mn.content, f.id::text) > 0)`
+
+// Process deletes the files no note has cited for the trash retention of their account, like a trashed item:
+// an image removed from its text, or whose note was purged, comes back by undo or by pasting its link until then.
+// A retention of 0 keeps them forever.
 func Process(ctx context.Context, db bun.IDB, store silo.Store) *run {
 	return &run{
 		ctx:   ctx,
@@ -36,6 +41,7 @@ func Process(ctx context.Context, db bun.IDB, store silo.Store) *run {
 }
 
 func (p *run) Run() {
+	p.markOrphans()
 	p.findOrphans()
 	p.purge()
 }
@@ -49,12 +55,26 @@ func (p *run) GetResult() int {
 
 // Methods
 
+// markOrphans starts the clock of the files no longer cited, and stops it for those cited again.
+func (p *run) markOrphans() {
+	_, err := p.db.NewUpdate().Model((*domain.File)(nil)).Set("orphaned_at = NULL").
+		Where("orphaned_at IS NOT NULL AND " + cited).Exec(p.ctx)
+	if err == nil {
+		_, err = p.db.NewUpdate().Model((*domain.File)(nil)).Set("orphaned_at = current_timestamp").
+			Where("orphaned_at IS NULL AND NOT " + cited).Exec(p.ctx)
+	}
+	p.SetErr(err)
+}
+
 func (p *run) findOrphans() {
+	if p.HasErr() {
+		return
+	}
+
 	err := p.db.NewSelect().Model(&p.cache.orphans).
-		Where("f.created_at < current_timestamp - interval '1 hour'").
-		Where(`NOT EXISTS (
-			SELECT 1 FROM metadata_notes AS mn JOIN items AS i ON i.id = mn.item_id
-			WHERE i.user_id = f.user_id AND strpos(mn.content, f.id::text) > 0)`).
+		Join("JOIN users AS u ON u.id = f.user_id").
+		Where("u.trash_retention_days > 0").
+		Where("f.orphaned_at < current_timestamp - make_interval(days => u.trash_retention_days::int)").
 		Scan(p.ctx)
 	p.SetErr(err)
 }
