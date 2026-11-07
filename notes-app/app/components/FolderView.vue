@@ -23,7 +23,9 @@ function select(event: MouseEvent, index: number) {
     selection.value = [...new Set([...selection.value, ...range])];
     return;
   }
-  selection.value = selection.value.includes(id) ? selection.value.filter((other) => other !== id) : [...selection.value, id];
+  selection.value = selection.value.includes(id)
+    ? selection.value.filter((other) => other !== id)
+    : [...selection.value, id];
   anchor = index;
 }
 
@@ -47,17 +49,36 @@ const isOver = useDropFolder(panel, () => props.folderId ?? null);
 </script>
 
 <template>
-  <div ref="panel" class="flex min-h-full flex-col p-8 transition-shadow duration-150" :class="{ 'ring-2 ring-inset ring-primary/40': isOver }">
+  <div
+    ref="panel"
+    class="flex min-h-full flex-col p-8 transition-shadow duration-150"
+    :class="{ 'ring-2 ring-inset ring-primary/40': isOver }"
+  >
     <PageHeader :title="title">
       <ViewToggle />
       <UTooltip :text="$t('common.newFolder')">
-        <UButton :icon="icons.folderAdd" color="neutral" variant="ghost" :aria-label="$t('common.newFolder')" @click="createFolder(folderId)" />
+        <UButton
+          :icon="icons.folderAdd"
+          color="neutral"
+          variant="ghost"
+          :aria-label="$t('common.newFolder')"
+          @click="createFolder(folderId)"
+        />
       </UTooltip>
       <UTooltip :text="$t('common.newNote')">
-        <UButton :icon="icons.noteAdd" color="neutral" variant="ghost" :aria-label="$t('common.newNote')" :to="newNotePath(folderId)" />
+        <UButton
+          :icon="icons.noteAdd"
+          color="neutral"
+          variant="ghost"
+          :aria-label="$t('common.newNote')"
+          :to="newNotePath(folderId)"
+        />
       </UTooltip>
     </PageHeader>
-    <div v-if="selected.length" class="sticky top-0 z-10 mb-3 flex items-center gap-2 rounded-md bg-elevated py-1 pr-1 pl-3 text-sm">
+    <div
+      v-if="selected.length"
+      class="sticky top-0 z-10 mb-3 flex items-center gap-2 rounded-md bg-elevated py-1 pr-1 pl-3 text-sm"
+    >
       <span class="mr-auto">{{ $t('folder.selected', selected.length) }}</span>
       <USelectMenu
         :items="destinations"
@@ -68,9 +89,23 @@ const isOver = useDropFolder(panel, () => props.folderId ?? null);
         :aria-label="$t('folder.moveTo')"
         @update:model-value="moveSelection"
       />
-      <UButton :label="$t('common.delete')" :icon="icons.delete" color="error" variant="ghost" size="sm" @click="removeSelection" />
+      <UButton
+        :label="$t('common.delete')"
+        :icon="icons.delete"
+        color="error"
+        variant="ghost"
+        size="sm"
+        @click="removeSelection"
+      />
       <UTooltip :text="$t('folder.clearSelection')" :kbds="['esc']">
-        <UButton :icon="icons.close" color="neutral" variant="ghost" size="sm" :aria-label="$t('folder.clearSelection')" @click="selection = []" />
+        <UButton
+          :icon="icons.close"
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          :aria-label="$t('folder.clearSelection')"
+          @click="selection = []"
+        />
       </UTooltip>
     </div>
     <ul v-if="items.length" :class="{ mosaic: view === 'grid' }">
@@ -85,7 +120,13 @@ const isOver = useDropFolder(panel, () => props.folderId ?? null);
       :description="$t('folder.emptyDescription')"
       :actions="[
         { label: $t('common.newNote'), icon: icons.noteAdd, to: newNotePath(folderId) },
-        { label: $t('common.newFolder'), icon: icons.folderAdd, color: 'neutral', variant: 'subtle', onClick: () => createFolder(folderId) },
+        {
+          label: $t('common.newFolder'),
+          icon: icons.folderAdd,
+          color: 'neutral',
+          variant: 'subtle',
+          onClick: () => createFolder(folderId),
+        },
       ]"
     />
     <!-- Like a note's footer. The subtitle is the folder's own path: the breadcrumb leads to its parents. -->

@@ -30,10 +30,22 @@ const canGoForward = computed(() => route.fullPath && !!window.history.state?.fo
 <template>
   <!-- Plain muted text like the other pages' subtitles: the path reads as before, its parts just link. -->
   <nav class="flex min-w-0 items-center gap-1 text-xs text-muted" :aria-label="$t('path.breadcrumb')">
-    <button type="button" class="shrink-0 hover:text-default disabled:opacity-40 disabled:hover:text-muted" :aria-label="$t('path.back')" :disabled="!canGoBack" @click="router.back()">
+    <button
+      type="button"
+      class="shrink-0 hover:text-default disabled:opacity-40 disabled:hover:text-muted"
+      :aria-label="$t('path.back')"
+      :disabled="!canGoBack"
+      @click="router.back()"
+    >
       <UIcon :name="icons.back" class="block size-3.5" />
     </button>
-    <button type="button" class="mr-1 shrink-0 hover:text-default disabled:opacity-40 disabled:hover:text-muted" :aria-label="$t('path.forward')" :disabled="!canGoForward" @click="router.forward()">
+    <button
+      type="button"
+      class="mr-1 shrink-0 hover:text-default disabled:opacity-40 disabled:hover:text-muted"
+      :aria-label="$t('path.forward')"
+      :disabled="!canGoForward"
+      @click="router.forward()"
+    >
       <UIcon :name="icons.forward" class="block size-3.5" />
     </button>
     <template v-for="(part, index) in breadcrumb" :key="index">

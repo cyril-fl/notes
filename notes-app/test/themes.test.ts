@@ -18,7 +18,14 @@ const contrast = (a: string, b: string) => {
 };
 // a at the given opacity over b, as bg-primary/10 draws it.
 const over = (a: string, b: string, alpha: number) =>
-  '#' + rgb(a).map((v, i) => Math.round(v * alpha + rgb(b)[i]! * (1 - alpha)).toString(16).padStart(2, '0')).join('');
+  '#' +
+  rgb(a)
+    .map((v, i) =>
+      Math.round(v * alpha + rgb(b)[i]! * (1 - alpha))
+        .toString(16)
+        .padStart(2, '0'),
+    )
+    .join('');
 
 // The shades Nuxt UI takes for each token, with the light accent on the 600 of main.css.
 for (const theme of themes) {

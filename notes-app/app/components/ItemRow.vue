@@ -16,10 +16,14 @@ const to = computed(() => `/${isFolder.value ? 'folders' : 'notes'}/${props.item
 // Only folders take drops: a note target always refuses.
 const isOver = useDropFolder(
   computed(() => (isFolder.value ? link.value : null)),
-  () => props.item.id
+  () => props.item.id,
 );
 const date = computed(() =>
-  new Date(props.item.updated_at ?? props.item.created_at).toLocaleDateString(locale.value, { day: 'numeric', month: 'short', year: 'numeric' })
+  new Date(props.item.updated_at ?? props.item.created_at).toLocaleDateString(locale.value, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }),
 );
 </script>
 
@@ -34,7 +38,13 @@ const date = computed(() =>
         <p class="text-muted">{{ date }}</p>
       </div>
     </NuxtLink>
-    <NuxtLink v-else ref="link" :to="to" class="row h-9" :class="{ 'row-over': isOver, 'row-selected': selected && !isOver }">
+    <NuxtLink
+      v-else
+      ref="link"
+      :to="to"
+      class="row h-9"
+      :class="{ 'row-over': isOver, 'row-selected': selected && !isOver }"
+    >
       <UIcon
         :name="isFolder ? icons.folder : icons.note"
         class="size-4 shrink-0"

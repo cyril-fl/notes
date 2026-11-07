@@ -10,7 +10,10 @@ const collapsed = ref(false);
 
 // The account's language wins over the cookie's, which only remembers this browser's last one.
 const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
-watch(() => me.value?.locale, (locale) => locale && setLocale(locale as 'fr' | 'en'));
+watch(
+  () => me.value?.locale,
+  (locale) => locale && setLocale(locale as 'fr' | 'en'),
+);
 
 // Theme, mode and view follow the account; a change of mode or view from anywhere (sidebar, view toggle, settings) is saved to it.
 const appConfig = useAppConfig();
@@ -59,7 +62,12 @@ defineShortcuts({
       </template>
     </UDashboardSidebar>
 
-    <UDashboardPanel :ui="{ root: 'h-full min-h-0 flex-1 overflow-hidden rounded-xl border-0 bg-default', body: 'gap-0 p-0 sm:gap-0 sm:p-0' }">
+    <UDashboardPanel
+      :ui="{
+        root: 'h-full min-h-0 flex-1 overflow-hidden rounded-xl border-0 bg-default',
+        body: 'gap-0 p-0 sm:gap-0 sm:p-0',
+      }"
+    >
       <template #body>
         <!-- Only on a small screen, where the sidebar is a drawer. -->
         <div class="flex px-2 pt-2 lg:hidden">

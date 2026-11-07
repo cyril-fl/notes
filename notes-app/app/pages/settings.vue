@@ -12,7 +12,9 @@ const input = useTemplateRef('input');
 const importing = ref(false);
 
 const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
-const avatarSrc = computed(() => me.value?.avatar && imageSrc(`/api/files/${me.value.avatar}`, useRuntimeConfig().public.apiBase));
+const avatarSrc = computed(
+  () => me.value?.avatar && imageSrc(`/api/files/${me.value.avatar}`, useRuntimeConfig().public.apiBase),
+);
 
 // Each language in its own words. The layout watches me: it switches the interface once the API saved the choice.
 const languages = [
@@ -97,7 +99,13 @@ async function importZip(event: Event) {
         <p class="min-w-0 flex-1 truncate text-sm">
           {{ $t('settings.loggedInAs') }} <span class="font-medium">{{ me?.name }}</span>
         </p>
-        <UButton :label="$t('settings.manageAccount')" :icon="icons.account" to="/account" color="neutral" variant="outline" />
+        <UButton
+          :label="$t('settings.manageAccount')"
+          :icon="icons.account"
+          to="/account"
+          color="neutral"
+          variant="outline"
+        />
       </div>
     </section>
 
@@ -105,7 +113,15 @@ async function importZip(event: Event) {
       <h2 class="mb-1 text-sm font-semibold">{{ $t('settings.language') }}</h2>
       <div class="flex items-center gap-4 py-3">
         <p class="min-w-0 flex-1 text-xs text-muted">{{ $t('settings.languageDescription') }}</p>
-        <USelectMenu :model-value="locale" :items="languages" value-key="value" :search-input="false" :aria-label="$t('settings.language')" class="w-56" @update:model-value="changeLanguage" />
+        <USelectMenu
+          :model-value="locale"
+          :items="languages"
+          value-key="value"
+          :search-input="false"
+          :aria-label="$t('settings.language')"
+          class="w-56"
+          @update:model-value="changeLanguage"
+        />
       </div>
     </section>
 
@@ -116,7 +132,13 @@ async function importZip(event: Event) {
           <p class="text-sm">{{ $t('settings.theme') }}</p>
           <p class="mb-3 text-xs text-muted">{{ $t('settings.themeDescription') }}</p>
           <div class="grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-3">
-            <ThemePreview v-for="theme in themes" :key="theme.id" :theme="theme" :active="me?.theme === theme.id" @click="changeTheme(theme.id)" />
+            <ThemePreview
+              v-for="theme in themes"
+              :key="theme.id"
+              :theme="theme"
+              :active="me?.theme === theme.id"
+              @click="changeTheme(theme.id)"
+            />
           </div>
         </li>
         <li class="flex items-center gap-4 py-3">
@@ -124,7 +146,14 @@ async function importZip(event: Event) {
             <p class="text-sm">{{ $t('settings.mode') }}</p>
             <p class="text-xs text-muted">{{ $t('settings.modeDescription') }}</p>
           </div>
-          <USelectMenu v-model="colorMode.preference" :items="modes" value-key="value" :search-input="false" :aria-label="$t('settings.mode')" class="w-56" />
+          <USelectMenu
+            v-model="colorMode.preference"
+            :items="modes"
+            value-key="value"
+            :search-input="false"
+            :aria-label="$t('settings.mode')"
+            class="w-56"
+          />
         </li>
       </ul>
     </section>
@@ -156,16 +185,36 @@ async function importZip(event: Event) {
             <p class="text-sm">{{ $t('settings.export') }}</p>
             <p class="text-xs text-muted">{{ $t('settings.exportDescription') }}</p>
           </div>
-          <UButton :label="$t('settings.export')" :icon="icons.export" color="neutral" variant="outline" :href="exportURL" download />
+          <UButton
+            :label="$t('settings.export')"
+            :icon="icons.export"
+            color="neutral"
+            variant="outline"
+            :href="exportURL"
+            download
+          />
         </li>
         <li class="flex items-center gap-4 py-3">
           <div class="min-w-0 flex-1">
             <p class="text-sm">{{ $t('settings.import') }}</p>
             <p class="text-xs text-muted">{{ $t('settings.importDescription') }}</p>
           </div>
-          <USelectMenu v-model="parent" :items="destinations" value-key="value" :aria-label="$t('settings.importInto')" class="w-56" />
-          <input ref="input" type="file" accept=".zip,application/zip" class="hidden" @change="importZip">
-          <UButton :label="$t('settings.import')" :icon="icons.import" color="neutral" variant="outline" :loading="importing" @click="input?.click()" />
+          <USelectMenu
+            v-model="parent"
+            :items="destinations"
+            value-key="value"
+            :aria-label="$t('settings.importInto')"
+            class="w-56"
+          />
+          <input ref="input" type="file" accept=".zip,application/zip" class="hidden" @change="importZip" />
+          <UButton
+            :label="$t('settings.import')"
+            :icon="icons.import"
+            color="neutral"
+            variant="outline"
+            :loading="importing"
+            @click="input?.click()"
+          />
         </li>
       </ul>
     </section>

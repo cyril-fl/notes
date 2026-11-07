@@ -12,7 +12,7 @@ const q = computed(() => (typeof route.query.q === 'string' ? route.query.q : ''
 const { data: matches, status } = useLazyAsyncData(
   'search',
   () => (q.value.trim() ? api<Match[]>('/api/search', { query: { q: q.value } }) : Promise.resolve([])),
-  { watch: [q], default: () => [] as Match[] }
+  { watch: [q], default: () => [] as Match[] },
 );
 </script>
 

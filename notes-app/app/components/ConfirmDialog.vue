@@ -8,7 +8,13 @@ const disabled = computed(() => !!props.expected && typed.value !== props.expect
 </script>
 
 <template>
-  <UModal :title="title" :description="description" :ui="{ content: 'max-w-sm' }" :close="false" @update:open="emit('close')">
+  <UModal
+    :title="title"
+    :description="description"
+    :ui="{ content: 'max-w-sm' }"
+    :close="false"
+    @update:open="emit('close')"
+  >
     <template v-if="expected" #body>
       <UFormField :label="$t('common.typeToConfirm', { text: expected })">
         <UInput v-model="typed" autofocus class="w-full" autocomplete="off" />

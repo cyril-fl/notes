@@ -19,8 +19,12 @@ const darkMode = computed({
   get: () => colorMode.value === 'dark',
   set: (dark) => (colorMode.preference = dark ? 'dark' : 'light'),
 });
-const { data: recent } = useLazyAsyncData('recent', () => api<Recent[]>('/api/recent', { quiet: true }), { default: () => [] as Recent[] });
-const { data: tags } = useLazyAsyncData('tags', () => api<TagCount[]>('/api/graph'), { default: () => [] as TagCount[] });
+const { data: recent } = useLazyAsyncData('recent', () => api<Recent[]>('/api/recent', { quiet: true }), {
+  default: () => [] as Recent[],
+});
+const { data: tags } = useLazyAsyncData('tags', () => api<TagCount[]>('/api/graph'), {
+  default: () => [] as TagCount[],
+});
 
 // The account, loaded by the layout: its avatar opens the account menu.
 const { data: me } = useNuxtData<User>('me');
@@ -44,16 +48,44 @@ const isOverRoot = useDropFolder(rootLink, () => null);
   <!-- Reduced to a rail of icons: the sidebar never leaves the screen. -->
   <nav v-if="collapsed" class="flex h-full flex-col items-center gap-1 py-3" :aria-label="$t('common.navigation')">
     <UTooltip :text="$t('common.search')" :kbds="['meta', 'K']" :content="{ side: 'right' }">
-      <UButton :icon="icons.search" color="neutral" variant="ghost" :aria-label="$t('common.search')" @click="searchOpen = true" />
+      <UButton
+        :icon="icons.search"
+        color="neutral"
+        variant="ghost"
+        :aria-label="$t('common.search')"
+        @click="searchOpen = true"
+      />
     </UTooltip>
     <UTooltip :text="$t('common.notes')" :content="{ side: 'right' }">
-      <UButton :icon="icons.notes" to="/" color="neutral" variant="ghost" active-variant="soft" :aria-label="$t('common.notes')" :active="route.path === '/'" />
+      <UButton
+        :icon="icons.notes"
+        to="/"
+        color="neutral"
+        variant="ghost"
+        active-variant="soft"
+        :aria-label="$t('common.notes')"
+        :active="route.path === '/'"
+      />
     </UTooltip>
     <UTooltip :text="$t('common.graph')" :content="{ side: 'right' }">
-      <UButton :icon="icons.graph" to="/graph" color="neutral" variant="ghost" active-variant="soft" :aria-label="$t('common.graph')" />
+      <UButton
+        :icon="icons.graph"
+        to="/graph"
+        color="neutral"
+        variant="ghost"
+        active-variant="soft"
+        :aria-label="$t('common.graph')"
+      />
     </UTooltip>
     <UTooltip :text="$t('common.trash')" :content="{ side: 'right' }">
-      <UButton :icon="icons.trash" to="/trash" color="neutral" variant="ghost" active-variant="soft" :aria-label="$t('common.trash')" />
+      <UButton
+        :icon="icons.trash"
+        to="/trash"
+        color="neutral"
+        variant="ghost"
+        active-variant="soft"
+        :aria-label="$t('common.trash')"
+      />
     </UTooltip>
 
     <div class="mt-auto flex flex-col items-center gap-1 border-t border-default pt-2">
@@ -63,7 +95,13 @@ const isOverRoot = useDropFolder(rootLink, () => null);
         </UButton>
       </UDropdownMenu>
       <UTooltip :text="darkMode ? $t('sidebar.lightTheme') : $t('sidebar.darkTheme')" :content="{ side: 'right' }">
-        <UButton :icon="darkMode ? icons.lightMode : icons.darkMode" color="neutral" variant="ghost" :aria-label="darkMode ? $t('sidebar.lightTheme') : $t('sidebar.darkTheme')" @click="darkMode = !darkMode" />
+        <UButton
+          :icon="darkMode ? icons.lightMode : icons.darkMode"
+          color="neutral"
+          variant="ghost"
+          :aria-label="darkMode ? $t('sidebar.lightTheme') : $t('sidebar.darkTheme')"
+          @click="darkMode = !darkMode"
+        />
       </UTooltip>
       <UTooltip :text="$t('sidebar.expand')" :kbds="['meta', '\\']" :content="{ side: 'right' }">
         <UDashboardSidebarCollapse color="neutral" variant="ghost" />
@@ -82,39 +120,67 @@ const isOverRoot = useDropFolder(rootLink, () => null);
       class="justify-start text-muted"
       @click="searchOpen = true"
     >
-      <template #trailing>
-        <UKbd value="meta" size="sm" class="ms-auto" /><UKbd value="K" size="sm" />
-      </template>
+      <template #trailing> <UKbd value="meta" size="sm" class="ms-auto" /><UKbd value="K" size="sm" /> </template>
     </UButton>
 
     <div class="min-h-0 flex-1 space-y-5 overflow-y-auto">
       <section v-if="favorites.length">
         <h2 class="px-2 pb-1 text-xs font-medium text-muted">{{ $t('sidebar.favorites') }}</h2>
-        <div v-for="folder in favorites" :key="folder.id" class="row" :class="{ 'row-active': route.params.id === folder.id }">
+        <div
+          v-for="folder in favorites"
+          :key="folder.id"
+          class="row"
+          :class="{ 'row-active': route.params.id === folder.id }"
+        >
           <UTooltip :text="$t('sidebar.removeFavorite')">
-            <button type="button" class="shrink-0 text-muted hover:text-default" :aria-label="$t('sidebar.removeFavorite')" @click="pinItem(folder, false)">
+            <button
+              type="button"
+              class="shrink-0 text-muted hover:text-default"
+              :aria-label="$t('sidebar.removeFavorite')"
+              @click="pinItem(folder, false)"
+            >
               <UIcon :name="icons.favorite" class="block size-4" />
             </button>
           </UTooltip>
-          <NuxtLink :to="`/folders/${folder.id}`" class="flex-1 self-stretch truncate leading-7">{{ folder.title }}</NuxtLink>
+          <NuxtLink :to="`/folders/${folder.id}`" class="flex-1 self-stretch truncate leading-7">{{
+            folder.title
+          }}</NuxtLink>
         </div>
       </section>
 
       <section v-if="pinnedNotes.length">
         <h2 class="px-2 pb-1 text-xs font-medium text-muted">{{ $t('sidebar.pinned') }}</h2>
-        <div v-for="note in pinnedNotes" :key="note.id" class="row" :class="{ 'row-active': route.params.id === note.id }">
+        <div
+          v-for="note in pinnedNotes"
+          :key="note.id"
+          class="row"
+          :class="{ 'row-active': route.params.id === note.id }"
+        >
           <UTooltip :text="$t('sidebar.unpin')">
-            <button type="button" class="shrink-0 text-muted hover:text-default" :aria-label="$t('sidebar.unpin')" @click="pinItem(note, false)">
+            <button
+              type="button"
+              class="shrink-0 text-muted hover:text-default"
+              :aria-label="$t('sidebar.unpin')"
+              @click="pinItem(note, false)"
+            >
               <UIcon :name="icons.pin" class="block size-4" />
             </button>
           </UTooltip>
-          <NuxtLink :to="`/notes/${note.id}`" class="flex-1 self-stretch truncate leading-7">{{ displayTitle(note.title, $t('untitled')) }}</NuxtLink>
+          <NuxtLink :to="`/notes/${note.id}`" class="flex-1 self-stretch truncate leading-7">{{
+            displayTitle(note.title, $t('untitled'))
+          }}</NuxtLink>
         </div>
       </section>
 
       <section v-if="recent.length">
         <h2 class="px-2 pb-1 text-xs font-medium text-muted">{{ $t('sidebar.recent') }}</h2>
-        <NuxtLink v-for="note in recent.slice(0, 5)" :key="note.id" :to="`/notes/${note.id}`" class="row" :class="{ 'row-active': route.params.id === note.id }">
+        <NuxtLink
+          v-for="note in recent.slice(0, 5)"
+          :key="note.id"
+          :to="`/notes/${note.id}`"
+          class="row"
+          :class="{ 'row-active': route.params.id === note.id }"
+        >
           <UIcon :name="icons.recent" class="size-4 shrink-0 text-muted" />
           <span class="truncate">{{ displayTitle(note.title, $t('untitled')) }}</span>
         </NuxtLink>
@@ -169,10 +235,24 @@ const isOverRoot = useDropFolder(rootLink, () => null);
         </UButton>
       </UDropdownMenu>
       <UTooltip :text="darkMode ? $t('sidebar.lightTheme') : $t('sidebar.darkTheme')">
-        <UButton :icon="darkMode ? icons.lightMode : icons.darkMode" color="neutral" variant="ghost" size="sm" :aria-label="darkMode ? $t('sidebar.lightTheme') : $t('sidebar.darkTheme')" @click="darkMode = !darkMode" />
+        <UButton
+          :icon="darkMode ? icons.lightMode : icons.darkMode"
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          :aria-label="darkMode ? $t('sidebar.lightTheme') : $t('sidebar.darkTheme')"
+          @click="darkMode = !darkMode"
+        />
       </UTooltip>
       <UTooltip :text="$t('common.newFolder')">
-        <UButton :icon="icons.folderAdd" color="neutral" variant="ghost" size="sm" :aria-label="$t('common.newFolder')" @click="createFolder()" />
+        <UButton
+          :icon="icons.folderAdd"
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          :aria-label="$t('common.newFolder')"
+          @click="createFolder()"
+        />
       </UTooltip>
       <UTooltip :text="$t('sidebar.collapse')" :kbds="['meta', '\\']">
         <UDashboardSidebarCollapse color="neutral" variant="ghost" size="sm" class="hidden lg:inline-flex" />

@@ -53,7 +53,8 @@ test('the settings save the theme and the trash retention to the account', async
   const api = { headers: { Origin: APP } };
   const me = async () => (await request.get(`${API}/api/me`, api)).json();
   const before = await me();
-  const primary = () => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--ui-color-primary-500').trim());
+  const primary = () =>
+    page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--ui-color-primary-500').trim());
   try {
     await page.goto('/settings');
     const notes = await primary();
@@ -66,6 +67,9 @@ test('the settings save the theme and the trash retention to the account', async
 
     await expect.poll(me).toMatchObject({ theme: 'dracula', trash_retention_days: 0 });
   } finally {
-    await request.patch(`${API}/api/me`, { ...api, data: { theme: before.theme, trash_retention_days: before.trash_retention_days } });
+    await request.patch(`${API}/api/me`, {
+      ...api,
+      data: { theme: before.theme, trash_retention_days: before.trash_retention_days },
+    });
   }
 });

@@ -62,13 +62,18 @@ test('a pasted image is sent to the API, shown, and cited by the note', async ({
   const image = editor.locator('img[alt="point.png"]');
   await expect(image).toBeAttached();
   await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(1);
-  await expect.poll(() => box.content(note.id), { timeout: 5000 }).toMatch(/!\[point\.png\]\(\/api\/files\/[0-9a-f-]{36}\)/);
+  await expect
+    .poll(() => box.content(note.id), { timeout: 5000 })
+    .toMatch(/!\[point\.png\]\(\/api\/files\/[0-9a-f-]{36}\)/);
 });
 
 test('pinning from the menu lists the note in the sidebar', async ({ page }) => {
   const note = await box.note(`# ${box.prefix} épinglée`);
   await page.goto(`/folders/${box.folder.id}`);
-  await page.getByRole('main').getByRole('link', { name: new RegExp(`${box.prefix} épinglée`) }).click({ button: 'right' });
+  await page
+    .getByRole('main')
+    .getByRole('link', { name: new RegExp(`${box.prefix} épinglée`) })
+    .click({ button: 'right' });
   await page.getByRole('menuitem', { name: 'Épingler' }).click();
   const pinned = page.locator('section', { has: page.getByRole('heading', { name: 'Épinglées' }) });
   await expect(pinned.getByRole('link', { name: `${box.prefix} épinglée` })).toBeVisible();

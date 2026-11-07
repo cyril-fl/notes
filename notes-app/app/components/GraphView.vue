@@ -18,11 +18,11 @@ function isActiveLink(link: Link) {
 
 const activeLinks = computed(() => props.graph.links.filter(isActiveLink));
 
-const linkedToActive = computed(() => new Set(activeLinks.value.flatMap(link => [link.source, link.target])));
+const linkedToActive = computed(() => new Set(activeLinks.value.flatMap((link) => [link.source, link.target])));
 
-const hoveredNote = computed(() => props.graph.notes.find(note => note.id === hovered.value) ?? null);
+const hoveredNote = computed(() => props.graph.notes.find((note) => note.id === hovered.value) ?? null);
 
-const titles = computed(() => new Map(props.graph.notes.map(note => [note.id, note.title])));
+const titles = computed(() => new Map(props.graph.notes.map((note) => [note.id, note.title])));
 
 function otherEnd(link: Link) {
   return link.source === hovered.value ? link.target : link.source;
@@ -76,11 +76,20 @@ function zoomBy(factor: number, x?: number, y?: number) {
 }
 
 // The wheel, and a trackpad pinch (a wheel with ctrlKey for the browser); passive: false to keep the page from scrolling.
-useEventListener(view, 'wheel', (event: WheelEvent) => {
-  event.preventDefault();
-  const rect = view.value!.getBoundingClientRect();
-  zoomBy(Math.exp(-event.deltaY * (event.ctrlKey ? 0.01 : 0.002)), event.clientX - rect.left, event.clientY - rect.top);
-}, { passive: false });
+useEventListener(
+  view,
+  'wheel',
+  (event: WheelEvent) => {
+    event.preventDefault();
+    const rect = view.value!.getBoundingClientRect();
+    zoomBy(
+      Math.exp(-event.deltaY * (event.ctrlKey ? 0.01 : 0.002)),
+      event.clientX - rect.left,
+      event.clientY - rect.top,
+    );
+  },
+  { passive: false },
+);
 
 function recenter() {
   zoom.value = 1;
@@ -145,7 +154,11 @@ function linkClass(link: Link) {
       >
         <!-- Solid colors, not opacity: links drawn under the dot must not show through it. -->
         <span class="size-2.5 shrink-0 rounded-full transition-colors duration-150" :class="dotClass(note.id)" />
-        <span class="max-w-full truncate text-xs transition-opacity duration-150" :class="{ 'font-medium': note.id === active, 'opacity-30': isDimmed(note.id) }">{{ displayTitle(note.title, $t('untitled')) }}</span>
+        <span
+          class="max-w-full truncate text-xs transition-opacity duration-150"
+          :class="{ 'font-medium': note.id === active, 'opacity-30': isDimmed(note.id) }"
+          >{{ displayTitle(note.title, $t('untitled')) }}</span
+        >
       </NuxtLink>
 
       <div
@@ -155,10 +168,15 @@ function linkClass(link: Link) {
       >
         <span class="shrink-0 truncate font-medium">{{ displayTitle(hoveredNote.title, $t('untitled')) }}</span>
         <span class="shrink-0 truncate text-muted">{{ hoveredNote.path }}</span>
-        <ul v-if="activeLinks.length" class="mt-1 flex min-h-0 flex-col gap-0.5 overflow-hidden border-t border-default pt-1">
+        <ul
+          v-if="activeLinks.length"
+          class="mt-1 flex min-h-0 flex-col gap-0.5 overflow-hidden border-t border-default pt-1"
+        >
           <li v-for="link in activeLinks" :key="`${link.source}-${link.target}`" class="flex gap-2">
             <span class="truncate">{{ displayTitle(titles.get(otherEnd(link)), $t('untitled')) }}</span>
-            <span class="ml-auto shrink-0 text-primary">{{ [...(link.linked ? [$t('graph.link')] : []), ...link.tags.map(tag => `#${tag}`)].join(' ') }}</span>
+            <span class="ml-auto shrink-0 text-primary">{{
+              [...(link.linked ? [$t('graph.link')] : []), ...link.tags.map((tag) => `#${tag}`)].join(' ')
+            }}</span>
           </li>
         </ul>
         <span v-else class="text-muted">{{ $t('graph.noLink') }}</span>
@@ -166,15 +184,41 @@ function linkClass(link: Link) {
     </div>
 
     <!-- @pointerdown.stop: a click on a button is not the start of a drag. -->
-    <div class="absolute right-3 bottom-3 z-30 flex gap-1 rounded-md bg-default/80 p-0.5 backdrop-blur" @pointerdown.stop>
+    <div
+      class="absolute right-3 bottom-3 z-30 flex gap-1 rounded-md bg-default/80 p-0.5 backdrop-blur"
+      @pointerdown.stop
+    >
       <UTooltip :text="$t('graph.zoomOut')">
-        <UButton :icon="icons.zoomOut" color="neutral" variant="ghost" size="sm" :aria-label="$t('graph.zoomOut')" :disabled="zoom <= MIN_ZOOM" @click="zoomBy(1 / 1.4)" />
+        <UButton
+          :icon="icons.zoomOut"
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          :aria-label="$t('graph.zoomOut')"
+          :disabled="zoom <= MIN_ZOOM"
+          @click="zoomBy(1 / 1.4)"
+        />
       </UTooltip>
       <UTooltip :text="$t('graph.zoomIn')">
-        <UButton :icon="icons.zoomIn" color="neutral" variant="ghost" size="sm" :aria-label="$t('graph.zoomIn')" :disabled="zoom >= MAX_ZOOM" @click="zoomBy(1.4)" />
+        <UButton
+          :icon="icons.zoomIn"
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          :aria-label="$t('graph.zoomIn')"
+          :disabled="zoom >= MAX_ZOOM"
+          @click="zoomBy(1.4)"
+        />
       </UTooltip>
       <UTooltip :text="$t('graph.recenter')">
-        <UButton :icon="icons.recenter" color="neutral" variant="ghost" size="sm" :aria-label="$t('graph.recenter')" @click="recenter" />
+        <UButton
+          :icon="icons.recenter"
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          :aria-label="$t('graph.recenter')"
+          @click="recenter"
+        />
       </UTooltip>
     </div>
   </div>

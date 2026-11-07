@@ -2,6 +2,9 @@
 export const useSelection = createGlobalState(() => {
   const ids = ref<string[]>([]);
   const route = useRoute();
-  watch(() => route.fullPath, () => (ids.value = []));
+  watch(
+    () => route.fullPath,
+    () => (ids.value = []),
+  );
   return ids;
 });

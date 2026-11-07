@@ -6,7 +6,9 @@ test.beforeEach(async () => (box = await sandbox()));
 test.afterEach(async () => box.dispose());
 
 test('several items are selected, moved, then removed together', async ({ page }) => {
-  const sub = await (await box.api.post('/api/folders', { data: { title: 'Rangement', parent_id: box.folder.id } })).json();
+  const sub = await (
+    await box.api.post('/api/folders', { data: { title: 'Rangement', parent_id: box.folder.id } })
+  ).json();
   await box.note('# Alpha');
   await box.note('# Bravo');
   await page.goto(`/folders/${box.folder.id}`);

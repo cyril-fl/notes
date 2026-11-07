@@ -23,10 +23,24 @@ async function square(file: File, size: number): Promise<Blob> {
   const side = Math.min(bitmap.width, bitmap.height);
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = Math.min(side, size);
-  canvas.getContext('2d')!.drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, canvas.width, canvas.height);
+  canvas
+    .getContext('2d')!
+    .drawImage(
+      bitmap,
+      (bitmap.width - side) / 2,
+      (bitmap.height - side) / 2,
+      side,
+      side,
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    );
   bitmap.close();
   // A browser that cannot encode WebP gives a PNG.
-  return new Promise((resolve, reject) => canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('canvas.toBlob'))), 'image/webp', 0.9));
+  return new Promise((resolve, reject) =>
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('canvas.toBlob'))), 'image/webp', 0.9),
+  );
 }
 
 async function changeAvatar(event: Event) {
@@ -49,10 +63,18 @@ async function removeAvatar() {
 }
 
 const name = ref('');
-watch(() => me.value?.name, (current) => (name.value = current ?? ''), { immediate: true });
+watch(
+  () => me.value?.name,
+  (current) => (name.value = current ?? ''),
+  { immediate: true },
+);
 
 async function rename() {
-  me.value = await api<User>('/api/me', { method: 'PATCH', body: { name: name.value }, conflict: t('account.nameTaken') });
+  me.value = await api<User>('/api/me', {
+    method: 'PATCH',
+    body: { name: name.value },
+    conflict: t('account.nameTaken'),
+  });
   toast.add({ title: t('account.renamed'), color: 'success' });
 }
 
@@ -69,7 +91,11 @@ async function changePassword() {
     }
     // The API's messages are in English: the two the user can fix are said here.
     const message: string = (error as FetchError).data?.error ?? '';
-    const key = message.includes('current password') ? 'account.wrongPassword' : message.includes('characters') ? 'account.shortPassword' : 'api.failed';
+    const key = message.includes('current password')
+      ? 'account.wrongPassword'
+      : message.includes('characters')
+        ? 'account.shortPassword'
+        : 'api.failed';
     toast.add({ title: t(key), color: 'error' });
     return;
   }
@@ -91,9 +117,28 @@ async function changePassword() {
             <p class="text-sm">{{ $t('account.avatar') }}</p>
             <p class="text-xs text-muted">{{ $t('account.avatarDescription') }}</p>
           </div>
-          <input ref="input" type="file" accept="image/png,image/jpeg,image/gif,image/webp" class="hidden" @change="changeAvatar">
-          <UButton v-if="me?.avatar" :label="$t('account.removeAvatar')" color="neutral" variant="ghost" @click="removeAvatar" />
-          <UButton :label="$t('account.chooseAvatar')" :icon="icons.avatar" color="neutral" variant="outline" :loading="uploading" @click="input?.click()" />
+          <input
+            ref="input"
+            type="file"
+            accept="image/png,image/jpeg,image/gif,image/webp"
+            class="hidden"
+            @change="changeAvatar"
+          />
+          <UButton
+            v-if="me?.avatar"
+            :label="$t('account.removeAvatar')"
+            color="neutral"
+            variant="ghost"
+            @click="removeAvatar"
+          />
+          <UButton
+            :label="$t('account.chooseAvatar')"
+            :icon="icons.avatar"
+            color="neutral"
+            variant="outline"
+            :loading="uploading"
+            @click="input?.click()"
+          />
         </li>
         <li class="py-3">
           <form class="flex items-center gap-4" @submit.prevent="rename">
@@ -102,7 +147,13 @@ async function changePassword() {
               <p class="text-xs text-muted">{{ $t('account.nameDescription') }}</p>
             </div>
             <UInput v-model="name" autocomplete="username" :aria-label="$t('account.name')" class="w-56" />
-            <UButton type="submit" :label="$t('account.save')" color="neutral" variant="outline" :disabled="!name.trim() || name.trim() === me?.name" />
+            <UButton
+              type="submit"
+              :label="$t('account.save')"
+              color="neutral"
+              variant="outline"
+              :disabled="!name.trim() || name.trim() === me?.name"
+            />
           </form>
         </li>
       </ul>
@@ -118,7 +169,13 @@ async function changePassword() {
         <UFormField :label="$t('account.newPassword')">
           <UInput v-model="next" type="password" autocomplete="new-password" class="w-56" />
         </UFormField>
-        <UButton type="submit" :label="$t('account.changePassword')" color="neutral" variant="outline" :disabled="!current || !next" />
+        <UButton
+          type="submit"
+          :label="$t('account.changePassword')"
+          color="neutral"
+          variant="outline"
+          :disabled="!current || !next"
+        />
       </form>
     </section>
 
@@ -128,7 +185,13 @@ async function changePassword() {
         <p class="min-w-0 flex-1 truncate text-sm">
           {{ $t('settings.loggedInAs') }} <span class="font-medium">{{ me?.name }}</span>
         </p>
-        <UButton :label="$t('settings.logout')" :icon="icons.logout" color="neutral" variant="outline" @click="logout" />
+        <UButton
+          :label="$t('settings.logout')"
+          :icon="icons.logout"
+          color="neutral"
+          variant="outline"
+          @click="logout"
+        />
       </div>
     </section>
   </div>

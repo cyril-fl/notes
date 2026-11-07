@@ -12,10 +12,13 @@ function editorFor(key: number) {
 const editor = ref(editorFor(0));
 let createdId: string | undefined;
 
-watch(() => route.fullPath, () => {
-  if (route.params.id !== createdId) editor.value = editorFor(editor.value.key + 1);
-  createdId = undefined;
-});
+watch(
+  () => route.fullPath,
+  () => {
+    if (route.params.id !== createdId) editor.value = editorFor(editor.value.key + 1);
+    createdId = undefined;
+  },
+);
 
 function onCreated(id: string) {
   createdId = id;

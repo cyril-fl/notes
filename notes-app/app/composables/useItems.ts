@@ -24,7 +24,11 @@ export function useItems() {
   }
 
   async function createFolder(parentId?: string) {
-    const title = await prompt({ title: t('common.newFolder'), placeholder: t('items.folderName'), action: t('common.create') });
+    const title = await prompt({
+      title: t('common.newFolder'),
+      placeholder: t('items.folderName'),
+      action: t('common.create'),
+    });
     if (!title) return;
     const body = { title, parent_id: parentId };
     return act(() => api<Item>('/api/folders', { method: 'POST', body, conflict: t('items.nameTaken') }));
@@ -33,7 +37,9 @@ export function useItems() {
   async function renameFolder(folder: Item) {
     const title = await prompt({ title: t('items.renameFolder'), value: folder.title, action: t('common.rename') });
     if (!title || title === folder.title) return;
-    return act(() => api<Item>(`/api/folders/${folder.id}`, { method: 'PATCH', body: { title }, conflict: t('items.nameTaken') }));
+    return act(() =>
+      api<Item>(`/api/folders/${folder.id}`, { method: 'PATCH', body: { title }, conflict: t('items.nameTaken') }),
+    );
   }
 
   function removeItem(item: Pick<Item, 'id' | 'kind'>) {
@@ -42,17 +48,35 @@ export function useItems() {
 
   /** The API removes one item per call: they go together, read again once. */
   function removeItems(items: Pick<Item, 'id' | 'kind'>[]) {
-    return act(() => Promise.all(items.map((item) => api(`/api/${item.kind === 'folder' ? 'folders' : 'notes'}/${item.id}`, { method: 'DELETE' }))));
+    return act(() =>
+      Promise.all(
+        items.map((item) =>
+          api(`/api/${item.kind === 'folder' ? 'folders' : 'notes'}/${item.id}`, { method: 'DELETE' }),
+        ),
+      ),
+    );
   }
 
   /** One id or several; a null parent is the root. */
   function moveItem(ids: string | string[], parentId: string | null) {
     const body = { ids: [ids].flat(), parent_id: parentId ?? undefined };
-    return act(() => api<Item[]>('/api/move', { method: 'POST', body, conflict: { [TAKEN]: t('items.nameTaken'), 'into itself': t('items.cycle') } }));
+    return act(() =>
+      api<Item[]>('/api/move', {
+        method: 'POST',
+        body,
+        conflict: { [TAKEN]: t('items.nameTaken'), 'into itself': t('items.cycle') },
+      }),
+    );
   }
 
   function restoreItem(id: string) {
-    return act(() => api<Item[]>('/api/restore', { method: 'POST', body: { ids: [id] }, conflict: { [TAKEN]: t('items.nameTaken'), 'in the trash': t('items.parentInTrash') } }));
+    return act(() =>
+      api<Item[]>('/api/restore', {
+        method: 'POST',
+        body: { ids: [id] },
+        conflict: { [TAKEN]: t('items.nameTaken'), 'in the trash': t('items.parentInTrash') },
+      }),
+    );
   }
 
   /** Pins a note, or makes a folder a favorite. */
@@ -106,10 +130,19 @@ export function useItems() {
 
   /** What right-clicking an item offers. */
   function itemMenu(item: Item): ContextMenuItem[][] {
-    const remove = { label: t('common.delete'), icon: icons.delete, color: 'error' as const, onSelect: () => removeItem(item) };
+    const remove = {
+      label: t('common.delete'),
+      icon: icons.delete,
+      color: 'error' as const,
+      onSelect: () => removeItem(item),
+    };
     if (item.kind === 'note') {
       const pinned = isPinned(item.id);
-      const pin = { label: pinned ? t('items.unpin') : t('items.pin'), icon: pinned ? icons.unpin : icons.pin, onSelect: () => pinItem(item, !pinned) };
+      const pin = {
+        label: pinned ? t('items.unpin') : t('items.pin'),
+        icon: pinned ? icons.unpin : icons.pin,
+        onSelect: () => pinItem(item, !pinned),
+      };
       return [[pin], [remove]];
     }
 
@@ -121,14 +154,32 @@ export function useItems() {
         { label: t('common.newFolder'), icon: icons.folderAdd, onSelect: () => createFolder(item.id) },
       ],
       [
-        { label: favorite ? t('items.removeFavorite') : t('items.addFavorite'), icon: favorite ? icons.unfavorite : icons.favorite, onSelect: () => pinItem(item, !favorite) },
+        {
+          label: favorite ? t('items.removeFavorite') : t('items.addFavorite'),
+          icon: favorite ? icons.unfavorite : icons.favorite,
+          onSelect: () => pinItem(item, !favorite),
+        },
         { label: t('common.rename'), icon: icons.rename, onSelect: () => renameFolder(item) },
       ],
       [remove],
     ];
   }
 
-  return { createFolder, renameFolder, removeItem, removeItems, moveItem, restoreItem, pinItem, emptyTrash, purgeItem, itemMenu, renameTag, removeTag, tagMenu };
+  return {
+    createFolder,
+    renameFolder,
+    removeItem,
+    removeItems,
+    moveItem,
+    restoreItem,
+    pinItem,
+    emptyTrash,
+    purgeItem,
+    itemMenu,
+    renameTag,
+    removeTag,
+    tagMenu,
+  };
 }
 
 /** The pinned notes and favorite folders, read once for the sidebar, the menus and the editor. */
@@ -148,10 +199,14 @@ export const ROOT = 'root';
 export function useDestinations(exclude: () => string[] = () => []) {
   const api = useApi();
   const { t } = useI18n();
-  const { data: folders } = useLazyAsyncData('folder-paths', () => api<FolderPath[]>('/api/folders'), { default: () => [] as FolderPath[] });
+  const { data: folders } = useLazyAsyncData('folder-paths', () => api<FolderPath[]>('/api/folders'), {
+    default: () => [] as FolderPath[],
+  });
   return computed(() => [
     { label: t('common.root'), value: ROOT },
-    ...folders.value.filter((folder) => !exclude().includes(folder.id)).map((folder) => ({ label: folder.path, value: folder.id })),
+    ...folders.value
+      .filter((folder) => !exclude().includes(folder.id))
+      .map((folder) => ({ label: folder.path, value: folder.id })),
   ]);
 }
 

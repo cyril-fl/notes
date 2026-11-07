@@ -25,18 +25,24 @@ function fit(values: number[]) {
 export function layoutGraph(notes: { id: string }[], links: Link[]) {
   const nodes: Node[] = notes.map(({ id }) => ({ id }));
   // d3 writes into the links it gets: they are copies.
-  const edges = links.map(link => ({ ...link }));
+  const edges = links.map((link) => ({ ...link }));
 
   forceSimulation(nodes)
     .force('charge', forceManyBody().strength(-300))
-    .force('link', forceLink<Node, Link>(edges).id(node => node.id).distance(link => 70 / Math.max(link.tags.length + (link.linked ? 1 : 0), 1)).strength(1))
+    .force(
+      'link',
+      forceLink<Node, Link>(edges)
+        .id((node) => node.id)
+        .distance((link) => 70 / Math.max(link.tags.length + (link.linked ? 1 : 0), 1))
+        .strength(1),
+    )
     .force('collide', forceCollide(COLLIDE_RADIUS))
     .force('x', forceX().strength(0.04))
     .force('y', forceY().strength(0.08))
     .stop()
     .tick(TICKS);
 
-  const x = fit(nodes.map(node => node.x!));
-  const y = fit(nodes.map(node => node.y!));
-  return new Map(nodes.map(node => [node.id, { x: x(node.x!), y: y(node.y!) }]));
+  const x = fit(nodes.map((node) => node.x!));
+  const y = fit(nodes.map((node) => node.y!));
+  return new Map(nodes.map((node) => [node.id, { x: x(node.x!), y: y(node.y!) }]));
 }

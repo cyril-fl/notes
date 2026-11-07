@@ -5,13 +5,28 @@ import { readWikiLink, resolvedLinks, writeWikiLink } from '../app/utils/wikiLin
 const ID = '3f2a0000-0000-0000-0000-00000000abcd';
 
 test('reads a waiting link at the start only', () => {
-  assert.deepEqual(readWikiLink('[[Courses]] et la suite'), { type: 'wikiLink', raw: '[[Courses]]', target: 'Courses', id: null });
-  assert.deepEqual(readWikiLink('[[ /A/Idées ]]'), { type: 'wikiLink', raw: '[[ /A/Idées ]]', target: '/A/Idées', id: null });
+  assert.deepEqual(readWikiLink('[[Courses]] et la suite'), {
+    type: 'wikiLink',
+    raw: '[[Courses]]',
+    target: 'Courses',
+    id: null,
+  });
+  assert.deepEqual(readWikiLink('[[ /A/Idées ]]'), {
+    type: 'wikiLink',
+    raw: '[[ /A/Idées ]]',
+    target: '/A/Idées',
+    id: null,
+  });
   assert.equal(readWikiLink('voir [[Courses]]'), undefined);
 });
 
 test('reads a resolved link with its id', () => {
-  assert.deepEqual(readWikiLink(`[Courses](note:${ID.toUpperCase()}) suite`), { type: 'wikiLink', raw: `[Courses](note:${ID.toUpperCase()})`, target: 'Courses', id: ID });
+  assert.deepEqual(readWikiLink(`[Courses](note:${ID.toUpperCase()}) suite`), {
+    type: 'wikiLink',
+    raw: `[Courses](note:${ID.toUpperCase()})`,
+    target: 'Courses',
+    id: ID,
+  });
 });
 
 test('leaves the other links and brackets to markdown', () => {
@@ -28,6 +43,12 @@ test('writes by id once resolved, by title until then', () => {
 test('pairs the links the API resolved with the targets typed', () => {
   const sent = '[[Autre]] puis [[/A/Idées]] et [[Inconnu]]';
   const saved = `[Autre](note:${ID}) puis [Idées](note:${ID.toUpperCase()}) et [[Inconnu]]`;
-  assert.deepEqual([...resolvedLinks(sent, saved)], [['autre', { target: 'Autre', id: ID }], ['/a/idées', { target: 'Idées', id: ID }]]);
+  assert.deepEqual(
+    [...resolvedLinks(sent, saved)],
+    [
+      ['autre', { target: 'Autre', id: ID }],
+      ['/a/idées', { target: 'Idées', id: ID }],
+    ],
+  );
   assert.equal(resolvedLinks('[[Autre]]', 'texte').size, 0);
 });

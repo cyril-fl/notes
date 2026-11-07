@@ -25,7 +25,11 @@ try {
     const edit = await api.patch('/api/me', { data: changes });
     if (!edit.ok()) throw new Error(`PATCH /api/me: ${edit.status()} ${await edit.text()}`);
   }
-  const page = await browser.newPage({ storageState: SESSION, locale: 'fr-FR', viewport: { width: 1100, height: 800 } });
+  const page = await browser.newPage({
+    storageState: SESSION,
+    locale: 'fr-FR',
+    viewport: { width: 1100, height: 800 },
+  });
   await page.goto(APP + path);
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(500); // the theme and mode of the account apply once /api/me answered

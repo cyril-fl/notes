@@ -131,7 +131,12 @@ function saveOnClose() {
 
   const url = `${baseURL}/api/notes${id.value ? `/${id.value}` : ''}`;
   const body = JSON.stringify(id.value ? changes : { ...changes, parent_id: parent.value });
-  fetch(url, { method: id.value ? 'PATCH' : 'POST', body, keepalive: true, headers: { 'Content-Type': 'application/json' } });
+  fetch(url, {
+    method: id.value ? 'PATCH' : 'POST',
+    body,
+    keepalive: true,
+    headers: { 'Content-Type': 'application/json' },
+  });
 }
 useEventListener(window, 'pagehide', saveOnClose);
 
@@ -165,7 +170,12 @@ async function askLink(editor: Editor) {
   if (current) return editor.chain().focus().unsetLink().run();
 
   const href = await prompt({ title: t('note.addLink'), placeholder: 'https://', action: t('common.add') });
-  if (href) editor.chain().focus().setLink({ href: /^[a-z]+:/i.test(href) ? href : `https://${href}` }).run();
+  if (href)
+    editor
+      .chain()
+      .focus()
+      .setLink({ href: /^[a-z]+:/i.test(href) ? href : `https://${href}` })
+      .run();
 }
 
 // The notes offered after [[: picked, the link points to the note's id right away.
@@ -173,7 +183,7 @@ const { data: graph } = useLazyAsyncData('graph', () => api<NotesGraph>('/api/gr
 const noteItems = computed(() =>
   (graph.value?.notes ?? [])
     .filter((note) => note.id !== id.value && note.title)
-    .map((note) => ({ kind: 'wikiLink', label: note.title, description: note.path, icon: icons.note, id: note.id }))
+    .map((note) => ({ kind: 'wikiLink', label: note.title, description: note.path, icon: icons.note, id: note.id })),
 );
 
 function openLink(event: MouseEvent) {
@@ -192,7 +202,13 @@ const handlers = {
   wikiLink: {
     canExecute: () => true,
     execute: (editor: Editor, item: { label: string; id: string }) =>
-      editor.chain().focus().insertContent([{ type: 'wikiLink', attrs: { target: item.label, id: item.id } }, { type: 'text', text: ' ' }]),
+      editor
+        .chain()
+        .focus()
+        .insertContent([
+          { type: 'wikiLink', attrs: { target: item.label, id: item.id } },
+          { type: 'text', text: ' ' },
+        ]),
     isActive: () => false,
     isDisabled: () => false,
   },
@@ -240,7 +256,12 @@ const starterKit = {
 async function upload(file: File) {
   touched.value = true;
   try {
-    const saved = await api<NoteFile>('/api/files', { method: 'POST', body: file, query: { name: file.name }, quiet: true });
+    const saved = await api<NoteFile>('/api/files', {
+      method: 'POST',
+      body: file,
+      query: { name: file.name },
+      quiet: true,
+    });
     return `/api/files/${saved.id}`;
   } catch (error) {
     const status = (error as FetchError).status;
@@ -270,7 +291,13 @@ const status = computed(() => {
   />
 
   <!-- UEditor hands its listeners to TipTap, not to the page: clicks on links are caught here. -->
-  <article v-else-if="!loading" class="flex flex-1 flex-col p-8" @focusin="touched = true" @pointerdown.capture="touched = true" @click="openLink">
+  <article
+    v-else-if="!loading"
+    class="flex flex-1 flex-col p-8"
+    @focusin="touched = true"
+    @pointerdown.capture="touched = true"
+    @click="openLink"
+  >
     <UEditor
       ref="editor"
       v-slot="{ editor }"

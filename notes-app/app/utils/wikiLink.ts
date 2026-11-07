@@ -47,14 +47,23 @@ export const WikiLink = Node.create({
   },
 
   parseHTML() {
-    return [{
-      tag: 'a[data-wikilink]',
-      getAttrs: (el) => ({ target: (el as HTMLElement).dataset.wikilink, id: (el as HTMLElement).dataset.note ?? null }),
-    }];
+    return [
+      {
+        tag: 'a[data-wikilink]',
+        getAttrs: (el) => ({
+          target: (el as HTMLElement).dataset.wikilink,
+          id: (el as HTMLElement).dataset.note ?? null,
+        }),
+      },
+    ];
   },
 
   renderHTML({ node, HTMLAttributes }) {
-    const attrs = { 'data-wikilink': node.attrs.target, 'data-note': node.attrs.id ?? undefined, class: node.attrs.id ? 'wikilink' : 'wikilink wikilink-waiting' };
+    const attrs = {
+      'data-wikilink': node.attrs.target,
+      'data-note': node.attrs.id ?? undefined,
+      class: node.attrs.id ? 'wikilink' : 'wikilink wikilink-waiting',
+    };
     return ['a', mergeAttributes(HTMLAttributes, attrs), node.attrs.target];
   },
 
@@ -73,10 +82,22 @@ export const WikiLink = Node.create({
   renderMarkdown: (node) => writeWikiLink(node.attrs?.target, node.attrs?.id ?? null),
 
   addInputRules() {
-    return [nodeInputRule({ find: new RegExp(`${BY_TITLE.source}$`), type: this.type, getAttributes: (m) => ({ target: m[1]?.trim() }) })];
+    return [
+      nodeInputRule({
+        find: new RegExp(`${BY_TITLE.source}$`),
+        type: this.type,
+        getAttributes: (m) => ({ target: m[1]?.trim() }),
+      }),
+    ];
   },
 
   addPasteRules() {
-    return [nodePasteRule({ find: new RegExp(BY_TITLE.source, 'g'), type: this.type, getAttributes: (m) => ({ target: m[1]?.trim() }) })];
+    return [
+      nodePasteRule({
+        find: new RegExp(BY_TITLE.source, 'g'),
+        type: this.type,
+        getAttributes: (m) => ({ target: m[1]?.trim() }),
+      }),
+    ];
   },
 });

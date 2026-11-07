@@ -15,10 +15,13 @@ const query = refDebounced(term, 200);
 
 const { data: matches, status } = useLazyAsyncData(
   'palette-search',
-  () => (query.value.trim() ? api<Match[]>('/api/search', { query: { q: query.value }, quiet: true }) : Promise.resolve([])),
-  { watch: [query], default: () => [] as Match[] }
+  () =>
+    query.value.trim() ? api<Match[]>('/api/search', { query: { q: query.value }, quiet: true }) : Promise.resolve([]),
+  { watch: [query], default: () => [] as Match[] },
 );
-const { data: recent } = useLazyAsyncData('recent', () => api<Recent[]>('/api/recent', { quiet: true }), { default: () => [] as Recent[] });
+const { data: recent } = useLazyAsyncData('recent', () => api<Recent[]>('/api/recent', { quiet: true }), {
+  default: () => [] as Recent[],
+});
 
 const toNote = (note: { id: string; title: string; path: string }): CommandPaletteItem => ({
   label: displayTitle(note.title, t('untitled')),
@@ -39,11 +42,24 @@ const groups = computed<CommandPaletteGroup[]>(() => {
       label: t('search.actions'),
       items: [
         { label: t('common.newNote'), icon: icons.noteAdd, kbds: ['N'], to: newNotePath(currentFolder(route)) },
-        { label: t('common.newFolder'), icon: icons.folderAdd, kbds: ['shift', 'N'], onSelect: () => createFolder(currentFolder(route)) },
+        {
+          label: t('common.newFolder'),
+          icon: icons.folderAdd,
+          kbds: ['shift', 'N'],
+          onSelect: () => createFolder(currentFolder(route)),
+        },
         { label: t('common.graph'), icon: icons.graph, to: '/graph' },
         { label: t('common.trash'), icon: icons.trash, to: '/trash' },
         { label: t('common.settings'), icon: icons.settings, to: '/settings' },
-        ...(searching ? [{ label: t('search.allResults', { term: term.value }), icon: icons.search, to: { path: '/search', query: { q: term.value } } }] : []),
+        ...(searching
+          ? [
+              {
+                label: t('search.allResults', { term: term.value }),
+                icon: icons.search,
+                to: { path: '/search', query: { q: term.value } },
+              },
+            ]
+          : []),
       ],
     },
   ];

@@ -32,7 +32,12 @@ export function noteImage(baseURL: string, upload: (file: File) => Promise<strin
     },
 
     renderHTML({ HTMLAttributes }) {
-      return ['img', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, { src: imageSrc(HTMLAttributes.src ?? '', baseURL) })];
+      return [
+        'img',
+        mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+          src: imageSrc(HTMLAttributes.src ?? '', baseURL),
+        }),
+      ];
     },
 
     addProseMirrorPlugins() {

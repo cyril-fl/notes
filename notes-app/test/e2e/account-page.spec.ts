@@ -11,11 +11,15 @@ test('the account page sets an avatar, shown in the sidebar, then removes it', a
       const canvas = Object.assign(document.createElement('canvas'), { width: 600, height: 400 });
       return canvas.toDataURL('image/png').split(',')[1]!;
     });
-    await page.locator('input[type=file]').setInputFiles({ name: 'avatar.png', mimeType: 'image/png', buffer: Buffer.from(wide, 'base64') });
+    await page
+      .locator('input[type=file]')
+      .setInputFiles({ name: 'avatar.png', mimeType: 'image/png', buffer: Buffer.from(wide, 'base64') });
     await expect.poll(async () => (await (await request.get(`${API}/api/me`, api)).json()).avatar).toBeTruthy();
     const avatar = page.getByRole('button', { name: 'Menu du compte' }).locator('img');
     await expect(avatar).toHaveAttribute('src', /\/api\/files\//);
-    await expect.poll(() => avatar.evaluate((img: HTMLImageElement) => `${img.naturalWidth}×${img.naturalHeight}`)).toBe('256×256');
+    await expect
+      .poll(() => avatar.evaluate((img: HTMLImageElement) => `${img.naturalWidth}×${img.naturalHeight}`))
+      .toBe('256×256');
 
     await page.getByRole('button', { name: 'Retirer' }).click();
     await expect(page.getByRole('button', { name: 'Menu du compte' }).locator('img')).toHaveCount(0);

@@ -7,7 +7,9 @@ let account: Awaited<ReturnType<typeof throwaway>>;
 test.beforeEach(async () => (account = await throwaway()));
 test.afterEach(async () => account.dispose());
 
-test('deleting all the data asks the name of the account, then empties it and keeps it logged in', async ({ browser }) => {
+test('deleting all the data asks the name of the account, then empties it and keeps it logged in', async ({
+  browser,
+}) => {
   const folder = await (await account.api.post('/api/folders', { data: { title: 'Doomed' } })).json();
   await account.api.post('/api/notes', { data: { content: '# Doomed note', parent_id: folder.id } });
   await account.api.post('/api/tags', { data: { value: 'doomed' } });

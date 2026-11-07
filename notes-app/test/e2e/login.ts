@@ -10,7 +10,10 @@ export default async function login() {
   const response = await api.post('/api/login', {
     data: { name: process.env.E2E_NAME ?? 'e2e', password: process.env.E2E_PASSWORD ?? 'e2e-password' },
   });
-  if (!response.ok()) throw new Error(`e2e login: ${response.status()} ${await response.text()}: create the account with notes user add e2e`);
+  if (!response.ok())
+    throw new Error(
+      `e2e login: ${response.status()} ${await response.text()}: create the account with notes user add e2e`,
+    );
   await api.storageState({ path: SESSION });
   await api.dispose();
 }

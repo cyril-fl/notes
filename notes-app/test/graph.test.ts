@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { layoutGraph } from '../app/utils/graph.ts';
 
-const notes = (...ids: string[]) => ids.map(id => ({ id }));
+const notes = (...ids: string[]) => ids.map((id) => ({ id }));
 const link = (source: string, target: string, ...tags: string[]) => ({ source, target, tags });
 
 function distance(positions: ReturnType<typeof layoutGraph>, a: string, b: string) {
@@ -29,7 +29,9 @@ test('notes sharing tags gather, away from the others', () => {
     link('d', 'f', 'cuisine'),
   ]);
   const inside = Math.max(distance(positions, 'a', 'b'), distance(positions, 'b', 'c'), distance(positions, 'a', 'c'));
-  const across = Math.min(...['d', 'e', 'f'].flatMap(other => ['a', 'b', 'c'].map(id => distance(positions, id, other))));
+  const across = Math.min(
+    ...['d', 'e', 'f'].flatMap((other) => ['a', 'b', 'c'].map((id) => distance(positions, id, other))),
+  );
   assert.ok(inside < across, `${inside} inside, ${across} across`);
 });
 
@@ -40,7 +42,7 @@ test('more shared tags bring notes closer', () => {
 
 test('every note stays in the view, with its links untouched', () => {
   const ids = Array.from({ length: 80 }, (_, i) => `n${i}`);
-  const links = ids.slice(1).map(id => link('n0', id, 'go'));
+  const links = ids.slice(1).map((id) => link('n0', id, 'go'));
   const positions = layoutGraph(notes(...ids), links);
   assert.equal(positions.size, 80);
   for (const { x, y } of positions.values()) assert.ok(x >= 8 && x <= 92 && y >= 8 && y <= 92, `${x}, ${y}`);

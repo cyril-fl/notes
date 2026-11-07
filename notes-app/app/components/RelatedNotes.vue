@@ -8,7 +8,7 @@ const props = defineProps<{ noteId: string }>();
 
 const api = useApi();
 const { data } = useLazyAsyncData(`neighbors:${props.noteId}`, () =>
-  api<Neighbors>(`/api/notes/${props.noteId}/neighbors`, { quiet: true })
+  api<Neighbors>(`/api/notes/${props.noteId}/neighbors`, { quiet: true }),
 );
 
 const sections = computed(() =>
@@ -16,7 +16,7 @@ const sections = computed(() =>
     { title: t('related.links'), notes: data.value?.links ?? [] },
     { title: t('related.backlinks'), notes: data.value?.backlinks ?? [] },
     { title: t('related.sameTags'), notes: data.value?.neighbors ?? [] },
-  ].filter((section) => section.notes.length)
+  ].filter((section) => section.notes.length),
 );
 
 const total = computed(() => sections.value.reduce((sum, section) => sum + section.notes.length, 0));
@@ -34,7 +34,9 @@ const total = computed(() => sections.value.reduce((sum, section) => sum + secti
           size="xs"
           class="-ml-2"
         />
-        <NuxtLink :to="{ path: '/graph', query: { note: noteId } }" class="ml-auto text-xs text-primary" @click.stop>{{ $t('related.showGraph') }}</NuxtLink>
+        <NuxtLink :to="{ path: '/graph', query: { note: noteId } }" class="ml-auto text-xs text-primary" @click.stop>{{
+          $t('related.showGraph')
+        }}</NuxtLink>
       </div>
     </template>
     <template #content>

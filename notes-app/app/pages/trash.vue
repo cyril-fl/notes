@@ -31,7 +31,11 @@ async function askPurge(item: Trashed) {
 }
 
 function deletedOn(item: Trashed) {
-  return new Date(item.deleted_at).toLocaleDateString(locale.value, { day: 'numeric', month: 'short', year: 'numeric' });
+  return new Date(item.deleted_at).toLocaleDateString(locale.value, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
 }
 </script>
 
@@ -48,7 +52,14 @@ function deletedOn(item: Trashed) {
         <span class="ml-auto shrink-0 pl-4 text-xs text-muted">{{ deletedOn(item) }}</span>
         <UButton :label="$t('trash.restore')" color="neutral" variant="ghost" size="xs" @click="restoreItem(item.id)" />
         <UTooltip :text="$t('trash.purge')">
-          <UButton :icon="icons.close" color="neutral" variant="ghost" size="xs" :aria-label="$t('trash.purge')" @click="askPurge(item)" />
+          <UButton
+            :icon="icons.close"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            :aria-label="$t('trash.purge')"
+            @click="askPurge(item)"
+          />
         </UTooltip>
       </li>
     </ul>

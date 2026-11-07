@@ -22,7 +22,7 @@ export function useDragItem(target: Target, item: () => Item) {
           const ids = selection.value.includes(item().id) ? selection.value : [item().id];
           return { itemId: item().id, itemIds: ids, parentId: item().parent_id ?? null };
         },
-      })
+      }),
     );
   });
 }
@@ -57,7 +57,7 @@ export function useDropFolder(target: Target, folderId: () => string | null) {
           if (location.current.dropTargets[0]?.element !== self.element) return;
           moveItem(source.data.itemIds as string[], folderId());
         },
-      })
+      }),
     );
   });
 
