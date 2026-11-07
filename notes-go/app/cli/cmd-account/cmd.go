@@ -145,12 +145,7 @@ func Purge(cobra *cobra.Command, args []string) error {
 	var typed string
 	if err := huhform.New(
 		huh.NewInput().Title(fmt.Sprintf("Type %s to delete every note, folder, tag and image for good", name)).Value(&typed).
-			Validate(func(value string) error {
-				if value != name {
-					return errors.New("not the account's name")
-				}
-				return nil
-			}),
+			Validate(sameName(name)),
 	).Run(); err != nil {
 		return err
 	}
@@ -162,6 +157,16 @@ func Purge(cobra *cobra.Command, args []string) error {
 	}
 	fmt.Printf("Successfully emptied account %s\n", name)
 	return nil
+}
+
+// sameName accepts the account's name only, exactly as the app's danger zone does.
+func sameName(name string) func(string) error {
+	return func(value string) error {
+		if value != name {
+			return errors.New("not the account's name")
+		}
+		return nil
+	}
 }
 
 // newPassword reads it from stdin with --password-stdin (scripts), else asks it twice.
