@@ -19,4 +19,5 @@ Nuxt 4, Nuxt UI 4 (Tailwind 4), `@nuxtjs/i18n`, VueUse; client only, the Go API 
 
 - `test/e2e/login.ts` logs the e2e account in once (`E2E_NAME`/`E2E_PASSWORD`, default `e2e`/`e2e-password`) into `test-results/.session.json`; the browser locale is `fr-FR`, so selectors read French.
 - `sandbox()` of `helpers.ts` gives a test its own folder, deleted afterwards.
+- `throwaway()` gives a test its own account (made in the `note-api` container, deleted with its data afterwards), for what would break the shared e2e account: a purge, a password change.
 - A test that changes the account (settings) sets it back in a `finally`: every run shares that account.
