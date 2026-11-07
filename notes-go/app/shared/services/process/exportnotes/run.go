@@ -104,7 +104,7 @@ func (p *run) loadTree() {
 			SELECT id FROM items WHERE deleted_at IS NULL AND user_id = ? AND (CASE WHEN ? = '' THEN parent_id IS NULL ELSE parent_id::text = ? END)
 			UNION ALL SELECT child.id FROM items AS child JOIN tree ON child.parent_id = tree.id WHERE child.deleted_at IS NULL
 		)
-		SELECT i.id, coalesce(i.parent_id::text, '') AS parent_id, i.kind, coalesce(i.title, '') AS title, coalesce(mn.content, '') AS content
+		SELECT i.id, coalesce(i.parent_id::text, '') AS parent_id, i.kind, coalesce(i.title, '') AS title, mn.content
 		FROM tree
 		JOIN items AS i ON i.id = tree.id
 		LEFT JOIN metadata_notes AS mn ON mn.item_id = i.id

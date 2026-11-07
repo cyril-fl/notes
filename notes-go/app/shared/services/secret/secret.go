@@ -20,8 +20,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// Prefix starts every sealed value, followed by the id of its account: a value without it was written before
-// encryption (notes encrypt).
+// Prefix starts every sealed value, followed by the id of its account.
 const Prefix = "enc1:"
 
 var (
@@ -104,12 +103,11 @@ func Seal(userID, text string) (Text, error) {
 	return Text(Prefix + userID + ":" + seal(gcm.(cipher.AEAD), []byte(text))), nil
 }
 
-// Open decrypts what Seal gave, its account's key loaded. A value without Prefix comes back as is: written in clear,
-// until notes encrypt.
+// Open decrypts what Seal gave, its account's key loaded.
 func Open(value string) (string, error) {
 	data, sealed := strings.CutPrefix(value, Prefix)
 	if !sealed {
-		return value, nil
+		return "", ErrCorrupt
 	}
 	userID, data, _ := strings.Cut(data, ":")
 	gcm, ok := keys.Load(userID)
@@ -134,6 +132,8 @@ func (t *Text) Scan(src any) error {
 	var value string
 	switch src := src.(type) {
 	case nil:
+		*t = ""
+		return nil
 	case string:
 		value = src
 	case []byte:

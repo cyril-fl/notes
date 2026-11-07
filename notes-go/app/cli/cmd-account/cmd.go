@@ -1,5 +1,5 @@
 // Package cmdaccount logs the CLI in and out, empties the account, and lets the admin create accounts, reset their
-// password, encrypt what was written in clear and change the server's secret.
+// password and change the server's secret.
 package cmdaccount
 
 import (
@@ -19,7 +19,6 @@ import (
 	"main.go/app/shared/services/process/adduser"
 	"main.go/app/shared/services/process/createsession"
 	"main.go/app/shared/services/process/deletesession"
-	"main.go/app/shared/services/process/encryptnotes"
 	"main.go/app/shared/services/process/purgeaccount"
 	"main.go/app/shared/services/process/readsession"
 	"main.go/app/shared/services/process/resetpassword"
@@ -132,17 +131,6 @@ func ResetPassword(cobra *cobra.Command, args []string) error {
 		return process.GetErr()
 	}
 	fmt.Printf("Successfully reset the password of %s: log in again on every device\n", args[0])
-	return nil
-}
-
-// Encrypt seals the notes and snippets of every account written before encryption.
-func Encrypt(cobra *cobra.Command, args []string) error {
-	process := encryptnotes.Process(cobra.Context(), postgrey.GetDb())
-	process.Run()
-	if process.HasErr() {
-		return process.GetErr()
-	}
-	fmt.Printf("Successfully encrypted %d notes and the snippets of %d accounts\n", process.GetResult().Notes, process.GetResult().Accounts)
 	return nil
 }
 

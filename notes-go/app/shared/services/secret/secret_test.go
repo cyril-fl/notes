@@ -24,8 +24,8 @@ func TestSealOpen(t *testing.T) {
 	if text, err := Open(string(sealed)); err != nil || text != "# Idée #go" {
 		t.Errorf("Open() = %q, %v; want the text back", text, err)
 	}
-	if text, err := Open("written in clear"); err != nil || text != "written in clear" {
-		t.Errorf("Open(clear) = %q, %v; want it as is", text, err)
+	if _, err := Open("written in clear"); err != ErrCorrupt {
+		t.Errorf("Open(clear) err = %v, want ErrCorrupt", err)
 	}
 	if _, err := Open(string(sealed[:len(sealed)-4]) + "AAAA"); err != ErrCorrupt {
 		t.Errorf("Open(tampered) err = %v, want ErrCorrupt", err)

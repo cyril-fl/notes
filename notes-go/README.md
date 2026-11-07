@@ -49,7 +49,6 @@ notes user add cyril            # demande le mot de passe deux fois (8 caractèr
 notes login                     # nom et mot de passe, puis toutes les commandes agissent pour ce compte
 notes logout
 notes reset-password cyril      # mot de passe oublié : nouveau mot de passe, tous les appareils déconnectés
-notes encrypt                   # chiffre une fois ce qui a été écrit avant le chiffrement (après make backup)
 notes rotate-secret             # rechiffre les clés des comptes par un nouveau NOTES_SECRET (voir Chiffrement)
 notes account purge             # vide le compte connecté (notes, dossiers, tags, images), après avoir tapé son nom
 ```
@@ -213,7 +212,6 @@ Le texte des notes et les snippets sont chiffrés dans la base (AES-256-GCM). Ch
 
 - Génère la clé avec `openssl rand -base64 32` et mets la même dans `.env` (CLI) et `.env.docker` (API).
 - **Garde une copie de la clé dans un gestionnaire de mots de passe, jamais dans une sauvegarde.** Si tu la perds, les notes deviennent illisibles, même avec une sauvegarde.
-- Les données écrites avant le chiffrement restent lisibles. Chiffre-les une fois : `make backup`, puis `notes encrypt`. Un second passage ne fait rien. Ne tarde pas : tant qu'une note n'est pas chiffrée, la purge horaire ne voit pas ses images, et elle les efface une fois le délai de corbeille écoulé.
 - Un mot de passe oublié ne fait rien perdre : `notes reset-password` suffit, car les clés ne dépendent pas du mot de passe.
 - Changer le secret : `make backup`, mets le nouveau dans `NOTES_SECRET` (`.env`), puis `NOTES_OLD_SECRET=<ancien> notes rotate-secret`. Seules les clés des comptes sont rechiffrées, pas les notes. Mets ensuite le nouveau secret dans `.env.docker` et lance `make api`. Un second passage ne fait rien.
 - `notes export` sort du texte en clair.

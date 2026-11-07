@@ -55,7 +55,7 @@ func (s Snippets) Seal(userID string) (string, error) {
 	return string(data), err
 }
 
-// Scan also reads a JSON array in clear: the column's default, or written before notes encrypt.
+// Scan also reads a JSON array in clear: the column's default, [].
 func (s *Snippets) Scan(src any) error {
 	var data []byte
 	switch src := src.(type) {
