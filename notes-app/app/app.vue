@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { fr } from '@nuxt/ui/locale';
+import { en, fr } from '@nuxt/ui/locale';
+
+const { locale } = useI18n();
+const uiLocale = computed(() => (locale.value === 'en' ? en : fr));
 </script>
 
 <template>
-  <UApp :locale="fr" :toaster="{ position: 'bottom-right' }">
+  <UApp :locale="uiLocale" :toaster="{ position: 'bottom-right' }">
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
