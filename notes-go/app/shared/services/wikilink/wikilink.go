@@ -68,6 +68,20 @@ func Relabel(content, id, title string) string {
 	return content
 }
 
+// Unresolve writes the links to notes back as [[Label]]: outside the app, the ids mean nothing. A link
+// without a label stays as it is.
+func Unresolve(content string) string {
+	links := spans(content, byID, 2)
+	slices.Reverse(links)
+	for _, l := range links {
+		label := content[l.start+1 : l.start+strings.Index(content[l.start:], "](note:")]
+		if strings.TrimSpace(label) != "" {
+			content = content[:l.start] + "[[" + label + "]]" + content[l.end:]
+		}
+	}
+	return content
+}
+
 // Link is the markdown of a resolved link; brackets would end the label early, they are dropped.
 func Link(id, title string) string {
 	label := strings.NewReplacer("[", "", "]", "", "\n", " ").Replace(title)

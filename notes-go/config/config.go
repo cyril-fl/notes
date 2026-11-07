@@ -58,6 +58,8 @@ type commands struct {
 	SyncTags     plumcliconfig.Cmdparams `yaml:"sync-tags"`
 	SyncTitles   plumcliconfig.Cmdparams `yaml:"sync-titles"`
 	SyncLinks    plumcliconfig.Cmdparams `yaml:"sync-links"`
+	Export       plumcliconfig.Cmdparams `yaml:"export"`
+	Import       plumcliconfig.Cmdparams `yaml:"import"`
 	Serve        plumcliconfig.Cmdparams `yaml:"serve"`
 	Root         plumcliconfig.Cmdparams `yaml:"root"`
 }

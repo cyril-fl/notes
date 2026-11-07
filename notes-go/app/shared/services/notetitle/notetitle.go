@@ -26,20 +26,28 @@ var (
 // From gives the first heading of content, else its first line of text cut to MaxLength runes;
 // "" when there is neither: the note is untitled. Code blocks and lines of #tags only are skipped.
 func From(content string) string {
-	lines := textLines(content)
-	for _, line := range lines {
-		if match := heading.FindStringSubmatch(line); match != nil {
-			if title := clean(match[1]); title != "" {
-				return title
-			}
-		}
+	if title := Heading(content); title != "" {
+		return title
 	}
+	lines := textLines(content)
 	for _, line := range lines {
 		if heading.MatchString(line) || rule.MatchString(line) {
 			continue
 		}
 		if title := clean(block.ReplaceAllString(line, "")); title != "" {
 			return cut(title)
+		}
+	}
+	return ""
+}
+
+// Heading gives the first heading of content, "" without one.
+func Heading(content string) string {
+	for _, line := range textLines(content) {
+		if match := heading.FindStringSubmatch(line); match != nil {
+			if title := clean(match[1]); title != "" {
+				return title
+			}
 		}
 	}
 	return ""

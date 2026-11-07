@@ -250,6 +250,22 @@ commands:
     short: "Link every note to the notes its [[links]] name"
     long: "Link every note to the notes its [[links]] name: a [[Title]], or a [[/Folder/Title]] when several notes share the title. Only needed once, for notes written before links were read from the text."
     example: "notes sync-links"
+  export:
+    use: "export <directory> [<uuid|path>]"
+    short: "Write notes out as markdown files"
+    long: "Write the notes of a folder (all of them without one) into a new or empty directory: a folder becomes a directory, a note a <title>.md file with its text. Links to notes are written back as [[Title]]."
+    example: "notes export ~/notes-backup\nnotes export ~/projets /Projects"
+  import:
+    use: "import <directory>"
+    short: "Add markdown files as notes"
+    long: "Add every .md file of a directory as a note, and its subdirectories as folders, all or nothing. Hidden files and other files are skipped; a text without a heading gets its file name as title. A folder name already taken in the same place stops the import."
+    example: "notes import ~/notes-backup --parent /Archive\nnotes import ~/Obsidian/vault"
+    args:
+      - name: "parent"
+        shorthand: "p"
+        value: ""
+        usage: "UUID or path of the folder to import into (root when not given)"
+        type: "string"
   serve:
     use: "serve"
     short: "Run the HTTP API"

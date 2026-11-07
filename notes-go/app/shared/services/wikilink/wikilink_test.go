@@ -72,3 +72,10 @@ func TestRelabel(t *testing.T) {
 		t.Errorf("Relabel = %q, want %q", got, want)
 	}
 }
+
+func TestUnresolve(t *testing.T) {
+	got := Unresolve("[Courses](note:" + idA + ") [](note:" + idB + ") `[A](note:" + idA + ")` [[B]]")
+	if want := "[[Courses]] [](note:" + idB + ") `[A](note:" + idA + ")` [[B]]"; got != want {
+		t.Errorf("Unresolve = %q, want %q", got, want)
+	}
+}

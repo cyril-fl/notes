@@ -112,6 +112,19 @@ notes restore <uuid>
 
 `restore` n'accepte que des UUID, affichés par `notes trash`. Les éléments sont supprimés définitivement au lancement de la CLI, une fois passé le délai de `trash.retention-days` (30 jours, `0` pour ne jamais purger).
 
+### Export et import
+
+```sh
+notes export ~/notes-md              # toutes les notes
+notes export ~/projets /Projets      # un dossier
+notes import ~/notes-md --parent /Archive
+notes import ~/Obsidian/vault        # à la racine
+```
+
+`export` écrit dans un dossier nouveau ou vide, jamais par-dessus des fichiers : un dossier devient un répertoire, une note un fichier `<titre>.md` avec son texte tel quel (titre et `#tags` compris). Les liens `[Titre](note:<uuid>)` redeviennent `[[Titre]]`, puisque les ids n'ont pas de sens hors de cette base. Deux notes du même titre dans le même dossier donnent `Titre.md` et `Titre (2).md`.
+
+`import` fait l'inverse, tout ou rien : un nom de dossier déjà pris au même endroit arrête tout l'import, sans rien laisser derrière. Les fichiers cachés (`.obsidian`, `.git`…) et ceux qui ne sont pas des `.md` sont ignorés. Un texte sans titre markdown reçoit le nom de son fichier en tête, `# Nom`, comme dans Obsidian. Les `[[liens]]` se relient à l'import, comme à la frappe.
+
 ### Scripts
 
 `search`, `recent`, `trash` et `show folder` acceptent `--json`, tout comme `show tag --list`, qui accepte aussi `--yaml` :
