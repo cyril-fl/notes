@@ -12,6 +12,7 @@ export function useItems() {
   const api = useApi();
   const route = useRoute();
   const { prompt, confirm } = useDialogs();
+  const { icons } = useIcons();
 
   // On failure the toast already told the user.
   async function act<T>(request: () => Promise<T>): Promise<T | undefined> {
@@ -91,8 +92,8 @@ export function useItems() {
 
   function tagMenu(value: string): ContextMenuItem[][] {
     return [
-      [{ label: 'Renommer', icon: 'i-lucide-pencil', onSelect: () => renameTag(value) }],
-      [{ label: 'Supprimer', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => removeTag(value) }],
+      [{ label: 'Renommer', icon: icons.rename, onSelect: () => renameTag(value) }],
+      [{ label: 'Supprimer', icon: icons.delete, color: 'error' as const, onSelect: () => removeTag(value) }],
     ];
   }
 
@@ -107,10 +108,10 @@ export function useItems() {
 
   /** What right-clicking an item offers. */
   function itemMenu(item: Item): ContextMenuItem[][] {
-    const remove = { label: 'Supprimer', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => removeItem(item) };
+    const remove = { label: 'Supprimer', icon: icons.delete, color: 'error' as const, onSelect: () => removeItem(item) };
     if (item.kind === 'note') {
       const pinned = isPinned(item.id);
-      const pin = { label: pinned ? 'Désépingler' : 'Épingler', icon: pinned ? 'i-lucide-pin-off' : 'i-lucide-pin', onSelect: () => pinItem(item, !pinned) };
+      const pin = { label: pinned ? 'Désépingler' : 'Épingler', icon: pinned ? icons.unpin : icons.pin, onSelect: () => pinItem(item, !pinned) };
       return [[pin], [remove]];
     }
 
@@ -118,12 +119,12 @@ export function useItems() {
 
     return [
       [
-        { label: 'Nouvelle note', icon: 'i-lucide-square-pen', onSelect: () => navigateTo(newNotePath(item.id)) },
-        { label: 'Nouveau dossier', icon: 'i-lucide-folder-plus', onSelect: () => createFolder(item.id) },
+        { label: 'Nouvelle note', icon: icons.noteAdd, onSelect: () => navigateTo(newNotePath(item.id)) },
+        { label: 'Nouveau dossier', icon: icons.folderAdd, onSelect: () => createFolder(item.id) },
       ],
       [
-        { label: favorite ? 'Retirer des favoris' : 'Ajouter aux favoris', icon: favorite ? 'i-lucide-star-off' : 'i-lucide-star', onSelect: () => pinItem(item, !favorite) },
-        { label: 'Renommer', icon: 'i-lucide-pencil', onSelect: () => renameFolder(item) },
+        { label: favorite ? 'Retirer des favoris' : 'Ajouter aux favoris', icon: favorite ? icons.unfavorite : icons.favorite, onSelect: () => pinItem(item, !favorite) },
+        { label: 'Renommer', icon: icons.rename, onSelect: () => renameFolder(item) },
       ],
       [remove],
     ];

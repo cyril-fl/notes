@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { NotesGraph } from '~/types/items';
 
+const { icons } = useIcons();
+
 type Link = NotesGraph['links'][number];
 
 const props = defineProps<{ graph: NotesGraph; selected?: string }>();
@@ -166,13 +168,13 @@ function linkClass(link: Link) {
     <!-- @pointerdown.stop: a click on a button is not the start of a drag. -->
     <div class="absolute right-3 bottom-3 z-30 flex gap-1 rounded-md bg-default/80 p-0.5 backdrop-blur" @pointerdown.stop>
       <UTooltip text="Dézoomer">
-        <UButton icon="i-lucide-minus" color="neutral" variant="ghost" size="sm" aria-label="Dézoomer" :disabled="zoom <= MIN_ZOOM" @click="zoomBy(1 / 1.4)" />
+        <UButton :icon="icons.zoomOut" color="neutral" variant="ghost" size="sm" aria-label="Dézoomer" :disabled="zoom <= MIN_ZOOM" @click="zoomBy(1 / 1.4)" />
       </UTooltip>
       <UTooltip text="Zoomer">
-        <UButton icon="i-lucide-plus" color="neutral" variant="ghost" size="sm" aria-label="Zoomer" :disabled="zoom >= MAX_ZOOM" @click="zoomBy(1.4)" />
+        <UButton :icon="icons.zoomIn" color="neutral" variant="ghost" size="sm" aria-label="Zoomer" :disabled="zoom >= MAX_ZOOM" @click="zoomBy(1.4)" />
       </UTooltip>
       <UTooltip text="Recentrer">
-        <UButton icon="i-lucide-locate-fixed" color="neutral" variant="ghost" size="sm" aria-label="Recentrer" @click="recenter" />
+        <UButton :icon="icons.recenter" color="neutral" variant="ghost" size="sm" aria-label="Recentrer" @click="recenter" />
       </UTooltip>
     </div>
   </div>

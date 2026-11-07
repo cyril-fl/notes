@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Match } from '~/types/items';
 
+const { icons } = useIcons();
+
 const route = useRoute();
 const api = useApi();
 const view = useView();
@@ -22,7 +24,7 @@ const { data: matches, status } = useLazyAsyncData(
     <NoteList v-if="matches.length" :notes="matches" :grid="view === 'grid'" />
     <UEmpty
       v-else-if="status !== 'pending'"
-      icon="i-lucide-search-x"
+      :icon="icons.searchEmpty"
       :title="q.trim() ? 'Aucun résultat' : 'Rechercher dans les notes'"
       :description="q.trim() ? `Aucune note ne contient « ${q} ».` : 'Tapez un mot dans la barre de recherche.'"
     />

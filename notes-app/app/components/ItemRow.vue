@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Item } from '~/types/items';
 
+const { icons } = useIcons();
+
 const props = defineProps<{ item: Item; grid?: boolean; selected?: boolean }>();
 
 const { itemMenu } = useItems();
@@ -24,7 +26,7 @@ const date = computed(() =>
   <UContextMenu :items="itemMenu(item)">
     <NuxtLink v-if="grid" ref="link" :to="to" class="group flex min-w-0 flex-col gap-2">
       <div class="tile" :class="{ 'tile-over': isOver, 'tile-selected': selected && !isOver }">
-        <UIcon :name="isFolder ? 'i-lucide-folder' : 'i-lucide-file-text'" class="size-10 text-dimmed" />
+        <UIcon :name="isFolder ? icons.folder : icons.note" class="size-10 text-dimmed" />
       </div>
       <div class="min-w-0 text-center text-xs">
         <p class="truncate">{{ displayTitle(item.title) }}</p>
@@ -33,7 +35,7 @@ const date = computed(() =>
     </NuxtLink>
     <NuxtLink v-else ref="link" :to="to" class="row h-9" :class="{ 'row-over': isOver, 'row-selected': selected && !isOver }">
       <UIcon
-        :name="isFolder ? 'i-lucide-folder' : 'i-lucide-file-text'"
+        :name="isFolder ? icons.folder : icons.note"
         class="size-4 shrink-0"
         :class="isOver ? 'text-white' : 'text-muted'"
       />

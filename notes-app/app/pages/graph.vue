@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { NotesGraph } from '~/types/items';
 
+const { icons } = useIcons();
+
 const route = useRoute();
 const api = useApi();
 
@@ -14,10 +16,10 @@ const { data: graph } = useLazyAsyncData('graph', () => api<NotesGraph>('/api/gr
       <GraphView v-if="graph.notes.length" class="min-h-0 flex-1" :graph="graph" :selected="route.query.note as string | undefined" />
       <UEmpty
         v-else
-        icon="i-lucide-waypoints"
+        :icon="icons.graph"
         title="Aucune note pour le moment"
         description="Ajoutez des #tags à vos notes : celles qui en partagent un sont reliées ici."
-        :actions="[{ label: 'Nouvelle note', icon: 'i-lucide-square-pen', to: newNotePath() }]"
+        :actions="[{ label: 'Nouvelle note', icon: icons.noteAdd, to: newNotePath() }]"
       />
     </template>
   </div>

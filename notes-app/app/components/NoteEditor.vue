@@ -6,6 +6,8 @@ import type { RouteLocationNormalized } from 'vue-router';
 import type { Item, ItemDetail, NotesGraph } from '~/types/items';
 import type { Changes } from '~/utils/saver';
 
+const { icons } = useIcons();
+
 const props = defineProps<{ noteId?: string; parentId?: string }>();
 const emit = defineEmits<{ created: [id: string] }>();
 
@@ -154,7 +156,7 @@ const { data: graph } = useLazyAsyncData('graph', () => api<NotesGraph>('/api/gr
 const noteItems = computed(() =>
   (graph.value?.notes ?? [])
     .filter((note) => note.id !== id.value && note.title)
-    .map((note) => ({ kind: 'wikiLink', label: note.title, description: note.path, icon: 'i-lucide-file-text', id: note.id }))
+    .map((note) => ({ kind: 'wikiLink', label: note.title, description: note.path, icon: icons.note, id: note.id }))
 );
 
 function openLink(event: MouseEvent) {
@@ -190,22 +192,22 @@ const handlers = {
 
 const toolbar: EditorToolbarItem[][] = [
   [
-    { kind: 'heading', level: 1, icon: 'i-lucide-heading-1', tooltip: { text: 'Titre 1' } },
-    { kind: 'heading', level: 2, icon: 'i-lucide-heading-2', tooltip: { text: 'Titre 2' } },
-    { kind: 'heading', level: 3, icon: 'i-lucide-heading-3', tooltip: { text: 'Titre 3' } },
+    { kind: 'heading', level: 1, icon: icons.heading1, tooltip: { text: 'Titre 1' } },
+    { kind: 'heading', level: 2, icon: icons.heading2, tooltip: { text: 'Titre 2' } },
+    { kind: 'heading', level: 3, icon: icons.heading3, tooltip: { text: 'Titre 3' } },
   ],
   [
-    { kind: 'mark', mark: 'bold', icon: 'i-lucide-bold', tooltip: { text: 'Gras' } },
-    { kind: 'mark', mark: 'italic', icon: 'i-lucide-italic', tooltip: { text: 'Italique' } },
-    { kind: 'mark', mark: 'strike', icon: 'i-lucide-strikethrough', tooltip: { text: 'Barré' } },
-    { kind: 'mark', mark: 'code', icon: 'i-lucide-code', tooltip: { text: 'Code' } },
-    { kind: 'link', icon: 'i-lucide-link', tooltip: { text: 'Lien' } },
+    { kind: 'mark', mark: 'bold', icon: icons.bold, tooltip: { text: 'Gras' } },
+    { kind: 'mark', mark: 'italic', icon: icons.italic, tooltip: { text: 'Italique' } },
+    { kind: 'mark', mark: 'strike', icon: icons.strike, tooltip: { text: 'Barré' } },
+    { kind: 'mark', mark: 'code', icon: icons.code, tooltip: { text: 'Code' } },
+    { kind: 'link', icon: icons.link, tooltip: { text: 'Lien' } },
   ],
   [
-    { kind: 'bulletList', icon: 'i-lucide-list', tooltip: { text: 'Liste' } },
-    { kind: 'orderedList', icon: 'i-lucide-list-ordered', tooltip: { text: 'Liste numérotée' } },
-    { kind: 'taskList', icon: 'i-lucide-list-checks', tooltip: { text: 'Tâches' } },
-    { kind: 'blockquote', icon: 'i-lucide-quote', tooltip: { text: 'Citation' } },
+    { kind: 'bulletList', icon: icons.list, tooltip: { text: 'Liste' } },
+    { kind: 'orderedList', icon: icons.orderedList, tooltip: { text: 'Liste numérotée' } },
+    { kind: 'taskList', icon: icons.taskList, tooltip: { text: 'Tâches' } },
+    { kind: 'blockquote', icon: icons.quote, tooltip: { text: 'Citation' } },
   ],
 ];
 
@@ -230,10 +232,10 @@ const status = computed(() => {
 <template>
   <UEmpty
     v-if="notFound"
-    icon="i-lucide-file-x"
+    :icon="icons.noteNotFound"
     title="Cette note est introuvable"
     description="Elle n'existe pas ou elle est dans la corbeille."
-    :actions="[{ label: 'Retour aux notes', icon: 'i-lucide-arrow-left', color: 'neutral', variant: 'subtle', to: '/' }]"
+    :actions="[{ label: 'Retour aux notes', icon: icons.home, color: 'neutral', variant: 'subtle', to: '/' }]"
   />
 
   <!-- UEditor hands its listeners to TipTap, not to the page: clicks on links are caught here. -->

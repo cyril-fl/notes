@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Item } from '~/types/items';
 
+const { icons } = useIcons();
+
 const props = defineProps<{ folderId?: string; title: string; subtitle?: string; items: Item[] }>();
 
 const { createFolder, moveItem, removeItems } = useItems();
@@ -49,10 +51,10 @@ const isOver = useDropFolder(panel, () => props.folderId ?? null);
     <PageHeader :title="title">
       <ViewToggle />
       <UTooltip text="Nouveau dossier">
-        <UButton icon="i-lucide-folder-plus" color="neutral" variant="ghost" aria-label="Nouveau dossier" @click="createFolder(folderId)" />
+        <UButton :icon="icons.folderAdd" color="neutral" variant="ghost" aria-label="Nouveau dossier" @click="createFolder(folderId)" />
       </UTooltip>
       <UTooltip text="Nouvelle note">
-        <UButton icon="i-lucide-square-pen" color="neutral" variant="ghost" aria-label="Nouvelle note" :to="newNotePath(folderId)" />
+        <UButton :icon="icons.noteAdd" color="neutral" variant="ghost" aria-label="Nouvelle note" :to="newNotePath(folderId)" />
       </UTooltip>
     </PageHeader>
     <div v-if="selected.length" class="sticky top-0 z-10 mb-3 flex items-center gap-2 rounded-md bg-elevated py-1 pr-1 pl-3 text-sm">
@@ -66,9 +68,9 @@ const isOver = useDropFolder(panel, () => props.folderId ?? null);
         aria-label="Déplacer vers"
         @update:model-value="moveSelection"
       />
-      <UButton label="Supprimer" icon="i-lucide-trash-2" color="error" variant="ghost" size="sm" @click="removeSelection" />
+      <UButton label="Supprimer" :icon="icons.delete" color="error" variant="ghost" size="sm" @click="removeSelection" />
       <UTooltip text="Annuler la sélection" :kbds="['esc']">
-        <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" aria-label="Annuler la sélection" @click="selection = []" />
+        <UButton :icon="icons.close" color="neutral" variant="ghost" size="sm" aria-label="Annuler la sélection" @click="selection = []" />
       </UTooltip>
     </div>
     <ul v-if="items.length" :class="{ mosaic: view === 'grid' }">
@@ -78,12 +80,12 @@ const isOver = useDropFolder(panel, () => props.folderId ?? null);
     </ul>
     <UEmpty
       v-else
-      icon="i-lucide-folder-open"
+      :icon="icons.folderEmpty"
       title="Ce dossier est vide"
       description="Créez une note ou glissez-y des éléments depuis la barre latérale."
       :actions="[
-        { label: 'Nouvelle note', icon: 'i-lucide-square-pen', to: newNotePath(folderId) },
-        { label: 'Nouveau dossier', icon: 'i-lucide-folder-plus', color: 'neutral', variant: 'subtle', onClick: () => createFolder(folderId) },
+        { label: 'Nouvelle note', icon: icons.noteAdd, to: newNotePath(folderId) },
+        { label: 'Nouveau dossier', icon: icons.folderAdd, color: 'neutral', variant: 'subtle', onClick: () => createFolder(folderId) },
       ]"
     />
     <!-- Like a note's footer. The subtitle is the folder's own path: the breadcrumb leads to its parents. -->

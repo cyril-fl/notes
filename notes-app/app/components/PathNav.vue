@@ -2,6 +2,8 @@
 /** The folder path, '/A/B', as a breadcrumb, with the history's back and forward buttons. */
 const props = defineProps<{ path: string }>();
 
+const { icons } = useIcons();
+
 const destinations = useDestinations();
 
 // shortcut: matches folders by path, a folder name holding '/' gets no link; ask the API for the ancestors' ids if that matters.
@@ -28,10 +30,10 @@ const canGoForward = computed(() => route.fullPath && !!window.history.state?.fo
   <!-- Plain muted text like the other pages' subtitles: the path reads as before, its parts just link. -->
   <nav class="flex min-w-0 items-center gap-1 text-xs text-muted" aria-label="Fil d'Ariane">
     <button type="button" class="shrink-0 hover:text-default disabled:opacity-40 disabled:hover:text-muted" aria-label="Précédent" :disabled="!canGoBack" @click="router.back()">
-      <UIcon name="i-lucide-arrow-left" class="block size-3.5" />
+      <UIcon :name="icons.back" class="block size-3.5" />
     </button>
     <button type="button" class="mr-1 shrink-0 hover:text-default disabled:opacity-40 disabled:hover:text-muted" aria-label="Suivant" :disabled="!canGoForward" @click="router.forward()">
-      <UIcon name="i-lucide-arrow-right" class="block size-3.5" />
+      <UIcon :name="icons.forward" class="block size-3.5" />
     </button>
     <template v-for="(part, index) in breadcrumb" :key="index">
       <span v-if="index" aria-hidden="true">/</span>

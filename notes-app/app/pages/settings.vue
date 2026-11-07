@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { ImportResult } from '~/types/items';
 
+const { icons } = useIcons();
+
 const api = useApi();
 const toast = useToast();
 // The API sends the zip as an attachment: a plain link downloads it.
@@ -44,7 +46,7 @@ async function importZip(event: Event) {
             <p class="text-sm">Exporter</p>
             <p class="text-xs text-muted">Toutes les notes en fichiers markdown, un dossier par dossier, dans un zip.</p>
           </div>
-          <UButton label="Exporter" icon="i-lucide-download" color="neutral" variant="outline" :href="exportURL" download />
+          <UButton label="Exporter" :icon="icons.export" color="neutral" variant="outline" :href="exportURL" download />
         </li>
         <li class="flex items-center gap-4 py-3">
           <div class="min-w-0 flex-1">
@@ -53,7 +55,7 @@ async function importZip(event: Event) {
           </div>
           <USelectMenu v-model="parent" :items="destinations" value-key="value" aria-label="Importer dans" class="w-56" />
           <input ref="input" type="file" accept=".zip,application/zip" class="hidden" @change="importZip">
-          <UButton label="Importer" icon="i-lucide-upload" color="neutral" variant="outline" :loading="importing" @click="input?.click()" />
+          <UButton label="Importer" :icon="icons.import" color="neutral" variant="outline" :loading="importing" @click="input?.click()" />
         </li>
       </ul>
     </section>

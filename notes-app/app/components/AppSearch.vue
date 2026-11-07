@@ -2,6 +2,8 @@
 import type { CommandPaletteGroup, CommandPaletteItem } from '@nuxt/ui';
 import type { Match, Recent } from '~/types/items';
 
+const { icons } = useIcons();
+
 const api = useApi();
 const route = useRoute();
 const { createFolder } = useItems();
@@ -20,7 +22,7 @@ const { data: recent } = useLazyAsyncData('recent', () => api<Recent[]>('/api/re
 const toNote = (note: { id: string; title: string; path: string }): CommandPaletteItem => ({
   label: displayTitle(note.title),
   suffix: note.path,
-  icon: 'i-lucide-file-text',
+  icon: icons.note,
   to: `/notes/${note.id}`,
 });
 
@@ -35,12 +37,12 @@ const groups = computed<CommandPaletteGroup[]>(() => {
       id: 'actions',
       label: 'Actions',
       items: [
-        { label: 'Nouvelle note', icon: 'i-lucide-square-pen', kbds: ['N'], to: newNotePath(currentFolder(route)) },
-        { label: 'Nouveau dossier', icon: 'i-lucide-folder-plus', kbds: ['shift', 'N'], onSelect: () => createFolder(currentFolder(route)) },
-        { label: 'Graphe', icon: 'i-lucide-waypoints', to: '/graph' },
-        { label: 'Corbeille', icon: 'i-lucide-trash-2', to: '/trash' },
-        { label: 'Réglages', icon: 'i-lucide-settings', to: '/settings' },
-        ...(searching ? [{ label: `Tous les résultats pour « ${term.value} »`, icon: 'i-lucide-search', to: { path: '/search', query: { q: term.value } } }] : []),
+        { label: 'Nouvelle note', icon: icons.noteAdd, kbds: ['N'], to: newNotePath(currentFolder(route)) },
+        { label: 'Nouveau dossier', icon: icons.folderAdd, kbds: ['shift', 'N'], onSelect: () => createFolder(currentFolder(route)) },
+        { label: 'Graphe', icon: icons.graph, to: '/graph' },
+        { label: 'Corbeille', icon: icons.trash, to: '/trash' },
+        { label: 'Réglages', icon: icons.settings, to: '/settings' },
+        ...(searching ? [{ label: `Tous les résultats pour « ${term.value} »`, icon: icons.search, to: { path: '/search', query: { q: term.value } } }] : []),
       ],
     },
   ];

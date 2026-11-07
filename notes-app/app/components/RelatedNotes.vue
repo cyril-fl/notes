@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Neighbors } from '~/types/items';
 
+const { icons } = useIcons();
+
 const props = defineProps<{ noteId: string }>();
 
 const api = useApi();
@@ -25,7 +27,7 @@ const total = computed(() => sections.value.reduce((sum, section) => sum + secti
       <div class="flex items-center py-2">
         <UButton
           :label="`Notes liées (${total})`"
-          :trailing-icon="open ? 'i-lucide-chevron-down' : 'i-lucide-chevron-up'"
+          :trailing-icon="open ? icons.chevronDown : icons.chevronUp"
           color="neutral"
           variant="ghost"
           size="xs"

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Item } from '~/types/items';
 
+const { icons } = useIcons();
+
 const props = defineProps<{ folder: Item }>();
 
 const route = useRoute();
@@ -31,7 +33,7 @@ watch(isOver, (over) => (over ? start() : stop()));
         :class="{ 'row-active': route.params.id === folder.id, 'row-over': isOver }"
       >
         <NuxtLink :to="`/folders/${folder.id}`" draggable="false" class="flex min-w-0 flex-1 items-center gap-2 self-stretch">
-          <UIcon name="i-lucide-folder" class="size-4 shrink-0" :class="isOver ? 'text-white' : 'text-muted'" />
+          <UIcon :name="icons.folder" class="size-4 shrink-0" :class="isOver ? 'text-white' : 'text-muted'" />
           <span class="truncate">{{ folder.title }}</span>
         </NuxtLink>
         <button
@@ -43,7 +45,7 @@ watch(isOver, (over) => (over ? start() : stop()));
           @click="open = !open"
         >
           <UIcon
-            name="i-lucide-chevron-right"
+            :name="icons.chevronRight"
             class="size-3.5 text-muted transition-transform duration-150"
             :class="{ 'rotate-90': open }"
           />
