@@ -17,7 +17,8 @@ A note-taking app, Obsidian-like: one Go program (`notes-go/`, CLI and HTTP API)
 - One commit per change (`feat:`/`fix:`/`refactor:`/`test:`/`docs:`), an annotated tag per version, the user pushes. Details and issue handling: the `notes-release` skill.
 - Work left for later goes into GitHub issues (`gh issue list -R cyril-fl/notes`), and known limits into `shortcut:` comments in the code.
 - Before deleting or migrating data: `make backup` in `notes-go/`.
-- Files left uncommitted by another agent are not yours: stage paths explicitly.
+- Several agents share this checkout: files left uncommitted by another one are not yours (stage paths explicitly), and the branch may have been switched under you (`git branch --show-current` before committing; work goes on `develop`, `main` follows it at releases).
+- `AGENTS.md` files are links to these `CLAUDE.md`: edit the `CLAUDE.md`.
 
 ## Skills
 

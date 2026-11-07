@@ -9,7 +9,7 @@ description: Close a piece of work or a version of Notes - one commit per change
 
 - One commit per change, in English, lower case after the prefix: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `style:`. The message says what the user gets ("feat: pick a theme of colors from its thumbnail in the settings"), not the files.
 - `Fixes #n` in the body for an issue.
-- Stage paths explicitly; never `git add` files another agent left uncommitted (check `git status` first).
+- On `develop` (`git branch --show-current`: another agent may have switched it). Stage paths explicitly; never `git add` files another agent left uncommitted (check `git status` first).
 - lefthook runs gofmt on staged Go files.
 - Never push: the user runs `git push origin develop --follow-tags`.
 

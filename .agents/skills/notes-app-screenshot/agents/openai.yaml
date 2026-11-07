@@ -1,0 +1,4 @@
+interface:
+  display_name: "Notes app screenshot"
+  short_description: "Screenshot a page of the app with account settings"
+  default_prompt: "Use $notes-app-screenshot to look at this page of the app, in light and dark."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Notes release"
+  short_description: "Commit, tag and close the issues of a version"
+  default_prompt: "Use $notes-release to commit, tag and close the issues of this work."

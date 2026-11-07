@@ -1,0 +1,4 @@
+interface:
+  display_name: "Notes account setting"
+  short_description: "Add a setting of the account end to end"
+  default_prompt: "Use $notes-account-setting to add this setting to the account, from the users column to the settings page."
