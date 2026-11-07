@@ -16,8 +16,8 @@ const style = computed(() => {
   const dark = colorMode.value === 'dark';
   const { primary, neutral } = props.theme;
   return {
-    '--bg': color(neutral, dark ? 900 : 50),
-    '--side': color(neutral, dark ? 800 : 100),
+    '--bg': dark ? color(neutral, 900) : '#fff',
+    '--side': color(neutral, dark ? 800 : 50),
     '--line': color(neutral, dark ? 600 : 300),
     '--accent': color(primary, dark ? 400 : 600),
   };

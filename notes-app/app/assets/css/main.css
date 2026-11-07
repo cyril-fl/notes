@@ -125,8 +125,8 @@
   --color-gruvbox-900: #5e2207;
   --color-gruvbox-950: #361002;
 
-  --color-gruvbox-gray-50: #fefbee;
-  --color-gruvbox-gray-100: #f7eed3;
+  --color-gruvbox-gray-50: #fbf1c7;
+  --color-gruvbox-gray-100: #f2e5bc;
   --color-gruvbox-gray-200: #ebdbb2;
   --color-gruvbox-gray-300: #d5c4a1;
   --color-gruvbox-gray-400: #bdae93;
@@ -149,8 +149,8 @@
   --color-everforest-900: #3c440b;
   --color-everforest-950: #20250a;
 
-  --color-everforest-gray-50: #fefcf7;
-  --color-everforest-gray-100: #f8f5e6;
+  --color-everforest-gray-50: #fdf6e3;
+  --color-everforest-gray-100: #f4f0d9;
   --color-everforest-gray-200: #e6e2cc;
   --color-everforest-gray-300: #d3c6aa;
   --color-everforest-gray-400: #a1aca3;
@@ -166,12 +166,10 @@
   --ui-radius: 0.25rem;
 }
 
-/* Light mode on the tinted 50 of the theme's greys rather than white, so each theme shows on the whole page, and the
-   accent one shade darker to stay at 4.5:1 on it. Unlayered, it wins over the light colors of Nuxt UI. */
+/* Light mode takes the accent one shade darker, to stay at 4.5:1 as text on its own tint (the active row) and on the
+   tinted frame. Unlayered, it wins over the light colors of Nuxt UI. */
 :root:not(.dark) {
   --ui-primary: var(--ui-color-primary-600);
-  --ui-bg: var(--ui-color-neutral-50);
-  --ui-bg-muted: var(--ui-color-neutral-100);
 }
 
 @layer base {
