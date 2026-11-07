@@ -33,6 +33,17 @@
   html {
     -webkit-font-smoothing: antialiased;
   }
+
+  /* An app, not a page: Ctrl+A and drags select only what is typed, not the buttons and lists around it. */
+  body {
+    @apply select-none;
+  }
+
+  input,
+  textarea,
+  [contenteditable='true'] {
+    @apply select-text;
+  }
 }
 
 @layer components {
