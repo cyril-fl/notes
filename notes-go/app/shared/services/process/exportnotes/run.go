@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"path"
+	"slices"
 	"strings"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
@@ -15,11 +17,16 @@ import (
 
 var ErrFolderNotFound = errors.New("folder not found")
 
-// File is one entry of the export, its Path relative to the export directory: a folder (Dir) or a note.
+// FilesDir holds the images of the export, at its root.
+const FilesDir = "_files"
+
+// File is one entry of the export, its Path relative to the export directory: a folder (Dir), a note, or an
+// image whose bytes the writer reads from Silo at Key.
 type File struct {
 	Path    string
 	Dir     bool
 	Content string
+	Key     string
 }
 
 // item is a live item of the exported tree.
@@ -42,11 +49,13 @@ type run struct {
 
 type cache struct {
 	children map[string][]item
+	images   map[string]domain.File // the files the exported notes cite, by id
 	files    []File
 }
 
 // Process exports the live content of a folder ("" = everything) as markdown files: a folder is a
-// directory, a note is <title>.md with its text, links to notes written back as [[Title]].
+// directory, a note is <title>.md with its text, links to notes written back as [[Title]], images
+// copied into FilesDir and cited by a relative path.
 func Process(ctx context.Context, db bun.IDB, folderID string) *run {
 	return &run{
 		ctx:      ctx,
@@ -58,7 +67,9 @@ func Process(ctx context.Context, db bun.IDB, folderID string) *run {
 func (p *run) Run() {
 	p.checkFolder()
 	p.loadTree()
+	p.loadImages()
 	p.makeFiles(p.folderID, "")
+	p.addImages()
 }
 
 // Getters & Setters
@@ -110,20 +121,48 @@ func (p *run) loadTree() {
 	}
 }
 
+// loadImages keeps the files of the account only: a note may cite the address of another account's.
+func (p *run) loadImages() {
+	if p.HasErr() {
+		return
+	}
+
+	var ids []string
+	for _, items := range p.cache.children {
+		for _, it := range items {
+			for _, match := range domain.FilePattern.FindAllStringSubmatch(it.Content, -1) {
+				ids = append(ids, match[1])
+			}
+		}
+	}
+	p.cache.images = map[string]domain.File{}
+	if len(ids) == 0 {
+		return
+	}
+
+	var files []domain.File
+	err := p.db.NewSelect().Model(&files).Where("id IN (?) AND user_id = ?", bun.List(ids), domain.UserID(p.ctx)).Scan(p.ctx)
+	for _, file := range files {
+		p.cache.images[file.ID] = file
+	}
+	p.SetErr(err)
+}
+
 // makeFiles names the children of a folder: names unique whatever their case (macOS and Windows disks ignore it).
 func (p *run) makeFiles(parentID, dir string) {
 	if p.HasErr() {
 		return
 	}
 
-	taken := map[string]bool{}
+	// A folder named like FilesDir at the root becomes "_files (2)".
+	taken := map[string]bool{strings.ToLower(FilesDir): dir == "" && len(p.cache.images) > 0}
 	for _, it := range p.cache.children[parentID] {
 		ext := ""
 		if it.Kind == domain.NOTE {
 			ext = ".md"
 		}
 		name := uniqueName(fileName(it.Title), ext, taken)
-		file := File{Path: path.Join(dir, name), Dir: it.Kind == domain.FOLDER, Content: wikilink.Unresolve(it.Content)}
+		file := File{Path: path.Join(dir, name), Dir: it.Kind == domain.FOLDER, Content: p.citeImages(wikilink.Unresolve(it.Content), dir)}
 		p.cache.files = append(p.cache.files, file)
 		if file.Dir {
 			p.makeFiles(it.ID, file.Path)
@@ -131,7 +170,41 @@ func (p *run) makeFiles(parentID, dir string) {
 	}
 }
 
+// citeImages points the images of a note in dir to their copy in FilesDir.
+func (p *run) citeImages(content, dir string) string {
+	up := ""
+	if dir != "" {
+		up = strings.Repeat("../", strings.Count(dir, "/")+1)
+	}
+	return domain.FilePattern.ReplaceAllStringFunc(content, func(url string) string {
+		file, ok := p.cache.images[domain.FilePattern.FindStringSubmatch(url)[1]]
+		if !ok {
+			return url
+		}
+		return up + imagePath(file)
+	})
+}
+
+// addImages adds FilesDir and the images, sorted: the export of the same notes gives the same files.
+func (p *run) addImages() {
+	if p.HasErr() || len(p.cache.images) == 0 {
+		return
+	}
+
+	p.cache.files = append(p.cache.files, File{Path: FilesDir, Dir: true})
+	ids := slices.Sorted(maps.Keys(p.cache.images))
+	for _, id := range ids {
+		file := p.cache.images[id]
+		p.cache.files = append(p.cache.files, File{Path: imagePath(file), Key: file.Key()})
+	}
+}
+
 // Helpers
+
+// imagePath names an image by its id: two pasted images are both "image.png".
+func imagePath(file domain.File) string {
+	return FilesDir + "/" + file.ID + domain.FileTypes[file.ContentType]
+}
 
 // fileName keeps a title as it is, but for what a file name cannot hold.
 func fileName(title string) string {

@@ -2,17 +2,29 @@ package importnotes
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/fs"
+	"net/url"
 	"path"
+	"regexp"
 	"strings"
 
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
+	"main.go/app/shared/domain"
 	"main.go/app/shared/services/notetitle"
+	"main.go/app/shared/services/process/createfile"
 	"main.go/app/shared/services/process/createfolder"
 	"main.go/app/shared/services/process/createnote"
+	"main.go/app/shared/services/process/exportnotes"
+	"main.go/app/shared/services/silo"
 )
+
+// imagePattern finds the markdown images ![alt](target "title") and ![alt](<target with spaces>): the target is
+// the second group, or the third.
+// shortcut: Obsidian's ![[image.png]] stays as text, read it too if a vault is ever imported.
+var imagePattern = regexp.MustCompile(`(!\[[^\]]*\]\()(?:<([^>]+)>|([^)\s]+))`)
 
 // Input is what to import: every directory and .md file of Dir, into the folder ParentID ("" = the root).
 type Input struct {
@@ -32,34 +44,45 @@ type run struct {
 
 	ctx   context.Context
 	db    bun.IDB // *bun.DB or bun.Tx: tests run inside a rolled-back transaction
+	store silo.Store
 	input Input
 }
 
 type cache struct {
-	folders map[string]string // directory path -> folder id
+	folders map[string]string      // directory path -> folder id
+	images  map[string]domain.File // file path -> the image made of it
 	result  Result
 }
 
 // Process imports markdown files as notes and their directories as folders, all or nothing: a folder
-// name already taken stops it. Titles, #tags and [[links]] come from the text, as for any note.
-func Process(ctx context.Context, db bun.IDB, input Input) *run {
+// name already taken stops it. Titles, #tags and [[links]] come from the text, as for any note; the images
+// a note cites by a relative path become files of the account, exportnotes.FilesDir no folder.
+func Process(ctx context.Context, db bun.IDB, store silo.Store, input Input) *run {
 	return &run{
 		ctx:   ctx,
 		db:    db,
+		store: store,
 		input: input,
 	}
 }
 
+// Run removes the bytes of the images made when it fails: the rolled-back rows no longer cite them.
 func (p *run) Run() {
-	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
-		p.cache = cache{folders: map[string]string{".": p.input.ParentID}}
+	err := p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
+		p.cache = cache{folders: map[string]string{".": p.input.ParentID}, images: map[string]domain.File{}}
 		return fs.WalkDir(p.input.Dir, ".", func(name string, entry fs.DirEntry, err error) error {
 			if err != nil || name == "." {
 				return err
 			}
 			return p.importEntry(ctx, tx, name, entry)
 		})
-	}))
+	})
+	if err != nil {
+		for _, file := range p.cache.images {
+			_ = p.store.Remove(p.ctx, file.Key())
+		}
+	}
+	p.SetErr(err)
 }
 
 // Getters & Setters
@@ -74,7 +97,7 @@ func (p *run) GetResult() Result {
 func (p *run) importEntry(ctx context.Context, tx bun.Tx, name string, entry fs.DirEntry) error {
 	hidden := strings.HasPrefix(entry.Name(), ".")
 	if entry.IsDir() {
-		if hidden {
+		if hidden || name == exportnotes.FilesDir {
 			return fs.SkipDir
 		}
 		return p.importFolder(ctx, tx, name, entry.Name())
@@ -87,13 +110,50 @@ func (p *run) importEntry(ctx context.Context, tx bun.Tx, name string, entry fs.
 	if err != nil || strings.TrimSpace(string(data)) == "" {
 		return err
 	}
-	note := createnote.Process(ctx, tx, createnote.Input{Content: withTitle(string(data), name), ParentID: p.cache.folders[path.Dir(name)]})
+	content, err := p.importImages(ctx, tx, name, string(data))
+	if err != nil {
+		return err
+	}
+	note := createnote.Process(ctx, tx, createnote.Input{Content: withTitle(content, name), ParentID: p.cache.folders[path.Dir(name)]})
 	note.Run()
 	if note.HasErr() {
 		return fmt.Errorf("%s: %w", name, note.GetErr())
 	}
 	p.cache.result.Notes++
 	return nil
+}
+
+// importImages makes a file of each image the note at name cites by a relative path, once per image, and cites
+// it by its address instead. A missing file or one that is not an image keeps its link as written.
+func (p *run) importImages(ctx context.Context, tx bun.Tx, name, content string) (string, error) {
+	var failed error
+	content = imagePattern.ReplaceAllStringFunc(content, func(link string) string {
+		parts := imagePattern.FindStringSubmatch(link)
+		target, err := url.PathUnescape(parts[2] + parts[3])
+		if err != nil || failed != nil || strings.Contains(target, ":") || strings.HasPrefix(target, "/") {
+			return link
+		}
+		target = path.Join(path.Dir(name), target)
+		file, ok := p.cache.images[target]
+		if !ok {
+			data, err := fs.ReadFile(p.input.Dir, target)
+			if err != nil {
+				return link
+			}
+			image := createfile.Process(ctx, tx, p.store, createfile.Input{Name: path.Base(target), Data: data})
+			image.Run()
+			if image.HasErr() {
+				if !errors.Is(image.GetErr(), createfile.ErrNotImage) {
+					failed = fmt.Errorf("%s: %w", target, image.GetErr())
+				}
+				return link
+			}
+			file = image.GetResult()
+			p.cache.images[target] = file
+		}
+		return parts[1] + domain.FileURL(file.ID)
+	})
+	return content, failed
 }
 
 // withTitle writes the file name as a heading on a text without one (Obsidian titles a note by its file),

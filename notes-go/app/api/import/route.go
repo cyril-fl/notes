@@ -10,12 +10,13 @@ import (
 	"github.com/uptrace/bun"
 	"main.go/app/api/services/respond"
 	"main.go/app/shared/services/process/importnotes"
+	"main.go/app/shared/services/silo"
 )
 
 const (
-	// maxZip limits the upload, maxContent what it unpacks to: a zip of text, these are far beyond real notes.
-	maxZip     = 50 << 20
-	maxContent = 200 << 20
+	// maxZip limits the upload, maxContent what it unpacks to: text and images, these are far beyond real notes.
+	maxZip     = 200 << 20
+	maxContent = 400 << 20
 )
 
 // Handler adds the .md files of a zip as notes, its directories as folders, into a folder (the root without
@@ -25,14 +26,14 @@ const (
 // @Accept   application/zip
 // @Produce  json
 // @Param    parent query string false "folder uuid, the root when left out"
-// @Param    body body []byte true "zip of .md files"
+// @Param    body body []byte true "zip of .md files and their images"
 // @Success  200 {object} importnotes.Result
 // @Failure  400 {object} respond.Failure
 // @Failure  409 {object} respond.Failure
 // @Failure  413 {object} respond.Failure
 // @Failure  500 {object} respond.Failure
 // @Router   /api/import [post]
-func Handler(db bun.IDB) http.HandlerFunc {
+func Handler(db bun.IDB, store silo.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		parent := r.URL.Query().Get("parent")
 		if !respond.ValidIDs(w, parent) {
@@ -64,7 +65,7 @@ func Handler(db bun.IDB) http.HandlerFunc {
 			return
 		}
 
-		process := importnotes.Process(r.Context(), db, importnotes.Input{Dir: archive, ParentID: parent})
+		process := importnotes.Process(r.Context(), db, store, importnotes.Input{Dir: archive, ParentID: parent})
 		process.Run()
 		if process.HasErr() {
 			respond.Error(w, process.GetErr())

@@ -116,6 +116,9 @@ func getTables(tx bun.Tx) []*bun.CreateTableQuery {
 		tx.NewCreateTable().Model((*domain.NoteLink)(nil)).
 			ForeignKey(`("source_id") REFERENCES "metadata_notes" ("item_id") ON DELETE CASCADE`).
 			ForeignKey(`("target_id") REFERENCES "metadata_notes" ("item_id") ON DELETE CASCADE`),
+		// shortcut: deleting an account leaves its objects in Silo, remove the prefix <user_id>/ if accounts ever get deleted.
+		tx.NewCreateTable().Model((*domain.File)(nil)).
+			ForeignKey(`("user_id") REFERENCES "users" ("id") ON DELETE CASCADE`),
 	}
 }
 

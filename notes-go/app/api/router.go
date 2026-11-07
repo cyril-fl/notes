@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/uptrace/bun"
+	apicreatefile "main.go/app/api/create-file"
 	apicreatefolder "main.go/app/api/create-folder"
 	apicreatenote "main.go/app/api/create-note"
 	apicreatetag "main.go/app/api/create-tag"
@@ -19,6 +20,7 @@ import (
 	apiimport "main.go/app/api/import"
 	apilogin "main.go/app/api/login"
 	apimove "main.go/app/api/move"
+	apireadfile "main.go/app/api/read-file"
 	apireadfinder "main.go/app/api/read-finder"
 	apireadfolder "main.go/app/api/read-folder"
 	apireadgraph "main.go/app/api/read-graph"
@@ -31,13 +33,15 @@ import (
 	apisearch "main.go/app/api/search"
 	"main.go/app/api/services/auth"
 	"main.go/app/api/services/guard"
+	"main.go/app/shared/services/silo"
 )
 
 // @title    Notes API
 // @version  1.0
 
 // New gives the API, reachable by web pages from origin only (none when empty), and by logged-in accounts only.
-func New(db bun.IDB, origin string) http.Handler {
+// The images of the notes are in store.
+func New(db bun.IDB, store silo.Store, origin string) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.Handle("POST /api/login", apilogin.Handler(db))
@@ -75,8 +79,11 @@ func New(db bun.IDB, origin string) http.Handler {
 	mux.Handle("DELETE /api/trash", apideletetrash.Handler(db))
 	mux.Handle("DELETE /api/trash/{id}", apideletetrash.Item(db))
 	mux.Handle("POST /api/restore", apirestore.Handler(db))
-	mux.Handle("GET /api/export", apiexport.Handler(db))
-	mux.Handle("POST /api/import", apiimport.Handler(db))
+	mux.Handle("GET /api/export", apiexport.Handler(db, store))
+	mux.Handle("POST /api/import", apiimport.Handler(db, store))
+
+	mux.Handle("POST /api/files", apicreatefile.Handler(db, store))
+	mux.Handle("GET /api/files/{id}", apireadfile.Handler(db, store))
 
 	return guard.New(origin, auth.New(db, mux))
 }

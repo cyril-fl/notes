@@ -44,6 +44,27 @@ test('a [[link]] typed by hand waits, then the API points it to its note', async
   await expect.poll(() => box.content(source.id), { timeout: 5000 }).toContain(`](note:${target.id})`);
 });
 
+// A 1×1 PNG.
+const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+
+test('a pasted image is sent to the API, shown, and cited by the note', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} image\n\ntexte`);
+  await page.goto(`/notes/${note.id}`);
+  const editor = page.locator('.ProseMirror');
+  await editor.click();
+  await page.keyboard.press('ControlOrMeta+End');
+  await editor.evaluate((element, png) => {
+    const data = new DataTransfer();
+    data.items.add(new File([Uint8Array.from(atob(png), (c) => c.charCodeAt(0))], 'point.png', { type: 'image/png' }));
+    element.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }));
+  }, PNG);
+
+  const image = editor.locator('img[alt="point.png"]');
+  await expect(image).toBeAttached();
+  await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(1);
+  await expect.poll(() => box.content(note.id), { timeout: 5000 }).toMatch(/!\[point\.png\]\(\/api\/files\/[0-9a-f-]{36}\)/);
+});
+
 test('pinning from the menu lists the note in the sidebar', async ({ page }) => {
   const note = await box.note(`# ${box.prefix} épinglée`);
   await page.goto(`/folders/${box.folder.id}`);

@@ -9,6 +9,7 @@ import (
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/importnotes"
 	"main.go/app/shared/services/process/resolveitem"
+	"main.go/app/shared/services/silo"
 )
 
 // Import adds the .md files of the directory args[0] as notes, and its directories as folders, into --parent.
@@ -27,7 +28,11 @@ func Import(cobra *cobra.Command, args []string) error {
 		return fmt.Errorf("not a directory: %s", args[0])
 	}
 
-	process := importnotes.Process(cobra.Context(), postgrey.GetDb(), input)
+	store, err := silo.New(cobra.Context())
+	if err != nil {
+		return err
+	}
+	process := importnotes.Process(cobra.Context(), postgrey.GetDb(), store, input)
 	process.Run()
 
 	if !process.HasErr() {

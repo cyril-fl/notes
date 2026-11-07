@@ -63,6 +63,25 @@ components:
       required:
       - values
       type: object
+    domain.File:
+      properties:
+        content_type:
+          type: string
+        created_at:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        size:
+          type: integer
+      required:
+      - content_type
+      - created_at
+      - id
+      - name
+      - size
+      type: object
     domain.Item:
       properties:
         created_at:
@@ -477,6 +496,131 @@ paths:
       summary: Export the notes as markdown files
       tags:
       - transfer
+  /api/files:
+    post:
+      parameters:
+      - description: file name
+        in: query
+        name: name
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                type: integer
+              title: body
+              type: array
+          image/gif:
+            schema:
+              format: binary
+              type: string
+          image/jpeg:
+            schema:
+              format: binary
+              type: string
+          image/png:
+            schema:
+              format: binary
+              type: string
+          image/webp:
+            schema:
+              type: string
+        description: image
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/domain.File'
+          description: Created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "413":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Request Entity Too Large
+        "415":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unsupported Media Type
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Upload an image
+      tags:
+      - files
+  /api/files/{id}:
+    get:
+      parameters:
+      - description: uuid
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            image/gif:
+              schema:
+                type: file
+            image/jpeg:
+              schema:
+                type: file
+            image/png:
+              schema:
+                type: file
+            image/webp:
+              schema:
+                type: file
+          description: OK
+        "404":
+          content:
+            image/gif:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+            image/jpeg:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+            image/png:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+            image/webp:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+        "500":
+          content:
+            image/gif:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+            image/jpeg:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+            image/png:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+            image/webp:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Read an image
+      tags:
+      - files
   /api/folders:
     get:
       responses:
@@ -713,7 +857,7 @@ paths:
             schema:
               format: binary
               type: string
-        description: zip of .md files
+        description: zip of .md files and their images
         required: true
       responses:
         "200":

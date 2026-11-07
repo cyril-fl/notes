@@ -10,6 +10,7 @@ import (
 
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/hashtag"
+	"main.go/app/shared/services/process/createfile"
 	"main.go/app/shared/services/process/createfolder"
 	"main.go/app/shared/services/process/createnote"
 	"main.go/app/shared/services/process/createsession"
@@ -24,6 +25,7 @@ import (
 	"main.go/app/shared/services/process/listitems"
 	"main.go/app/shared/services/process/moveitems"
 	"main.go/app/shared/services/process/pinnote"
+	"main.go/app/shared/services/process/readfile"
 	"main.go/app/shared/services/process/readitem"
 	"main.go/app/shared/services/process/readsession"
 	"main.go/app/shared/services/process/readtag"
@@ -42,6 +44,7 @@ var statuses = []struct {
 }{
 	{http.StatusBadRequest, []error{
 		createfolder.ErrNoTitle, createfolder.ErrParentNotFound,
+		createfile.ErrNoData,
 		createnote.ErrNoContent, createnote.ErrParentNotFound,
 		createtag.ErrNoValue,
 		deleteitems.ErrNoValue,
@@ -62,7 +65,10 @@ var statuses = []struct {
 		createsession.ErrBadCredentials, readsession.ErrNoSession,
 	}},
 	{http.StatusNotFound, []error{
-		editfolder.ErrNotFound, editnote.ErrNotFound, emptytrash.ErrNotFound, edittag.ErrNotFound, pinnote.ErrNotFound, readitem.ErrNotFound, readtag.ErrNotFound,
+		editfolder.ErrNotFound, editnote.ErrNotFound, emptytrash.ErrNotFound, edittag.ErrNotFound, pinnote.ErrNotFound, readfile.ErrNotFound, readitem.ErrNotFound, readtag.ErrNotFound,
+	}},
+	{http.StatusUnsupportedMediaType, []error{
+		createfile.ErrNotImage,
 	}},
 	{http.StatusConflict, []error{
 		domain.ErrFolderExists, edittag.ErrAlreadyExists, moveitems.ErrCycle, restoreitems.ErrParentInTrash,

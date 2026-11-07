@@ -2,8 +2,9 @@
 import type { EditorToolbarItem } from '@nuxt/ui';
 import type { Editor } from '@tiptap/vue-3';
 import { TaskItem, TaskList } from '@tiptap/extension-list';
+import type { FetchError } from 'ofetch';
 import type { RouteLocationNormalized } from 'vue-router';
-import type { Item, ItemDetail, NotesGraph } from '~/types/items';
+import type { Item, ItemDetail, NoteFile, NotesGraph } from '~/types/items';
 import type { Changes } from '~/utils/saver';
 
 const { icons } = useIcons();
@@ -235,7 +236,21 @@ const starterKit = {
       ALLOWED_LINKS.includes((url.split(':')[0] ?? '').toLowerCase()) && ctx.defaultValidate(url),
   },
 } as object;
-const extensions = [TaskList, TaskItem.configure({ nested: true }), WikiLink];
+// A dropped image takes no focus: the upload is an interaction, its image an edit.
+async function upload(file: File) {
+  touched.value = true;
+  try {
+    const saved = await api<NoteFile>('/api/files', { method: 'POST', body: file, query: { name: file.name }, quiet: true });
+    return `/api/files/${saved.id}`;
+  } catch (error) {
+    const status = (error as FetchError).status;
+    const key = status === 413 ? 'note.imageTooLarge' : status === 415 ? 'note.imageType' : 'note.imageFailed';
+    toast.add({ title: t(key, { name: file.name }), color: 'error' });
+    return null;
+  }
+}
+
+const extensions = [TaskList, TaskItem.configure({ nested: true }), WikiLink, noteImage(baseURL, upload)];
 
 const status = computed(() => {
   if (failed.value) return t('note.notSaved');

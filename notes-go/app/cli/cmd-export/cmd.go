@@ -3,6 +3,7 @@ package cmdexport
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -11,6 +12,7 @@ import (
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/exportnotes"
 	"main.go/app/shared/services/process/resolveitem"
+	"main.go/app/shared/services/silo"
 )
 
 var ErrNotEmpty = errors.New("the directory is not empty")
@@ -32,6 +34,10 @@ func Export(cobra *cobra.Command, args []string) error {
 		return fmt.Errorf("%w: %s", ErrNotEmpty, dir)
 	}
 
+	store, err := silo.New(cobra.Context())
+	if err != nil {
+		return err
+	}
 	process := exportnotes.Process(cobra.Context(), postgrey.GetDb(), folderID)
 	process.Run()
 	if process.HasErr() {
@@ -50,6 +56,12 @@ func Export(cobra *cobra.Command, args []string) error {
 			}
 			continue
 		}
+		if file.Key != "" {
+			if err := copyImage(cobra, store, file.Key, target); err != nil {
+				return err
+			}
+			continue
+		}
 		if err := os.WriteFile(target, []byte(file.Content), 0o644); err != nil {
 			return err
 		}
@@ -58,4 +70,22 @@ func Export(cobra *cobra.Command, args []string) error {
 
 	fmt.Printf("Successfully exported %d note(s) to %s\n", notes, dir)
 	return nil
+}
+
+// copyImage writes the bytes of an image from Silo into target.
+func copyImage(cobra *cobra.Command, store silo.Store, key, target string) error {
+	body, err := store.Get(cobra.Context(), key)
+	if err != nil {
+		return err
+	}
+	defer body.Close()
+	out, err := os.Create(target)
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(out, body); err != nil {
+		out.Close()
+		return err
+	}
+	return out.Close()
 }

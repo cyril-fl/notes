@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"main.go/app/shared/domain"
 	"main.go/app/shared/services/password"
 	"main.go/app/shared/services/process/adduser"
@@ -20,6 +21,7 @@ import (
 	"github.com/uptrace/bun"
 	"main.go/app/shared/services/postgrey"
 	"main.go/app/shared/services/process/createschema"
+	"main.go/app/shared/services/silo"
 )
 
 const unknownID = "3f2a4b1c-0d9e-4a8b-9c7d-1e2f3a4b5c6d"
@@ -68,7 +70,7 @@ func logIn(t *testing.T, tx bun.Tx) *client {
 	if _, err := savepoint.NewInsert().Model(&session).Exec(ctx); err != nil {
 		t.Fatal(err)
 	}
-	api := New(bun.IDB(savepoint), "")
+	api := New(bun.IDB(savepoint), silo.NewMemory(), "")
 	return &client{t: t, api: api, db: savepoint, handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.Header.Set("Authorization", "Bearer "+token)
 		api.ServeHTTP(w, r)
@@ -551,7 +553,7 @@ func TestExportAndImport(t *testing.T) {
 }
 
 func TestRouterGuards(t *testing.T) {
-	handler := New(nil, "http://localhost:3001")
+	handler := New(nil, nil, "http://localhost:3001")
 
 	r := httptest.NewRequest(http.MethodDelete, "/api/notes/"+unknownID, nil)
 	r.Host = "localhost:8080"
@@ -577,6 +579,44 @@ func TestRouterGuards(t *testing.T) {
 	handler.ServeHTTP(w, r)
 	if w.Code != http.StatusUnauthorized {
 		t.Errorf("no session: status = %d, want 401", w.Code)
+	}
+}
+
+func TestFiles(t *testing.T) {
+	c := newClient(t)
+	image := "\x89PNG\r\n\x1a\n...."
+
+	var file struct{ ID, Name, ContentType string }
+	c.do(http.MethodPost, "/api/files?name=chat.png", image, http.StatusCreated, &file)
+	if file.ID == "" || file.Name != "chat.png" {
+		t.Fatalf("file = %+v", file)
+	}
+	if got := c.raw("/api/files/" + file.ID); got != image {
+		t.Errorf("GET = %q, want the image back", got)
+	}
+	c.do(http.MethodPost, "/api/files", "<svg/>", http.StatusUnsupportedMediaType, nil)
+	c.do(http.MethodPost, "/api/files", "", http.StatusBadRequest, nil)
+	c.do(http.MethodGet, "/api/files/"+unknownID, "", http.StatusNotFound, nil)
+	c.other(t).do(http.MethodGet, "/api/files/"+file.ID, "", http.StatusNotFound, nil)
+
+	// A note citing it exports the image beside it.
+	title := unique("photo")
+	c.do(http.MethodPost, "/api/notes", fmt.Sprintf(`{"content":"# %s\n\n![chat](/api/files/%s)"}`, title, file.ID), http.StatusCreated, nil)
+	exported := c.raw("/api/export")
+	read, err := zip.NewReader(strings.NewReader(exported), int64(len(exported)))
+	if err != nil {
+		t.Fatalf("export is not a zip: %v", err)
+	}
+	for name, want := range map[string]string{title + ".md": "![chat](_files/" + file.ID + ".png)", "_files/" + file.ID + ".png": image} {
+		entry, err := read.Open(name)
+		if err != nil {
+			t.Fatalf("export misses %s: %v", name, err)
+		}
+		data, _ := io.ReadAll(entry)
+		entry.Close()
+		if !strings.Contains(string(data), want) {
+			t.Errorf("%s = %q, want %q in it", name, data, want)
+		}
 	}
 }
 

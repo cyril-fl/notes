@@ -14,7 +14,9 @@ import (
 	"main.go/app/api"
 	"main.go/app/api/services/guard"
 	"main.go/app/shared/services/postgrey"
+	"main.go/app/shared/services/process/purgefiles"
 	"main.go/app/shared/services/process/purgeitems"
+	"main.go/app/shared/services/silo"
 )
 
 const (
@@ -40,17 +42,27 @@ func Serve(cobra *cobra.Command, args []string) error {
 	defer stop()
 
 	db := postgrey.GetDb()
+	store, err := silo.New(ctx)
+	if err != nil {
+		return err
+	}
+	// The files after the items: a note purged now frees its images in the same round.
 	go every(ctx, purgeInterval, func() {
 		purge := purgeitems.Process(ctx, db)
 		purge.Run()
 		if purge.HasErr() && ctx.Err() == nil {
 			log.Printf("purge: %v", purge.GetErr())
 		}
+		files := purgefiles.Process(ctx, db, store)
+		files.Run()
+		if files.HasErr() && ctx.Err() == nil {
+			log.Printf("purge files: %v", files.GetErr())
+		}
 	})
 
 	server := &http.Server{
 		Addr:              addr,
-		Handler:           api.New(db, origin),
+		Handler:           api.New(db, store, origin),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       30 * time.Second,
 		WriteTimeout:      30 * time.Second,

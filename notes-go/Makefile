@@ -13,13 +13,21 @@ test:
 	docker compose exec -T postgres sh -c 'psql -U "$$POSTGRES_USER" -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = '"'"'$${POSTGRES_DB}_test'"'"'" | grep -q 1 || createdb -U "$$POSTGRES_USER" "$${POSTGRES_DB}_test"' && \
 	POSTGRES_DB=$${POSTGRES_DB}_test CONFIG_FILE=$(CURDIR)/config/config.yaml go test -p 1 $(or $(ARGS),./...)
 
-# Restore: docker compose exec -T postgres sh -c 'psql -U "$$POSTGRES_USER" "$$POSTGRES_DB"' < backups/<file>.sql
+# The base, then the images of Silo beside it. Restore:
+#   docker compose exec -T postgres sh -c 'psql -U "$$POSTGRES_USER" "$$POSTGRES_DB"' < backups/<file>.sql
+#   docker compose cp backups/<file>.files silo:/tmp/restore && docker compose exec silo sh -c \
+#     'mcli alias set local http://127.0.0.1:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" && mcli mirror /tmp/restore local/<bucket>'
 backup:
 	@mkdir -p backups
-	@file=backups/notes-$$(date +%Y%m%d-%H%M%S).sql; \
+	@set -a && . ./.env && set +a && \
+	file=backups/notes-$$(date +%Y%m%d-%H%M%S); \
 	docker compose exec -T postgres sh -c 'pg_dump --clean --if-exists -U "$$POSTGRES_USER" "$$POSTGRES_DB"' > $$file.tmp \
-		&& mv $$file.tmp $$file && echo $$file \
-		|| { rm -f $$file.tmp; exit 1; }
+		&& mv $$file.tmp $$file.sql && echo $$file.sql \
+		|| { rm -f $$file.tmp; exit 1; }; \
+	docker compose exec -T silo sh -c 'rm -rf /tmp/backup && mkdir /tmp/backup \
+		&& mcli alias set local http://127.0.0.1:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" >/dev/null \
+		&& mcli mirror --quiet local/'"$$S3_BUCKET"' /tmp/backup >/dev/null' \
+		&& docker compose cp silo:/tmp/backup $$file.files && echo $$file.files
 
 api:
 	@docker compose up -d --build api

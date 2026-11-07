@@ -49,6 +49,156 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload an image */
+        post: {
+            parameters: {
+                query?: {
+                    /** @description file name */
+                    name?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description image */
+            requestBody: {
+                content: {
+                    "application/json": number[];
+                    "image/gif": string;
+                    "image/jpeg": string;
+                    "image/png": string;
+                    "image/webp": string;
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["domain.File"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+                /** @description Request Entity Too Large */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+                /** @description Unsupported Media Type */
+                415: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/files/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read an image */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description uuid */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "image/gif": Record<string, never>;
+                        "image/jpeg": Record<string, never>;
+                        "image/png": Record<string, never>;
+                        "image/webp": Record<string, never>;
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "image/gif": components["schemas"]["respond.Failure"];
+                        "image/jpeg": components["schemas"]["respond.Failure"];
+                        "image/png": components["schemas"]["respond.Failure"];
+                        "image/webp": components["schemas"]["respond.Failure"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "image/gif": components["schemas"]["respond.Failure"];
+                        "image/jpeg": components["schemas"]["respond.Failure"];
+                        "image/png": components["schemas"]["respond.Failure"];
+                        "image/webp": components["schemas"]["respond.Failure"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/folders": {
         parameters: {
             query?: never;
@@ -434,7 +584,7 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            /** @description zip of .md files */
+            /** @description zip of .md files and their images */
             requestBody: {
                 content: {
                     "application/json": number[];
@@ -1793,6 +1943,13 @@ export interface components {
         };
         "createtag.Body": {
             values: string[];
+        };
+        "domain.File": {
+            content_type: string;
+            created_at: string;
+            id: string;
+            name: string;
+            size: number;
         };
         "domain.Item": {
             created_at: string;
