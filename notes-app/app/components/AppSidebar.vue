@@ -5,7 +5,7 @@ defineProps<{ collapsed?: boolean }>();
 
 const api = useApi();
 const route = useRoute();
-const { createFolder, tagMenu } = useItems();
+const { createFolder, tagMenu, pinItem } = useItems();
 const searchOpen = useState('search-open', () => false);
 const colorMode = useColorMode();
 
@@ -71,18 +71,26 @@ const isOverRoot = useDropFolder(rootLink, () => null);
     <div class="min-h-0 flex-1 space-y-5 overflow-y-auto">
       <section v-if="favorites.length">
         <h2 class="px-2 pb-1 text-xs font-medium text-muted">Favoris</h2>
-        <NuxtLink v-for="folder in favorites" :key="folder.id" :to="`/folders/${folder.id}`" class="row" :class="{ 'row-active': route.params.id === folder.id }">
-          <UIcon name="i-lucide-star" class="size-4 shrink-0 text-muted" />
-          <span class="truncate">{{ folder.title }}</span>
-        </NuxtLink>
+        <div v-for="folder in favorites" :key="folder.id" class="row" :class="{ 'row-active': route.params.id === folder.id }">
+          <UTooltip text="Retirer des favoris">
+            <button type="button" class="shrink-0 text-muted hover:text-default" aria-label="Retirer des favoris" @click="pinItem(folder, false)">
+              <UIcon name="i-lucide-star" class="block size-4" />
+            </button>
+          </UTooltip>
+          <NuxtLink :to="`/folders/${folder.id}`" class="flex-1 self-stretch truncate leading-7">{{ folder.title }}</NuxtLink>
+        </div>
       </section>
 
       <section v-if="pinnedNotes.length">
         <h2 class="px-2 pb-1 text-xs font-medium text-muted">Épinglées</h2>
-        <NuxtLink v-for="note in pinnedNotes" :key="note.id" :to="`/notes/${note.id}`" class="row" :class="{ 'row-active': route.params.id === note.id }">
-          <UIcon name="i-lucide-pin" class="size-4 shrink-0 text-muted" />
-          <span class="truncate">{{ displayTitle(note.title) }}</span>
-        </NuxtLink>
+        <div v-for="note in pinnedNotes" :key="note.id" class="row" :class="{ 'row-active': route.params.id === note.id }">
+          <UTooltip text="Désépingler">
+            <button type="button" class="shrink-0 text-muted hover:text-default" aria-label="Désépingler" @click="pinItem(note, false)">
+              <UIcon name="i-lucide-pin" class="block size-4" />
+            </button>
+          </UTooltip>
+          <NuxtLink :to="`/notes/${note.id}`" class="flex-1 self-stretch truncate leading-7">{{ displayTitle(note.title) }}</NuxtLink>
+        </div>
       </section>
 
       <section v-if="recent.length">
