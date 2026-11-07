@@ -35,7 +35,7 @@
   --color-notes-300: #93c5fd;
   --color-notes-400: #60a5fa;
   --color-notes-500: #2c6def;
-  --color-notes-600: #255ee4;
+  --color-notes-600: #245ce2;
   --color-notes-700: #1d4ed8;
   --color-notes-800: #1e40af;
   --color-notes-900: #1e3a8a;
@@ -47,7 +47,7 @@
   --color-dracula-300: #cbb0fb;
   --color-dracula-400: #bd93f9;
   --color-dracula-500: #9053e5;
-  --color-dracula-600: #864ad9;
+  --color-dracula-600: #8045d2;
   --color-dracula-700: #7b40cc;
   --color-dracula-800: #6435a6;
   --color-dracula-900: #522e85;
@@ -71,7 +71,7 @@
   --color-catppuccin-300: #cba6f7;
   --color-catppuccin-400: #b585f3;
   --color-catppuccin-500: #9055df;
-  --color-catppuccin-600: #8839ef;
+  --color-catppuccin-600: #7f32e4;
   --color-catppuccin-700: #7228d2;
   --color-catppuccin-800: #5e22ab;
   --color-catppuccin-900: #4d1f8a;
@@ -95,8 +95,8 @@
   --color-nord-300: #a3cddc;
   --color-nord-400: #88c0d0;
   --color-nord-500: #5577a1;
-  --color-nord-600: #51729c;
-  --color-nord-700: #4c6d96;
+  --color-nord-600: #476489;
+  --color-nord-700: #445f82;
   --color-nord-800: #405a7a;
   --color-nord-900: #364b64;
   --color-nord-950: #232f40;
@@ -143,7 +143,7 @@
   --color-everforest-300: #bfd08f;
   --color-everforest-400: #a7c080;
   --color-everforest-500: #6d7c02;
-  --color-everforest-600: #647103;
+  --color-everforest-600: #616d03;
   --color-everforest-700: #5a6604;
   --color-everforest-800: #485108;
   --color-everforest-900: #3c440b;
@@ -164,6 +164,14 @@
 
 :root {
   --ui-radius: 0.25rem;
+}
+
+/* Light mode on the tinted 50 of the theme's greys rather than white, so each theme shows on the whole page, and the
+   accent one shade darker to stay at 4.5:1 on it. Unlayered, it wins over the light colors of Nuxt UI. */
+:root:not(.dark) {
+  --ui-primary: var(--ui-color-primary-600);
+  --ui-bg: var(--ui-color-neutral-50);
+  --ui-bg-muted: var(--ui-color-neutral-100);
 }
 
 @layer base {
@@ -190,7 +198,7 @@
   }
 
   .row-active {
-    @apply bg-accented;
+    @apply bg-primary/10 text-primary;
   }
 
   /* An item of a multiple selection. */

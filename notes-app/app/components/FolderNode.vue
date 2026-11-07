@@ -33,7 +33,7 @@ watch(isOver, (over) => (over ? start() : stop()));
         :class="{ 'row-active': route.params.id === folder.id, 'row-over': isOver }"
       >
         <NuxtLink :to="`/folders/${folder.id}`" draggable="false" class="flex min-w-0 flex-1 items-center gap-2 self-stretch">
-          <UIcon :name="icons.folder" class="size-4 shrink-0" :class="isOver ? 'text-inverted' : 'text-muted'" />
+          <UIcon :name="icons.folder" class="size-4 shrink-0" :class="isOver ? 'text-inverted' : 'text-primary'" />
           <span class="truncate">{{ folder.title }}</span>
         </NuxtLink>
         <button
