@@ -16,12 +16,27 @@ const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
 const avatarSrc = computed(() => me.value?.avatar && imageSrc(`/api/files/${me.value.avatar}`, baseURL));
 const uploading = ref(false);
 
+// square crops the image to its centered square and scales it to size: a phone photo of several MB becomes a few KB.
+// An animated GIF keeps its first frame.
+async function square(file: File, size: number): Promise<Blob> {
+  const bitmap = await createImageBitmap(file);
+  const side = Math.min(bitmap.width, bitmap.height);
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = Math.min(side, size);
+  canvas.getContext('2d')!.drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  // A browser that cannot encode WebP gives a PNG.
+  return new Promise((resolve, reject) => canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('canvas.toBlob'))), 'image/webp', 0.9));
+}
+
 async function changeAvatar(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0];
   if (!file) return;
   uploading.value = true;
   try {
-    const saved = await api<NoteFile>('/api/files', { method: 'POST', body: file, query: { name: file.name } });
+    const image = await square(file, 256);
+    const name = `avatar.${image.type === 'image/webp' ? 'webp' : 'png'}`;
+    const saved = await api<NoteFile>('/api/files', { method: 'POST', body: image, query: { name } });
     me.value = await api<User>('/api/me', { method: 'PATCH', body: { avatar: saved.id } });
   } finally {
     uploading.value = false;

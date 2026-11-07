@@ -2,19 +2,20 @@ import { expect, test } from '@playwright/test';
 import { API, APP } from '../../playwright.config';
 
 const api = { headers: { Origin: APP } };
-// A real PNG of one pixel: UAvatar shows the initials instead of an image that does not load.
-const png = {
-  name: 'avatar.png',
-  mimeType: 'image/png',
-  buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64'),
-};
 
 test('the account page sets an avatar, shown in the sidebar, then removes it', async ({ page, request }) => {
   try {
     await page.goto('/account');
-    await page.locator('input[type=file]').setInputFiles(png);
+    // A real 600×400 image (UAvatar shows the initials instead of an image that does not load), cropped and scaled to 256×256 before the upload.
+    const wide = await page.evaluate(() => {
+      const canvas = Object.assign(document.createElement('canvas'), { width: 600, height: 400 });
+      return canvas.toDataURL('image/png').split(',')[1]!;
+    });
+    await page.locator('input[type=file]').setInputFiles({ name: 'avatar.png', mimeType: 'image/png', buffer: Buffer.from(wide, 'base64') });
     await expect.poll(async () => (await (await request.get(`${API}/api/me`, api)).json()).avatar).toBeTruthy();
-    await expect(page.getByRole('button', { name: 'Menu du compte' }).locator('img')).toHaveAttribute('src', /\/api\/files\//);
+    const avatar = page.getByRole('button', { name: 'Menu du compte' }).locator('img');
+    await expect(avatar).toHaveAttribute('src', /\/api\/files\//);
+    await expect.poll(() => avatar.evaluate((img: HTMLImageElement) => `${img.naturalWidth}×${img.naturalHeight}`)).toBe('256×256');
 
     await page.getByRole('button', { name: 'Retirer' }).click();
     await expect(page.getByRole('button', { name: 'Menu du compte' }).locator('img')).toHaveCount(0);
