@@ -15,12 +15,12 @@ test('without a session the app asks to log in, then goes back where it was', as
   await page.getByLabel('Mot de passe').fill(process.env.E2E_PASSWORD ?? 'e2e-password');
   await page.getByRole('button', { name: 'Se connecter' }).click();
   await expect(page).toHaveURL(/\/trash$/);
-  await expect(page.getByRole('heading', { name: 'Corbeille' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Corbeille', exact: true })).toBeVisible();
 
-  // Logging out from the settings leaves the app.
-  await page.goto('/settings');
-  await expect(page.getByText(`Connecté en tant que ${process.env.E2E_NAME ?? 'e2e'}`)).toBeVisible();
-  await page.getByRole('button', { name: 'Se déconnecter' }).click();
+  // Logging out from the account menu of the sidebar leaves the app.
+  await page.getByRole('button', { name: 'Menu du compte' }).click();
+  await expect(page.getByRole('menu').getByText(process.env.E2E_NAME ?? 'e2e')).toBeVisible();
+  await page.getByRole('menuitem', { name: 'Se déconnecter' }).click();
   await expect(page).toHaveURL(/\/login/);
   await page.goto('/');
   await expect(page).toHaveURL(/\/login/);

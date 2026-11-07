@@ -12,6 +12,7 @@ const input = useTemplateRef('input');
 const importing = ref(false);
 
 const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
+const avatarSrc = computed(() => me.value?.avatar && imageSrc(`/api/files/${me.value.avatar}`, useRuntimeConfig().public.apiBase));
 
 // Each language in its own words. The layout watches me: it switches the interface once the API saved the choice.
 const languages = [
@@ -61,12 +62,6 @@ async function deleteData() {
   await refreshNuxtData();
 }
 
-async function logout() {
-  await api('/api/logout', { method: 'POST' });
-  clearNuxtData(); // The next account must not see what this one read.
-  await navigateTo('/login');
-}
-
 const parent = ref(ROOT);
 const destinations = useDestinations();
 
@@ -98,10 +93,11 @@ async function importZip(event: Event) {
     <section class="mb-8">
       <h2 class="mb-1 text-sm font-semibold">{{ $t('settings.account') }}</h2>
       <div class="flex items-center gap-4 py-3">
+        <UAvatar :src="avatarSrc || undefined" :alt="me?.name" />
         <p class="min-w-0 flex-1 truncate text-sm">
           {{ $t('settings.loggedInAs') }} <span class="font-medium">{{ me?.name }}</span>
         </p>
-        <UButton :label="$t('settings.logout')" color="neutral" variant="outline" @click="logout" />
+        <UButton :label="$t('settings.manageAccount')" :icon="icons.account" to="/account" color="neutral" variant="outline" />
       </div>
     </section>
 

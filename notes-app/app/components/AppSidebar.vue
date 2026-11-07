@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { Recent, TagCount } from '~/types/items';
+import type { Recent, TagCount, User } from '~/types/items';
 
 const { icons } = useIcons();
+const { t } = useI18n();
 
 defineProps<{ collapsed?: boolean }>();
 
@@ -20,6 +21,20 @@ const darkMode = computed({
 });
 const { data: recent } = useLazyAsyncData('recent', () => api<Recent[]>('/api/recent', { quiet: true }), { default: () => [] as Recent[] });
 const { data: tags } = useLazyAsyncData('tags', () => api<TagCount[]>('/api/graph'), { default: () => [] as TagCount[] });
+
+// The account, loaded by the layout: its avatar opens the account menu.
+const { data: me } = useNuxtData<User>('me');
+const baseURL = useRuntimeConfig().public.apiBase;
+const avatarSrc = computed(() => (me.value?.avatar ? imageSrc(`/api/files/${me.value.avatar}`, baseURL) : undefined));
+const logout = useLogout();
+const accountMenu = computed(() => [
+  [{ label: me.value?.name, type: 'label' as const }],
+  [
+    { label: t('sidebar.account'), icon: icons.account, to: '/account' },
+    { label: t('common.settings'), icon: icons.settings, to: '/settings' },
+  ],
+  [{ label: t('settings.logout'), icon: icons.logout, onSelect: logout }],
+]);
 
 const rootLink = useTemplateRef('rootLink');
 const isOverRoot = useDropFolder(rootLink, () => null);
@@ -42,9 +57,11 @@ const isOverRoot = useDropFolder(rootLink, () => null);
     </UTooltip>
 
     <div class="mt-auto flex flex-col items-center gap-1 border-t border-default pt-2">
-      <UTooltip :text="$t('common.settings')" :content="{ side: 'right' }">
-        <UButton :icon="icons.settings" to="/settings" color="neutral" variant="ghost" active-variant="soft" :aria-label="$t('common.settings')" />
-      </UTooltip>
+      <UDropdownMenu :items="accountMenu" :content="{ side: 'right', align: 'end' }">
+        <UButton color="neutral" variant="ghost" :aria-label="$t('sidebar.accountMenu')">
+          <UAvatar :src="avatarSrc" :alt="me?.name" size="xs" />
+        </UButton>
+      </UDropdownMenu>
       <UTooltip :text="darkMode ? $t('sidebar.lightTheme') : $t('sidebar.darkTheme')" :content="{ side: 'right' }">
         <UButton :icon="darkMode ? icons.lightMode : icons.darkMode" color="neutral" variant="ghost" :aria-label="darkMode ? $t('sidebar.lightTheme') : $t('sidebar.darkTheme')" @click="darkMode = !darkMode" />
       </UTooltip>
@@ -146,9 +163,11 @@ const isOverRoot = useDropFolder(rootLink, () => null);
         <UIcon :name="icons.trash" class="size-4 shrink-0" />
         {{ $t('common.trash') }}
       </NuxtLink>
-      <UTooltip :text="$t('common.settings')">
-        <UButton :icon="icons.settings" to="/settings" color="neutral" variant="ghost" size="sm" :aria-label="$t('common.settings')" />
-      </UTooltip>
+      <UDropdownMenu :items="accountMenu" :content="{ side: 'top', align: 'start' }">
+        <UButton color="neutral" variant="ghost" size="sm" :aria-label="$t('sidebar.accountMenu')">
+          <UAvatar :src="avatarSrc" :alt="me?.name" size="2xs" />
+        </UButton>
+      </UDropdownMenu>
       <UTooltip :text="darkMode ? $t('sidebar.lightTheme') : $t('sidebar.darkTheme')">
         <UButton :icon="darkMode ? icons.lightMode : icons.darkMode" color="neutral" variant="ghost" size="sm" :aria-label="darkMode ? $t('sidebar.lightTheme') : $t('sidebar.darkTheme')" @click="darkMode = !darkMode" />
       </UTooltip>

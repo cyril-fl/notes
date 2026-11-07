@@ -33,7 +33,9 @@
     "expand": "Déployer la barre latérale",
     "collapse": "Replier la barre latérale",
     "removeFavorite": "Retirer des favoris",
-    "unpin": "Désépingler"
+    "unpin": "Désépingler",
+    "account": "Compte",
+    "accountMenu": "Menu du compte"
   },
   "search": {
     "placeholder": "Chercher une note, une action…",
@@ -191,6 +193,29 @@
       "nord": "Nord",
       "gruvbox": "Gruvbox",
       "everforest": "Everforest"
-    }
+    },
+    "manageAccount": "Gérer le compte"
+  },
+  "account": {
+    "title": "Compte",
+    "profile": "Profil",
+    "avatar": "Avatar",
+    "avatarDescription": "Une image PNG, JPEG, GIF ou WebP, montrée dans la barre latérale.",
+    "chooseAvatar": "Choisir une image",
+    "removeAvatar": "Retirer",
+    "name": "Nom",
+    "nameDescription": "Le nom pour se connecter.",
+    "save": "Enregistrer",
+    "renamed": "Nom enregistré",
+    "nameTaken": "Ce nom est déjà pris par un autre compte.",
+    "password": "Mot de passe",
+    "passwordDescription": "Les autres appareils sont déconnectés ; celui-ci reste connecté.",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "changePassword": "Changer le mot de passe",
+    "passwordChanged": "Mot de passe changé",
+    "wrongPassword": "Le mot de passe actuel est faux.",
+    "shortPassword": "Le nouveau mot de passe doit faire 8 caractères ou plus.",
+    "session": "Session"
   }
 }

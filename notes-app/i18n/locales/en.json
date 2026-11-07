@@ -33,7 +33,9 @@
     "expand": "Expand the sidebar",
     "collapse": "Collapse the sidebar",
     "removeFavorite": "Remove from favorites",
-    "unpin": "Unpin"
+    "unpin": "Unpin",
+    "account": "Account",
+    "accountMenu": "Account menu"
   },
   "search": {
     "placeholder": "Search a note, an action…",
@@ -191,6 +193,29 @@
       "nord": "Nord",
       "gruvbox": "Gruvbox",
       "everforest": "Everforest"
-    }
+    },
+    "manageAccount": "Manage account"
+  },
+  "account": {
+    "title": "Account",
+    "profile": "Profile",
+    "avatar": "Avatar",
+    "avatarDescription": "A PNG, JPEG, GIF or WebP image, shown in the sidebar.",
+    "chooseAvatar": "Choose an image",
+    "removeAvatar": "Remove",
+    "name": "Name",
+    "nameDescription": "The name to log in with.",
+    "save": "Save",
+    "renamed": "Name saved",
+    "nameTaken": "Another account already has this name.",
+    "password": "Password",
+    "passwordDescription": "Your other devices are logged out; this one stays logged in.",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "changePassword": "Change password",
+    "passwordChanged": "Password changed",
+    "wrongPassword": "The current password is wrong.",
+    "shortPassword": "The new password needs 8 characters or more.",
+    "session": "Session"
   }
 }
