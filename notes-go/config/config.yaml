@@ -250,6 +250,11 @@ commands:
     short: "Link every note to the notes its [[links]] name"
     long: "Link every note to the notes its [[links]] name: a [[Title]], or a [[/Folder/Title]] when several notes share the title. Only needed once, for notes written before links were read from the text."
     example: "notes sync-links"
+  sync-entities:
+    use: "sync-entities"
+    short: "Repair the & < > the web editor saved as &amp; &lt; &gt;"
+    long: "Write back as < > & the &lt; &gt; &amp; that the web editor saved in the text of notes before v0.16.0, outside code, and the titles with them. Only needed once."
+    example: "notes sync-entities"
   export:
     use: "export <directory> [<uuid|path>]"
     short: "Write notes out as markdown files"

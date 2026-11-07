@@ -101,6 +101,8 @@ Pour une base créée avant cette règle, `notes sync-tags` aligne une fois pour
 
 Pour une base créée avant cette règle, `notes sync-links` relie une fois pour toutes les `[[liens]]` des notes.
 
+Avant la v0.16.0, l'éditeur de l'app enregistrait `<`, `>` et `&` sous la forme `&lt;`, `&gt;` et `&amp;`. `notes sync-entities` répare une fois pour toutes le texte et le titre des notes touchées, hors blocs de code.
+
 ### Corbeille
 
 ```sh

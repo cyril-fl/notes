@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+	cmdsyncentities "main.go/app/cli/cmd-sync-entities"
 	cmdsynclinks "main.go/app/cli/cmd-sync-links"
 	cmdsynctags "main.go/app/cli/cmd-sync-tags"
 	cmdsynctitles "main.go/app/cli/cmd-sync-titles"
@@ -34,6 +35,15 @@ var cmdSyncLinks = &cobra.Command{
 	RunE:    cmdsynclinks.Sync,
 }
 
+var cmdSyncEntities = &cobra.Command{
+	Use:     cmd.SyncEntities.Use,
+	Short:   cmd.SyncEntities.Short,
+	Long:    cmd.SyncEntities.Long,
+	Example: cmd.SyncEntities.Example,
+	Args:    cobra.NoArgs,
+	RunE:    cmdsyncentities.Sync,
+}
+
 func init() {
-	cmdRoot.AddCommand(cmdSyncTags, cmdSyncTitles, cmdSyncLinks)
+	cmdRoot.AddCommand(cmdSyncTags, cmdSyncTitles, cmdSyncLinks, cmdSyncEntities)
 }
