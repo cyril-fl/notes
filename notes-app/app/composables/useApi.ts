@@ -15,16 +15,22 @@ function errorMessage(error: FetchError, conflict?: ApiOptions['conflict']): str
   return Object.entries(conflict).find(([part]) => message.includes(part))?.[1] ?? message;
 }
 
-/** Calls the Go API and tells the user when it fails. */
+/** Calls the Go API and tells the user when it fails; without a session, opens the login page. */
 export function useApi() {
   const toast = useToast();
+  const route = useRoute();
   const baseURL = useRuntimeConfig().public.apiBase;
 
   return async function api<T>(path: string, { conflict, quiet, ...options }: ApiOptions = {}): Promise<T> {
     try {
-      return await $fetch<T>(path, { baseURL, ...options } as object);
+      // include: in development the API is on another port, and its session cookie must go along.
+      return await $fetch<T>(path, { baseURL, credentials: 'include', ...options } as object);
     } catch (error) {
-      if (!quiet) toast.add({ title: errorMessage(error as FetchError, conflict), color: 'error' });
+      if ((error as FetchError).status === 401 && route.path !== '/login') {
+        await navigateTo({ path: '/login', query: { redirect: route.fullPath } });
+      } else if (!quiet) {
+        toast.add({ title: errorMessage(error as FetchError, conflict), color: 'error' });
+      }
       throw error;
     }
   };

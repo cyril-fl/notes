@@ -6,6 +6,7 @@ test.beforeEach(async () => (box = await sandbox()));
 test.afterEach(async () => box.dispose());
 
 test('the sidebar collapses to a rail of icons and comes back', async ({ page }) => {
+  await box.note('# Récente'); // The section shows with a note only.
   await page.goto('/');
   const tree = page.getByRole('navigation').getByText('Récentes');
   await expect(tree).toBeVisible();

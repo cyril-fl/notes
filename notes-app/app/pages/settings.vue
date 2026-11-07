@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ImportResult } from '~/types/items';
+import type { ImportResult, User } from '~/types/items';
 
 const { icons } = useIcons();
 
@@ -9,6 +9,14 @@ const toast = useToast();
 const exportURL = `${useRuntimeConfig().public.apiBase}/api/export`;
 const input = useTemplateRef('input');
 const importing = ref(false);
+
+const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
+
+async function logout() {
+  await api('/api/logout', { method: 'POST' });
+  clearNuxtData(); // The next account must not see what this one read.
+  await navigateTo('/login');
+}
 
 const parent = ref(ROOT);
 const destinations = useDestinations();
@@ -37,6 +45,16 @@ async function importZip(event: Event) {
 <template>
   <div class="p-8">
     <PageHeader title="Réglages" />
+
+    <section class="mb-8">
+      <h2 class="mb-1 text-sm font-semibold">Compte</h2>
+      <div class="flex items-center gap-4 py-3">
+        <p class="min-w-0 flex-1 truncate text-sm">
+          Connecté en tant que <span class="font-medium">{{ me?.name }}</span>
+        </p>
+        <UButton label="Se déconnecter" color="neutral" variant="outline" @click="logout" />
+      </div>
+    </section>
 
     <section>
       <h2 class="mb-1 text-sm font-semibold">Données</h2>

@@ -14,3 +14,4 @@ export type Recent = Schemas['listrecent.Recent'];
 export type Pinned = Schemas['listpinned.Pinned'];
 export type ImportResult = Schemas['importnotes.Result'];
 export type FolderPath = Schemas['listfolders.Folder'];
+export type User = Schemas['domain.User'];
