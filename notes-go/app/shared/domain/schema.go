@@ -2,9 +2,11 @@ package domain
 
 import (
 	"context"
-	"strings"
+	"sync"
 
 	"github.com/uptrace/bun"
+	"golang.org/x/text/collate"
+	"golang.org/x/text/language"
 )
 
 // RegisterModels must run before any query on MetadataNote.Tags (bun m2m requirement).
@@ -53,7 +55,14 @@ func Paths(ctx context.Context, db bun.IDB) (map[string]string, error) {
 	return paths, nil
 }
 
-// CompareFold orders two titles, paths or tags whatever their case, as lower() did in SQL.
+// collators are pooled: a collate.Collator is not safe for concurrent use.
+// The root order is the same for fr and en (CLDR has no fr-FR rules), so the account's locale is not needed.
+var collators = sync.Pool{New: func() any { return collate.New(language.Und, collate.IgnoreCase) }}
+
+// CompareFold orders two titles, paths or tags whatever their case and with accented letters next to their base
+// letter (Été between abricot and zoo), as the collation of Postgres did.
 func CompareFold(a, b string) int {
-	return strings.Compare(strings.ToLower(a), strings.ToLower(b))
+	c := collators.Get().(*collate.Collator)
+	defer collators.Put(c)
+	return c.CompareString(a, b)
 }
