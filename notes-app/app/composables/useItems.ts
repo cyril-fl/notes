@@ -1,5 +1,5 @@
 import type { ContextMenuItem } from '@nuxt/ui';
-import type { Item, Pinned } from '~/types/items';
+import type { FolderPath, Item, Pinned } from '~/types/items';
 
 const CYCLE = 'Un dossier ne peut pas aller dans lui-même ou ses sous-dossiers.';
 const PARENT_IN_TRASH = "Le dossier parent est dans la corbeille : restaure-le d'abord.";
@@ -38,13 +38,17 @@ export function useItems() {
   }
 
   function removeItem(item: Pick<Item, 'id' | 'kind'>) {
-    const resource = item.kind === 'folder' ? 'folders' : 'notes';
-    return act(() => api(`/api/${resource}/${item.id}`, { method: 'DELETE' }));
+    return removeItems([item]);
   }
 
-  /** A null parent is the root. */
-  function moveItem(id: string, parentId: string | null) {
-    const body = { ids: [id], parent_id: parentId ?? undefined };
+  /** The API removes one item per call: they go together, read again once. */
+  function removeItems(items: Pick<Item, 'id' | 'kind'>[]) {
+    return act(() => Promise.all(items.map((item) => api(`/api/${item.kind === 'folder' ? 'folders' : 'notes'}/${item.id}`, { method: 'DELETE' }))));
+  }
+
+  /** One id or several; a null parent is the root. */
+  function moveItem(ids: string | string[], parentId: string | null) {
+    const body = { ids: [ids].flat(), parent_id: parentId ?? undefined };
     return act(() => api<Item[]>('/api/move', { method: 'POST', body, conflict: { [TAKEN]: NAME_TAKEN, 'into itself': CYCLE } }));
   }
 
@@ -125,7 +129,7 @@ export function useItems() {
     ];
   }
 
-  return { createFolder, renameFolder, removeItem, moveItem, restoreItem, pinItem, emptyTrash, purgeItem, itemMenu, renameTag, removeTag, tagMenu };
+  return { createFolder, renameFolder, removeItem, removeItems, moveItem, restoreItem, pinItem, emptyTrash, purgeItem, itemMenu, renameTag, removeTag, tagMenu };
 }
 
 /** The pinned notes and favorite folders, read once for the sidebar, the menus and the editor. */
@@ -136,6 +140,19 @@ export function usePinned() {
 
 function isPinned(id: string) {
   return useNuxtData<Pinned[]>('pinned').data.value?.some((note) => note.id === id) ?? false;
+}
+
+/** Stands for the root in a select, which refuses '' as a value; the API takes no parent for it. */
+export const ROOT = 'root';
+
+/** Where items can go, for a select: the root, then every folder by its path but the excluded ones. */
+export function useDestinations(exclude: () => string[] = () => []) {
+  const api = useApi();
+  const { data: folders } = useLazyAsyncData('folder-paths', () => api<FolderPath[]>('/api/folders'), { default: () => [] as FolderPath[] });
+  return computed(() => [
+    { label: 'Racine', value: ROOT },
+    ...folders.value.filter((folder) => !exclude().includes(folder.id)).map((folder) => ({ label: folder.path, value: folder.id })),
+  ]);
 }
 
 /** The folder the page shows, where a new note or folder goes; undefined at the root and elsewhere. */

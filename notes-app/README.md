@@ -29,6 +29,10 @@ La barre latérale se redimensionne en tirant son bord (sa largeur reste d'une v
 
 Un clic droit sur un dossier le met en favori, un clic droit sur un tag le renomme ou le supprime.
 
+Dans un dossier, ⌘-clic (Ctrl hors macOS) sélectionne plusieurs éléments et ⇧-clic une plage : une barre propose de les déplacer ou de les supprimer, et glisser l'un d'eux emmène toute la sélection. Échap annule la sélection.
+
+Le graphe se déplace en glissant et zoome à la molette, en pinçant le trackpad ou avec ses boutons + et −. « Recentrer » le remet comme au départ.
+
 ## Réglages
 
 La page Réglages (roue dentée en bas de la barre latérale, ou la palette) regroupe ce qui touche à l'app entière. Pour l'instant :

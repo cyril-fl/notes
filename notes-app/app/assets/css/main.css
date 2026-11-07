@@ -45,6 +45,11 @@
     @apply bg-accented;
   }
 
+  /* An item of a multiple selection. */
+  .row-selected {
+    @apply bg-primary/10 hover:bg-primary/15;
+  }
+
   /* An item being dragged over. */
   .row-over {
     @apply bg-primary text-white;
@@ -57,6 +62,10 @@
 
   .tile {
     @apply flex aspect-square items-center justify-center overflow-hidden rounded-md bg-muted p-3 text-xs transition-all duration-150 group-hover:bg-accented/60;
+  }
+
+  .tile-selected {
+    @apply bg-primary/10 ring-2 ring-primary/60;
   }
 
   .tile-over {

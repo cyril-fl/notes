@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { FolderPath, ImportResult } from '~/types/items';
+import type { ImportResult } from '~/types/items';
 
 const api = useApi();
 const toast = useToast();
@@ -8,11 +8,8 @@ const exportURL = `${useRuntimeConfig().public.apiBase}/api/export`;
 const input = useTemplateRef('input');
 const importing = ref(false);
 
-// The select refuses '' as a value: ROOT stands for the root, which the API takes as no parent.
-const ROOT = 'root';
 const parent = ref(ROOT);
-const { data: folders } = useLazyAsyncData('folder-paths', () => api<FolderPath[]>('/api/folders'), { default: () => [] as FolderPath[] });
-const destinations = computed(() => [{ label: 'Racine', value: ROOT }, ...folders.value.map((folder) => ({ label: folder.path, value: folder.id }))]);
+const destinations = useDestinations();
 
 async function importZip(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0];
