@@ -23,20 +23,22 @@ defineShortcuts({
       :min-size="12"
       :default-size="16"
       :max-size="28"
+      :collapsed-size="3.5"
       :ui="{
-        root: 'h-full min-h-0 min-w-0 overflow-hidden rounded-xl border-0 bg-default data-[collapsed=true]:hidden',
+        root: 'h-full min-h-0 min-w-0 overflow-hidden rounded-xl border-0 bg-default',
         body: 'gap-0 p-0',
       }"
     >
-      <AppSidebar />
+      <template #default="{ collapsed: rail }">
+        <AppSidebar :collapsed="rail" />
+      </template>
     </UDashboardSidebar>
 
     <UDashboardPanel :ui="{ root: 'h-full min-h-0 flex-1 overflow-hidden rounded-xl border-0 bg-default', body: 'gap-0 p-0 sm:gap-0 sm:p-0' }">
       <template #body>
-        <!-- Only when the sidebar is out of sight: on a small screen, or collapsed. -->
-        <div class="flex px-2 pt-2" :class="{ 'lg:hidden': !collapsed }">
-          <UDashboardSidebarToggle color="neutral" variant="ghost" class="lg:hidden" />
-          <UDashboardSidebarCollapse color="neutral" variant="ghost" class="hidden lg:inline-flex" />
+        <!-- Only on a small screen, where the sidebar is a drawer. -->
+        <div class="flex px-2 pt-2 lg:hidden">
+          <UDashboardSidebarToggle color="neutral" variant="ghost" />
         </div>
         <main class="flex min-h-0 flex-1 flex-col">
           <slot />

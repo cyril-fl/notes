@@ -5,14 +5,18 @@ let box: Awaited<ReturnType<typeof sandbox>>;
 test.beforeEach(async () => (box = await sandbox()));
 test.afterEach(async () => box.dispose());
 
-test('the sidebar collapses and comes back', async ({ page }) => {
+test('the sidebar collapses to a rail of icons and comes back', async ({ page }) => {
   await page.goto('/');
-  const search = page.getByRole('button', { name: /Rechercher/ });
-  await expect(search).toBeVisible();
+  const tree = page.getByRole('navigation').getByText('Récentes');
+  await expect(tree).toBeVisible();
   await page.getByRole('button', { name: 'Replier la barre latérale' }).first().click();
-  await expect(search).toBeHidden();
+  await expect(tree).toBeHidden();
+  // Still there, reduced: search and the pages stay one click away.
+  await page.getByRole('navigation').getByRole('button', { name: 'Rechercher' }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Déployer la barre latérale' }).click();
-  await expect(search).toBeVisible();
+  await expect(tree).toBeVisible();
 });
 
 test('a tag is renamed from its menu in the sidebar', async ({ page }) => {

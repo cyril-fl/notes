@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Recent, TagCount } from '~/types/items';
 
+defineProps<{ collapsed?: boolean }>();
+
 const api = useApi();
 const route = useRoute();
 const { createFolder, tagMenu } = useItems();
@@ -10,6 +12,10 @@ const colorMode = useColorMode();
 const { data: pinned } = usePinned();
 const favorites = computed(() => pinned.value.filter((item) => item.kind === 'folder'));
 const pinnedNotes = computed(() => pinned.value.filter((item) => item.kind === 'note'));
+const darkMode = computed({
+  get: () => colorMode.value === 'dark',
+  set: (dark) => (colorMode.preference = dark ? 'dark' : 'light'),
+});
 const { data: recent } = useLazyAsyncData('recent', () => api<Recent[]>('/api/recent', { quiet: true }), { default: () => [] as Recent[] });
 const { data: tags } = useLazyAsyncData('tags', () => api<TagCount[]>('/api/graph'), { default: () => [] as TagCount[] });
 
@@ -18,7 +24,35 @@ const isOverRoot = useDropFolder(rootLink, () => null);
 </script>
 
 <template>
-  <nav class="flex h-full flex-col gap-4 p-3" aria-label="Navigation">
+  <!-- Reduced to a rail of icons: the sidebar never leaves the screen. -->
+  <nav v-if="collapsed" class="flex h-full flex-col items-center gap-1 py-3" aria-label="Navigation">
+    <UTooltip text="Rechercher" :kbds="['meta', 'K']" :content="{ side: 'right' }">
+      <UButton icon="i-lucide-search" color="neutral" variant="ghost" aria-label="Rechercher" @click="searchOpen = true" />
+    </UTooltip>
+    <UTooltip text="Notes" :content="{ side: 'right' }">
+      <UButton icon="i-lucide-notebook-text" to="/" color="neutral" variant="ghost" active-variant="soft" aria-label="Notes" :active="route.path === '/'" />
+    </UTooltip>
+    <UTooltip text="Graphe" :content="{ side: 'right' }">
+      <UButton icon="i-lucide-waypoints" to="/graph" color="neutral" variant="ghost" active-variant="soft" aria-label="Graphe" />
+    </UTooltip>
+    <UTooltip text="Corbeille" :content="{ side: 'right' }">
+      <UButton icon="i-lucide-trash-2" to="/trash" color="neutral" variant="ghost" active-variant="soft" aria-label="Corbeille" />
+    </UTooltip>
+
+    <div class="mt-auto flex flex-col items-center gap-1 border-t border-default pt-2">
+      <UTooltip text="Réglages" :content="{ side: 'right' }">
+        <UButton icon="i-lucide-settings" to="/settings" color="neutral" variant="ghost" active-variant="soft" aria-label="Réglages" />
+      </UTooltip>
+      <UTooltip :text="darkMode ? 'Thème clair' : 'Thème sombre'" :content="{ side: 'right' }">
+        <UButton :icon="darkMode ? 'i-lucide-sun' : 'i-lucide-moon'" color="neutral" variant="ghost" :aria-label="darkMode ? 'Thème clair' : 'Thème sombre'" @click="darkMode = !darkMode" />
+      </UTooltip>
+      <UTooltip text="Déployer la barre latérale" :kbds="['meta', '\\']" :content="{ side: 'right' }">
+        <UDashboardSidebarCollapse color="neutral" variant="ghost" />
+      </UTooltip>
+    </div>
+  </nav>
+
+  <nav v-else class="flex h-full flex-col gap-4 p-3" aria-label="Navigation">
     <UButton
       icon="i-lucide-search"
       label="Rechercher"
@@ -105,15 +139,8 @@ const isOverRoot = useDropFolder(rootLink, () => null);
       <UTooltip text="Réglages">
         <UButton icon="i-lucide-settings" to="/settings" color="neutral" variant="ghost" size="sm" aria-label="Réglages" />
       </UTooltip>
-      <UTooltip :text="colorMode.value === 'dark' ? 'Thème clair' : 'Thème sombre'">
-        <UButton
-          :icon="colorMode.value === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'"
-          color="neutral"
-          variant="ghost"
-          size="sm"
-          :aria-label="colorMode.value === 'dark' ? 'Thème clair' : 'Thème sombre'"
-          @click="colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'"
-        />
+      <UTooltip :text="darkMode ? 'Thème clair' : 'Thème sombre'">
+        <UButton :icon="darkMode ? 'i-lucide-sun' : 'i-lucide-moon'" color="neutral" variant="ghost" size="sm" :aria-label="darkMode ? 'Thème clair' : 'Thème sombre'" @click="darkMode = !darkMode" />
       </UTooltip>
       <UTooltip text="Nouveau dossier">
         <UButton icon="i-lucide-folder-plus" color="neutral" variant="ghost" size="sm" aria-label="Nouveau dossier" @click="createFolder()" />
