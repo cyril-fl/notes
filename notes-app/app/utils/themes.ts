@@ -6,6 +6,7 @@ export const themes = [
   { id: 'catppuccin', primary: 'catppuccin', neutral: 'catppuccin-gray' },
   { id: 'nord', primary: 'nord', neutral: 'nord-gray' },
   { id: 'gruvbox', primary: 'gruvbox', neutral: 'gruvbox-gray' },
+  { id: 'everforest', primary: 'everforest', neutral: 'everforest-gray' },
 ];
 
 export type Theme = (typeof themes)[number];

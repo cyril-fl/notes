@@ -123,6 +123,30 @@
   --color-gruvbox-gray-800: #3c3836;
   --color-gruvbox-gray-900: #282828;
   --color-gruvbox-gray-950: #1d2021;
+
+  --color-everforest-50: #f6f8ee;
+  --color-everforest-100: #ebf0d9;
+  --color-everforest-200: #d7e2b5;
+  --color-everforest-300: #bfd08f;
+  --color-everforest-400: #a7c080;
+  --color-everforest-500: #8da101;
+  --color-everforest-600: #728201;
+  --color-everforest-700: #5a6604;
+  --color-everforest-800: #485108;
+  --color-everforest-900: #3c440b;
+  --color-everforest-950: #20250a;
+
+  --color-everforest-gray-50: #fdf6e3;
+  --color-everforest-gray-100: #f4f0d9;
+  --color-everforest-gray-200: #e6e2cc;
+  --color-everforest-gray-300: #d3c6aa;
+  --color-everforest-gray-400: #9da9a0;
+  --color-everforest-gray-500: #859289;
+  --color-everforest-gray-600: #5c6a72;
+  --color-everforest-gray-700: #4f585e;
+  --color-everforest-gray-800: #343f44;
+  --color-everforest-gray-900: #2d353b;
+  --color-everforest-gray-950: #232a2e;
 }
 
 :root {
