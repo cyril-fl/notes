@@ -15,6 +15,8 @@ import (
 	apieditfolder "main.go/app/api/edit-folder"
 	apieditnote "main.go/app/api/edit-note"
 	apiedittag "main.go/app/api/edit-tag"
+	apiexport "main.go/app/api/export"
+	apiimport "main.go/app/api/import"
 	apimove "main.go/app/api/move"
 	apireadfinder "main.go/app/api/read-finder"
 	apireadfolder "main.go/app/api/read-folder"
@@ -65,6 +67,8 @@ func New(db bun.IDB, origin string) http.Handler {
 	mux.Handle("GET /api/trash", apireadtrash.Handler(db))
 	mux.Handle("DELETE /api/trash", apideletetrash.Handler(db))
 	mux.Handle("POST /api/restore", apirestore.Handler(db))
+	mux.Handle("GET /api/export", apiexport.Handler(db))
+	mux.Handle("POST /api/import", apiimport.Handler(db))
 
 	return guard.New(origin, mux)
 }

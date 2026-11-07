@@ -1,6 +1,8 @@
 package api
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -466,6 +468,39 @@ func (c *client) post(path, body string) string {
 }
 
 // No DB needed: the guard answers first, and the route of an unknown method never runs.
+func TestExportAndImport(t *testing.T) {
+	c := newClient(t)
+	folder := fmt.Sprintf("transfer-%d", time.Now().UnixNano())
+
+	var zipped bytes.Buffer
+	archive := zip.NewWriter(&zipped)
+	for name, content := range map[string]string{folder + "/Idées.md": "# Idées " + folder, folder + "/image.png": "png"} {
+		entry, _ := archive.Create(name)
+		entry.Write([]byte(content))
+	}
+	archive.Close()
+
+	var result struct{ Folders, Notes int }
+	c.do(http.MethodPost, "/api/import", zipped.String(), http.StatusOK, &result)
+	if result.Folders != 1 || result.Notes != 1 {
+		t.Errorf("import = %+v, want 1 folder and 1 note", result)
+	}
+	// The same folder again at the root: refused, all or nothing.
+	c.do(http.MethodPost, "/api/import", zipped.String(), http.StatusConflict, nil)
+	c.do(http.MethodPost, "/api/import", "pas un zip", http.StatusBadRequest, nil)
+
+	exported := c.raw("/api/export")
+	read, err := zip.NewReader(strings.NewReader(exported), int64(len(exported)))
+	if err != nil {
+		t.Fatalf("export is not a zip: %v", err)
+	}
+	if file, err := read.Open(folder + "/Idées " + folder + ".md"); err != nil {
+		t.Errorf("export misses the imported note: %v", err)
+	} else {
+		file.Close()
+	}
+}
+
 func TestRouterGuards(t *testing.T) {
 	handler := New(nil, "http://localhost:3001")
 

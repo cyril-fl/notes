@@ -22,8 +22,8 @@ type Input struct {
 
 // Result counts what was created.
 type Result struct {
-	Folders int
-	Notes   int
+	Folders int `json:"folders"`
+	Notes   int `json:"notes"`
 }
 
 type run struct {
