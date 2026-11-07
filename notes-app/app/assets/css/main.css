@@ -25,6 +25,106 @@
   --color-plain-950: #0f0f0f;
 }
 
+/* The themes of app/utils/themes.ts, an accent and its greys each, taken from the key colors of the open source schemes
+   of the same name. Static: Tailwind keeps them though no class uses them. The greys serve both modes, like plain. */
+@theme static {
+  --color-dracula-50: #f7f2ff;
+  --color-dracula-100: #ede3fe;
+  --color-dracula-200: #dccafd;
+  --color-dracula-300: #cbb0fb;
+  --color-dracula-400: #bd93f9;
+  --color-dracula-500: #a974f5;
+  --color-dracula-600: #9356e8;
+  --color-dracula-700: #7b40cc;
+  --color-dracula-800: #6435a6;
+  --color-dracula-900: #522e85;
+  --color-dracula-950: #351a5e;
+
+  --color-dracula-gray-50: #f8f8f2;
+  --color-dracula-gray-100: #eeeee8;
+  --color-dracula-gray-200: #dcdce0;
+  --color-dracula-gray-300: #c0c2cf;
+  --color-dracula-gray-400: #8b93b8;
+  --color-dracula-gray-500: #6272a4;
+  --color-dracula-gray-600: #4f5a80;
+  --color-dracula-gray-700: #44475a;
+  --color-dracula-gray-800: #343746;
+  --color-dracula-gray-900: #282a36;
+  --color-dracula-gray-950: #1e1f29;
+
+  --color-catppuccin-50: #f8f2fe;
+  --color-catppuccin-100: #efe3fd;
+  --color-catppuccin-200: #e2cdfb;
+  --color-catppuccin-300: #cba6f7;
+  --color-catppuccin-400: #b585f3;
+  --color-catppuccin-500: #9d5ff0;
+  --color-catppuccin-600: #8839ef;
+  --color-catppuccin-700: #7228d2;
+  --color-catppuccin-800: #5e22ab;
+  --color-catppuccin-900: #4d1f8a;
+  --color-catppuccin-950: #320d63;
+
+  --color-catppuccin-gray-50: #eff1f5;
+  --color-catppuccin-gray-100: #e6e9ef;
+  --color-catppuccin-gray-200: #ccd0da;
+  --color-catppuccin-gray-300: #bcc0cc;
+  --color-catppuccin-gray-400: #9ca0b0;
+  --color-catppuccin-gray-500: #7f849c;
+  --color-catppuccin-gray-600: #5c5f77;
+  --color-catppuccin-gray-700: #4c4f69;
+  --color-catppuccin-gray-800: #313244;
+  --color-catppuccin-gray-900: #1e1e2e;
+  --color-catppuccin-gray-950: #11111b;
+
+  --color-nord-50: #eff6f9;
+  --color-nord-100: #dcebf1;
+  --color-nord-200: #bfdbe6;
+  --color-nord-300: #a3cddc;
+  --color-nord-400: #88c0d0;
+  --color-nord-500: #81a1c1;
+  --color-nord-600: #5e81ac;
+  --color-nord-700: #4c6d96;
+  --color-nord-800: #405a7a;
+  --color-nord-900: #364b64;
+  --color-nord-950: #232f40;
+
+  --color-nord-gray-50: #eceff4;
+  --color-nord-gray-100: #e5e9f0;
+  --color-nord-gray-200: #d8dee9;
+  --color-nord-gray-300: #c2c9d6;
+  --color-nord-gray-400: #8f99ab;
+  --color-nord-gray-500: #6b7489;
+  --color-nord-gray-600: #4c566a;
+  --color-nord-gray-700: #434c5e;
+  --color-nord-gray-800: #3b4252;
+  --color-nord-gray-900: #2e3440;
+  --color-nord-gray-950: #242933;
+
+  --color-gruvbox-50: #fff4e6;
+  --color-gruvbox-100: #ffe6c7;
+  --color-gruvbox-200: #fecb8f;
+  --color-gruvbox-300: #feab57;
+  --color-gruvbox-400: #fe8019;
+  --color-gruvbox-500: #d65d0e;
+  --color-gruvbox-600: #af3a03;
+  --color-gruvbox-700: #8f2f03;
+  --color-gruvbox-800: #742805;
+  --color-gruvbox-900: #5e2207;
+  --color-gruvbox-950: #361002;
+
+  --color-gruvbox-gray-50: #fbf1c7;
+  --color-gruvbox-gray-100: #f2e5bc;
+  --color-gruvbox-gray-200: #ebdbb2;
+  --color-gruvbox-gray-300: #d5c4a1;
+  --color-gruvbox-gray-400: #bdae93;
+  --color-gruvbox-gray-500: #a89984;
+  --color-gruvbox-gray-600: #7c6f64;
+  --color-gruvbox-gray-700: #504945;
+  --color-gruvbox-gray-800: #3c3836;
+  --color-gruvbox-gray-900: #282828;
+  --color-gruvbox-gray-950: #1d2021;
+}
+
 :root {
   --ui-radius: 0.25rem;
 }

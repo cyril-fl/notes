@@ -48,19 +48,24 @@ test('the language of the interface is a setting of the account', async ({ page 
   }
 });
 
-// The view and the trash retention are saved to the account, then set back as they were.
-test('the settings save the view and the trash retention to the account', async ({ page, request }) => {
+// A theme and the trash retention are saved to the account, then set back as they were.
+test('the settings save the theme and the trash retention to the account', async ({ page, request }) => {
   const api = { headers: { Origin: APP } };
-  const before = await (await request.get(`${API}/api/me`, api)).json();
+  const me = async () => (await request.get(`${API}/api/me`, api)).json();
+  const before = await me();
+  const primary = () => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--ui-color-primary-500').trim());
   try {
     await page.goto('/settings');
-    await page.getByRole('button', { name: 'Vue', exact: true }).click();
-    await page.getByRole('option', { name: 'Vue mosaïque' }).click();
+    const notes = await primary();
+    await page.getByRole('button', { name: 'Dracula' }).click();
+    await expect(page.getByRole('button', { name: 'Dracula' })).toHaveAttribute('aria-pressed', 'true');
+    await expect.poll(primary).not.toBe(notes);
+
     await page.getByRole('button', { name: 'Durée de conservation' }).click();
     await page.getByRole('option', { name: 'Jamais effacés' }).click();
 
-    await expect.poll(async () => (await (await request.get(`${API}/api/me`, api)).json())).toMatchObject({ view: 'grid', trash_retention_days: 0 });
+    await expect.poll(me).toMatchObject({ theme: 'dracula', trash_retention_days: 0 });
   } finally {
-    await request.patch(`${API}/api/me`, { ...api, data: { view: before.view, trash_retention_days: before.trash_retention_days } });
+    await request.patch(`${API}/api/me`, { ...api, data: { theme: before.theme, trash_retention_days: before.trash_retention_days } });
   }
 });

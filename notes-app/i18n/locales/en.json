@@ -164,16 +164,23 @@
     "imported": "{notes} note(s) and {folders} folder(s) imported",
     "appearance": "Appearance",
     "theme": "Theme",
-    "themeDescription": "Light, dark, or the system's.",
-    "themeSystem": "System",
-    "themeLight": "Light",
-    "themeDark": "Dark",
-    "view": "View",
-    "viewDescription": "How folders, tags and search list the notes.",
+    "themeDescription": "The colors of the interface.",
     "trash": "Trash",
     "retention": "Retention",
     "retentionDescription": "Deleted items are erased for good after this delay.",
     "retentionDays": "{n} day | {n} days",
-    "retentionNever": "Never erased"
+    "retentionNever": "Never erased",
+    "mode": "Mode",
+    "modeDescription": "Light, dark, or the system's.",
+    "modeSystem": "System",
+    "modeLight": "Light",
+    "modeDark": "Dark",
+    "themes": {
+      "notes": "Notes",
+      "dracula": "Dracula",
+      "catppuccin": "Catppuccin",
+      "nord": "Nord",
+      "gruvbox": "Gruvbox"
+    }
   }
 }

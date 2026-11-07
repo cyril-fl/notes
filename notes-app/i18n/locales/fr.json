@@ -164,16 +164,23 @@
     "imported": "{notes} note(s) et {folders} dossier(s) importés",
     "appearance": "Apparence",
     "theme": "Thème",
-    "themeDescription": "Clair, sombre, ou celui du système.",
-    "themeSystem": "Système",
-    "themeLight": "Clair",
-    "themeDark": "Sombre",
-    "view": "Vue",
-    "viewDescription": "Comment les dossiers, les tags et la recherche listent les notes.",
+    "themeDescription": "Les couleurs de l'interface.",
     "trash": "Corbeille",
     "retention": "Durée de conservation",
     "retentionDescription": "Les éléments supprimés sont effacés pour de bon après ce délai.",
     "retentionDays": "{n} jour | {n} jours",
-    "retentionNever": "Jamais effacés"
+    "retentionNever": "Jamais effacés",
+    "mode": "Mode",
+    "modeDescription": "Clair, sombre, ou celui du système.",
+    "modeSystem": "Système",
+    "modeLight": "Clair",
+    "modeDark": "Sombre",
+    "themes": {
+      "notes": "Notes",
+      "dracula": "Dracula",
+      "catppuccin": "Catppuccin",
+      "nord": "Nord",
+      "gruvbox": "Gruvbox"
+    }
   }
 }
