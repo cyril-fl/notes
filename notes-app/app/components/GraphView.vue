@@ -18,6 +18,14 @@ const activeLinks = computed(() => props.graph.links.filter(isActiveLink));
 
 const linkedToActive = computed(() => new Set(activeLinks.value.flatMap(link => [link.source, link.target])));
 
+const hoveredNote = computed(() => props.graph.notes.find(note => note.id === hovered.value) ?? null);
+
+const titles = computed(() => new Map(props.graph.notes.map(note => [note.id, note.title])));
+
+function otherEnd(link: Link) {
+  return link.source === hovered.value ? link.target : link.source;
+}
+
 function isDimmed(id: string) {
   return active.value !== null && id !== active.value && !linkedToActive.value.has(id);
 }
@@ -28,12 +36,6 @@ const zoom = ref(1);
 function at(id: string) {
   const { x, y } = positions.value.get(id) ?? { x: 50, y: 50 };
   return { x: 50 + (x - 50) * zoom.value, y: 50 + (y - 50) * zoom.value };
-}
-
-function linkLabelStyle(link: Link) {
-  const from = at(link.source);
-  const to = at(link.target);
-  return { left: `${(from.x + to.x) / 2}%`, top: `${(from.y + to.y) / 2}%` };
 }
 
 // Drag the background to move around the graph.
@@ -125,7 +127,6 @@ function linkClass(link: Link) {
         v-for="note in graph.notes"
         :key="note.id"
         :to="`/notes/${note.id}`"
-        :title="note.path"
         draggable="false"
         :style="{ left: `${at(note.id).x}%`, top: `${at(note.id).y}%` }"
         :class="{ 'opacity-30': isDimmed(note.id), 'z-10': note.id === active }"
@@ -139,14 +140,21 @@ function linkClass(link: Link) {
         <span class="max-w-full truncate text-xs" :class="{ 'font-medium': note.id === active }">{{ displayTitle(note.title) }}</span>
       </NuxtLink>
 
-      <span
-        v-for="link in activeLinks"
-        :key="`${link.source}-${link.target}`"
-        :style="linkLabelStyle(link)"
-        class="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-default px-1 text-xs whitespace-nowrap text-primary"
+      <div
+        v-if="hoveredNote"
+        :style="{ left: `${at(hoveredNote.id).x}%`, top: `${at(hoveredNote.id).y}%` }"
+        class="pointer-events-none absolute z-20 ml-4 flex max-w-64 -translate-y-1/2 flex-col gap-1 rounded-md bg-default p-2 text-xs shadow-lg ring ring-default"
       >
-        {{ [...(link.linked ? ['lien'] : []), ...link.tags.map(tag => `#${tag}`)].join(' · ') }}
-      </span>
+        <span class="truncate font-medium">{{ displayTitle(hoveredNote.title) }}</span>
+        <span class="truncate text-muted">{{ hoveredNote.path }}</span>
+        <ul v-if="activeLinks.length" class="mt-1 flex flex-col gap-0.5 border-t border-default pt-1">
+          <li v-for="link in activeLinks" :key="`${link.source}-${link.target}`" class="flex gap-2">
+            <span class="truncate">{{ displayTitle(titles.get(otherEnd(link)) ?? '') }}</span>
+            <span class="ml-auto shrink-0 text-primary">{{ [...(link.linked ? ['lien'] : []), ...link.tags.map(tag => `#${tag}`)].join(' ') }}</span>
+          </li>
+        </ul>
+        <span v-else class="text-muted">Aucun lien</span>
+      </div>
     </div>
 
     <!-- @pointerdown.stop: a click on a button is not the start of a drag. -->
