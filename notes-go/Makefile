@@ -21,10 +21,8 @@ backup:
 		&& mv $$file.tmp $$file && echo $$file \
 		|| { rm -f $$file.tmp; exit 1; }
 
-# Not vendor/: Go would then use it for every local build, and ignore changes to plum.
 api:
-	@go mod vendor -o .docker-vendor
-	@docker compose up -d --build api; status=$$?; rm -rf .docker-vendor; exit $$status
+	@docker compose up -d --build api
 
 # Generates docs/swagger.yaml from the @ comments of app/api; no docs.go, the binary stays out of it.
 # Every field is required unless tagged binding:"optional".

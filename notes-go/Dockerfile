@@ -1,8 +1,10 @@
-# Build with `make api`: plum comes from .docker-vendor, go.mod replaces it by a path that only exists on the host.
 FROM golang:1.27 AS build
 WORKDIR /src
+# Modules first: a code change does not download them again.
+COPY go.mod go.sum ./
+RUN go mod download
 COPY . .
-RUN mv .docker-vendor vendor && CGO_ENABLED=0 go build -mod=vendor -o /notes .
+RUN CGO_ENABLED=0 go build -o /notes .
 
 FROM scratch
 COPY --from=build /notes /notes
