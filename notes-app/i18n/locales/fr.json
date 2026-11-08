@@ -132,7 +132,9 @@
     "notFoundDescription": "Elle n'existe pas ou elle est dans la corbeille.",
     "placeholder": "Commencez par un titre…",
     "focus": "Mode focus",
-    "unfocus": "Quitter le mode focus"
+    "unfocus": "Quitter le mode focus",
+    "outline": "Plan",
+    "noOutline": "Aucun titre"
   },
   "tag": {
     "count": "{n} note | {n} notes",
@@ -241,6 +243,7 @@
   },
   "features": {
     "graph": "Le graphe des notes",
-    "focusMode": "Le mode focus, qui ne laisse que la note à l'écran"
+    "focusMode": "Le mode focus, qui ne laisse que la note à l'écran",
+    "contextPanel": "Le panneau de contexte à droite de la note : son plan et ses notes liées"
   }
 }

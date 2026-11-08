@@ -5,6 +5,7 @@ export type Level = 'base' | 'pro' | 'off';
 export const features = {
   graph: 'base',
   focusMode: 'pro',
+  contextPanel: 'pro',
 } as const satisfies Record<string, Level>;
 
 export type Feature = keyof typeof features;

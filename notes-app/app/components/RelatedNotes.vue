@@ -4,7 +4,7 @@ import type { Neighbors } from '~/types/items';
 const { icons } = useIcons();
 const { t } = useI18n();
 
-const props = defineProps<{ noteId: string }>();
+const props = defineProps<{ noteId: string; defaultOpen?: boolean }>();
 
 const api = useApi();
 const { has } = usePro();
@@ -24,7 +24,7 @@ const total = computed(() => sections.value.reduce((sum, section) => sum + secti
 </script>
 
 <template>
-  <UCollapsible v-if="sections.length">
+  <UCollapsible v-if="sections.length" :default-open="defaultOpen">
     <template #default="{ open }">
       <div class="flex items-center py-2">
         <UButton

@@ -132,7 +132,9 @@
     "notFoundDescription": "It does not exist or it is in the trash.",
     "placeholder": "Start with a title…",
     "focus": "Focus mode",
-    "unfocus": "Leave focus mode"
+    "unfocus": "Leave focus mode",
+    "outline": "Outline",
+    "noOutline": "No headings"
   },
   "tag": {
     "count": "{n} note | {n} notes",
@@ -241,6 +243,7 @@
   },
   "features": {
     "graph": "The graph of the notes",
-    "focusMode": "Focus mode, which leaves only the note on screen"
+    "focusMode": "Focus mode, which leaves only the note on screen",
+    "contextPanel": "The context panel beside the note: its outline and its related notes"
   }
 }
