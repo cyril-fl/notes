@@ -251,7 +251,7 @@ test('the Pro mode unlocks the focus mode and the context panel', async ({ page 
 
 // The / menu is the Pro mode's: without it a / stays text, with it the line becomes the block picked in a submenu.
 test('the Pro mode adds the / commands to the editor', async ({ page }) => {
-  const note = await box.note(`# Slash ${box.prefix}\n\nTexte`);
+  const note = await box.note(`# Slash ${box.prefix}\n\nTexte /`);
   const editor = page.locator('.ProseMirror');
   try {
     await page.goto(`/notes/${note.id}`);
@@ -262,8 +262,18 @@ test('the Pro mode adds the / commands to the editor', async ({ page }) => {
 
     await box.api.patch('/api/me', { data: { pro: true } });
     await page.reload();
-    await editor.click();
-    await page.keyboard.press('ControlOrMeta+End');
+    await editor.getByText('Texte').click();
+    // ProseMirror reads the click's selection a moment later: typed sooner, Enter splits the title.
+    await expect
+      .poll(() =>
+        editor.evaluate(
+          (e) => (e as { editor?: Editor } & HTMLElement).editor?.state.selection.$from.parent.textContent,
+        ),
+      )
+      .toContain('Texte');
+    // Only a / just typed opens the menu, not the cursor put back after one.
+    await expect(page.getByRole('menuitem', { name: 'Titres' })).toHaveCount(0);
+    await page.keyboard.press('End');
     await page.keyboard.press('Enter');
     await page.keyboard.type('/');
     // The menu has the focus: a letter is for it, not a shortcut of the page (t opens the snippets).
@@ -273,7 +283,8 @@ test('the Pro mode adds the / commands to the editor', async ({ page }) => {
     // A backspace takes back the / and closes the menu.
     await page.keyboard.press('Backspace');
     await expect(page.getByRole('menuitem', { name: 'Titres' })).toHaveCount(0);
-    await expect(editor).not.toContainText('/');
+    // The note keeps its other /: only the new line is checked.
+    await expect(editor.locator('p').last()).toHaveText('');
     // A second / is written, the menu closed.
     await page.keyboard.type('//');
     await expect(page.getByRole('menuitem', { name: 'Titres' })).toHaveCount(0);
