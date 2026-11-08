@@ -25,18 +25,13 @@ export function useNoteCallouts(): EditorModule {
       {
         char: '/',
         pluginKey: 'slashMenu',
-        // /encadré still finds them all, by their section.
-        filterFields: ['label', 'group'],
-        items: [
-          { type: 'label', label: t('note.callout') },
-          ...Object.entries(types).map(([callout, icon]) => ({
-            kind: 'callout',
-            callout,
-            group: t('note.callout'),
-            label: t(`note.callouts.${callout}`),
-            icon,
-          })),
-        ],
+        items: Object.entries(types).map(([callout, icon]) => ({
+          kind: 'callout',
+          callout,
+          group: t('note.callout'),
+          label: t(`note.callouts.${callout}`),
+          icon,
+        })),
       },
     ],
   };

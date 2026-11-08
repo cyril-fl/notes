@@ -50,24 +50,14 @@ test('merges the modules in order', () => {
   assert.deepEqual(clicks, ['first', 'last']);
 });
 
-test('joins the menus of the same key, keeping the first one options and adding the others', () => {
+test('joins the menus of the same key, keeping the first one options', () => {
   const merged = mergeModules(
     [
       {
         menus: [{ char: '/', pluginKey: 'slashMenu', items: [{ label: 'Titre' }], suggestion: { allowSpaces: true } }],
       },
       { menus: [{ char: '#', pluginKey: 'tagMenu', items: [] }] },
-      {
-        menus: [
-          {
-            char: '/',
-            pluginKey: 'slashMenu',
-            items: () => [{ label: 'Tableau' }],
-            suggestion: {},
-            filterFields: ['label', 'group'],
-          },
-        ],
-      },
+      { menus: [{ char: '/', pluginKey: 'slashMenu', items: () => [{ label: 'Tableau' }] }] },
     ],
     () => true,
   );
@@ -77,7 +67,6 @@ test('joins the menus of the same key, keeping the first one options and adding 
   );
   const [slash] = merged.menus;
   assert.deepEqual(slash!.suggestion, { allowSpaces: true });
-  assert.deepEqual(slash!.filterFields, ['label', 'group']);
   assert.deepEqual(
     (slash!.items as () => { label: string }[])().map((item) => item.label),
     ['Titre', 'Tableau'],

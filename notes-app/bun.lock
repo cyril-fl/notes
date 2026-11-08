@@ -16,6 +16,7 @@
         "@tiptap/extension-list": "^3.32.2",
         "@tiptap/extension-table": "3.32.2",
         "@tiptap/pm": "^3.32.2",
+        "@tiptap/suggestion": "3.32.2",
         "@vueuse/core": "^15.0.0",
         "@vueuse/nuxt": "^15.0.0",
         "d3-force": "^3.0.1",

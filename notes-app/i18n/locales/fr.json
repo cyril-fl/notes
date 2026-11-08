@@ -125,7 +125,8 @@
     "orderedList": "Liste numérotée",
     "taskList": "Tâches",
     "quote": "Citation",
-    "blocks": "Blocs",
+    "headings": "Titres",
+    "lists": "Listes",
     "paragraph": "Texte",
     "codeBlock": "Bloc de code",
     "divider": "Séparateur",
@@ -278,11 +279,11 @@
     "focusMode": "Le mode focus, qui ne laisse que la note à l'écran",
     "contextPanel": "Le panneau de contexte à droite de la note : son plan et ses notes liées",
     "settingsNav": "La barre latérale des réglages, une page par section",
-    "slashCommands": "Les commandes / dans les notes : titres, listes, bloc de code…",
-    "tables": "Les tableaux dans les notes, insérés avec /tableau",
+    "slashCommands": "Le menu / dans les notes : titres, listes, bloc de code…, rangés en sous-menus",
+    "tables": "Les tableaux dans les notes, insérés depuis le menu /",
     "codeHighlight": "Les blocs de code colorés selon leur langage",
-    "callouts": "Les encadrés (note, astuce, attention, danger), insérés avec /encadré",
+    "callouts": "Les encadrés (note, astuce, attention, danger), insérés depuis le menu /",
     "wordCount": "Le nombre de mots de la note, sous le texte",
-    "contextMenu": "Le clic droit (ou l'appui long) dans une note : les commandes /, les encadrés dans un sous-menu"
+    "contextMenu": "Le clic droit (ou l'appui long) dans une note : le même menu que /"
   }
 }

@@ -125,7 +125,8 @@
     "orderedList": "Numbered list",
     "taskList": "Tasks",
     "quote": "Quote",
-    "blocks": "Blocks",
+    "headings": "Headings",
+    "lists": "Lists",
     "paragraph": "Text",
     "codeBlock": "Code block",
     "divider": "Divider",
@@ -278,11 +279,11 @@
     "focusMode": "Focus mode, which leaves only the note on screen",
     "contextPanel": "The context panel beside the note: its outline and its related notes",
     "settingsNav": "The settings sidebar, one page per section",
-    "slashCommands": "The / commands in the notes: headings, lists, code block…",
-    "tables": "Tables in the notes, inserted with /table",
+    "slashCommands": "The / menu in the notes: headings, lists, code block…, in submenus",
+    "tables": "Tables in the notes, inserted from the / menu",
     "codeHighlight": "Code blocks colored by their language",
-    "callouts": "Callouts (note, tip, warning, danger), inserted with /callout",
+    "callouts": "Callouts (note, tip, warning, danger), inserted from the / menu",
     "wordCount": "The word count of the note, below the text",
-    "contextMenu": "Right click (or long press) in a note: the / commands, the callouts in a submenu"
+    "contextMenu": "Right click (or long press) in a note: the same menu as /"
   }
 }

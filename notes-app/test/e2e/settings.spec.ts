@@ -158,7 +158,7 @@ test('the Pro mode unlocks the focus mode and the context panel', async ({ page 
   }
 });
 
-// The / menu is the Pro mode's: without it a / stays text, with it the line becomes the block picked.
+// The / menu is the Pro mode's: without it a / stays text, with it the line becomes the block picked in a submenu.
 test('the Pro mode adds the / commands to the editor', async ({ page }) => {
   const note = await box.note(`# Slash ${box.prefix}\n\nTexte`);
   const editor = page.locator('.ProseMirror');
@@ -167,15 +167,16 @@ test('the Pro mode adds the / commands to the editor', async ({ page }) => {
     await editor.click();
     await page.keyboard.press('ControlOrMeta+End');
     await page.keyboard.type(' /');
-    await expect(page.getByRole('option', { name: 'Bloc de code' })).toHaveCount(0);
+    await expect(page.getByRole('menuitem', { name: 'Bloc de code' })).toHaveCount(0);
 
     await box.api.patch('/api/me', { data: { pro: true } });
     await page.reload();
     await editor.click();
     await page.keyboard.press('ControlOrMeta+End');
     await page.keyboard.press('Enter');
-    await page.keyboard.type('/titre');
-    await page.getByRole('option', { name: 'Titre 2' }).click();
+    await page.keyboard.type('/');
+    await page.getByRole('menuitem', { name: 'Titres' }).hover();
+    await page.getByRole('menuitem', { name: 'Titre 2' }).click();
     await page.keyboard.type('Sous-titre');
     await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('## Sous-titre');
   } finally {
@@ -193,8 +194,8 @@ test('the Pro mode adds the tables to the editor', async ({ page }) => {
     await editor.click();
     await page.keyboard.press('ControlOrMeta+End');
     await page.keyboard.press('Enter');
-    await page.keyboard.type('/tableau');
-    await page.getByRole('option', { name: 'Tableau' }).click();
+    await page.keyboard.type('/');
+    await page.getByRole('menuitem', { name: 'Tableau' }).click();
     await page.keyboard.type('Nom');
     await page.keyboard.press('Tab');
     await page.keyboard.type('Âge');
@@ -270,8 +271,9 @@ test('the Pro mode adds the callouts to the editor', async ({ page }) => {
       .toBe('Texte');
     await page.keyboard.press('End');
     await page.keyboard.press('Enter');
-    await page.keyboard.type('/encadré');
-    await page.getByRole('option', { name: 'Attention' }).click();
+    await page.keyboard.type('/');
+    await page.getByRole('menuitem', { name: 'Encadrés' }).hover();
+    await page.getByRole('menuitem', { name: 'Attention' }).click();
     await page.keyboard.type('Prudence');
     await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('> [!warning]\n> Prudence');
     expect(await box.content(note.id)).toContain('> [!tip] Astuce\n> Lire la suite');

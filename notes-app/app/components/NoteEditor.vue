@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { ContextMenuItem, EditorSuggestionMenuItem } from '@nuxt/ui';
+import type { DropdownMenuItem, EditorSuggestionMenuItem } from '@nuxt/ui';
 import { createHandlers } from '@nuxt/ui/runtime/utils/editor.js';
+import type { Range } from '@tiptap/core';
 import type { Editor } from '@tiptap/vue-3';
 import type { FetchError } from 'ofetch';
 import type { RouteLocationNormalized } from 'vue-router';
@@ -202,33 +203,49 @@ const modules = [
   useNoteTables(),
   useNoteCode(),
   useNoteCallouts(),
-  { extensions: [noteImage(baseURL, upload)] },
+  { extensions: [noteImage(baseURL, upload), slashTrigger(openSlash)] },
 ];
 const parts = computed(() => mergeModules(modules, has));
 
-// The / menu again on a right click or a long press, without its section titles, its items of a same group (the callouts) in a submenu.
-const contextMenu = computed(() => {
+// The / menu, its items of a same group (headings, lists, callouts) in a submenu; opened where the / was typed, the / goes away with the pick.
+const slashAt = ref<{ range: Range; left: number; top: number } | null>(null);
+const slashMenu = computed(() => {
   const editor = editorRef.value?.editor;
   const slash = parts.value.menus.find((menu) => menu.pluginKey === 'slashMenu');
-  if (!editor || !slash || !has('contextMenu')) return [];
+  if (!editor || !slash) return [];
   const handlers = { ...createHandlers(), ...parts.value.handlers };
-  const items: ContextMenuItem[] = [];
+  const items: DropdownMenuItem[] = [];
   for (const item of toValue(slash.items) as (EditorSuggestionMenuItem & { kind: string; group?: string })[]) {
-    if (item.type === 'label') continue;
     const entry = {
       label: item.label,
       icon: item.icon,
-      onSelect: () => handlers[item.kind]?.execute(editor, item).run(),
+      onSelect: () => {
+        if (slashAt.value) editor.chain().focus().deleteRange(slashAt.value.range).run();
+        handlers[item.kind]?.execute(editor, item).run();
+      },
     };
     if (!item.group) items.push(entry);
     else {
       const group = items.find((other) => other.label === item.group && other.children);
-      if (group) (group.children as ContextMenuItem[]).push(entry);
+      if (group) (group.children as DropdownMenuItem[]).push(entry);
       else items.push({ label: item.group, icon: item.icon, children: [entry] });
     }
   }
   return items;
 });
+function openSlash(range: Range, rect: DOMRect | null) {
+  if (rect && slashMenu.value.length) slashAt.value = { range, left: rect.left, top: rect.bottom };
+}
+const slashOpen = computed({
+  get: () => !!slashAt.value,
+  set: (open) => {
+    if (open) return;
+    slashAt.value = null;
+    editorRef.value?.editor?.commands.focus();
+  },
+});
+// The same menu on a right click or a long press.
+const contextMenu = computed(() => (has('contextMenu') ? slashMenu.value : []));
 // The menu keeps the browser from moving the cursor on a right click: it goes where the click was, unless inside the selected text.
 function placeCursor(event: MouseEvent) {
   const editor = editorRef.value?.editor;
@@ -329,7 +346,7 @@ const status = computed(() => {
             class="rounded-md border border-default bg-default p-1 shadow-sm"
           />
           <UEditorSuggestionMenu
-            v-for="{ items, ...menu } in parts.menus"
+            v-for="{ items, ...menu } in parts.menus.filter((menu) => menu.pluginKey !== 'slashMenu')"
             :key="menu.pluginKey"
             :editor="editor"
             v-bind="menu"
@@ -338,6 +355,13 @@ const status = computed(() => {
         </UEditor>
       </div>
     </UContextMenu>
+    <UDropdownMenu
+      v-model:open="slashOpen"
+      :items="slashMenu"
+      :content="{ align: 'start', onCloseAutoFocus: (event: Event) => event.preventDefault() }"
+    >
+      <span class="fixed size-0" :style="{ left: `${slashAt?.left}px`, top: `${slashAt?.top}px` }" />
+    </UDropdownMenu>
 
     <footer class="shrink-0 border-t border-default px-8">
       <RelatedNotes v-if="id && !panel" :key="id" :note-id="id" />
