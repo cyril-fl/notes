@@ -250,7 +250,9 @@ const isOverRoot = useDropFolder(rootLink, () => null);
             :key="note.id"
             :to="`/notes/${note.id}`"
             class="row"
-            :class="{ 'row-active': route.params.id === note.id }"
+            :class="{
+              'row-active': route.params.id === note.id && !pinnedNotes.some((pinned) => pinned.id === note.id),
+            }"
           >
             <UIcon :name="icons.recent" class="size-4 shrink-0 text-muted" />
             <span class="truncate">{{ displayTitle(note.title, $t('untitled')) }}</span>
