@@ -66,23 +66,23 @@ func TestEditUser(t *testing.T) {
 	defer tx.Rollback()
 	ctx, tx = testaccount.New(t, ctx, tx)
 
-	locale, view, never := "en", "grid", 0
+	locale, view, never, pro := "en", "grid", 0, true
 	process := Process(ctx, tx, Input{Locale: &locale})
 	process.Run()
 	if process.HasErr() {
 		t.Fatalf("edit: %v", process.GetErr())
 	}
-	if got := process.GetResult(); got.Locale != "en" || got.ID == "" || got.Theme != "notes" || got.ColorMode != "system" || got.TrashRetentionDays != 30 {
+	if got := process.GetResult(); got.Locale != "en" || got.ID == "" || got.Theme != "notes" || got.ColorMode != "system" || got.TrashRetentionDays != 30 || got.Pro {
 		t.Errorf("result = %+v, want locale en with ID and the default settings", got)
 	}
 
-	process = Process(ctx, tx, Input{View: &view, TrashRetentionDays: &never})
+	process = Process(ctx, tx, Input{View: &view, TrashRetentionDays: &never, Pro: &pro})
 	process.Run()
 	if process.HasErr() {
 		t.Fatalf("edit: %v", process.GetErr())
 	}
-	if got := process.GetResult(); got.Locale != "en" || got.View != "grid" || got.TrashRetentionDays != 0 {
-		t.Errorf("result = %+v, want locale kept, view grid, retention 0", got)
+	if got := process.GetResult(); got.Locale != "en" || got.View != "grid" || got.TrashRetentionDays != 0 || !got.Pro {
+		t.Errorf("result = %+v, want locale kept, view grid, retention 0, pro", got)
 	}
 
 	if got := process.GetResult(); len(got.Snippets) != 0 {

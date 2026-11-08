@@ -22,6 +22,7 @@ type User struct {
 	Theme        string `bun:",notnull,default:'notes'" json:"theme"`       // the colors of the web app, one of Themes
 	ColorMode    string `bun:",notnull,default:'system'" json:"color_mode"` // light or dark, one of ColorModes
 	View         string `bun:",notnull,default:'list'" json:"view"`         // how the web app lists items, one of Views
+	Pro          bool   `bun:",notnull,default:false" json:"pro"`           // the web app's Pro mode, see notes-app/app/composables/usePro.ts
 	// Days before the trash is purged, 0 to never purge. An insert of 0 gets the default: only an update sets it.
 	TrashRetentionDays int       `bun:",notnull,default:30" json:"trash_retention_days"`
 	Avatar             string    `bun:",type:uuid,nullzero" json:"avatar,omitempty"` // the id of a File of the account, purgefiles keeps it

@@ -39,6 +39,7 @@ type Input struct {
 	Theme              *string           `json:"theme,omitempty" binding:"optional"`
 	ColorMode          *string           `json:"color_mode,omitempty" binding:"optional"`
 	View               *string           `json:"view,omitempty" binding:"optional"`
+	Pro                *bool             `json:"pro,omitempty" binding:"optional"`
 	TrashRetentionDays *int              `json:"trash_retention_days,omitempty" binding:"optional"`
 	Name               *string           `json:"name,omitempty" binding:"optional"`
 	Avatar             *string           `json:"avatar,omitempty" binding:"optional"`   // the id of an image of the account, "" for none
@@ -139,6 +140,9 @@ func (p *run) updateUser() {
 		}
 		if p.input.View != nil {
 			query.Set("view = ?", *p.input.View)
+		}
+		if p.input.Pro != nil {
+			query.Set("pro = ?", *p.input.Pro)
 		}
 		if p.input.TrashRetentionDays != nil {
 			query.Set("trash_retention_days = ?", *p.input.TrashRetentionDays)

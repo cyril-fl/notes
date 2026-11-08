@@ -130,7 +130,9 @@
     "saving": "Saving…",
     "notFound": "This note cannot be found",
     "notFoundDescription": "It does not exist or it is in the trash.",
-    "placeholder": "Start with a title…"
+    "placeholder": "Start with a title…",
+    "focus": "Focus mode",
+    "unfocus": "Leave focus mode"
   },
   "tag": {
     "count": "{n} note | {n} notes",
@@ -210,7 +212,10 @@
     "snippetName": "Name",
     "snippetContent": "Content",
     "snippetHelp": "Markdown; a #tag adds that tag to the note.",
-    "save": "Save"
+    "save": "Save",
+    "pro": "Pro mode",
+    "proMode": "Turn on Pro mode",
+    "proDescription": "More tools, for advanced use:"
   },
   "account": {
     "title": "Account",
@@ -233,5 +238,9 @@
     "wrongPassword": "The current password is wrong.",
     "shortPassword": "The new password needs 8 characters or more.",
     "session": "Session"
+  },
+  "features": {
+    "graph": "The graph of the notes",
+    "focusMode": "Focus mode, which leaves only the note on screen"
   }
 }

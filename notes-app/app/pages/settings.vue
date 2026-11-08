@@ -38,6 +38,12 @@ async function changeTheme(next: string) {
   me.value = await api<User>('/api/me', { method: 'PATCH', body: { theme: next } });
 }
 
+const { pro } = usePro();
+
+async function changePro(next: boolean) {
+  me.value = await api<User>('/api/me', { method: 'PATCH', body: { pro: next } });
+}
+
 // 0 never purges; a retention set by hand elsewhere stays in the list.
 const retentions = computed(() =>
   [...new Set([0, 7, 30, 90, 365, me.value?.trash_retention_days ?? 30])]
@@ -185,6 +191,25 @@ async function importZip(event: Event) {
           />
         </li>
       </ul>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="mb-1 text-sm font-semibold">{{ $t('settings.pro') }}</h2>
+      <div class="flex items-center gap-4 py-3">
+        <div class="min-w-0 flex-1">
+          <p class="text-sm">{{ $t('settings.proMode') }}</p>
+          <p class="text-xs text-muted">{{ $t('settings.proDescription') }}</p>
+          <ul class="mt-2 list-inside list-disc text-xs text-muted">
+            <li v-for="feature in proFeatures" :key="feature">{{ $t(`features.${feature}`) }}</li>
+          </ul>
+        </div>
+        <USwitch
+          :model-value="pro"
+          :disabled="!me"
+          :aria-label="$t('settings.proMode')"
+          @update:model-value="changePro"
+        />
+      </div>
     </section>
 
     <section class="mb-8">

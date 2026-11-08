@@ -10,6 +10,8 @@ import type { LinkSize } from '~/utils/linkCard';
 import LinkCard from '~/components/LinkCard.vue';
 
 const { icons } = useIcons();
+const { has } = usePro();
+const focus = useState('focus', () => false);
 const { t } = useI18n();
 
 // start: the starting text of a new note, saved only once typed in.
@@ -456,6 +458,17 @@ const status = computed(() => {
       <div class="flex h-9 items-center gap-2 text-xs text-muted">
         <PathNav :path="path" />
         <span class="ml-auto shrink-0" :class="{ 'text-error': failed }" role="status">{{ status }}</span>
+        <UTooltip v-if="has('focusMode')" :text="focus ? $t('note.unfocus') : $t('note.focus')" :kbds="['meta', '.']">
+          <UButton
+            :icon="focus ? icons.unfocus : icons.focus"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            :aria-label="focus ? $t('note.unfocus') : $t('note.focus')"
+            :aria-pressed="focus"
+            @click="focus = !focus"
+          />
+        </UTooltip>
       </div>
     </footer>
   </article>

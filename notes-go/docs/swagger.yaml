@@ -150,6 +150,9 @@ components:
         name:
           description: unique case-insensitive, see createschema
           type: string
+        pro:
+          description: the web app's Pro mode, see notes-app/app/composables/usePro.ts
+          type: boolean
         snippets:
           items:
             $ref: '#/components/schemas/domain.Snippet'
@@ -172,6 +175,7 @@ components:
       - id
       - locale
       - name
+      - pro
       - snippets
       - theme
       - trash_retention_days
@@ -224,6 +228,8 @@ components:
           type: string
         name:
           type: string
+        pro:
+          type: boolean
         snippets:
           description: the whole list, it replaces the saved one
           items:

@@ -6,6 +6,7 @@ const { icons } = useIcons();
 const { t } = useI18n();
 
 const api = useApi();
+const { has } = usePro();
 const route = useRoute();
 const { createFolder } = useItems();
 
@@ -64,7 +65,7 @@ const groups = computed<CommandPaletteGroup[]>(() => {
           kbds: ['shift', 'N'],
           onSelect: () => createFolder(currentFolder(route)),
         },
-        { label: t('common.graph'), icon: icons.graph, to: '/graph' },
+        ...(has('graph') ? [{ label: t('common.graph'), icon: icons.graph, to: '/graph' }] : []),
         { label: t('common.trash'), icon: icons.trash, to: '/trash' },
         { label: t('common.settings'), icon: icons.settings, to: '/settings' },
         ...(searching

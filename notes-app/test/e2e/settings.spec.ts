@@ -106,3 +106,27 @@ test('snippets are made in the settings and used in the notes', async ({ page })
     await box.api.patch('/api/me', { data: { snippets: [] } });
   }
 });
+
+// The focus mode is a Pro feature: hidden until the Pro mode is on, then it hides the sidebar around the note.
+test('the Pro mode unlocks the focus mode', async ({ page }) => {
+  const note = await box.note(`# Focus ${box.prefix}`);
+  try {
+    await page.goto(`/notes/${note.id}`);
+    await expect(page.getByRole('textbox')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Mode focus' })).toHaveCount(0);
+
+    await page.goto('/settings');
+    await page.getByRole('switch', { name: 'Activer le mode Pro' }).click();
+    await expect.poll(async () => (await (await box.api.get('/api/me')).json()).pro).toBe(true);
+
+    await page.goto(`/notes/${note.id}`);
+    const sidebar = page.getByRole('link', { name: 'Graphe' }).first();
+    await expect(sidebar).toBeVisible();
+    await page.getByRole('button', { name: 'Mode focus' }).click();
+    await expect(sidebar).toBeHidden();
+    await page.getByRole('button', { name: 'Quitter le mode focus' }).click();
+    await expect(sidebar).toBeVisible();
+  } finally {
+    await box.api.patch('/api/me', { data: { pro: false } });
+  }
+});

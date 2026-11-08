@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { NotesGraph } from '~/types/items';
 
+definePageMeta({ feature: 'graph' });
+
 const { icons } = useIcons();
 
 const route = useRoute();

@@ -130,7 +130,9 @@
     "saving": "Enregistrement…",
     "notFound": "Cette note est introuvable",
     "notFoundDescription": "Elle n'existe pas ou elle est dans la corbeille.",
-    "placeholder": "Commencez par un titre…"
+    "placeholder": "Commencez par un titre…",
+    "focus": "Mode focus",
+    "unfocus": "Quitter le mode focus"
   },
   "tag": {
     "count": "{n} note | {n} notes",
@@ -210,7 +212,10 @@
     "snippetName": "Nom",
     "snippetContent": "Contenu",
     "snippetHelp": "Du markdown ; un #tag ajoute ce tag à la note.",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "pro": "Mode Pro",
+    "proMode": "Activer le mode Pro",
+    "proDescription": "Des outils en plus, pour un usage avancé :"
   },
   "account": {
     "title": "Compte",
@@ -233,5 +238,9 @@
     "wrongPassword": "Le mot de passe actuel est faux.",
     "shortPassword": "Le nouveau mot de passe doit faire 8 caractères ou plus.",
     "session": "Session"
+  },
+  "features": {
+    "graph": "Le graphe des notes",
+    "focusMode": "Le mode focus, qui ne laisse que la note à l'écran"
   }
 }

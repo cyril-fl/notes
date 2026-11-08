@@ -9,6 +9,15 @@ const searchOpen = useState('search-open', () => false);
 const searchSnippets = useState('search-snippets', () => false);
 const collapsed = ref(false);
 
+// The focus mode leaves only the note: it ends with the page, or with the Pro mode.
+const { has } = usePro();
+const focus = useState('focus', () => false);
+const focused = computed(() => focus.value && has('focusMode'));
+watch(
+  () => route.path,
+  () => (focus.value = false),
+);
+
 // The account's language wins over the cookie's, which only remembers this browser's last one.
 const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
 watch(
@@ -40,6 +49,7 @@ defineShortcuts({
   shift_n: () => createFolder(currentFolder(route)),
   t: () => (searchSnippets.value = searchOpen.value = true),
   'meta_\\': () => (collapsed.value = !collapsed.value),
+  'meta_.': { usingInput: true, handler: () => has('focusMode') && (focus.value = !focus.value) },
 });
 // The template: Nuxt UI's dashboard, a sidebar that resizes (its width kept in localStorage), collapses, and becomes a drawer on small screens.
 </script>
@@ -47,6 +57,7 @@ defineShortcuts({
 <template>
   <UDashboardGroup unit="rem" storage="local" storage-key="notes-layout" class="gap-2 bg-muted p-2 text-default">
     <UDashboardSidebar
+      v-if="!focused"
       v-model:collapsed="collapsed"
       collapsible
       resizable
@@ -72,7 +83,7 @@ defineShortcuts({
     >
       <template #body>
         <!-- Only on a small screen, where the sidebar is a drawer. -->
-        <div class="flex px-2 pt-2 lg:hidden">
+        <div v-if="!focused" class="flex px-2 pt-2 lg:hidden">
           <UDashboardSidebarToggle color="neutral" variant="ghost" />
         </div>
         <main class="flex min-h-0 flex-1 flex-col">

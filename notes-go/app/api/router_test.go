@@ -706,8 +706,8 @@ func TestLogin(t *testing.T) {
 	if w := send("PATCH", "/api/me", `{"trash_retention_days":-1}`, cookies[0]); w.Code != http.StatusBadRequest {
 		t.Errorf("negative retention: status = %d, want 400", w.Code)
 	}
-	if w := send("PATCH", "/api/me", `{"theme":"dracula","color_mode":"dark","view":"grid","trash_retention_days":7}`, cookies[0]); w.Code != http.StatusOK ||
-		!strings.Contains(w.Body.String(), `"locale":"en","theme":"dracula","color_mode":"dark","view":"grid","trash_retention_days":7`) {
+	if w := send("PATCH", "/api/me", `{"theme":"dracula","color_mode":"dark","view":"grid","pro":true,"trash_retention_days":7}`, cookies[0]); w.Code != http.StatusOK ||
+		!strings.Contains(w.Body.String(), `"locale":"en","theme":"dracula","color_mode":"dark","view":"grid","pro":true,"trash_retention_days":7`) {
 		t.Errorf("edit settings: status = %d, body = %s", w.Code, w.Body)
 	}
 	if w := send("PATCH", "/api/me", `{"snippets":[{"name":"","content":"x"}]}`, cookies[0]); w.Code != http.StatusBadRequest {

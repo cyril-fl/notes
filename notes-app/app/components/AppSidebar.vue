@@ -11,6 +11,7 @@ const route = useRoute();
 const { createFolder, tagMenu, pinItem } = useItems();
 const searchOpen = useState('search-open', () => false);
 const colorMode = useColorMode();
+const { has } = usePro();
 
 const { data: pinned } = usePinned();
 const favorites = computed(() => pinned.value.filter((item) => item.kind === 'folder'));
@@ -67,7 +68,7 @@ const isOverRoot = useDropFolder(rootLink, () => null);
         :active="route.path === '/'"
       />
     </UTooltip>
-    <UTooltip :text="$t('common.graph')" :content="{ side: 'right' }">
+    <UTooltip v-if="has('graph')" :text="$t('common.graph')" :content="{ side: 'right' }">
       <UButton
         :icon="icons.graph"
         to="/graph"
@@ -124,7 +125,12 @@ const isOverRoot = useDropFolder(rootLink, () => null);
     </UButton>
 
     <!-- Above the scrolling area, so a long folder tree never hides it. -->
-    <NuxtLink to="/graph" class="row -mt-2 font-medium" :class="{ 'row-active': route.path === '/graph' }">
+    <NuxtLink
+      v-if="has('graph')"
+      to="/graph"
+      class="row -mt-2 font-medium"
+      :class="{ 'row-active': route.path === '/graph' }"
+    >
       <UIcon :name="icons.graph" class="size-4 shrink-0" />
       {{ $t('common.graph') }}
     </NuxtLink>

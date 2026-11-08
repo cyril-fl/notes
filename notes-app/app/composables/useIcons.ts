@@ -44,6 +44,8 @@ export function useIcons() {
     export: 'i-reicon-download',
     import: 'i-reicon-upload',
     snippet: 'i-reicon-text-block',
+    focus: 'i-reicon-maximize',
+    unfocus: 'i-reicon-minimize',
 
     // Graph
     zoomIn: 'i-reicon-plus',

@@ -7,6 +7,7 @@ const { t } = useI18n();
 const props = defineProps<{ noteId: string }>();
 
 const api = useApi();
+const { has } = usePro();
 const { data } = useLazyAsyncData(`neighbors:${props.noteId}`, () =>
   api<Neighbors>(`/api/notes/${props.noteId}/neighbors`, { quiet: true }),
 );
@@ -34,9 +35,13 @@ const total = computed(() => sections.value.reduce((sum, section) => sum + secti
           size="xs"
           class="-ml-2"
         />
-        <NuxtLink :to="{ path: '/graph', query: { note: noteId } }" class="ml-auto text-xs text-primary" @click.stop>{{
-          $t('related.showGraph')
-        }}</NuxtLink>
+        <NuxtLink
+          v-if="has('graph')"
+          :to="{ path: '/graph', query: { note: noteId } }"
+          class="ml-auto text-xs text-primary"
+          @click.stop
+          >{{ $t('related.showGraph') }}</NuxtLink
+        >
       </div>
     </template>
     <template #content>
