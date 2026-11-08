@@ -33,5 +33,5 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # Reads the cache the CI writes on main: a tag never reads its own, so it writes none.
           cache-from: type=gha
-          cache-to: type=gha,mode=max
