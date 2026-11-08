@@ -1,13 +1,9 @@
 <script setup lang="ts">
-import type { EditorToolbarItem } from '@nuxt/ui';
 import type { Editor } from '@tiptap/vue-3';
-import { TaskItem, TaskList } from '@tiptap/extension-list';
 import type { FetchError } from 'ofetch';
 import type { RouteLocationNormalized } from 'vue-router';
-import type { Item, ItemDetail, NoteFile, NotesGraph, TagCount, User } from '~/types/items';
+import type { Item, ItemDetail, NoteFile, NotesGraph } from '~/types/items';
 import type { Changes } from '~/utils/saver';
-import type { LinkSize } from '~/utils/linkCard';
-import LinkCard from '~/components/LinkCard.vue';
 
 const { icons } = useIcons();
 const { has } = usePro();
@@ -18,10 +14,8 @@ const { t } = useI18n();
 const props = defineProps<{ noteId?: string; parentId?: string; start?: string }>();
 const emit = defineEmits<{ created: [id: string] }>();
 
-const ALLOWED_LINKS = ['http', 'https', 'mailto'];
-
 const api = useApi();
-const { prompt, confirm } = useDialogs();
+const { confirm } = useDialogs();
 const { removeItem } = useItems();
 const baseURL = useRuntimeConfig().public.apiBase;
 const toast = useToast();
@@ -180,189 +174,6 @@ onBeforeUnmount(async () => {
   await removeItem({ id: id.value, kind: 'note' });
 });
 
-async function askLink(editor: Editor) {
-  const current = editor.getAttributes('link').href as string | undefined;
-  if (current) return editor.chain().focus().unsetLink().run();
-
-  const href = await prompt({
-    title: t('note.addLink'),
-    placeholder: t('note.linkPlaceholder'),
-    action: t('common.add'),
-  });
-  if (!href) return;
-  const { from, to } = editor.state.selection;
-  editor
-    .chain()
-    .focus()
-    .insertContent(linkContent(toHref(href), editor.state.doc.textBetween(from, to)))
-    .run();
-}
-
-// A link swapped in place to another size, the same href and text.
-function setLinkSize(editor: Editor, size: LinkSize) {
-  const card = editor.isActive('linkCard') && editor.getAttributes('linkCard');
-  if (card)
-    return editor
-      .chain()
-      .focus()
-      .insertContent(linkContent(card.href, card.text, size));
-  if (size === 'hyperlink') return editor.chain();
-  const href = editor.getAttributes('link').href as string;
-  editor.chain().focus().extendMarkRange('link').run();
-  const { from, to } = editor.state.selection;
-  return editor.chain().insertContent(linkContent(href, editor.state.doc.textBetween(from, to), size));
-}
-
-function linkSizeHandler(size: LinkSize) {
-  return {
-    canExecute: () => true,
-    execute: (editor: Editor) => setLinkSize(editor, size),
-    isActive: (editor: Editor) =>
-      size === 'hyperlink' ? editor.isActive('link') : editor.isActive('linkCard', { size }),
-    isDisabled: () => false,
-  };
-}
-
-function linkHref(editor: Editor) {
-  return (editor.getAttributes('linkCard').href ?? editor.getAttributes('link').href) as string | undefined;
-}
-
-// The notes offered after [[: picked, the link points to the note's id right away.
-const { data: graph } = useLazyAsyncData('graph', () => api<NotesGraph>('/api/graph/notes'));
-const noteItems = computed(() =>
-  (graph.value?.notes ?? [])
-    .filter((note) => note.id !== id.value && note.title)
-    .map((note) => ({ kind: 'wikiLink', label: note.title, description: note.path, icon: icons.note, id: note.id })),
-);
-
-// The snippets offered after ;; : picked, their markdown goes in at the cursor.
-const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
-const snippetItems = computed(() =>
-  (me.value?.snippets ?? []).map((snippet) => ({
-    kind: 'snippet',
-    label: snippet.name,
-    icon: icons.snippet,
-    content: snippet.content,
-  })),
-);
-
-// The existing tags offered after #: the same data as the sidebar, refreshed when a save changes the tags.
-const { data: allTags } = useLazyAsyncData('tags', () => api<TagCount[]>('/api/graph'), {
-  default: () => [] as TagCount[],
-});
-const tagItems = computed(() => allTags.value.map((tag) => ({ kind: 'tag', label: tag.value, icon: icons.tag })));
-
-function openLink(event: MouseEvent) {
-  const link = (event.target as HTMLElement).closest<HTMLElement>('a[data-wikilink]');
-  if (!link) return;
-  event.preventDefault();
-  if (link.dataset.note) return navigateTo(`/notes/${link.dataset.note}`);
-  toast.add({
-    title: t('note.pendingLink'),
-    description: t('note.pendingLinkDescription', { target: link.dataset.wikilink }),
-    color: 'warning',
-  });
-}
-
-const handlers = {
-  wikiLink: {
-    canExecute: () => true,
-    execute: (editor: Editor, item: { label: string; id: string }) =>
-      editor
-        .chain()
-        .focus()
-        .insertContent([
-          { type: 'wikiLink', attrs: { target: item.label, id: item.id } },
-          { type: 'text', text: ' ' },
-        ]),
-    isActive: () => false,
-    isDisabled: () => false,
-  },
-  tag: {
-    canExecute: () => true,
-    execute: (editor: Editor, item: { label: string }) => editor.chain().focus().insertContent(`#${item.label} `),
-    isActive: () => false,
-    isDisabled: () => false,
-  },
-  snippet: {
-    canExecute: () => true,
-    execute: (editor: Editor, item: { content: string }) =>
-      editor.chain().focus().insertContent(item.content, { contentType: 'markdown' }),
-    isActive: () => false,
-    isDisabled: () => false,
-  },
-  link: {
-    canExecute: () => true,
-    execute: (editor: Editor) => {
-      askLink(editor);
-      return editor.chain();
-    },
-    isActive: (editor: Editor) => editor.isActive('link'),
-    isDisabled: () => false,
-  },
-  linkHyperlink: linkSizeHandler('hyperlink'),
-  linkMini: linkSizeHandler('mini'),
-  linkLarge: linkSizeHandler('large'),
-  linkOpen: {
-    canExecute: () => true,
-    execute: (editor: Editor) => {
-      const href = linkHref(editor);
-      // A mail link opens the mail app: a new tab would stay empty.
-      if (href && isMailLink(href)) window.location.href = href;
-      else if (isCardLink(href)) window.open(href, '_blank', 'noopener');
-      return editor.chain();
-    },
-    isActive: () => false,
-    isDisabled: () => false,
-  },
-};
-
-// Shown on a web link or a card, like the menu of Apple Notes.
-const linkToolbar: EditorToolbarItem[][] = [
-  [
-    { kind: 'linkHyperlink', icon: icons.link, tooltip: { text: t('note.linkHyperlink') } },
-    { kind: 'linkMini', icon: icons.linkMini, tooltip: { text: t('note.linkMini') } },
-    { kind: 'linkLarge', icon: icons.linkLarge, tooltip: { text: t('note.linkLarge') } },
-  ],
-  [{ kind: 'linkOpen', icon: icons.linkOpen, tooltip: { text: t('note.linkOpen') } }],
-];
-
-function showLinkToolbar({ editor }: { editor: Pick<Editor, 'isActive' | 'getAttributes'> }) {
-  return editor.isActive('linkCard') || (editor.isActive('link') && isCardLink(editor.getAttributes('link').href));
-}
-
-const toolbar: EditorToolbarItem[][] = [
-  [
-    { kind: 'heading', level: 1, icon: icons.heading1, tooltip: { text: t('note.heading', { level: 1 }) } },
-    { kind: 'heading', level: 2, icon: icons.heading2, tooltip: { text: t('note.heading', { level: 2 }) } },
-    { kind: 'heading', level: 3, icon: icons.heading3, tooltip: { text: t('note.heading', { level: 3 }) } },
-  ],
-  [
-    { kind: 'mark', mark: 'bold', icon: icons.bold, tooltip: { text: t('note.bold') } },
-    { kind: 'mark', mark: 'italic', icon: icons.italic, tooltip: { text: t('note.italic') } },
-    { kind: 'mark', mark: 'strike', icon: icons.strike, tooltip: { text: t('note.strike') } },
-    { kind: 'mark', mark: 'code', icon: icons.code, tooltip: { text: t('note.code') } },
-    { kind: 'link', icon: icons.link, tooltip: { text: t('note.link') } },
-  ],
-  [
-    { kind: 'bulletList', icon: icons.list, tooltip: { text: t('note.bulletList') } },
-    { kind: 'orderedList', icon: icons.orderedList, tooltip: { text: t('note.orderedList') } },
-    { kind: 'taskList', icon: icons.taskList, tooltip: { text: t('note.taskList') } },
-    { kind: 'blockquote', icon: icons.quote, tooltip: { text: t('note.quote') } },
-  ],
-];
-
-const starterKit = {
-  underline: false,
-  link: {
-    openOnClick: false,
-    // Autolink asks with the text as typed: an email or a domain has no scheme yet, it gets mailto: or https:.
-    isAllowedUri: (url: string, ctx: { defaultValidate: (url: string) => boolean }) => {
-      const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(url)?.[1];
-      return (!scheme || ALLOWED_LINKS.includes(scheme.toLowerCase())) && ctx.defaultValidate(url);
-    },
-  },
-} as object;
 // A dropped image takes no focus: the upload is an interaction, its image an edit.
 async function upload(file: File) {
   touched.value = true;
@@ -382,16 +193,16 @@ async function upload(file: File) {
   }
 }
 
-const extensions = [
-  TaskList,
-  TaskItem.configure({ nested: true }),
-  WikiLink,
-  linkCard(LinkCard),
-  noteImage(baseURL, upload),
-];
+const { extensions, starterKit, handlers, toolbar, bubbles, menus, onClick } = mergeModules([
+  useNoteFormatting(),
+  useNoteLinks(id),
+  useNoteSuggestions(),
+  { extensions: [noteImage(baseURL, upload)] },
+]);
 
 // The headings of the note, for the context panel: a click scrolls the text to one, without moving the cursor.
 const panel = useContextPanel();
+const { data: graph } = useLazyAsyncData('graph', () => api<NotesGraph>('/api/graph/notes'));
 const nearGraph = computed(() => (graph.value && id.value ? neighborhood(graph.value, id.value) : undefined));
 const outline = ref<{ level: number; text: string; pos: number }[]>([]);
 function readOutline(editor: Editor) {
@@ -441,7 +252,7 @@ const status = computed(() => {
     class="flex min-h-0 flex-1 flex-col pt-4"
     @focusin="touched = true"
     @pointerdown.capture="touched = true"
-    @click="openLink"
+    @click="onClick"
   >
     <UEditor
       ref="editor"
@@ -461,30 +272,23 @@ const status = computed(() => {
     >
       <UEditorToolbar :editor="editor" :items="toolbar" class="mx-7 shrink-0 border-b border-muted py-1" />
       <UEditorToolbar
+        v-for="bubble in bubbles"
+        :key="bubble.pluginKey"
         :editor="editor"
-        :items="linkToolbar"
+        :items="bubble.items"
         layout="bubble"
-        plugin-key="linkMenu"
+        :plugin-key="bubble.pluginKey"
         :options="{ placement: 'top-start' }"
-        :should-show="showLinkToolbar"
+        :should-show="bubble.shouldShow"
         class="rounded-md border border-default bg-default p-1 shadow-sm"
       />
       <UEditorSuggestionMenu
+        v-for="{ items, ...menu } in menus"
+        :key="menu.pluginKey"
         :editor="editor"
-        :items="noteItems"
-        char="[["
-        plugin-key="wikiLinkMenu"
-        :filter-fields="['label', 'description']"
-        :suggestion="{ allowSpaces: true }"
+        v-bind="menu"
+        :items="toValue(items)"
       />
-      <UEditorSuggestionMenu
-        :editor="editor"
-        :items="snippetItems"
-        char=";;"
-        plugin-key="snippetMenu"
-        :suggestion="{ allowSpaces: true }"
-      />
-      <UEditorSuggestionMenu :editor="editor" :items="tagItems" char="#" plugin-key="tagMenu" />
     </UEditor>
 
     <footer class="shrink-0 border-t border-default px-8">
