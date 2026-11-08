@@ -15,6 +15,7 @@ export const features = {
   contextMenu: 'pro',
   paletteActions: 'pro',
   sourceMode: 'pro',
+  noteLock: 'base',
 } as const satisfies Record<string, Level>;
 
 export type Feature = keyof typeof features;
@@ -33,6 +34,7 @@ const groups: Record<Feature, 'display' | 'editing' | 'navigation'> = {
   contextMenu: 'editing',
   paletteActions: 'navigation',
   sourceMode: 'editing',
+  noteLock: 'editing',
 };
 
 /** The features the settings compare between the standard and the Pro mode, by subsection. */

@@ -500,7 +500,7 @@ const status = computed(() => {
         <span v-if="has('wordCount') && source === undefined" class="shrink-0 tabular-nums">{{
           $t('note.words', words)
         }}</span>
-        <UTooltip v-if="id" :text="readonly ? $t('note.unlock') : $t('note.lock')">
+        <UTooltip v-if="id && has('noteLock')" :text="readonly ? $t('note.unlock') : $t('note.lock')">
           <UButton
             :icon="readonly ? icons.lock : icons.unlock"
             color="neutral"

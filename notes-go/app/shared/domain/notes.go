@@ -26,8 +26,9 @@ type Item struct {
 	UpdatedAt time.Time   `bun:",nullzero" json:"updated_at,omitzero" binding:"optional"`
 	DeletedAt time.Time   `bun:",soft_delete,nullzero" json:"-"`
 	Kind      Kind        `bun:",notnull" json:"kind"`
-	Title     secret.Text `bun:",type:text,nullzero" json:"title" swaggertype:"string"` // NULL = untitled note (--no-title)
-	TitleHash string      `bun:",nullzero" json:"-"`                                    // its Blind: unique folder names, [[links]] by title
+	Title     secret.Text `bun:",type:text,nullzero" json:"title" swaggertype:"string"`  // NULL = untitled note (--no-title)
+	TitleHash string      `bun:",nullzero" json:"-"`                                     // its Blind: unique folder names, [[links]] by title
+	Readonly  bool        `bun:",scanonly" json:"readonly,omitempty" binding:"optional"` // a locked note, read by listitems from metadata_notes
 }
 
 // SealTitle gives a title sealed, and its blind for title_hash: both "" for an untitled note, written NULL.

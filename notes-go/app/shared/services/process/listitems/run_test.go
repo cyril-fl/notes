@@ -44,6 +44,9 @@ func TestListItems(t *testing.T) {
 
 	note := createnote.Process(ctx, tx, createnote.Input{Content: "# A note", ParentID: id})
 	note.Run()
+	if _, err := tx.NewRaw("UPDATE metadata_notes SET readonly = true WHERE item_id = ?", note.GetResult().ID).Exec(ctx); err != nil {
+		t.Fatal(err)
+	}
 	sub := createfolder.Process(ctx, tx, createfolder.Input{Title: "Z folder", ParentID: id})
 	sub.Run()
 	trashed := createfolder.Process(ctx, tx, createfolder.Input{Title: "Trashed", ParentID: id})
@@ -63,6 +66,9 @@ func TestListItems(t *testing.T) {
 	}
 	if children.HasErr() || !slices.Equal(got, []string{"Z folder", "A note"}) {
 		t.Errorf("children = %v, %v; want [Z folder, A note]", got, children.GetErr())
+	}
+	if items := children.GetResult(); len(items) == 2 && (items[0].Readonly || !items[1].Readonly) {
+		t.Errorf("readonly = %v, %v; want only the locked note", items[0].Readonly, items[1].Readonly)
 	}
 
 	root := Process(ctx, tx, "")

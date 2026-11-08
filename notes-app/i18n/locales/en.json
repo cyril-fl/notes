@@ -162,6 +162,7 @@
     "editor": "Back to the editor",
     "lock": "Lock read-only",
     "unlock": "Unlock",
+    "readonly": "Locked",
     "locked": "Locked note: unlock it to edit it"
   },
   "tag": {
@@ -305,6 +306,7 @@
     "wordCount": "The word count of the note, below the text",
     "contextMenu": "Right click (or long press) in a note: the same menu as /",
     "paletteActions": "In the Cmd K palette: move the open note or folder, rename it, change the theme",
-    "sourceMode": "Source mode: the note's markdown as plain text, from the button under the text"
+    "sourceMode": "Source mode: the note's markdown as plain text, from the button under the text",
+    "noteLock": "Lock a note read-only, from the padlock under the text"
   }
 }

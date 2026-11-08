@@ -58,10 +58,12 @@ func (p *run) makeParentID() {
 }
 
 // loadItems lists folders first, then notes, by title (sealed: ordered here); soft_delete hides the trashed ones.
+// readonly marks the locked notes, for their padlock in the folder.
 func (p *run) loadItems() {
 	query := p.db.NewSelect().
 		Model(&p.cache.result).
 		Column("id", "parent_id", "created_at", "updated_at", "kind", "title").
+		ColumnExpr("COALESCE((SELECT mn.readonly FROM metadata_notes AS mn WHERE mn.item_id = i.id), false) AS readonly").
 		Where("user_id = ?", domain.UserID(p.ctx)).
 		OrderExpr("kind = ? DESC, id", domain.FOLDER)
 

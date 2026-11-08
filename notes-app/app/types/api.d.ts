@@ -2094,6 +2094,8 @@ export interface components {
             id: string;
             kind: components["schemas"]["domain.Kind"];
             parent_id?: string;
+            /** @description a locked note, read by listitems from metadata_notes */
+            readonly?: boolean;
             /** @description NULL = untitled note (--no-title) */
             title: string;
             updated_at?: string;

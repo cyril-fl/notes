@@ -30,8 +30,14 @@ const date = computed(() =>
 <template>
   <UContextMenu :items="itemMenu(item)">
     <NuxtLink v-if="grid" ref="link" :to="to" class="group flex min-w-0 flex-col gap-2">
-      <div class="tile" :class="{ 'tile-over': isOver, 'tile-selected': selected && !isOver }">
+      <div class="tile relative" :class="{ 'tile-over': isOver, 'tile-selected': selected && !isOver }">
         <UIcon :name="isFolder ? icons.folder : icons.note" class="size-10 text-dimmed" />
+        <UIcon
+          v-if="item.readonly"
+          :name="icons.lock"
+          :aria-label="$t('note.readonly')"
+          class="absolute top-2 right-2 size-4 text-muted"
+        />
       </div>
       <div class="min-w-0 text-center text-xs">
         <p class="truncate">{{ displayTitle(item.title, $t('untitled')) }}</p>
@@ -51,6 +57,13 @@ const date = computed(() =>
         :class="isOver ? 'text-inverted' : isFolder ? 'text-primary' : 'text-muted'"
       />
       <span class="truncate">{{ displayTitle(item.title, $t('untitled')) }}</span>
+      <UIcon
+        v-if="item.readonly"
+        :name="icons.lock"
+        :aria-label="$t('note.readonly')"
+        class="size-3.5 shrink-0"
+        :class="isOver ? 'text-inverted' : 'text-muted'"
+      />
       <span class="ml-auto shrink-0 pl-4 text-xs" :class="isOver ? 'text-inverted' : 'text-muted'">{{ date }}</span>
     </NuxtLink>
   </UContextMenu>

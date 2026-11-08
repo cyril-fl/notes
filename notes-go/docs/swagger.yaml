@@ -93,6 +93,9 @@ components:
           $ref: '#/components/schemas/domain.Kind'
         parent_id:
           type: string
+        readonly:
+          description: a locked note, read by listitems from metadata_notes
+          type: boolean
         title:
           description: NULL = untitled note (--no-title)
           type: string
