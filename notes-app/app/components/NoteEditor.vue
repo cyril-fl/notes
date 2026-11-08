@@ -523,7 +523,7 @@ const status = computed(() => {
       <!-- At the bottom of the panel, kept in sight while the rest scrolls. -->
       <section v-if="has('graph') && nearGraph?.links.length" class="sticky bottom-0 mt-auto -mb-4 bg-default pb-4">
         <h2 class="mb-2 text-xs font-medium text-muted">{{ $t('common.graph') }}</h2>
-        <GraphView :graph="nearGraph" :selected="id" mini class="h-56! rounded-md bg-muted" />
+        <GraphView :graph="nearGraph" :selected="id" mini class="h-56!" />
       </section>
     </Teleport>
   </article>

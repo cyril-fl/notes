@@ -132,6 +132,7 @@ function linkClass(link: Link) {
   <div
     ref="view"
     class="relative size-full cursor-grab touch-none overflow-hidden select-none active:cursor-grabbing"
+    :class="{ 'rounded-md bg-muted': mini }"
     @pointerdown="startDrag"
     @click.capture="swallowClickAfterDrag"
   >
@@ -166,12 +167,14 @@ function linkClass(link: Link) {
         @focus="hover(note.id, $event)"
         @blur="hovered = null"
       >
-        <UIcon
-          v-if="mini"
-          :name="icons.note"
-          class="size-4 shrink-0 transition-colors duration-150"
-          :class="iconClass(note.id)"
-        />
+        <!-- On the view's background: the links drawn under the icon must not show through it. -->
+        <span v-if="mini" class="flex rounded-sm bg-muted p-0.5">
+          <UIcon
+            :name="icons.note"
+            class="size-4 shrink-0 transition-colors duration-150"
+            :class="iconClass(note.id)"
+          />
+        </span>
         <template v-else>
           <!-- Solid colors, not opacity: links drawn under the dot must not show through it. -->
           <span class="size-2.5 shrink-0 rounded-full transition-colors duration-150" :class="dotClass(note.id)" />
