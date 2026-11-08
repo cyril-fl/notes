@@ -105,13 +105,29 @@ func (p *run) saveNote() {
 	}
 
 	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
-		for _, step := range []func(context.Context, bun.Tx) error{p.insertItem, p.insertMetadata, p.linkTags, p.linkNotes} {
+		for _, step := range []func(context.Context, bun.Tx) error{p.checkParent, p.insertItem, p.insertMetadata, p.linkTags, p.linkNotes} {
 			if err := step(ctx, tx); err != nil {
 				return err
 			}
 		}
 		return nil
 	}))
+}
+
+// checkParent wants a folder not in the trash: the FK alone accepts a trashed one.
+func (p *run) checkParent(ctx context.Context, tx bun.Tx) error {
+	if p.cache.input.ParentID == "" {
+		return nil
+	}
+
+	exists, err := tx.NewSelect().
+		Model((*domain.Item)(nil)).
+		Where("id = ? AND kind = ? AND user_id = ?", p.cache.input.ParentID, domain.FOLDER, domain.UserID(p.ctx)).
+		Exists(ctx)
+	if err == nil && !exists {
+		err = fmt.Errorf("%w: %q", ErrParentNotFound, p.cache.input.ParentID)
+	}
+	return err
 }
 
 func (p *run) insertItem(ctx context.Context, tx bun.Tx) error {

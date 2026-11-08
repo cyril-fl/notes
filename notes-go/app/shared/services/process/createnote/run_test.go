@@ -12,8 +12,10 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/hashtag"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createfolder"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createschema"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createtag"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deleteitems"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 )
 
@@ -119,10 +121,24 @@ func TestCreateNote(t *testing.T) {
 		t.Errorf("title IS NULL = %v, %v; want true", isNull, err)
 	}
 
+	// A folder in the trash: the FK accepts it, the note would be lost with it.
+	folder := createfolder.Process(ctx, tx, createfolder.Input{Title: "Trashed"})
+	folder.Run()
+	if folder.HasErr() {
+		t.Fatalf("folder: %v", folder.GetErr())
+	}
+	trash := deleteitems.Process(ctx, tx, domain.FOLDER, []string{folder.GetResult().ID})
+	trash.Run()
+	if trash.HasErr() {
+		t.Fatalf("trash: %v", trash.GetErr())
+	}
+
 	// Last: the parent FK fails (RunInTx uses a savepoint here, but keep DB errors at the end).
-	orphan := Process(ctx, tx, Input{Content: "content", ParentID: "00000000-0000-0000-0000-000000000000"})
-	orphan.Run()
-	if !errors.Is(orphan.GetErr(), ErrParentNotFound) {
-		t.Errorf("err = %v, want %v", orphan.GetErr(), ErrParentNotFound)
+	for _, parentID := range []string{"00000000-0000-0000-0000-000000000000", folder.GetResult().ID} {
+		orphan := Process(ctx, tx, Input{Content: "content", ParentID: parentID})
+		orphan.Run()
+		if !errors.Is(orphan.GetErr(), ErrParentNotFound) {
+			t.Errorf("parent %s: err = %v, want %v", parentID, orphan.GetErr(), ErrParentNotFound)
+		}
 	}
 }

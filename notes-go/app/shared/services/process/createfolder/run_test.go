@@ -10,6 +10,7 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createnote"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createschema"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deleteitems"
 )
 
 // No DB needed: makeFolder fails first and saveFolder is guarded, so a nil db is never touched.
@@ -64,8 +65,15 @@ func TestCreateFolder(t *testing.T) {
 		t.Fatalf("note: %v", note.GetErr())
 	}
 
+	// A folder in the trash: the FK accepts it, the note would be lost with it.
+	trash := deleteitems.Process(ctx, tx, domain.FOLDER, []string{child.GetResult().ID})
+	trash.Run()
+	if trash.HasErr() {
+		t.Fatalf("trash: %v", trash.GetErr())
+	}
+
 	// Last: DB errors (RunInTx uses a savepoint here, but keep them at the end).
-	for _, parentID := range []string{"00000000-0000-0000-0000-000000000000", note.GetResult().ID} {
+	for _, parentID := range []string{"00000000-0000-0000-0000-000000000000", note.GetResult().ID, child.GetResult().ID} {
 		orphan := Process(ctx, tx, Input{Title: "Orphan", ParentID: parentID})
 		orphan.Run()
 		if !errors.Is(orphan.GetErr(), ErrParentNotFound) {
