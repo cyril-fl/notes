@@ -16,5 +16,6 @@ Go module `github.com/cyril-fl/notes/notes-go` (`go install …/notes-go@latest`
 - Every query filters by account: `domain.UserID(ctx)`. A `bun.Tx` hands its `RunInTx` functions the ctx it began with, so begin transactions with a ctx that has the account; tests use `ctx, tx = testaccount.New(t, ctx, tx)`.
 - **No migrations.** `createschema` creates missing tables and indexes only. A new column or index on an existing table needs a hand-written `ALTER` on the dev base and on `_test` (see the `notes-account-setting` skill).
 - Sentinel errors are exported and wrapped with `%w`; the API maps them to statuses in `app/api/services/respond/respond.go`.
+- Periodic cleanups go into the `every` loop of `notes serve` (`app/cli/cmd-serve/cmd.go`, with `purgeitems` and `purgefiles`); the CLI only purges at startup (`cmd/root.go`).
 - Images: a row in `files`, the bytes in Silo (S3, `compose.yaml`) through `services/silo.Store`, cited by notes as `/api/files/<id>`. Processes take the store as a parameter, tests pass `silo.NewMemory()`. `purgefiles` deletes what no note cites.
 - Domain structs: `bun.BaseModel` gets `json:"-"`, fields snake_case `json` tags (they are the API's JSON and the app's types).

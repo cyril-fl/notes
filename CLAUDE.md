@@ -23,4 +23,6 @@ A note-taking app, Obsidian-like: one Go program (`notes-go/`, CLI and HTTP API)
 
 ## Skills
 
-`notes-cli-command`, `notes-account-setting`, `notes-app-screenshot`, `notes-release`, `notes-issue-done`, `plum-process`, `go-tests` / `go-test-create` / `go-test-run`, `primitive-first-review`.
+`notes-cli-command`, `notes-account-setting`, `notes-app-screenshot`, `notes-release`, `notes-issue-done`, `notes-issue-hunt` (audit, then the missing issues), `plum-process`, `go-tests` / `go-test-create` / `go-test-run`, `primitive-first-review`.
+
+Subagents (`.claude/agents/`): `notes-auditor`, a read-only audit of the code used by `notes-issue-hunt`.
