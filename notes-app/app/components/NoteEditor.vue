@@ -6,7 +6,7 @@ import type { Item, ItemDetail, NoteFile, NotesGraph } from '~/types/items';
 import type { Changes } from '~/utils/saver';
 
 const { icons } = useIcons();
-const { has } = usePro();
+const { has, ready } = usePro();
 const focus = useState('focus', () => false);
 const { t } = useI18n();
 
@@ -193,12 +193,14 @@ async function upload(file: File) {
   }
 }
 
-const { extensions, starterKit, handlers, toolbar, bubbles, menus, onClick } = mergeModules([
+// Merged once the account is known: UEditor reads its extensions when created, so it waits for ready.
+const modules = [
   useNoteFormatting(),
   useNoteLinks(id),
   useNoteSuggestions(),
   { extensions: [noteImage(baseURL, upload)] },
-]);
+];
+const parts = computed(() => mergeModules(modules, has));
 
 // The headings of the note, for the context panel: a click scrolls the text to one, without moving the cursor.
 const panel = useContextPanel();
@@ -248,11 +250,11 @@ const status = computed(() => {
   <!-- UEditor hands its listeners to TipTap, not to the page: clicks on links are caught here.
        Only the text scrolls: a sticky toolbar inside the scroll moves with Safari's elastic bounce. -->
   <article
-    v-else-if="!loading"
+    v-else-if="!loading && ready"
     class="flex min-h-0 flex-1 flex-col pt-4"
     @focusin="touched = true"
     @pointerdown.capture="touched = true"
-    @click="onClick"
+    @click="parts.onClick"
   >
     <UEditor
       ref="editor"
@@ -263,16 +265,16 @@ const status = computed(() => {
       :autofocus="!noteId"
       :image="false"
       :mention="false"
-      :starter-kit="starterKit"
-      :extensions="extensions"
-      :handlers="handlers"
+      :starter-kit="parts.starterKit"
+      :extensions="parts.extensions"
+      :handlers="parts.handlers"
       class="flex min-h-0 w-full flex-1 flex-col"
       :ui="{ content: 'min-h-0 overflow-y-auto px-8 pb-8', base: 'sm:px-0 px-0' }"
       @update:model-value="onContent"
     >
-      <UEditorToolbar :editor="editor" :items="toolbar" class="mx-7 shrink-0 border-b border-muted py-1" />
+      <UEditorToolbar :editor="editor" :items="parts.toolbar" class="mx-7 shrink-0 border-b border-muted py-1" />
       <UEditorToolbar
-        v-for="bubble in bubbles"
+        v-for="bubble in parts.bubbles"
         :key="bubble.pluginKey"
         :editor="editor"
         :items="bubble.items"
@@ -283,7 +285,7 @@ const status = computed(() => {
         class="rounded-md border border-default bg-default p-1 shadow-sm"
       />
       <UEditorSuggestionMenu
-        v-for="{ items, ...menu } in menus"
+        v-for="{ items, ...menu } in parts.menus"
         :key="menu.pluginKey"
         :editor="editor"
         v-bind="menu"

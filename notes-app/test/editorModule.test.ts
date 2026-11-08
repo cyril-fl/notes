@@ -18,24 +18,28 @@ test('a command can always run and is inactive by default', () => {
 
 test('merges the modules in order', () => {
   const clicks: string[] = [];
-  const merged = mergeModules([
-    {
-      extensions: ['a' as never],
-      starterKit: { underline: false },
-      handlers: { one: command(() => 1) },
-      toolbar: [[{ kind: 'bold' } as never]],
-      onClick: () => clicks.push('first'),
-    },
-    {},
-    {
-      extensions: ['b' as never],
-      starterKit: { link: {} },
-      handlers: { two: command(() => 2) },
-      toolbar: [[{ kind: 'link' } as never]],
-      menus: [{ char: '#', pluginKey: 'tagMenu', items: [] }],
-      onClick: () => clicks.push('last'),
-    },
-  ]);
+  const merged = mergeModules(
+    [
+      {
+        extensions: ['a' as never],
+        starterKit: { underline: false },
+        handlers: { one: command(() => 1) },
+        toolbar: [[{ kind: 'bold' } as never]],
+        onClick: () => clicks.push('first'),
+      },
+      {},
+      {
+        extensions: ['b' as never],
+        starterKit: { link: {} },
+        handlers: { two: command(() => 2) },
+        toolbar: [[{ kind: 'link' } as never]],
+        menus: [{ char: '#', pluginKey: 'tagMenu', items: [] }],
+        onClick: () => clicks.push('last'),
+      },
+      { feature: 'focusMode', extensions: ['pro' as never] },
+    ],
+    () => false,
+  );
   assert.deepEqual(merged.extensions, ['a', 'b']);
   assert.deepEqual(merged.starterKit, { underline: false, link: {} });
   assert.deepEqual(Object.keys(merged.handlers), ['one', 'two']);
@@ -44,4 +48,10 @@ test('merges the modules in order', () => {
   assert.deepEqual(merged.bubbles, []);
   merged.onClick(new Event('click') as MouseEvent);
   assert.deepEqual(clicks, ['first', 'last']);
+});
+
+test('keeps the module of a feature only when the account has it', () => {
+  const modules = [{ extensions: ['base' as never] }, { feature: 'focusMode' as const, extensions: ['pro' as never] }];
+  assert.deepEqual(mergeModules(modules, () => false).extensions, ['base']);
+  assert.deepEqual(mergeModules(modules, (feature) => feature === 'focusMode').extensions, ['base', 'pro']);
 });
