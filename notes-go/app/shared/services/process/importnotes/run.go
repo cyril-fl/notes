@@ -23,8 +23,10 @@ import (
 
 // imagePattern finds the markdown images ![alt](target "title") and ![alt](<target with spaces>): the target is
 // the second group, or the third.
-// TODO: Obsidian's ![[image.png]] stays as text, read it too if a vault is ever imported.
 var imagePattern = regexp.MustCompile(`(!\[[^\]]*\]\()(?:<([^>]+)>|([^)\s]+))`)
+
+// embedPattern finds Obsidian's ![[image.png]] and ![[image.png|300]]: the name is the first group, the size is dropped.
+var embedPattern = regexp.MustCompile(`!\[\[([^\]|]+)(?:\|[^\]]*)?\]\]`)
 
 // Input is what to import: every directory and .md file of Dir, into the folder ParentID ("" = the root).
 type Input struct {
@@ -51,12 +53,13 @@ type run struct {
 type cache struct {
 	folders map[string]string      // directory path -> folder id
 	images  map[string]domain.File // file path -> the image made of it
+	names   map[string][]string    // file name -> its paths in Dir, read at the first ![[name]]
 	result  Result
 }
 
 // Process imports markdown files as notes and their directories as folders, all or nothing: a folder
 // name already taken stops it. Titles, #tags and [[links]] come from the text, as for any note; the images
-// a note cites by a relative path become files of the account, exportnotes.FilesDir no folder.
+// a note cites by a relative path or by ![[name]] become files of the account, exportnotes.FilesDir no folder.
 func Process(ctx context.Context, db bun.IDB, store silo.Store, input Input) *run {
 	return &run{
 		ctx:   ctx,
@@ -123,8 +126,8 @@ func (p *run) importEntry(ctx context.Context, tx bun.Tx, name string, entry fs.
 	return nil
 }
 
-// importImages makes a file of each image the note at name cites by a relative path, once per image, and cites
-// it by its address instead. A missing file or one that is not an image keeps its link as written.
+// importImages makes a file of each image the note at name cites by a relative path or by ![[name]], once per
+// image, and cites it by its address instead. A missing file or one that is not an image keeps its link as written.
 func (p *run) importImages(ctx context.Context, tx bun.Tx, name, content string) (string, error) {
 	var failed error
 	content = imagePattern.ReplaceAllStringFunc(content, func(link string) string {
@@ -133,27 +136,76 @@ func (p *run) importImages(ctx context.Context, tx bun.Tx, name, content string)
 		if err != nil || failed != nil || strings.Contains(target, ":") || strings.HasPrefix(target, "/") {
 			return link
 		}
-		target = path.Join(path.Dir(name), target)
-		file, ok := p.cache.images[target]
+		file, ok, err := p.importImage(ctx, tx, path.Join(path.Dir(name), target))
 		if !ok {
-			data, err := fs.ReadFile(p.input.Dir, target)
-			if err != nil {
-				return link
-			}
-			image := createfile.Process(ctx, tx, p.store, createfile.Input{Name: path.Base(target), Data: data})
-			image.Run()
-			if image.HasErr() {
-				if !errors.Is(image.GetErr(), createfile.ErrNotImage) {
-					failed = fmt.Errorf("%s: %w", target, image.GetErr())
-				}
-				return link
-			}
-			file = image.GetResult()
-			p.cache.images[target] = file
+			failed = err
+			return link
 		}
 		return parts[1] + domain.FileURL(file.ID)
 	})
+	content = embedPattern.ReplaceAllStringFunc(content, func(link string) string {
+		target, ok := p.findEmbed(path.Dir(name), embedPattern.FindStringSubmatch(link)[1])
+		if !ok || failed != nil {
+			return link
+		}
+		file, ok, err := p.importImage(ctx, tx, target)
+		if !ok {
+			failed = err
+			return link
+		}
+		return "![](" + domain.FileURL(file.ID) + ")"
+	})
 	return content, failed
+}
+
+// importImage makes a file of the image at target, once. ok is false for a missing file or one that is not an
+// image, err is set only when making it failed otherwise.
+func (p *run) importImage(ctx context.Context, tx bun.Tx, target string) (domain.File, bool, error) {
+	if file, ok := p.cache.images[target]; ok {
+		return file, true, nil
+	}
+	data, err := fs.ReadFile(p.input.Dir, target)
+	if err != nil {
+		return domain.File{}, false, nil
+	}
+	image := createfile.Process(ctx, tx, p.store, createfile.Input{Name: path.Base(target), Data: data})
+	image.Run()
+	if image.HasErr() {
+		if errors.Is(image.GetErr(), createfile.ErrNotImage) {
+			return domain.File{}, false, nil
+		}
+		return domain.File{}, false, fmt.Errorf("%s: %w", target, image.GetErr())
+	}
+	p.cache.images[target] = image.GetResult()
+	return image.GetResult(), true, nil
+}
+
+// findEmbed finds the file a ![[target]] of a note in dir cites: Obsidian writes its name, or the end of its path
+// when the name is not unique. The one in the note's directory wins, then the first in Dir's order.
+func (p *run) findEmbed(dir, target string) (string, bool) {
+	if p.cache.names == nil {
+		p.cache.names = map[string][]string{}
+		_ = fs.WalkDir(p.input.Dir, ".", func(name string, entry fs.DirEntry, err error) error {
+			if err == nil && !entry.IsDir() {
+				p.cache.names[entry.Name()] = append(p.cache.names[entry.Name()], name)
+			}
+			return nil
+		})
+	}
+	target = strings.TrimSpace(target)
+	found := ""
+	for _, name := range p.cache.names[path.Base(target)] {
+		if name != target && !strings.HasSuffix(name, "/"+target) {
+			continue
+		}
+		if path.Dir(name) == dir {
+			return name, true
+		}
+		if found == "" {
+			found = name
+		}
+	}
+	return found, found != ""
 }
 
 // withTitle writes the file name as a heading on a text without one (Obsidian titles a note by its file),

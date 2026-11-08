@@ -138,10 +138,12 @@ func TestImportExportImages(t *testing.T) {
 	}
 	parent := create.GetResult().ID
 
-	// Cited twice, one image; the missing one, the web one and the text file keep their links.
+	// Cited four times, one image; the missing one, the web one and the text file keep their links. A ![[name]]
+	// takes the file of its note's directory, or the one its path ends with, not Autre's text of the same name.
 	dir := fstest.MapFS{
-		"A.md":                 {Data: []byte("# A\n\n![mer](Voyage/photo%20mer.png)")},
-		"Voyage/Plage.md":      {Data: []byte("# Plage\n\n![sable](<photo mer.png>) ![absent](nope.png) ![web](https://x.org/y.png) ![txt](notes.txt)")},
+		"A.md":                 {Data: []byte("# A\n\n![mer](Voyage/photo%20mer.png) ![[Voyage/photo mer.png|300]] ![[absent.png]]")},
+		"Voyage/Plage.md":      {Data: []byte("# Plage\n\n![sable](<photo mer.png>) ![absent](nope.png) ![web](https://x.org/y.png) ![txt](notes.txt) ![[photo mer.png]]")},
+		"Autre/photo mer.png":  {Data: []byte("text")},
 		"Voyage/photo mer.png": {Data: []byte(png)},
 		"Voyage/notes.txt":     {Data: []byte("text")},
 		"_files/old.png":       {Data: []byte(png)},
@@ -152,7 +154,7 @@ func TestImportExportImages(t *testing.T) {
 	if run.HasErr() {
 		t.Fatalf("import: %v", run.GetErr())
 	}
-	if got, want := run.GetResult(), (Result{Folders: 1, Notes: 2}); got != want {
+	if got, want := run.GetResult(), (Result{Folders: 2, Notes: 2}); got != want {
 		t.Errorf("result = %+v, want %+v (no folder for _files)", got, want)
 	}
 	if len(store.Objects) != 1 {
@@ -177,9 +179,10 @@ func TestImportExportImages(t *testing.T) {
 	}
 	image := "_files/" + file.ID + ".png"
 	want := []string{
+		"Autre==",
 		"Voyage==",
-		"Voyage/Plage.md=# Plage\n\n![sable](../" + image + ") ![absent](nope.png) ![web](https://x.org/y.png) ![txt](notes.txt)=",
-		"A.md=# A\n\n![mer](" + image + ")=",
+		"Voyage/Plage.md=# Plage\n\n![sable](../" + image + ") ![absent](nope.png) ![web](https://x.org/y.png) ![txt](notes.txt) ![](../" + image + ")=",
+		"A.md=# A\n\n![mer](" + image + ") ![](" + image + ") ![[absent.png]]=",
 		"_files==",
 		image + "==" + file.Key(),
 	}
@@ -187,7 +190,7 @@ func TestImportExportImages(t *testing.T) {
 		t.Errorf("export = %q, want %q", got, want)
 	}
 
-	// The second import fails on Voyage, after A.md made its image: its bytes go away with the rows.
+	// The second import fails on Autre, after A.md made its image: its bytes go away with the rows.
 	again := Process(ctx, tx, store, Input{Dir: dir, ParentID: parent})
 	again.Run()
 	if !errors.Is(again.GetErr(), domain.ErrFolderExists) {
