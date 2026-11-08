@@ -133,6 +133,11 @@ test('the Pro mode unlocks the focus mode and the context panel', async ({ page 
     await page.keyboard.press('End');
     await page.keyboard.type(` [[Neighbor ${box.prefix}]]`);
     await expect(panel.getByRole('heading', { name: 'Graphe' })).toBeVisible({ timeout: 10_000 });
+    // A renamed note shows its new title in the panel's graph, without a reload.
+    await page.getByRole('textbox').getByRole('heading').click();
+    await page.keyboard.press('Home');
+    await page.keyboard.type('Renamed ');
+    await expect(panel.getByRole('link', { name: `Renamed Focus ${box.prefix}` })).toBeVisible({ timeout: 10_000 });
     await page.getByRole('button', { name: 'Mode focus' }).click();
     await expect(sidebar).toBeHidden();
     await expect(outline).toBeHidden();

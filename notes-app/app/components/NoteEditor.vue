@@ -77,12 +77,15 @@ async function patchNote(changes: Changes) {
   await readTags(changes);
 }
 
-// The API turns the #tags of the text into tags and its [[links]] into note ids: the sidebar, the related notes and the graph follow when they change.
+// The API turns the #tags of the text into tags and its [[links]] into note ids: the sidebar, the related notes and the graph follow when they or the title change.
 async function readTags(changes: Changes) {
   if (changes.content === undefined) return;
   const note = await api<ItemDetail>(`/api/notes/${id.value}`);
   showResolvedLinks(changes.content, note.content ?? '');
-  const changed = note.tags?.join() !== tags.value.join() || linkedNotes(note.content ?? '') !== links;
+  const changed =
+    note.tags?.join() !== tags.value.join() ||
+    linkedNotes(note.content ?? '') !== links ||
+    note.item.title !== title.value;
   tags.value = note.tags ?? [];
   links = linkedNotes(note.content ?? '');
   title.value = note.item.title;
