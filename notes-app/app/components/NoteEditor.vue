@@ -432,6 +432,7 @@ const status = computed(() => {
         :items="linkToolbar"
         layout="bubble"
         plugin-key="linkMenu"
+        :options="{ placement: 'top-start' }"
         :should-show="showLinkToolbar"
         class="rounded-md border border-default bg-default p-1 shadow-sm"
       />
