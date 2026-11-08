@@ -210,6 +210,7 @@
     "importFolder": "Choisir un dossier",
     "importDuplicate": "Deux fichiers s'appellent {name} : retirez-en un ou importez leurs dossiers.",
     "importZipAlone": "Un zip s'importe seul : retirez les autres fichiers.",
+    "importTooLarge": "Import trop gros : 200 Mo au plus, et 400 Mo une fois le zip décompressé.",
     "importInto": "Importer dans",
     "importConflict": "Un dossier du zip existe déjà à cet endroit : importez ailleurs, ou renommez-le.",
     "imported": "{notes} note(s) et {folders} dossier(s) importés",

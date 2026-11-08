@@ -77,6 +77,15 @@ test('a picked folder holding a zip imports its notes', async ({ page }) => {
   await expect(page.getByText('1 note(s) et 1 dossier(s) importés').first()).toBeVisible();
 });
 
+// Past the API's 200 MB, the toast gives the limit in French, not the API's message (#58).
+test('an import too large says its limit', async ({ page }) => {
+  const zip = test.info().outputPath('gros.zip');
+  await writeFile(zip, Buffer.alloc(210 << 20));
+  await page.goto('/settings');
+  await importFiles(page, zip);
+  await expect(page.getByText('Import trop gros : 200 Mo au plus').first()).toBeVisible();
+});
+
 // The language is the account's: without the cookie that remembers it, the API gives it back after a reload.
 test('the language of the interface is a setting of the account', async ({ page }) => {
   try {

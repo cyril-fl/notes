@@ -210,6 +210,7 @@
     "importFolder": "Pick a folder",
     "importDuplicate": "Two files are named {name}: remove one or import their folders.",
     "importZipAlone": "A zip is imported alone: remove the other files.",
+    "importTooLarge": "Import too large: 200 MB at most, and 400 MB once the zip is unpacked.",
     "importInto": "Import into",
     "importConflict": "A folder of the zip already exists here: import elsewhere, or rename it.",
     "imported": "{notes} note(s) and {folders} folder(s) imported",

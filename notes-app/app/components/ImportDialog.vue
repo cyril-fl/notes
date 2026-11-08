@@ -52,6 +52,7 @@ async function submit() {
       query: parent.value === ROOT ? {} : { parent: parent.value },
       ...body(),
       conflict: t('settings.importConflict'),
+      tooLarge: t('settings.importTooLarge'),
     });
     toast.add({ title: t('settings.imported', { notes: result.notes, folders: result.folders }), color: 'success' });
     await refreshNuxtData();
