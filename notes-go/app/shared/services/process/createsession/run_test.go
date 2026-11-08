@@ -89,6 +89,17 @@ func TestAccountLifecycle(t *testing.T) {
 	if err := run(readsession.Process(ctx, tx, token)); !errors.Is(err, readsession.ErrNoSession) {
 		t.Errorf("session after reset: err = %v, want %v", err, readsession.ErrNoSession)
 	}
+	if err := run(createsession.Process(ctx, tx, createsession.Input{Name: name, Password: "correct horse"})); !errors.Is(err, createsession.ErrBadCredentials) {
+		t.Errorf("login with the old password: err = %v, want %v", err, createsession.ErrBadCredentials)
+	}
+	for input, want := range map[[2]string]error{
+		{name, "short"}:                      adduser.ErrShortPassword,
+		{"nobody-" + name, "battery staple"}: resetpassword.ErrNotFound,
+	} {
+		if err := run(resetpassword.Process(ctx, tx, input[0], input[1])); !errors.Is(err, want) {
+			t.Errorf("reset %q: err = %v, want %v", input[0], err, want)
+		}
+	}
 	again := createsession.Process(ctx, tx, createsession.Input{Name: name, Password: "battery staple"})
 	again.Run()
 	if again.HasErr() {
