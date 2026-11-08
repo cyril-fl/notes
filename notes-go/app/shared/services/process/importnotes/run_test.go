@@ -182,7 +182,7 @@ func TestImportExportImages(t *testing.T) {
 		"Autre==",
 		"Voyage==",
 		"Voyage/Plage.md=# Plage\n\n![sable](../" + image + ") ![absent](nope.png) ![web](https://x.org/y.png) ![txt](notes.txt) ![](../" + image + ")=",
-		"A.md=# A\n\n![mer](" + image + ") ![](" + image + ") ![[absent.png]]=",
+		"A.md=# A\n\n![mer](" + image + ") ![](" + image + " \"small\") ![[absent.png]]=",
 		"_files==",
 		image + "==" + file.Key(),
 	}
@@ -198,5 +198,13 @@ func TestImportExportImages(t *testing.T) {
 	}
 	if len(store.Objects) != 1 {
 		t.Errorf("objects after a failed import = %d, want 1", len(store.Objects))
+	}
+}
+
+func TestSizeTitle(t *testing.T) {
+	for width, want := range map[string]string{"": "", "300": ` "small"`, "1": ` "small"`, "301": ` "medium"`, "600": ` "medium"`, "601": "", "x": ""} {
+		if got := sizeTitle(width); got != want {
+			t.Errorf("sizeTitle(%q) = %q, want %q", width, got, want)
+		}
 	}
 }

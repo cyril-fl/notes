@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"path"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
@@ -25,8 +26,24 @@ import (
 // the second group, or the third.
 var imagePattern = regexp.MustCompile(`(!\[[^\]]*\]\()(?:<([^>]+)>|([^)\s]+))`)
 
-// embedPattern finds Obsidian's ![[image.png]] and ![[image.png|300]]: the name is the first group, the size is dropped.
-var embedPattern = regexp.MustCompile(`!\[\[([^\]|]+)(?:\|[^\]]*)?\]\]`)
+// embedPattern finds Obsidian's ![[image.png]] and ![[image.png|300]] (or |300x200): the name is the first group,
+// the width the second.
+var embedPattern = regexp.MustCompile(`!\[\[([^\]|]+)(?:\|(\d*)[^\]]*)?\]\]`)
+
+// sizeTitle is the title of the markdown that gives an image of an Obsidian width in pixels the editor's closest
+// size, none above 600 or for no width: the image keeps its own then.
+func sizeTitle(width string) string {
+	n, err := strconv.Atoi(width)
+	switch {
+	case err != nil:
+		return ""
+	case n <= 300:
+		return ` "small"`
+	case n <= 600:
+		return ` "medium"`
+	}
+	return ""
+}
 
 // Input is what to import: every directory and .md file of Dir, into the folder ParentID ("" = the root).
 type Input struct {
@@ -144,7 +161,8 @@ func (p *run) importImages(ctx context.Context, tx bun.Tx, name, content string)
 		return parts[1] + domain.FileURL(file.ID)
 	})
 	content = embedPattern.ReplaceAllStringFunc(content, func(link string) string {
-		target, ok := p.findEmbed(path.Dir(name), embedPattern.FindStringSubmatch(link)[1])
+		embed := embedPattern.FindStringSubmatch(link)
+		target, ok := p.findEmbed(path.Dir(name), embed[1])
 		if !ok || failed != nil {
 			return link
 		}
@@ -153,7 +171,7 @@ func (p *run) importImages(ctx context.Context, tx bun.Tx, name, content string)
 			failed = err
 			return link
 		}
-		return "![](" + domain.FileURL(file.ID) + ")"
+		return "![](" + domain.FileURL(file.ID) + sizeTitle(embed[2]) + ")"
 	})
 	return content, failed
 }
