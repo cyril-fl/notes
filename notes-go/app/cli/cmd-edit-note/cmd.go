@@ -5,10 +5,8 @@ import (
 	"fmt"
 
 	millflagseditnote "github.com/cyril-fl/notes/notes-go/app/cli/cmd-edit-note/services/mill"
-	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
-	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/editnote"
-	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/pinnote"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/patchnote"
 	"github.com/cyril-fl/notes/notes-go/config"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
@@ -26,43 +24,36 @@ func Interactive(ctx context.Context, id string) error {
 }
 
 // run edits the text only when a flag asks for it, or with the form when no flag says anything: --pin
-// alone must not rewrite the note, nor change its last change date.
+// alone must not rewrite the note, nor change its last change date. patchnote pins and edits in one transaction.
 func run(ctx context.Context, id string, flags *pflag.FlagSet) error {
-	pinChanged := flags.Changed("pin") || flags.Changed("unpin")
+	input := patchnote.Input{ID: id}
+	if flags.Changed("pin") || flags.Changed("unpin") {
+		pinned := flags.Changed("pin")
+		input.Pinned = &pinned
+	}
 	textChanged := flags.Changed("content") || flags.Changed("tag") || flags.Changed("untag") || flags.Changed("tag-from-list")
-	if pinChanged && !textChanged {
-		return pin(ctx, id, flags.Changed("pin"))
+	if input.Pinned == nil || textChanged {
+		// The mill applies --tag and --untag over the current note, patchnote then only saves its result.
+		resolver := millflagseditnote.New(millflagseditnote.Template{Ctx: ctx, Db: postgrey.GetDb(), Flags: flags, ID: id})
+		note := resolver.Resolve()
+		if resolver.HasErr() {
+			return resolver.GetErr()
+		}
+		input.Content, input.Tags = &note.Content, &note.Tags
 	}
 
-	resolver := millflagseditnote.New(millflagseditnote.Template{Ctx: ctx, Db: postgrey.GetDb(), Flags: flags, ID: id})
-	input := resolver.Resolve()
-	if resolver.HasErr() {
-		return resolver.GetErr()
-	}
-
-	process := editnote.Process(ctx, postgrey.GetDb(), input)
-	process.Run()
-	if process.HasErr() {
-		return process.GetErr()
-	}
-	fmt.Printf("Successfully updated note %s\n", process.GetResult().ID)
-
-	if pinChanged {
-		return pin(ctx, id, flags.Changed("pin"))
-	}
-	return nil
-}
-
-func pin(ctx context.Context, id string, pinned bool) error {
-	process := pinnote.Process(ctx, postgrey.GetDb(), domain.NOTE, id, pinned)
+	process := patchnote.Process(ctx, postgrey.GetDb(), input)
 	process.Run()
 	if process.HasErr() {
 		return process.GetErr()
 	}
 
-	if pinned {
+	if input.Content != nil {
+		fmt.Printf("Successfully updated note %s\n", id)
+	}
+	if input.Pinned != nil && *input.Pinned {
 		fmt.Printf("Successfully pinned note %s\n", id)
-	} else {
+	} else if input.Pinned != nil {
 		fmt.Printf("Successfully unpinned note %s\n", id)
 	}
 	return nil
