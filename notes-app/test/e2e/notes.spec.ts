@@ -57,6 +57,26 @@ test('a [[link]] typed by hand waits, then the API points it to its note', async
   await expect.poll(() => box.content(source.id), { timeout: 5000 }).toContain(`](note:${target.id})`);
 });
 
+test('a web link turns into a large card, then a mini one, kept in the markdown', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} carte\n\nVoir [Exemple](https://example.com) ici`);
+  await page.goto(`/notes/${note.id}`);
+  const editor = page.locator('.ProseMirror');
+  await editor.getByText('Exemple').click();
+  await page.getByRole('button', { name: 'Large' }).click();
+  await expect(editor.locator('a.link-card-large')).toContainText('Exemple');
+  await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('[Exemple](https://example.com "large")');
+
+  await editor.locator('a.link-card').click();
+  await page.getByRole('button', { name: 'Mini' }).click();
+  await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('[Exemple](https://example.com "mini")');
+  await page.reload();
+  await expect(editor.locator('a.link-card-mini')).toContainText('Exemple');
+
+  await editor.locator('a.link-card').click();
+  await page.getByRole('button', { name: 'Hyperlien' }).click();
+  await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('[Exemple](https://example.com) ici');
+});
+
 // A 1×1 PNG.
 const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 

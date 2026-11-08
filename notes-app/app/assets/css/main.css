@@ -236,6 +236,32 @@
     @apply text-muted decoration-dashed decoration-current/50;
   }
 
+  /* A web link shown as a card: mini in the line, large on its own line. */
+  .ProseMirror a.link-card {
+    @apply cursor-pointer gap-2 rounded-md border border-default bg-elevated/50 no-underline align-middle hover:bg-elevated;
+  }
+
+  .ProseMirror a.link-card-mini {
+    @apply inline-flex max-w-full items-center px-2 py-0.5;
+  }
+
+  .ProseMirror a.link-card-large {
+    @apply flex w-full items-center p-3;
+  }
+
+  /* The separators and break ProseMirror puts around an inline node would each take a line next to a large card. */
+  .ProseMirror p:has(> a.link-card-large) > :is(img.ProseMirror-separator, br.ProseMirror-trailingBreak) {
+    @apply hidden!;
+  }
+
+  .ProseMirror .link-card-icon {
+    @apply m-0! size-4 shrink-0 rounded-sm;
+  }
+
+  .ProseMirror a.link-card-large .link-card-icon {
+    @apply size-8;
+  }
+
   /* Task lists are not in the Nuxt UI editor theme. */
   .ProseMirror ul[data-type='taskList'] {
     @apply list-none ps-0!;

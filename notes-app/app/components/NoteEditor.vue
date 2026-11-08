@@ -6,6 +6,8 @@ import type { FetchError } from 'ofetch';
 import type { RouteLocationNormalized } from 'vue-router';
 import type { Item, ItemDetail, NoteFile, NotesGraph, TagCount, User } from '~/types/items';
 import type { Changes } from '~/utils/saver';
+import type { CardSize } from '~/utils/linkCard';
+import LinkCard from '~/components/LinkCard.vue';
 
 const { icons } = useIcons();
 const { t } = useI18n();
@@ -183,6 +185,35 @@ async function askLink(editor: Editor) {
       .run();
 }
 
+// A web link as a hyperlink (size null), a mini card or a large one: the same href and text, swapped in place.
+function setLinkSize(editor: Editor, size: CardSize | null) {
+  const card = editor.isActive('linkCard') && editor.getAttributes('linkCard');
+  if (card) {
+    if (size) return editor.chain().focus().updateAttributes('linkCard', { size });
+    const text = { type: 'text', text: card.text || card.href, marks: [{ type: 'link', attrs: { href: card.href } }] };
+    return editor.chain().focus().insertContent(text);
+  }
+  if (!size) return editor.chain();
+  const href = editor.getAttributes('link').href as string;
+  editor.chain().focus().extendMarkRange('link').run();
+  const { from, to } = editor.state.selection;
+  const text = editor.state.doc.textBetween(from, to);
+  return editor.chain().insertContent({ type: 'linkCard', attrs: { href, text, size } });
+}
+
+function linkSizeHandler(size: CardSize | null) {
+  return {
+    canExecute: () => true,
+    execute: (editor: Editor) => setLinkSize(editor, size),
+    isActive: (editor: Editor) => (size ? editor.isActive('linkCard', { size }) : editor.isActive('link')),
+    isDisabled: () => false,
+  };
+}
+
+function linkHref(editor: Editor) {
+  return (editor.getAttributes('linkCard').href ?? editor.getAttributes('link').href) as string | undefined;
+}
+
 // The notes offered after [[: picked, the link points to the note's id right away.
 const { data: graph } = useLazyAsyncData('graph', () => api<NotesGraph>('/api/graph/notes'));
 const noteItems = computed(() =>
@@ -256,7 +287,34 @@ const handlers = {
     isActive: (editor: Editor) => editor.isActive('link'),
     isDisabled: (editor: Editor) => editor.state.selection.empty && !editor.isActive('link'),
   },
+  linkHyperlink: linkSizeHandler(null),
+  linkMini: linkSizeHandler('mini'),
+  linkLarge: linkSizeHandler('large'),
+  linkOpen: {
+    canExecute: () => true,
+    execute: (editor: Editor) => {
+      const href = linkHref(editor);
+      if (isWebLink(href)) window.open(href, '_blank', 'noopener');
+      return editor.chain();
+    },
+    isActive: () => false,
+    isDisabled: () => false,
+  },
 };
+
+// Shown on a web link or a card, like the menu of Apple Notes.
+const linkToolbar: EditorToolbarItem[][] = [
+  [
+    { kind: 'linkHyperlink', icon: icons.link, tooltip: { text: t('note.linkHyperlink') } },
+    { kind: 'linkMini', icon: icons.linkMini, tooltip: { text: t('note.linkMini') } },
+    { kind: 'linkLarge', icon: icons.linkLarge, tooltip: { text: t('note.linkLarge') } },
+  ],
+  [{ kind: 'linkOpen', icon: icons.linkOpen, tooltip: { text: t('note.linkOpen') } }],
+];
+
+function showLinkToolbar({ editor }: { editor: Pick<Editor, 'isActive' | 'getAttributes'> }) {
+  return editor.isActive('linkCard') || (editor.isActive('link') && isWebLink(editor.getAttributes('link').href));
+}
 
 const toolbar: EditorToolbarItem[][] = [
   [
@@ -306,7 +364,13 @@ async function upload(file: File) {
   }
 }
 
-const extensions = [TaskList, TaskItem.configure({ nested: true }), WikiLink, noteImage(baseURL, upload)];
+const extensions = [
+  TaskList,
+  TaskItem.configure({ nested: true }),
+  WikiLink,
+  linkCard(LinkCard),
+  noteImage(baseURL, upload),
+];
 
 const status = computed(() => {
   if (failed.value) return t('note.notSaved');
@@ -351,6 +415,14 @@ const status = computed(() => {
       @update:model-value="onContent"
     >
       <UEditorToolbar :editor="editor" :items="toolbar" class="mx-7 shrink-0 border-b border-muted py-1" />
+      <UEditorToolbar
+        :editor="editor"
+        :items="linkToolbar"
+        layout="bubble"
+        plugin-key="linkMenu"
+        :should-show="showLinkToolbar"
+        class="rounded-md border border-default bg-default p-1 shadow-sm"
+      />
       <UEditorSuggestionMenu
         :editor="editor"
         :items="noteItems"
