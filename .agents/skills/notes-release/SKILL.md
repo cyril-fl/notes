@@ -17,12 +17,15 @@ description: Close a piece of work or a version of Notes - one commit per change
 
 - `cd notes-go && make test`; `cd notes-app && bun run test && bun run typecheck && bun run e2e` (needs `make up`).
 - READMEs in French: `notes-go/README.md` (CLI, API), `notes-app/README.md` (the app).
-- The wiki is a separate repo, `../notes.wiki` (pages `Home.md`, `cli.md`, `api.md`): check `git status` there, it may hold the user's own uncommitted edits.
 
 ## Tag
 
 - `git tag -a vX.Y.0 -m "vX.Y.0: <what the user gets>"`. Check `git tag --sort=-v:refname | head` first: another agent may already have used the next number.
 - A tag not yet pushed (`git branch -r --contains` / not in `origin/develop`) may be moved with `git tag -fa`; a pushed one never.
+
+## Wiki
+
+Right after the tag, run the `notes-wiki` skill: a `Versions.md` section, the current version on `Home.md`, the page of the feature, committed in the wiki. Every tag, `fix:` included. The user pushes it with `develop`.
 
 ## Issues
 
