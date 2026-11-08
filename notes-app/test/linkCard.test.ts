@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { DEFAULT_LINK_SIZE, isWebLink, linkContent, readLinkCard, writeLinkCard } from '../app/utils/linkCard.ts';
+import {
+  DEFAULT_LINK_SIZE,
+  isCardLink,
+  linkContent,
+  linkHost,
+  readLinkCard,
+  writeLinkCard,
+} from '../app/utils/linkCard.ts';
 
 test('reads a mini or large card at the start only', () => {
   assert.deepEqual(readLinkCard('[Nuxt](https://nuxt.com "mini") suite'), {
@@ -20,7 +27,6 @@ test('leaves hyperlinks and other links to markdown', () => {
     '[Nuxt](https://nuxt.com "autre")',
     '[x](javascript:alert(1) "mini")',
     '[x](note:3f2a0000-0000-0000-0000-00000000abcd "mini")',
-    '[x](mailto:a@b.c "large")',
   ]) {
     assert.equal(readLinkCard(src), undefined, src);
   }
@@ -38,10 +44,18 @@ test('writes a card that reads back the same', () => {
   });
 });
 
-test('only http and https become cards', () => {
-  assert.equal(isWebLink('https://a.b'), true);
-  assert.equal(isWebLink('mailto:a@b.c'), false);
-  assert.equal(isWebLink(undefined), false);
+test('web and mail links become cards', () => {
+  assert.equal(isCardLink('https://a.b'), true);
+  assert.equal(isCardLink('MAILTO:a@b.c'), true);
+  assert.equal(isCardLink('tel:0600'), false);
+  assert.equal(isCardLink(undefined), false);
+  assert.equal(readLinkCard('[Moi](mailto:a@b.c "large")')?.href, 'mailto:a@b.c');
+});
+
+test('a mail link shows its address, without the subject', () => {
+  assert.equal(linkHost('mailto:jean%2Bnotes@b.c?subject=Salut'), 'jean+notes@b.c');
+  assert.equal(linkHost('https://ui.nuxt.com/x'), 'ui.nuxt.com');
+  assert.equal(linkHost('mailto:a%ZZ@b.c'), 'mailto:a%ZZ@b.c');
 });
 
 test('a link in a size: a card for the web, a hyperlink otherwise', () => {
@@ -55,5 +69,6 @@ test('a link in a size: a card for the web, a hyperlink otherwise', () => {
     text: 'A',
     marks: [{ type: 'link', attrs: { href: 'https://a.b' } }],
   });
-  assert.equal(linkContent('mailto:a@b.c', '', 'large').type, 'text');
+  assert.equal(linkContent('mailto:a@b.c', '', 'large').attrs?.text, 'a@b.c');
+  assert.equal(linkContent('tel:0600', '', 'large').type, 'text');
 });

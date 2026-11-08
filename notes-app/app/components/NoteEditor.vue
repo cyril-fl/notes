@@ -296,7 +296,9 @@ const handlers = {
     canExecute: () => true,
     execute: (editor: Editor) => {
       const href = linkHref(editor);
-      if (isWebLink(href)) window.open(href, '_blank', 'noopener');
+      // A mail link opens the mail app: a new tab would stay empty.
+      if (href && isMailLink(href)) window.location.href = href;
+      else if (isCardLink(href)) window.open(href, '_blank', 'noopener');
       return editor.chain();
     },
     isActive: () => false,
@@ -315,7 +317,7 @@ const linkToolbar: EditorToolbarItem[][] = [
 ];
 
 function showLinkToolbar({ editor }: { editor: Pick<Editor, 'isActive' | 'getAttributes'> }) {
-  return editor.isActive('linkCard') || (editor.isActive('link') && isWebLink(editor.getAttributes('link').href));
+  return editor.isActive('linkCard') || (editor.isActive('link') && isCardLink(editor.getAttributes('link').href));
 }
 
 const toolbar: EditorToolbarItem[][] = [

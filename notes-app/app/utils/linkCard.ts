@@ -8,7 +8,7 @@ export type LinkSize = CardSize | 'hyperlink';
 /** How a new web link shows, pasted or added with the link button. */
 export const DEFAULT_LINK_SIZE: LinkSize = 'mini';
 
-const CARD = /^\[([^[\]\n]*)\]\((https?:\/\/[^\s)"]+) "(mini|large)"\)/i;
+const CARD = /^\[([^[\]\n]*)\]\(((?:https?:\/\/|mailto:)[^\s)"]+) "(mini|large)"\)/i;
 
 /** A web link shown as a card at the start of src, as the markdown lexer asks for it: [Text](https://… "mini" or "large"). */
 export function readLinkCard(src: string) {
@@ -28,28 +28,34 @@ export function writeLinkCard(text: string, href: string, size: CardSize) {
   return `[${text.replace(/[[\]]/g, '')}](${href.replace(/[\s()"]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0')}`)} "${size}")`;
 }
 
-export function isWebLink(href?: string | null) {
-  return !!href && /^https?:\/\//i.test(href);
+/** A link that can be a card: a web page, or an address to write to. */
+export function isCardLink(href?: string | null) {
+  return !!href && /^(https?:\/\/|mailto:)/i.test(href);
 }
 
-/** The domain of a link, its text when it has none. */
+export function isMailLink(href: string) {
+  return /^mailto:/i.test(href);
+}
+
+/** The domain of a web link, the address of a mail link: its text when it has none. */
 export function linkHost(href: string) {
   try {
+    if (isMailLink(href)) return decodeURIComponent(href.slice(7).split('?')[0]!);
     return new URL(href).host;
   } catch {
     return href;
   }
 }
 
-/** The editor content of a link in a size: a card for a web link, a text with the link mark otherwise. */
+/** The editor content of a link in a size: a card for a web or mail link, a text with the link mark otherwise. */
 export function linkContent(href: string, text: string, size: LinkSize = DEFAULT_LINK_SIZE) {
-  if (size === 'hyperlink' || !isWebLink(href))
+  if (size === 'hyperlink' || !isCardLink(href))
     return { type: 'text', text: text || href, marks: [{ type: 'link', attrs: { href } }] };
   return { type: 'linkCard', attrs: { href, text: text || linkHost(href), size } };
 }
 
 /**
- * A web link shown as a card, like in Apple Notes: mini sits in the line, large takes the whole width.
+ * A web or mail link shown as a card, like in Apple Notes: mini sits in the line, large takes the whole width.
  * view draws it in the editor; copied, it is a plain <a>.
  */
 export function linkCard(view: Component) {
@@ -72,7 +78,7 @@ export function linkCard(view: Component) {
           getAttrs: (el) => {
             const a = el as HTMLAnchorElement;
             const href = a.getAttribute('href');
-            if (!isWebLink(href)) return false;
+            if (!isCardLink(href)) return false;
             return { href, text: a.textContent ?? '', size: a.dataset.linkCard === 'large' ? 'large' : 'mini' };
           },
         },
@@ -96,7 +102,7 @@ export function linkCard(view: Component) {
           props: {
             handlePaste(view, event) {
               const href = event.clipboardData?.getData('text/plain').trim();
-              if (!isWebLink(href) || /\s/.test(href!)) return false;
+              if (!isCardLink(href) || /\s/.test(href!)) return false;
               const { from, to } = view.state.selection;
               editor
                 .chain()

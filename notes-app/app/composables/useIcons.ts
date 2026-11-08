@@ -62,6 +62,7 @@ export function useIcons() {
     linkMini: 'i-reicon-minimize',
     linkLarge: 'i-reicon-maximize',
     linkOpen: 'i-reicon-arrow-up-right-square',
+    mail: 'i-reicon-envelope',
     orderedList: 'i-reicon-ordered-list',
     taskList: 'i-reicon-list-check',
     quote: 'i-reicon-quote-up',
