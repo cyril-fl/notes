@@ -208,6 +208,27 @@ test('the Pro mode adds the tables to the editor', async ({ page }) => {
   }
 });
 
+// A code block is colored by its language in the Pro mode only, and its markdown stays the same.
+test('the Pro mode colors the code blocks', async ({ page }) => {
+  const note = await box.note(`# Code ${box.prefix}\n\n\`\`\`go\nfunc main() {}\n\`\`\``);
+  const keyword = page.locator('.ProseMirror pre .hljs-keyword');
+  try {
+    await page.goto(`/notes/${note.id}`);
+    await expect(page.locator('.ProseMirror pre')).toContainText('func main');
+    await expect(keyword).toHaveCount(0);
+
+    await box.api.patch('/api/me', { data: { pro: true } });
+    await page.reload();
+    await expect(keyword.first()).toHaveText('func');
+    await page.locator('.ProseMirror pre').click();
+    await page.keyboard.press('End');
+    await page.keyboard.type(' // ok');
+    await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('```go\nfunc main() {} // ok\n```');
+  } finally {
+    await box.api.patch('/api/me', { data: { pro: false } });
+  }
+});
+
 // A page per section is the Pro mode's: without it a section's URL shows the whole page, and the switch moves between both.
 test('the settings follow the Pro mode, one page or a page per section', async ({ page }) => {
   try {

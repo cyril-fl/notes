@@ -287,6 +287,35 @@
     @apply bg-primary/10;
   }
 
+  /* The highlight.js classes lowlight puts in code blocks, on the theme's colors. */
+  .ProseMirror pre :is(.hljs-comment, .hljs-quote) {
+    @apply text-muted italic;
+  }
+
+  .ProseMirror pre :is(.hljs-keyword, .hljs-selector-tag, .hljs-built_in, .hljs-doctag) {
+    @apply text-primary;
+  }
+
+  .ProseMirror pre :is(.hljs-string, .hljs-regexp, .hljs-addition, .hljs-attribute) {
+    @apply text-success;
+  }
+
+  .ProseMirror pre :is(.hljs-number, .hljs-literal, .hljs-symbol, .hljs-bullet) {
+    @apply text-warning;
+  }
+
+  .ProseMirror pre :is(.hljs-title, .hljs-section, .hljs-name, .hljs-selector-id, .hljs-selector-class) {
+    @apply text-info;
+  }
+
+  .ProseMirror pre :is(.hljs-type, .hljs-variable, .hljs-template-variable, .hljs-attr, .hljs-meta) {
+    @apply text-secondary;
+  }
+
+  .ProseMirror pre .hljs-deletion {
+    @apply text-error;
+  }
+
   /* Task lists are not in the Nuxt UI editor theme. */
   .ProseMirror ul[data-type='taskList'] {
     @apply list-none ps-0!;
