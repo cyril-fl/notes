@@ -26,7 +26,7 @@
 }
 
 /* The themes of app/utils/themes.ts, an accent and its greys each, taken from the key colors of the open source schemes
-   of the same name (notes: the Tailwind blue on the plain greys; dracula: the darker backgrounds of OM Theme Default Dracula Italic, mirrored in light as cool lavender whites; tokyo: Tokyo Night with its red as the accent), the shades used for text and buttons darkened or lightened to reach WCAG AA (4.5:1) in both modes.
+   of the same name (notes: the Tailwind blue on the plain greys; dracula: the darker backgrounds of OM Theme Default Dracula Italic, mirrored in light as cool lavender whites; tokyo: Tokyo Night with its red as the accent; vue: Vue Theme, its light side drawn from the same teal), the shades used for text and buttons darkened or lightened to reach WCAG AA (4.5:1) in both modes.
    Static: Tailwind keeps them though no class uses them. The greys serve both modes, like plain. */
 @theme static {
   --color-notes-50: #eff6ff;
@@ -184,6 +184,30 @@
   --color-tokyo-gray-800: #16161e;
   --color-tokyo-gray-900: #1a1b26;
   --color-tokyo-gray-950: #101014;
+
+  --color-vue-50: #e8fffb;
+  --color-vue-100: #c5fff4;
+  --color-vue-200: #8ffcea;
+  --color-vue-300: #4ffbe0;
+  --color-vue-400: #19f9d8;
+  --color-vue-500: #0fc9af;
+  --color-vue-600: #0a7566;
+  --color-vue-700: #0b6a5e;
+  --color-vue-800: #0d544b;
+  --color-vue-900: #0e453e;
+  --color-vue-950: #032a26;
+
+  --color-vue-gray-50: #eef5f6;
+  --color-vue-gray-100: #e2eced;
+  --color-vue-gray-200: #dde6e7;
+  --color-vue-gray-300: #c3d3d8;
+  --color-vue-gray-400: #a0b9c4;
+  --color-vue-gray-500: #4e6a73;
+  --color-vue-gray-600: #3b545c;
+  --color-vue-gray-700: #1f3b44;
+  --color-vue-gray-800: #00252f;
+  --color-vue-gray-900: #002b36;
+  --color-vue-gray-950: #001d25;
 }
 
 :root {

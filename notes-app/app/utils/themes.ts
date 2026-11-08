@@ -8,6 +8,7 @@ export const themes = [
   { id: 'gruvbox', primary: 'gruvbox', neutral: 'gruvbox-gray' },
   { id: 'everforest', primary: 'everforest', neutral: 'everforest-gray' },
   { id: 'tokyo', primary: 'tokyo', neutral: 'tokyo-gray' },
+  { id: 'vue', primary: 'vue', neutral: 'vue-gray' },
 ];
 
 export type Theme = (typeof themes)[number];
