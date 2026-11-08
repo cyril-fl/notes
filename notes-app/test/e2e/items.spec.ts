@@ -41,3 +41,15 @@ test('a removed note comes back from the trash, then leaves it for good', async 
   expect((await box.api.post('/api/restore', { data: { ids: [note.id] } })).ok()).toBe(true);
   expect(await (await box.api.get(`/api/notes/${note.id}`)).status()).toBe(404); // Nothing left to restore.
 });
+
+// The folder goes to the trash while its new note is open (another device): the note is refused in French, not lost with it (#63).
+test('a new note in a trashed folder is refused with a French text', async ({ page }) => {
+  await page.goto(`/notes/new?parent=${box.folder.id}`);
+  await box.api.delete(`/api/folders/${box.folder.id}`);
+
+  await page.locator('.ProseMirror').click();
+  await page.keyboard.type('Perdue ?');
+  await expect(page.getByText('Le dossier parent est dans la corbeille').first()).toBeVisible();
+  const items = await (await box.api.get(`/api/items?parent=${box.folder.id}`)).json();
+  expect(items).toHaveLength(0);
+});

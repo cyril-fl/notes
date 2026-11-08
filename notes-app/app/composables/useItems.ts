@@ -3,6 +3,8 @@ import type { FolderPath, Item, Pinned } from '~/types/items';
 
 // The part of the API's message saying a folder name is taken (domain.ErrFolderExists).
 const TAKEN = 'already exists here';
+// The part of the API's message saying the parent folder is gone or in the trash (ErrParentNotFound).
+export const NO_PARENT = 'parent folder not found';
 
 /** Every change to the items: the views read again what they show afterwards. */
 export function useItems() {
@@ -31,7 +33,14 @@ export function useItems() {
     });
     if (!title) return;
     const body = { title, parent_id: parentId };
-    return act(() => api<Item>('/api/folders', { method: 'POST', body, conflict: t('items.nameTaken') }));
+    return act(() =>
+      api<Item>('/api/folders', {
+        method: 'POST',
+        body,
+        conflict: t('items.nameTaken'),
+        invalid: { [NO_PARENT]: t('items.parentInTrash') },
+      }),
+    );
   }
 
   async function renameFolder(folder: Item) {
@@ -65,6 +74,7 @@ export function useItems() {
         method: 'POST',
         body,
         conflict: { [TAKEN]: t('items.nameTaken'), 'into itself': t('items.cycle') },
+        invalid: { [NO_PARENT]: t('items.parentInTrash') },
       }),
     );
   }

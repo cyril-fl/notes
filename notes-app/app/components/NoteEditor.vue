@@ -72,7 +72,12 @@ async function send(changes: Changes): Promise<boolean | undefined> {
 
 async function createNote(changes: Changes) {
   const body = { ...changes, parent_id: parent.value };
-  const item = await api<Item>('/api/notes', { method: 'POST', body, tooLarge: t('note.tooLarge') });
+  const item = await api<Item>('/api/notes', {
+    method: 'POST',
+    body,
+    invalid: { [NO_PARENT]: t('items.parentInTrash') },
+    tooLarge: t('note.tooLarge'),
+  });
   id.value = item.id;
   emit('created', item.id);
   const note = await api<ItemDetail>(`/api/notes/${item.id}`);
@@ -228,7 +233,12 @@ async function rename() {
 renaming.value = rename;
 onBeforeUnmount(() => renaming.value === rename && (renaming.value = undefined));
 
-// TODO: a keepalive body is limited to 64 KiB, a longer note loses its last 1.5 s when the tab closes; beacon has the same limit.
+function closeBody(changes: Changes) {
+  return JSON.stringify(id.value ? { ...changes, updated_at: version } : { ...changes, parent_id: parent.value });
+}
+// A keepalive body is limited to 64 KiB (beacon too): beyond it the browser refuses the request.
+const fitsKeepalive = (body: string) => new Blob([body]).size <= 64 * 1024;
+
 function saveOnClose() {
   if (id.value && isEmpty.value) {
     saver.take();
@@ -239,8 +249,12 @@ function saveOnClose() {
   const changes = saver.take();
   if (!changes || (!id.value && !changes.content)) return;
 
+  const body = closeBody(changes);
+  if (!fitsKeepalive(body)) {
+    saver.push(changes);
+    return void saver.flush(); // A plain request: the page hidden lives on, a closing tab was held by holdLongNote.
+  }
   const url = `${baseURL}/api/notes${id.value ? `/${id.value}` : ''}`;
-  const body = JSON.stringify(id.value ? { ...changes, updated_at: version } : { ...changes, parent_id: parent.value });
   return fetch(url, {
     method: id.value ? 'PATCH' : 'POST',
     body,
@@ -250,6 +264,18 @@ function saveOnClose() {
   });
 }
 useEventListener(window, 'pagehide', saveOnClose);
+
+// A closing tab cancels a plain request: for a note too long for keepalive, the browser asks to wait while it goes.
+// TODO: iOS has no beforeunload, a note over 64 KiB closed from the app switcher within 1.5 s of typing loses those words; fix with a diff PATCH if it happens.
+function holdLongNote(event: BeforeUnloadEvent) {
+  const changes = saver.take();
+  if (!changes) return;
+  saver.push(changes);
+  if (fitsKeepalive(closeBody(changes))) return;
+  event.preventDefault();
+  void saver.flush();
+}
+useEventListener(window, 'beforeunload', holdLongNote);
 
 // iOS sends no pagehide on a lock or an app switch, and freezes the 1.5 s timer (#65). The page lives on:
 // the answer gives the editor its new version, or the next PATCH would be stale. An emptied note is not trashed on a mere switch.
