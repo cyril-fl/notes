@@ -10,6 +10,7 @@ export function useNoteSlash(): EditorModule {
         char: '/',
         pluginKey: 'slashMenu',
         items: [
+          { type: 'label', label: t('note.blocks') },
           { kind: 'paragraph', label: t('note.paragraph'), icon: icons.paragraph },
           { kind: 'heading', level: 1, label: t('note.heading', { level: 1 }), icon: icons.heading1 },
           { kind: 'heading', level: 2, label: t('note.heading', { level: 2 }), icon: icons.heading2 },

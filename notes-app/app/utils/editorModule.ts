@@ -37,14 +37,14 @@ export function command(
   return { canExecute: () => true, execute, isActive };
 }
 
-/** The menus of the same pluginKey as one: the first one's options, the items of all of them in order. */
+/** The menus of the same pluginKey as one: the first one's options, then the others' it lacks, the items of all of them in order. */
 function joinMenus(menus: EditorMenu[]) {
   const byKey = new Map<string, EditorMenu>();
   for (const menu of menus) {
     const first = byKey.get(menu.pluginKey);
     byKey.set(
       menu.pluginKey,
-      first ? { ...first, items: () => [...toValue(first.items), ...toValue(menu.items)] } : menu,
+      first ? { ...menu, ...first, items: () => [...toValue(first.items), ...toValue(menu.items)] } : menu,
     );
   }
   return [...byKey.values()];

@@ -13,7 +13,11 @@ export function useNoteCallouts(): EditorModule {
     feature: 'callouts',
     // Replaces the starter kit's blockquote: a quote without a marker stays a quote.
     starterKit: { blockquote: false },
-    extensions: [Callout],
+    extensions: [
+      Callout.configure({
+        labels: Object.fromEntries(Object.keys(types).map((type) => [type, t(`note.callouts.${type}`)])),
+      }),
+    ],
     handlers: {
       callout: command((editor, item) => editor.chain().focus().wrapIn('blockquote', { callout: item.callout })),
     },
@@ -21,13 +25,18 @@ export function useNoteCallouts(): EditorModule {
       {
         char: '/',
         pluginKey: 'slashMenu',
-        items: Object.entries(types).map(([callout, icon]) => ({
-          kind: 'callout',
-          callout,
-          group: t('note.callout'),
-          label: t(`note.callouts.${callout}`),
-          icon,
-        })),
+        // /encadré still finds them all, by their section.
+        filterFields: ['label', 'group'],
+        items: [
+          { type: 'label', label: t('note.callout') },
+          ...Object.entries(types).map(([callout, icon]) => ({
+            kind: 'callout',
+            callout,
+            group: t('note.callout'),
+            label: t(`note.callouts.${callout}`),
+            icon,
+          })),
+        ],
       },
     ],
   };

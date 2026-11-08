@@ -4,13 +4,24 @@ import type { JSONContent } from '@tiptap/core';
 const MARKER = /^\[!([a-z-]+)\][ \t]*/i;
 
 /** The callouts of Obsidian and GitHub (> [!note]): a blockquote that keeps its type, and its title when the marker has one on its line. */
-export const Callout = Blockquote.extend({
+export const Callout = Blockquote.extend<{ labels: Record<string, string> }>({
+  addOptions() {
+    return { ...this.parent!(), labels: {} };
+  },
+
   addAttributes() {
     return {
       callout: {
         default: null,
         parseHTML: (element) => element.getAttribute('data-callout'),
-        renderHTML: (attributes) => (attributes.callout ? { 'data-callout': attributes.callout } : {}),
+        // The type named in the account's language above the callout, as written when it has no label.
+        renderHTML: (attributes) =>
+          attributes.callout
+            ? {
+                'data-callout': attributes.callout,
+                'data-label': this.options.labels[attributes.callout.toLowerCase()] ?? attributes.callout,
+              }
+            : {},
       },
       titled: { default: false, rendered: false },
     };

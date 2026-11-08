@@ -343,7 +343,7 @@
   }
 
   .ProseMirror blockquote[data-callout]::before {
-    content: attr(data-callout);
+    content: attr(data-label);
     @apply block text-xs font-semibold uppercase;
     color: var(--callout);
   }

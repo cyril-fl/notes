@@ -125,6 +125,7 @@
     "orderedList": "Liste numérotée",
     "taskList": "Tâches",
     "quote": "Citation",
+    "blocks": "Blocs",
     "paragraph": "Texte",
     "codeBlock": "Bloc de code",
     "divider": "Séparateur",
@@ -134,12 +135,12 @@
     "tableDeleteRow": "Supprimer la ligne",
     "tableDeleteColumn": "Supprimer la colonne",
     "tableDelete": "Supprimer le tableau",
-    "callout": "Encadré",
+    "callout": "Encadrés",
     "callouts": {
-      "note": "Encadré note",
-      "tip": "Encadré astuce",
-      "warning": "Encadré attention",
-      "danger": "Encadré danger"
+      "note": "Note",
+      "tip": "Astuce",
+      "warning": "Attention",
+      "danger": "Danger"
     },
     "words": "aucun mot | {n} mot | {n} mots",
     "notSaved": "Non enregistré",

@@ -206,7 +206,7 @@ const modules = [
 ];
 const parts = computed(() => mergeModules(modules, has));
 
-// The / menu again on a right click or a long press, its items of a same group (the callouts) in a submenu.
+// The / menu again on a right click or a long press, without its section titles, its items of a same group (the callouts) in a submenu.
 const contextMenu = computed(() => {
   const editor = editorRef.value?.editor;
   const slash = parts.value.menus.find((menu) => menu.pluginKey === 'slashMenu');
@@ -214,6 +214,7 @@ const contextMenu = computed(() => {
   const handlers = { ...createHandlers(), ...parts.value.handlers };
   const items: ContextMenuItem[] = [];
   for (const item of toValue(slash.items) as (EditorSuggestionMenuItem & { kind: string; group?: string })[]) {
+    if (item.type === 'label') continue;
     const entry = {
       label: item.label,
       icon: item.icon,

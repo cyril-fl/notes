@@ -125,6 +125,7 @@
     "orderedList": "Numbered list",
     "taskList": "Tasks",
     "quote": "Quote",
+    "blocks": "Blocks",
     "paragraph": "Text",
     "codeBlock": "Code block",
     "divider": "Divider",
@@ -134,12 +135,12 @@
     "tableDeleteRow": "Delete the row",
     "tableDeleteColumn": "Delete the column",
     "tableDelete": "Delete the table",
-    "callout": "Callout",
+    "callout": "Callouts",
     "callouts": {
-      "note": "Note callout",
-      "tip": "Tip callout",
-      "warning": "Warning callout",
-      "danger": "Danger callout"
+      "note": "Note",
+      "tip": "Tip",
+      "warning": "Warning",
+      "danger": "Danger"
     },
     "words": "no words | {n} word | {n} words",
     "notSaved": "Not saved",

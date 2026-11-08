@@ -271,7 +271,7 @@ test('the Pro mode adds the callouts to the editor', async ({ page }) => {
     await page.keyboard.press('End');
     await page.keyboard.press('Enter');
     await page.keyboard.type('/encadré');
-    await page.getByRole('option', { name: 'Encadré attention' }).click();
+    await page.getByRole('option', { name: 'Attention' }).click();
     await page.keyboard.type('Prudence');
     await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('> [!warning]\n> Prudence');
     expect(await box.content(note.id)).toContain('> [!tip] Astuce\n> Lire la suite');
@@ -292,8 +292,8 @@ test('the Pro mode opens the / commands on a right click', async ({ page }) => {
     await box.api.patch('/api/me', { data: { pro: true } });
     await page.reload();
     await line.click({ button: 'right' });
-    await page.getByRole('menuitem', { name: 'Encadré' }).hover();
-    await page.getByRole('menuitem', { name: 'Encadré attention' }).click();
+    await page.getByRole('menuitem', { name: 'Encadrés' }).hover();
+    await page.getByRole('menuitem', { name: 'Attention' }).click();
     await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('> [!warning]\n> Prudence');
   } finally {
     await box.api.patch('/api/me', { data: { pro: false } });
