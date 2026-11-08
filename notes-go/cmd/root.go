@@ -19,7 +19,6 @@ import (
 var c = config.Current
 var cmd = c.Commands
 
-// TODO appliquer ca a solopg
 var cmdRoot = &cobra.Command{
 	Use:     c.Name,
 	Short:   cmd.Root.Short,
