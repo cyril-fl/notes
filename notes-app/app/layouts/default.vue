@@ -17,6 +17,9 @@ watch(
   () => route.path,
   () => (focus.value = false),
 );
+// The note's editor fills it (a Teleport to #context-panel).
+const contextPanel = useContextPanel();
+const notePanel = computed(() => contextPanel.value && route.path.startsWith('/notes/'));
 
 // The account's language wins over the cookie's, which only remembers this browser's last one.
 const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
@@ -91,6 +94,23 @@ defineShortcuts({
         </main>
       </template>
     </UDashboardPanel>
+
+    <!-- Not collapsible: the sidebar's collapse button would fold it too. -->
+    <UDashboardSidebar
+      v-if="notePanel"
+      id="context"
+      side="right"
+      resizable
+      :min-size="12"
+      :default-size="16"
+      :max-size="28"
+      :ui="{
+        root: 'h-full min-h-0 min-w-0 overflow-hidden rounded-xl border-0 bg-default',
+        body: 'gap-0 p-0',
+      }"
+    >
+      <aside id="context-panel" class="space-y-6 p-4" :aria-label="$t('features.contextPanel')" />
+    </UDashboardSidebar>
 
     <AppSearch />
   </UDashboardGroup>

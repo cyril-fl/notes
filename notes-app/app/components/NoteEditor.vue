@@ -385,8 +385,7 @@ const extensions = [
 ];
 
 // The headings of the note, for the context panel: a click scrolls the text to one, without moving the cursor.
-const wide = useMediaQuery('(min-width: 1024px)');
-const panel = computed(() => has('contextPanel') && !focus.value && wide.value);
+const panel = useContextPanel();
 const outline = ref<{ level: number; text: string; pos: number }[]>([]);
 function readOutline(editor: Editor) {
   const headings: typeof outline.value = [];
@@ -430,82 +429,78 @@ const status = computed(() => {
 
   <!-- UEditor hands its listeners to TipTap, not to the page: clicks on links are caught here.
        Only the text scrolls: a sticky toolbar inside the scroll moves with Safari's elastic bounce. -->
-  <div v-else-if="!loading" class="flex min-h-0 flex-1">
-    <article
-      class="flex min-h-0 min-w-0 flex-1 flex-col pt-4"
-      @focusin="touched = true"
-      @pointerdown.capture="touched = true"
-      @click="openLink"
+  <article
+    v-else-if="!loading"
+    class="flex min-h-0 flex-1 flex-col pt-4"
+    @focusin="touched = true"
+    @pointerdown.capture="touched = true"
+    @click="openLink"
+  >
+    <UEditor
+      ref="editor"
+      v-slot="{ editor }"
+      :model-value="initialContent"
+      content-type="markdown"
+      :placeholder="$t('note.placeholder')"
+      :autofocus="!noteId"
+      :image="false"
+      :mention="false"
+      :starter-kit="starterKit"
+      :extensions="extensions"
+      :handlers="handlers"
+      class="flex min-h-0 w-full flex-1 flex-col"
+      :ui="{ content: 'min-h-0 overflow-y-auto px-8 pb-8', base: 'sm:px-0 px-0' }"
+      @update:model-value="onContent"
     >
-      <UEditor
-        ref="editor"
-        v-slot="{ editor }"
-        :model-value="initialContent"
-        content-type="markdown"
-        :placeholder="$t('note.placeholder')"
-        :autofocus="!noteId"
-        :image="false"
-        :mention="false"
-        :starter-kit="starterKit"
-        :extensions="extensions"
-        :handlers="handlers"
-        class="flex min-h-0 w-full flex-1 flex-col"
-        :ui="{ content: 'min-h-0 overflow-y-auto px-8 pb-8', base: 'sm:px-0 px-0' }"
-        @update:model-value="onContent"
-      >
-        <UEditorToolbar :editor="editor" :items="toolbar" class="mx-7 shrink-0 border-b border-muted py-1" />
-        <UEditorToolbar
-          :editor="editor"
-          :items="linkToolbar"
-          layout="bubble"
-          plugin-key="linkMenu"
-          :options="{ placement: 'top-start' }"
-          :should-show="showLinkToolbar"
-          class="rounded-md border border-default bg-default p-1 shadow-sm"
-        />
-        <UEditorSuggestionMenu
-          :editor="editor"
-          :items="noteItems"
-          char="[["
-          plugin-key="wikiLinkMenu"
-          :filter-fields="['label', 'description']"
-          :suggestion="{ allowSpaces: true }"
-        />
-        <UEditorSuggestionMenu
-          :editor="editor"
-          :items="snippetItems"
-          char=";;"
-          plugin-key="snippetMenu"
-          :suggestion="{ allowSpaces: true }"
-        />
-        <UEditorSuggestionMenu :editor="editor" :items="tagItems" char="#" plugin-key="tagMenu" />
-      </UEditor>
+      <UEditorToolbar :editor="editor" :items="toolbar" class="mx-7 shrink-0 border-b border-muted py-1" />
+      <UEditorToolbar
+        :editor="editor"
+        :items="linkToolbar"
+        layout="bubble"
+        plugin-key="linkMenu"
+        :options="{ placement: 'top-start' }"
+        :should-show="showLinkToolbar"
+        class="rounded-md border border-default bg-default p-1 shadow-sm"
+      />
+      <UEditorSuggestionMenu
+        :editor="editor"
+        :items="noteItems"
+        char="[["
+        plugin-key="wikiLinkMenu"
+        :filter-fields="['label', 'description']"
+        :suggestion="{ allowSpaces: true }"
+      />
+      <UEditorSuggestionMenu
+        :editor="editor"
+        :items="snippetItems"
+        char=";;"
+        plugin-key="snippetMenu"
+        :suggestion="{ allowSpaces: true }"
+      />
+      <UEditorSuggestionMenu :editor="editor" :items="tagItems" char="#" plugin-key="tagMenu" />
+    </UEditor>
 
-      <footer class="shrink-0 border-t border-default px-8">
-        <RelatedNotes v-if="id && !panel" :key="id" :note-id="id" />
-        <div class="flex h-9 items-center gap-2 text-xs text-muted">
-          <PathNav :path="path" />
-          <span class="ml-auto shrink-0" :class="{ 'text-error': failed }" role="status">{{ status }}</span>
-          <UTooltip v-if="has('focusMode')" :text="focus ? $t('note.unfocus') : $t('note.focus')" :kbds="['meta', '.']">
-            <UButton
-              :icon="focus ? icons.unfocus : icons.focus"
-              color="neutral"
-              variant="ghost"
-              size="xs"
-              :aria-label="focus ? $t('note.unfocus') : $t('note.focus')"
-              :aria-pressed="focus"
-              @click="focus = !focus"
-            />
-          </UTooltip>
-        </div>
-      </footer>
-    </article>
+    <footer class="shrink-0 border-t border-default px-8">
+      <RelatedNotes v-if="id && !panel" :key="id" :note-id="id" />
+      <div class="flex h-9 items-center gap-2 text-xs text-muted">
+        <PathNav :path="path" />
+        <span class="ml-auto shrink-0" :class="{ 'text-error': failed }" role="status">{{ status }}</span>
+        <UTooltip v-if="has('focusMode')" :text="focus ? $t('note.unfocus') : $t('note.focus')" :kbds="['meta', '.']">
+          <UButton
+            :icon="focus ? icons.unfocus : icons.focus"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            :aria-label="focus ? $t('note.unfocus') : $t('note.focus')"
+            :aria-pressed="focus"
+            @click="focus = !focus"
+          />
+        </UTooltip>
+      </div>
+    </footer>
 
-    <aside
-      v-if="panel"
-      class="w-64 shrink-0 space-y-6 overflow-y-auto border-l border-default px-4 pt-4"
-      :aria-label="$t('features.contextPanel')"
-    >
+    <!-- Drawn by the layout beside the note, like the sidebar. -->
+    <Teleport v-if="panel" to="#context-panel" defer>
       <nav :aria-label="$t('note.outline')">
         <h2 class="mb-2 text-xs font-medium text-muted">{{ $t('note.outline') }}</h2>
         <p v-if="!outline.length" class="text-xs text-dimmed">{{ $t('note.noOutline') }}</p>
@@ -521,6 +516,6 @@ const status = computed(() => {
         </button>
       </nav>
       <RelatedNotes v-if="id" :key="id" :note-id="id" default-open />
-    </aside>
-  </div>
+    </Teleport>
+  </article>
 </template>
