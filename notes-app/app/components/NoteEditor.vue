@@ -46,6 +46,8 @@ const touched = ref(false);
 let version: string | undefined;
 // The text on the API as this editor last saw it: a moved note gets a new updated_at, not a new text.
 let saved = '';
+// The version saved, for the history in the context panel to read again.
+const savedAt = ref<string>();
 let stale = false;
 
 const saver = createSaver(send);
@@ -114,6 +116,7 @@ async function reloadStale() {
 function remember(note: ItemDetail) {
   version = note.item.updated_at ?? note.item.created_at; // A note never edited has no updated_at.
   saved = note.content ?? '';
+  savedAt.value = version;
 }
 
 // The API turns the #tags of the text into tags and its [[links]] into note ids: the sidebar, the related notes and the graph follow when they or the title change.
@@ -577,7 +580,12 @@ const status = computed(() => {
             @click="toggleLock"
           />
         </UTooltip>
-        <NoteHistory v-if="id && has('noteHistory')" :note-id="id" :readonly="readonly" @restore="restoreVersion" />
+        <NoteHistory
+          v-if="id && has('noteHistory') && !panel"
+          :note-id="id"
+          :readonly="readonly"
+          @restore="restoreVersion"
+        />
         <UTooltip v-if="has('sourceMode')" :text="source === undefined ? $t('note.source') : $t('note.editor')">
           <UButton
             :icon="icons.source"
@@ -620,6 +628,15 @@ const status = computed(() => {
         </button>
       </nav>
       <RelatedNotes v-if="id" :key="id" :note-id="id" default-open />
+      <NoteHistory
+        v-if="id && has('noteHistory')"
+        :key="id"
+        :note-id="id"
+        :readonly="readonly"
+        :saved-at="savedAt"
+        panel
+        @restore="restoreVersion"
+      />
       <!-- At the bottom of the panel, kept in sight while the rest scrolls. -->
       <section v-if="has('graph') && nearGraph?.links.length" class="sticky bottom-0 mt-auto -mb-4 bg-default pb-4">
         <div class="mb-2 flex items-center justify-between">

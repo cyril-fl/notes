@@ -438,7 +438,9 @@ test('the Pro history restores an earlier version', async ({ page }) => {
     await box.api.patch('/api/me', { data: { pro: true } });
     await page.goto(`/notes/${note.id}`);
     await expect(page.locator('.ProseMirror')).toContainText('second');
-    await page.getByRole('button', { name: 'Historique des versions' }).click();
+    // The context panel lists the versions on a wide screen: a click shows one.
+    const panel = page.getByRole('region', { name: 'Historique des versions' });
+    await panel.getByRole('button').first().click();
     await expect(page.getByRole('dialog')).toContainText('first');
     await page.getByRole('button', { name: 'Restaurer cette version' }).click();
     await expect(page.locator('.ProseMirror')).toContainText('first');

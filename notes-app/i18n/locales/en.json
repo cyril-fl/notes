@@ -308,7 +308,7 @@
   "features": {
     "graph": "The graph of the notes",
     "focusMode": "Focus mode, which leaves only the note on screen",
-    "contextPanel": "The context panel beside the note: its outline and its related notes",
+    "contextPanel": "The context panel beside the note: its outline, its related notes and its history",
     "settingsNav": "The settings sidebar, one page per section",
     "slashCommands": "The / menu in the notes: headings, lists, code block…, in submenus",
     "tables": "Insert a table from the / menu and change its rows and columns (existing ones show for everyone)",
@@ -319,11 +319,12 @@
     "paletteActions": "In the Cmd K palette: move the open note or folder, rename it, change the theme",
     "sourceMode": "Source mode: the note's markdown as plain text, from the button under the text",
     "noteLock": "Lock a note read-only, from the padlock under the text",
-    "noteHistory": "Go back to an earlier version of a note, from the clock under the text"
+    "noteHistory": "The version history of a note in the context panel (under the text on a phone), to restore one"
   },
   "history": {
     "title": "Version history",
-    "empty": "No earlier version: one is kept at most every 5 minutes, once the text changes.",
-    "restore": "Restore this version"
+    "empty": "No earlier version yet. When the text changes, the old one is kept, at most once every 5 minutes.",
+    "restore": "Restore this version",
+    "all": "Whole history ({count})"
   }
 }
