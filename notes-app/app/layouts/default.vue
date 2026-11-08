@@ -26,20 +26,25 @@ const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
 watch(
   () => me.value?.locale,
   (locale) => locale && setLocale(locale as 'fr' | 'en'),
+  { immediate: true }, // me may be loaded already, by the settings page's middleware
 );
 
 // Theme, mode and view follow the account; a change of mode or view from anywhere (sidebar, view toggle, settings) is saved to it.
 const appConfig = useAppConfig();
 const colorMode = useColorMode();
 const view = useView();
-watch(me, (user) => {
-  if (!user) return;
-  const theme = themes.find((theme) => theme.id === user.theme) ?? themes[0]!;
-  appConfig.ui.colors.primary = theme.primary;
-  appConfig.ui.colors.neutral = theme.neutral;
-  colorMode.preference = user.color_mode;
-  view.value = user.view as 'list' | 'grid';
-});
+watch(
+  me,
+  (user) => {
+    if (!user) return;
+    const theme = themes.find((theme) => theme.id === user.theme) ?? themes[0]!;
+    appConfig.ui.colors.primary = theme.primary;
+    appConfig.ui.colors.neutral = theme.neutral;
+    colorMode.preference = user.color_mode;
+    view.value = user.view as 'list' | 'grid';
+  },
+  { immediate: true },
+);
 watch([() => colorMode.preference, view], async ([mode, next]) => {
   if (!me.value || (mode === me.value.color_mode && next === me.value.view)) return;
   me.value = await api<User>('/api/me', { method: 'PATCH', body: { color_mode: mode, view: next } });

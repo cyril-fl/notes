@@ -1,6 +1,23 @@
 <script setup lang="ts">
 import type { ImportResult, Snippet, User } from '~/types/items';
 
+// Decided before the page renders, so the Pro mode never shows every section first and then jumps to one.
+definePageMeta({
+  middleware: async (to) => {
+    // Not useApi: its useI18n needs a component. Without a session the page goes on, and the layout sends to /login.
+    // Kept as the layout's me, so the sidebar draws the settings nav from the start too.
+    const cached = useNuxtData<User>('me').data;
+    cached.value ??= await $fetch<User>('/api/me', {
+      baseURL: useRuntimeConfig().public.apiBase,
+      credentials: 'include',
+    }).catch(() => undefined);
+    const me = cached.value;
+    const section = to.params.section as string | undefined;
+    if (section) return settingsSections.some(({ id }) => id === section) ? undefined : navigateTo('/settings');
+    if (me && unlocked(features.settingsNav, me.pro)) return navigateTo('/settings/general', { replace: true });
+  },
+});
+
 const { icons } = useIcons();
 const { t, locale } = useI18n();
 
@@ -43,11 +60,7 @@ async function changeTheme(next: string) {
   me.value = await api<User>('/api/me', { method: 'PATCH', body: { theme: next } });
 }
 
-const { pro, has } = usePro();
-watchEffect(() => {
-  if (current.value && !settingsSections.some((section) => section.id === current.value)) navigateTo('/settings');
-  else if (!current.value && has('settingsNav')) navigateTo('/settings/general', { replace: true });
-});
+const { pro } = usePro();
 
 async function changePro(next: boolean) {
   me.value = await api<User>('/api/me', { method: 'PATCH', body: { pro: next } });
