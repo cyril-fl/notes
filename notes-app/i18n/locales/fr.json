@@ -261,10 +261,11 @@
     "snippetContent": "Contenu",
     "snippetHelp": "Du markdown ; un #tag ajoute ce tag à la note.",
     "save": "Enregistrer",
-    "pro": "Mode Pro",
-    "proMode": "Activer le mode Pro",
+    "pro": "Mode avancé",
+    "proMode": "Activer le mode avancé",
     "feature": "Fonctionnalité",
     "standard": "Standard",
+    "advanced": "Avancé",
     "currentPlan": "Actuel",
     "included": "Inclus",
     "notIncluded": "Non inclus",
@@ -283,7 +284,7 @@
       "editorDescription": "Ce qui aide à écrire les notes.",
       "data": "Données",
       "dataDescription": "Exporter, importer, la corbeille, et tout effacer.",
-      "pro": "Mode Pro",
+      "pro": "Mode avancé",
       "proDescription": "Des outils en plus, pour un usage avancé."
     }
   },

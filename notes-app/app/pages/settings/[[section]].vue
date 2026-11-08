@@ -321,7 +321,9 @@ async function deleteData() {
                 </th>
                 <th class="w-24 bg-primary/5 px-2 py-2 font-medium text-primary">
                   <div class="flex flex-col items-center gap-1">
-                    <span class="inline-flex items-center gap-1"><UIcon :name="icons.pro" />Pro</span>
+                    <span class="inline-flex items-center gap-1"
+                      ><UIcon :name="icons.pro" />{{ $t('settings.advanced') }}</span
+                    >
                     <UBadge v-if="pro" :label="$t('settings.currentPlan')" size="sm" variant="subtle" />
                   </div>
                 </th>

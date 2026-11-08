@@ -261,10 +261,11 @@
     "snippetContent": "Content",
     "snippetHelp": "Markdown; a #tag adds that tag to the note.",
     "save": "Save",
-    "pro": "Pro mode",
-    "proMode": "Turn on Pro mode",
+    "pro": "Advanced mode",
+    "proMode": "Turn on advanced mode",
     "feature": "Feature",
     "standard": "Standard",
+    "advanced": "Advanced",
     "currentPlan": "Current",
     "included": "Included",
     "notIncluded": "Not included",
@@ -283,7 +284,7 @@
       "editorDescription": "What helps to write the notes.",
       "data": "Data",
       "dataDescription": "Export, import, the trash, and erasing everything.",
-      "pro": "Pro mode",
+      "pro": "Advanced mode",
       "proDescription": "More tools, for advanced use."
     }
   },
