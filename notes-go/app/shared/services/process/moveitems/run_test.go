@@ -67,6 +67,10 @@ func TestMoveItems(t *testing.T) {
 		if item.ParentID == nil || *item.ParentID != a {
 			t.Errorf("%s parent = %v, want %s", item.ID, item.ParentID, a)
 		}
+		// updated_at is the version patchnote checks: a move must not make an open editor's text stale.
+		if item.ID == note.GetResult().ID && !item.UpdatedAt.Equal(note.GetResult().UpdatedAt) {
+			t.Errorf("note updated_at = %v, want %v unchanged by the move", item.UpdatedAt, note.GetResult().UpdatedAt)
+		}
 	}
 
 	// Back to the root: no parent.

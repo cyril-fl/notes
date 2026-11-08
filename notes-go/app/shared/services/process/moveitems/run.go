@@ -139,8 +139,7 @@ func (p *run) updateItems(ctx context.Context, tx bun.Tx) error {
 
 	return tx.NewUpdate().
 		Model((*domain.Item)(nil)).
-		Set("parent_id = ?", parentID).
-		Set("updated_at = current_timestamp").
+		Set("parent_id = ?", parentID). // Not updated_at: it is the text's version, an open editor would get a 409.
 		Where("id IN (?) AND user_id = ?", bun.In(p.cache.input.IDs), domain.UserID(p.ctx)).
 		Returning("id, parent_id, created_at, updated_at, kind, title").
 		Scan(ctx, &p.cache.result)
