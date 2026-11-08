@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { isWebLink, readLinkCard, writeLinkCard } from '../app/utils/linkCard.ts';
+import { DEFAULT_LINK_SIZE, isWebLink, linkContent, readLinkCard, writeLinkCard } from '../app/utils/linkCard.ts';
 
 test('reads a mini or large card at the start only', () => {
   assert.deepEqual(readLinkCard('[Nuxt](https://nuxt.com "mini") suite'), {
@@ -42,4 +42,18 @@ test('only http and https become cards', () => {
   assert.equal(isWebLink('https://a.b'), true);
   assert.equal(isWebLink('mailto:a@b.c'), false);
   assert.equal(isWebLink(undefined), false);
+});
+
+test('a link in a size: a card for the web, a hyperlink otherwise', () => {
+  assert.deepEqual(linkContent('https://ui.nuxt.com/x', ''), {
+    type: 'linkCard',
+    attrs: { href: 'https://ui.nuxt.com/x', text: 'ui.nuxt.com', size: DEFAULT_LINK_SIZE },
+  });
+  assert.equal(linkContent('https://a.b', 'A', 'large').attrs?.size, 'large');
+  assert.deepEqual(linkContent('https://a.b', 'A', 'hyperlink'), {
+    type: 'text',
+    text: 'A',
+    marks: [{ type: 'link', attrs: { href: 'https://a.b' } }],
+  });
+  assert.equal(linkContent('mailto:a@b.c', '', 'large').type, 'text');
 });

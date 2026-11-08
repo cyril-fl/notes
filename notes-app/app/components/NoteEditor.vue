@@ -6,7 +6,7 @@ import type { FetchError } from 'ofetch';
 import type { RouteLocationNormalized } from 'vue-router';
 import type { Item, ItemDetail, NoteFile, NotesGraph, TagCount, User } from '~/types/items';
 import type { Changes } from '~/utils/saver';
-import type { CardSize } from '~/utils/linkCard';
+import type { LinkSize } from '~/utils/linkCard';
 import LinkCard from '~/components/LinkCard.vue';
 
 const { icons } = useIcons();
@@ -177,35 +177,37 @@ async function askLink(editor: Editor) {
   if (current) return editor.chain().focus().unsetLink().run();
 
   const href = await prompt({ title: t('note.addLink'), placeholder: 'https://', action: t('common.add') });
-  if (href)
-    editor
-      .chain()
-      .focus()
-      .setLink({ href: /^[a-z]+:/i.test(href) ? href : `https://${href}` })
-      .run();
+  if (!href) return;
+  const { from, to } = editor.state.selection;
+  const text = editor.state.doc.textBetween(from, to);
+  editor
+    .chain()
+    .focus()
+    .insertContent(linkContent(/^[a-z]+:/i.test(href) ? href : `https://${href}`, text))
+    .run();
 }
 
-// A web link as a hyperlink (size null), a mini card or a large one: the same href and text, swapped in place.
-function setLinkSize(editor: Editor, size: CardSize | null) {
+// A link swapped in place to another size, the same href and text.
+function setLinkSize(editor: Editor, size: LinkSize) {
   const card = editor.isActive('linkCard') && editor.getAttributes('linkCard');
-  if (card) {
-    if (size) return editor.chain().focus().updateAttributes('linkCard', { size });
-    const text = { type: 'text', text: card.text || card.href, marks: [{ type: 'link', attrs: { href: card.href } }] };
-    return editor.chain().focus().insertContent(text);
-  }
-  if (!size) return editor.chain();
+  if (card)
+    return editor
+      .chain()
+      .focus()
+      .insertContent(linkContent(card.href, card.text, size));
+  if (size === 'hyperlink') return editor.chain();
   const href = editor.getAttributes('link').href as string;
   editor.chain().focus().extendMarkRange('link').run();
   const { from, to } = editor.state.selection;
-  const text = editor.state.doc.textBetween(from, to);
-  return editor.chain().insertContent({ type: 'linkCard', attrs: { href, text, size } });
+  return editor.chain().insertContent(linkContent(href, editor.state.doc.textBetween(from, to), size));
 }
 
-function linkSizeHandler(size: CardSize | null) {
+function linkSizeHandler(size: LinkSize) {
   return {
     canExecute: () => true,
     execute: (editor: Editor) => setLinkSize(editor, size),
-    isActive: (editor: Editor) => (size ? editor.isActive('linkCard', { size }) : editor.isActive('link')),
+    isActive: (editor: Editor) =>
+      size === 'hyperlink' ? editor.isActive('link') : editor.isActive('linkCard', { size }),
     isDisabled: () => false,
   };
 }
@@ -287,7 +289,7 @@ const handlers = {
     isActive: (editor: Editor) => editor.isActive('link'),
     isDisabled: (editor: Editor) => editor.state.selection.empty && !editor.isActive('link'),
   },
-  linkHyperlink: linkSizeHandler(null),
+  linkHyperlink: linkSizeHandler('hyperlink'),
   linkMini: linkSizeHandler('mini'),
   linkLarge: linkSizeHandler('large'),
   linkOpen: {

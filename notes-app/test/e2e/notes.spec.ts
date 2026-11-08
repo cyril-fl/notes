@@ -77,6 +77,23 @@ test('a web link turns into a large card, then a mini one, kept in the markdown'
   await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('[Exemple](https://example.com) ici');
 });
 
+test('a pasted address becomes a mini card', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} collé\n\nVoir`);
+  await page.goto(`/notes/${note.id}`);
+  const editor = page.locator('.ProseMirror');
+  await editor.click();
+  await page.keyboard.press('ControlOrMeta+End');
+  await editor.evaluate((el) => {
+    const data = new DataTransfer();
+    data.setData('text/plain', 'https://example.com/page');
+    el.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }));
+  });
+  await expect(editor.locator('a.link-card-mini')).toContainText('example.com');
+  await expect
+    .poll(() => box.content(note.id), { timeout: 5000 })
+    .toContain('[example.com](https://example.com/page "mini")');
+});
+
 // A 1×1 PNG.
 const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 

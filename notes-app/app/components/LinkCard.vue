@@ -5,13 +5,7 @@ const props = defineProps(nodeViewProps);
 const { icons } = useIcons();
 
 const href = computed<string>(() => props.node.attrs.href);
-const host = computed(() => {
-  try {
-    return new URL(href.value).host;
-  } catch {
-    return href.value;
-  }
-});
+const host = computed(() => linkHost(href.value));
 const large = computed(() => props.node.attrs.size === 'large');
 // The browser asks the site itself: no favicon there, the link icon instead.
 const noFavicon = ref(false);
