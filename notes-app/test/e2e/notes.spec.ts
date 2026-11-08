@@ -164,13 +164,31 @@ test('a locked note is read-only, in the editor and for the API, until unlocked'
   const refused = await box.api.patch(`/api/notes/${note.id}`, { data: { content: 'autre' } });
   expect(refused.status()).toBe(409);
 
-  await page.reload();
+  // The folder shows its padlock, in the list and on its card.
+  await page.goto(`/folders/${box.folder.id}`);
+  await expect(page.getByRole('main').getByLabel('Verrouillée')).toBeVisible();
+
+  await page.goto(`/notes/${note.id}`);
   await expect(text).toHaveAttribute('contenteditable', 'false');
   await page.getByRole('button', { name: 'Verrouiller en lecture seule' }).click();
   await expect(text).toHaveAttribute('contenteditable', 'true');
   await text.press('ControlOrMeta+End');
   await text.pressSequentially(' modifiée');
   await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('modifiée');
+});
+
+test('a note left open does not overwrite the text written since on another device (#62)', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} deux appareils`);
+  await page.goto(`/notes/${note.id}`);
+  const text = page.locator('.ProseMirror');
+  await expect(text).toContainText('deux appareils');
+  await box.api.patch(`/api/notes/${note.id}`, { data: { content: `# ${box.prefix} deux appareils\n\ntéléphone` } });
+
+  await text.press('ControlOrMeta+End');
+  await text.pressSequentially(' tablette');
+  const toasts = page.getByRole('region', { name: /Notifications/ });
+  await expect(toasts.getByText('La note a changé sur un autre appareil', { exact: false })).toBeVisible();
+  expect(await box.content(note.id)).toContain('téléphone');
 });
 
 // In system mode the OS decides: the sidebar has no theme button. Set back to light, as every run expects.
