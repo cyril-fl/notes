@@ -260,6 +260,53 @@ test('a note over 64 KiB still sends its last words when hidden (keepalive limit
   await expect.poll(() => box.content(note.id)).toContain('dernier');
 });
 
+// A full navigation fires pagehide without the router guard; the frozen clock leaves the last words to saveOnClose (#70).
+test('closing the page sends the last words of an open note', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} fermée`);
+  await page.clock.install();
+  await page.goto(`/notes/${note.id}`);
+  const text = page.locator('.ProseMirror');
+  await expect(text).toContainText('fermée');
+  await text.click();
+  await text.press('ControlOrMeta+End');
+  await text.pressSequentially(' dernier');
+  await page.goto('about:blank');
+  await expect.poll(() => box.content(note.id)).toContain('dernier');
+});
+
+test('closing the page creates the new note typed in it', async ({ page }) => {
+  await page.clock.install();
+  await page.goto(`/notes/new?parent=${box.folder.id}`);
+  await page.locator('.ProseMirror').click();
+  await page.keyboard.type(`${box.prefix} nouvelle`);
+  await page.goto('about:blank');
+  await expect
+    .poll(async () => {
+      const items: { title: string }[] = await (await box.api.get(`/api/items?parent=${box.folder.id}`)).json();
+      return items.map((item) => item.title);
+    })
+    .toContain(`${box.prefix} nouvelle`);
+});
+
+test('closing the page trashes the note emptied in it', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} vidée`);
+  await page.clock.install();
+  await page.goto(`/notes/${note.id}`);
+  const text = page.locator('.ProseMirror');
+  await expect(text).toContainText('vidée');
+  await text.click();
+  await text.press('ControlOrMeta+a');
+  await text.press('Backspace');
+  await page.goto('about:blank');
+  await expect
+    .poll(async () => {
+      const trashed: { id: string }[] = await (await box.api.get('/api/trash')).json();
+      return trashed.some((item) => item.id === note.id);
+    })
+    .toBe(true);
+  await box.api.delete(`/api/trash/${note.id}`);
+});
+
 // In system mode the OS decides: the sidebar has no theme button. Set back to light, as every run expects.
 test('N opens a new note in the current folder, the theme button switches to dark', async ({ page }) => {
   try {
