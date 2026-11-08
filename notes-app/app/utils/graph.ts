@@ -46,3 +46,14 @@ export function layoutGraph(notes: { id: string }[], links: Link[]) {
   const y = fit(nodes.map((node) => node.y!));
   return new Map(nodes.map((node) => [node.id, { x: x(node.x!), y: y(node.y!) }]));
 }
+
+/** The graph around one note: the note, the notes it shares a [[link]] or a tag with, and the links between them. */
+export function neighborhood<G extends { notes: { id: string }[]; links: Link[] }>(graph: G, id: string): G {
+  const ids = new Set([id]);
+  for (const link of graph.links) if (link.source === id || link.target === id) ids.add(link.source).add(link.target);
+  return {
+    ...graph,
+    notes: graph.notes.filter((note) => ids.has(note.id)),
+    links: graph.links.filter((link) => ids.has(link.source) && ids.has(link.target)),
+  };
+}

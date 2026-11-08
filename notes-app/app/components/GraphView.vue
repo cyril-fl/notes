@@ -5,7 +5,8 @@ const { icons } = useIcons();
 
 type Link = NotesGraph['links'][number];
 
-const props = defineProps<{ graph: NotesGraph; selected?: string }>();
+// mini: in a narrow panel, without the card shown on hover, too wide for it.
+const props = defineProps<{ graph: NotesGraph; selected?: string; mini?: boolean }>();
 
 const hovered = ref<string | null>(null);
 const active = computed(() => hovered.value ?? props.selected ?? null);
@@ -162,7 +163,7 @@ function linkClass(link: Link) {
       </NuxtLink>
 
       <div
-        v-if="hoveredNote"
+        v-if="hoveredNote && !mini"
         :style="{ left: `${at(hoveredNote.id).x}%`, top: `${at(hoveredNote.id).y}%` }"
         class="pointer-events-none absolute z-20 ml-4 flex h-40 w-64 -translate-y-1/2 flex-col gap-1 rounded-md bg-default p-2 text-xs shadow-lg ring ring-default"
       >

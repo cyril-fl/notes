@@ -110,6 +110,7 @@ test('snippets are made in the settings and used in the notes', async ({ page })
 // The focus mode and the context panel are Pro features: hidden until the Pro mode is on; the focus mode then hides the sidebar and the panel.
 test('the Pro mode unlocks the focus mode and the context panel', async ({ page }) => {
   const note = await box.note(`# Focus ${box.prefix}`);
+  await box.note(`Neighbor ${box.prefix} [[Focus ${box.prefix}]]`);
   try {
     await page.goto(`/notes/${note.id}`);
     await expect(page.getByRole('textbox')).toBeVisible();
@@ -121,10 +122,12 @@ test('the Pro mode unlocks the focus mode and the context panel', async ({ page 
     await expect.poll(async () => (await (await box.api.get('/api/me')).json()).pro).toBe(true);
 
     await page.goto(`/notes/${note.id}`);
-    const sidebar = page.getByRole('link', { name: 'Graphe' }).first();
+    const sidebar = page.getByRole('link', { name: 'Graphe', exact: true }).first();
     await expect(sidebar).toBeVisible();
     const outline = page.getByRole('navigation', { name: 'Plan' });
     await expect(outline.getByRole('button', { name: `Focus ${box.prefix}` })).toBeVisible();
+    const panel = page.getByRole('complementary', { name: /panneau de contexte/ });
+    await expect(panel.getByRole('heading', { name: 'Graphe' })).toBeVisible();
     await page.getByRole('button', { name: 'Mode focus' }).click();
     await expect(sidebar).toBeHidden();
     await expect(outline).toBeHidden();

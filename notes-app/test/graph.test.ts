@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { layoutGraph } from '../app/utils/graph.ts';
+import { layoutGraph, neighborhood } from '../app/utils/graph.ts';
 
 const notes = (...ids: string[]) => ids.map((id) => ({ id }));
 const link = (source: string, target: string, ...tags: string[]) => ({ source, target, tags });
@@ -61,4 +61,16 @@ test('a [[link]] alone pulls notes together like a shared tag', () => {
     assert.ok(Number.isFinite(x) && Number.isFinite(y), `${id} at ${x}, ${y}`);
   }
   assert.ok(distance(positions, 'a', 'b') < distance(positions, 'a', 'c'));
+});
+
+test('the neighborhood keeps the note, its neighbors and the links between them', () => {
+  const graph = {
+    notes: notes('a', 'b', 'c', 'd'),
+    links: [link('a', 'b'), link('c', 'a'), link('b', 'c'), link('c', 'd')],
+  };
+  assert.deepEqual(neighborhood(graph, 'a'), {
+    notes: notes('a', 'b', 'c'),
+    links: [link('a', 'b'), link('c', 'a'), link('b', 'c')],
+  });
+  assert.deepEqual(neighborhood(graph, 'x'), { notes: [], links: [] });
 });

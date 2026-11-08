@@ -386,6 +386,7 @@ const extensions = [
 
 // The headings of the note, for the context panel: a click scrolls the text to one, without moving the cursor.
 const panel = useContextPanel();
+const nearGraph = computed(() => (graph.value && id.value ? neighborhood(graph.value, id.value) : undefined));
 const outline = ref<{ level: number; text: string; pos: number }[]>([]);
 function readOutline(editor: Editor) {
   const headings: typeof outline.value = [];
@@ -515,6 +516,10 @@ const status = computed(() => {
           {{ heading.text }}
         </button>
       </nav>
+      <section v-if="has('graph') && nearGraph?.links.length">
+        <h2 class="mb-2 text-xs font-medium text-muted">{{ $t('common.graph') }}</h2>
+        <GraphView :graph="nearGraph" :selected="id" mini class="h-56! rounded-md bg-muted" />
+      </section>
       <RelatedNotes v-if="id" :key="id" :note-id="id" default-open />
     </Teleport>
   </article>
