@@ -241,16 +241,13 @@ const isOverRoot = useDropFolder(rootLink, () => null);
                 <UIcon :name="icons.pin" class="block size-4" />
               </button>
             </UTooltip>
-            <NuxtLink
-              :to="`/notes/${note.id}`"
-              class="flex min-w-0 flex-1 items-center self-stretch truncate leading-7"
-            >
+            <NuxtLink :to="`/notes/${note.id}`" class="flex min-w-0 flex-1 items-center gap-2 self-stretch leading-7">
               <span class="truncate">{{ displayTitle(note.title, $t('untitled')) }}</span>
               <UIcon
                 v-if="note.readonly"
                 :name="icons.lock"
                 :aria-label="$t('note.readonly')"
-                class="ml-2 size-3.5 shrink-0 text-muted"
+                class="size-3.5 shrink-0 text-muted"
               />
             </NuxtLink>
           </div>
@@ -271,7 +268,7 @@ const isOverRoot = useDropFolder(rootLink, () => null);
               v-if="note.readonly"
               :name="icons.lock"
               :aria-label="$t('note.readonly')"
-              class="ml-2 size-3.5 shrink-0 text-muted"
+              class="size-3.5 shrink-0 text-muted"
             />
           </NuxtLink>
         </section>

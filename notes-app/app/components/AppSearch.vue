@@ -81,8 +81,9 @@ const proActions = computed<CommandPaletteItem[]>(() => {
 const toNote = (note: { id: string; title: string; path: string; readonly?: boolean }): CommandPaletteItem => ({
   label: displayTitle(note.title, t('untitled')),
   suffix: note.path,
-  icon: note.readonly ? icons.lock : icons.note,
+  icon: icons.note,
   to: `/notes/${note.id}`,
+  readonly: note.readonly,
 });
 
 // The API searches the text: the palette shows what it found as is, not filtered again on titles.
@@ -91,8 +92,8 @@ const groups = computed<CommandPaletteGroup[]>(() => {
   if (snippetsOnly.value) return [{ id: 'snippets', label: t('search.fromSnippet'), items: snippets.value }];
   return [
     searching
-      ? { id: 'notes', label: t('common.notes'), items: matches.value.map(toNote), ignoreFilter: true }
-      : { id: 'recent', label: t('sidebar.recent'), items: recent.value.slice(0, 8).map(toNote) },
+      ? { id: 'notes', label: t('common.notes'), items: matches.value.map(toNote), ignoreFilter: true, slot: 'note' }
+      : { id: 'recent', label: t('sidebar.recent'), items: recent.value.slice(0, 8).map(toNote), slot: 'note' },
     {
       id: 'actions',
       label: t('search.actions'),
@@ -133,5 +134,17 @@ const groups = computed<CommandPaletteGroup[]>(() => {
     :groups="groups"
     :loading="status === 'pending'"
     :placeholder="$t('search.placeholder')"
-  />
+  >
+    <!-- The default label, plus the padlock of a locked note after its title. -->
+    <template #note-label="{ item, ui }">
+      <span :class="ui.itemLabelBase()">{{ item.label }}</span>
+      <UIcon
+        v-if="item.readonly"
+        :name="icons.lock"
+        :aria-label="$t('note.readonly')"
+        class="inline-block size-3.5 align-middle text-muted"
+      />
+      <span :class="ui.itemLabelSuffix()">{{ item.suffix }}</span>
+    </template>
+  </UDashboardSearch>
 </template>
