@@ -136,9 +136,10 @@ async function readTags(changes: Changes, note: ItemDetail) {
 // The note scrolls in its own box, which the menus over the text do not watch (only the window): they follow it here.
 function placeBubbles() {
   const editor = editorRef.value?.editor;
-  if (!editor) return;
+  const shown = editor ? parts.value.bubbles.filter((bubble) => bubble.shouldShow({ editor })) : [];
+  if (!editor || !shown.length) return;
   const { tr } = editor.state;
-  for (const bubble of parts.value.bubbles) tr.setMeta(bubble.pluginKey, 'updatePosition');
+  for (const bubble of shown) tr.setMeta(bubble.pluginKey, 'updatePosition');
   editor.view.dispatch(tr);
 }
 
@@ -554,6 +555,11 @@ const status = computed(() => {
               flip: { fallbackStrategy: 'initialPlacement' },
               // 16: tiptap moves it by its offset (8) after the shift, which would leave it against the edge.
               shift: { crossAxis: true, padding: 16 },
+              // Stuck over the image (pushed down by the shift), it also moves off its left edge.
+              offset: ({ y, placement, rects }) => ({
+                mainAxis: 8,
+                crossAxis: placement.startsWith('top') && y > rects.reference.y - rects.floating.height ? 8 : 0,
+              }),
               hide: true,
             }"
             :should-show="bubble.shouldShow"
