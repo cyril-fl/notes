@@ -77,6 +77,43 @@ test('a picked folder holding a zip imports its notes', async ({ page }) => {
   await expect(page.getByText('1 note(s) et 1 dossier(s) importés').first()).toBeVisible();
 });
 
+// Playwright drops no folder: the drop is dispatched with fake entries, a folder holding a subfolder (#56).
+test('a dropped folder imports its notes with their paths', async ({ page }) => {
+  await page.goto('/settings');
+  await page.getByRole('button', { name: 'Importer', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('button', { name: 'Importer dans' }).click();
+  await page.getByRole('option', { name: `/${box.prefix}` }).click();
+  await dialog
+    .getByText('Déposez un zip')
+    .first()
+    .evaluate((zone) => {
+      const file = (fullPath: string) => ({
+        isFile: true,
+        isDirectory: false,
+        fullPath,
+        file: (done: (file: File) => void) =>
+          done(new File([`# ${fullPath}`], fullPath.split('/').pop()!, { type: 'text/markdown' })),
+      });
+      const folder = (fullPath: string, children: object[]) => ({
+        isFile: false,
+        isDirectory: true,
+        fullPath,
+        createReader: () => {
+          const batches = [children, []];
+          return { readEntries: (done: (entries: object[]) => void) => done(batches.shift()!) };
+        },
+      });
+      const root = folder('/Coffre', [file('/Coffre/Une.md'), folder('/Coffre/Sous', [file('/Coffre/Sous/Deux.md')])]);
+      const drop = new Event('drop', { bubbles: true, cancelable: true });
+      Object.defineProperty(drop, 'dataTransfer', { value: { files: [], items: [{ webkitGetAsEntry: () => root }] } });
+      zone.dispatchEvent(drop);
+    });
+  await expect(dialog.getByText('Deux.md')).toBeVisible();
+  await dialog.getByRole('button', { name: 'Importer', exact: true }).click();
+  await expect(page.getByText('2 note(s) et 2 dossier(s) importés').first()).toBeVisible();
+});
+
 // Past the API's 200 MB, the toast gives the limit in French, not the API's message (#58).
 test('an import too large says its limit', async ({ page }) => {
   const zip = test.info().outputPath('gros.zip');

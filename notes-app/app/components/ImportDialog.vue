@@ -25,13 +25,38 @@ function addFolder(event: Event) {
   input.value = ''; // The same folder can be picked again.
 }
 
+// A dropped folder reaches UFileUpload as an empty entry it rejects: its files are read here, by their path.
+// The entries are taken before any await: the drop's items are gone after it.
+const paths = new WeakMap<File, string>();
+async function addDropped(event: DragEvent) {
+  const entries = [...(event.dataTransfer?.items ?? [])].map((item) => item.webkitGetAsEntry());
+  for (const entry of entries) if (entry?.isDirectory) files.value = [...files.value, ...(await read(entry))];
+}
+
+async function read(entry: FileSystemEntry): Promise<File[]> {
+  if (entry.isFile) {
+    const file = await new Promise<File>((resolve, reject) => (entry as FileSystemFileEntry).file(resolve, reject));
+    paths.set(file, entry.fullPath.replace(/^\//, ''));
+    return kept(file) ? [file] : [];
+  }
+  const reader = (entry as FileSystemDirectoryEntry).createReader();
+  const children: FileSystemEntry[] = [];
+  // readEntries gives a folder in batches (100 in Chrome), then an empty one.
+  for (;;) {
+    const batch = await new Promise<FileSystemEntry[]>((resolve, reject) => reader.readEntries(resolve, reject));
+    if (!batch.length) break;
+    children.push(...batch);
+  }
+  return (await Promise.all(children.map(read))).flat();
+}
+
 // A lone zip goes as it is; anything else as a form, each file named by its path, the folders made from it.
 // A zip among other files would be skipped by the API: it goes alone.
 const isZip = (file: File) => file.name.toLowerCase().endsWith('.zip');
 const mixed = computed(() => files.value.length > 1 && files.value.some(isZip));
 
 // Loose files are named by their name alone: two of the same name would be one note, the API refuses them.
-const path = (file: File) => file.webkitRelativePath || file.name;
+const path = (file: File) => paths.get(file) || file.webkitRelativePath || file.name;
 const duplicate = computed(() => files.value.map(path).find((name, i, names) => names.indexOf(name) !== i));
 
 function body() {
@@ -66,7 +91,7 @@ async function submit() {
 <template>
   <UModal :title="$t('settings.import')" :close="false" @update:open="emit('close')">
     <template #body>
-      <form id="import" class="flex flex-col gap-4" @submit.prevent="submit">
+      <form id="import" class="flex flex-col gap-4" @submit.prevent="submit" @drop="addDropped">
         <UFormField :label="$t('settings.importInto')">
           <USelectMenu v-model="parent" :items="destinations" value-key="value" class="w-full" />
         </UFormField>
