@@ -244,11 +244,14 @@ const slashOpen = computed({
     editorRef.value?.editor?.commands.focus();
   },
 });
-// The menu has the focus: a backspace there takes back the / and closes it, as in the text.
+// The menu has the focus: a backspace there takes back the / and closes it, a second / is written (//), as in the text.
 function slashKey(event: KeyboardEvent) {
-  if (event.key !== 'Backspace' || !slashAt.value) return;
+  const chain = slashAt.value && editorRef.value?.editor?.chain().focus();
+  if (!chain || !slashAt.value) return;
+  if (event.key === 'Backspace') chain.deleteRange(slashAt.value.range).run();
+  else if (event.key === '/') chain.insertContent('/').run();
+  else return;
   event.preventDefault();
-  editorRef.value?.editor?.chain().focus().deleteRange(slashAt.value.range).run();
   slashAt.value = null;
 }
 useEventListener(window, 'keydown', slashKey);
