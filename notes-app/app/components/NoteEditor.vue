@@ -32,6 +32,7 @@ const path = ref('');
 const title = ref<string>();
 useHead({ title: () => displayTitle(title.value, t('untitled')) });
 const tags = ref<string[]>([]);
+let links = '';
 const initialContent = ref(props.start ?? '');
 const loading = ref(!!props.noteId);
 const notFound = ref(false);
@@ -76,13 +77,14 @@ async function patchNote(changes: Changes) {
   await readTags(changes);
 }
 
-// The API turns the #tags of the text into tags: the sidebar and the related notes follow when they change.
+// The API turns the #tags of the text into tags and its [[links]] into note ids: the sidebar, the related notes and the graph follow when they change.
 async function readTags(changes: Changes) {
   if (changes.content === undefined) return;
   const note = await api<ItemDetail>(`/api/notes/${id.value}`);
   showResolvedLinks(changes.content, note.content ?? '');
-  const changed = note.tags?.join() !== tags.value.join();
+  const changed = note.tags?.join() !== tags.value.join() || linkedNotes(note.content ?? '') !== links;
   tags.value = note.tags ?? [];
+  links = linkedNotes(note.content ?? '');
   title.value = note.item.title;
   if (changed) await refreshNuxtData();
 }
@@ -106,6 +108,7 @@ async function load() {
     const note = await api<ItemDetail>(`/api/notes/${props.noteId}`, { quiet: true });
     initialContent.value = note.content ?? '';
     tags.value = note.tags ?? [];
+    links = linkedNotes(initialContent.value);
     title.value = note.item.title;
     path.value = note.path.slice(0, note.path.lastIndexOf('/')) || '/';
     parent.value = note.item.parent_id ?? undefined;

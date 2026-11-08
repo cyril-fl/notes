@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { readWikiLink, resolvedLinks, writeWikiLink } from '../app/utils/wikiLink.ts';
+import { linkedNotes, readWikiLink, resolvedLinks, writeWikiLink } from '../app/utils/wikiLink.ts';
 
 const ID = '3f2a0000-0000-0000-0000-00000000abcd';
 
@@ -51,4 +51,14 @@ test('pairs the links the API resolved with the targets typed', () => {
     ],
   );
   assert.equal(resolvedLinks('[[Autre]]', 'texte').size, 0);
+});
+
+test('the notes a text links to, by id, sorted and once each', () => {
+  const a = '0e6c1f5e-1b2a-4c3d-8e9f-0a1b2c3d4e5f';
+  const b = '9F8E7D6C-5B4A-4321-8765-0FEDCBA98765';
+  assert.equal(
+    linkedNotes(`[B](note:${b}) and [A](note:${a}), [[Waiting]], [A again](note:${a})`),
+    `${a},${b.toLowerCase()}`,
+  );
+  assert.equal(linkedNotes('no link'), '');
 });

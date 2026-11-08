@@ -17,6 +17,12 @@ export function writeWikiLink(target: string, id: string | null) {
   return id ? `[${target.replace(/[[\]]/g, '')}](note:${id})` : `[[${target}]]`;
 }
 
+/** The ids of the notes a saved text links to, sorted: two texts link to the same notes when their lists are equal. */
+export function linkedNotes(content: string) {
+  const ids = [...content.matchAll(new RegExp(BY_ID.source, 'g'))].map((link) => link[2]!.toLowerCase());
+  return [...new Set(ids)].sort().join();
+}
+
 /** The [[targets]] the API resolved on saving, by lowercased target: it rewrites each link in place, so sent and saved links pair up in order. */
 export function resolvedLinks(sent: string, saved: string) {
   const links = (content: string) => [...content.matchAll(new RegExp(`${BY_ID.source}|${BY_TITLE.source}`, 'g'))];
