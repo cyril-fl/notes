@@ -188,3 +188,25 @@ test('< > & are saved as typed, not as HTML entities', async ({ page }) => {
     })
     .toBe('a >> b & c < d');
 });
+
+// Pro: the palette moves the open note, and its path under the text follows.
+test('the Pro palette moves the open note', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} moved`);
+  const sub = await (await box.api.post('/api/folders', { data: { title: 'sub', parent_id: box.folder.id } })).json();
+  try {
+    await box.api.patch('/api/me', { data: { pro: true } });
+    await page.goto(`/notes/${note.id}`);
+    await expect(page.locator('.ProseMirror')).toContainText('moved');
+    await page.keyboard.press('ControlOrMeta+k');
+    await page.getByRole('option', { name: 'Déplacer vers…' }).click();
+    await page.getByPlaceholder('Chercher une note, une action…').fill(`${box.prefix}/sub`);
+    await page.getByRole('option', { name: `/${box.prefix}/sub` }).click();
+    await expect(
+      page.getByRole('navigation', { name: "Fil d'Ariane" }).getByRole('link', { name: 'sub' }),
+    ).toBeVisible();
+    const moved = await (await box.api.get(`/api/notes/${note.id}`)).json();
+    expect(moved.item.parent_id).toBe(sub.id);
+  } finally {
+    await box.api.patch('/api/me', { data: { pro: false } });
+  }
+});

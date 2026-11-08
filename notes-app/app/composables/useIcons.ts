@@ -17,6 +17,7 @@ export function useIcons() {
     favorite: 'i-reicon-star-filled',
     unfavorite: 'i-reicon-star-off',
     rename: 'i-reicon-edit',
+    move: 'i-reicon-folder-move',
     delete: 'i-reicon-trash3',
     trash: 'i-reicon-trash2',
 
@@ -45,6 +46,7 @@ export function useIcons() {
     import: 'i-reicon-upload',
     snippet: 'i-reicon-text-block',
     appearance: 'i-reicon-palette',
+    current: 'i-reicon-check',
     data: 'i-reicon-database',
     pro: 'i-reicon-sparkles',
     focus: 'i-reicon-maximize',

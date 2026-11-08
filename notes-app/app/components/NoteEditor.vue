@@ -108,8 +108,7 @@ async function load() {
     tags.value = note.tags ?? [];
     links = linkedNotes(initialContent.value);
     title.value = note.item.title;
-    path.value = note.path.slice(0, note.path.lastIndexOf('/')) || '/';
-    parent.value = note.item.parent_id ?? undefined;
+    place(note);
     isEmpty.value = false;
   } catch {
     notFound.value = true;
@@ -118,6 +117,16 @@ async function load() {
   }
 }
 load();
+
+function place(note: ItemDetail) {
+  path.value = note.path.slice(0, note.path.lastIndexOf('/')) || '/';
+  parent.value = note.item.parent_id ?? undefined;
+}
+// The note moved from the Cmd K palette: its path follows when the views read again, without holding them up.
+const unhook = useNuxtApp().hook('app:data:refresh', () => {
+  if (id.value) api<ItemDetail>(`/api/notes/${id.value}`, { quiet: true }).then(place, () => {});
+});
+onBeforeUnmount(unhook);
 
 function onContent(markdown: string) {
   if (!touched.value) return;

@@ -47,7 +47,9 @@
     "noResultDescription": "Aucune note ne contient « {q} ».",
     "empty": "Rechercher dans les notes",
     "emptyDescription": "Tapez un mot dans la barre de recherche.",
-    "fromSnippet": "Nouvelle note depuis un snippet"
+    "fromSnippet": "Nouvelle note depuis un snippet",
+    "moveTo": "Déplacer vers…",
+    "theme": "Changer de thème"
   },
   "items": {
     "cycle": "Un dossier ne peut pas aller dans lui-même ou ses sous-dossiers.",
@@ -284,6 +286,7 @@
     "codeHighlight": "Les blocs de code colorés selon leur langage",
     "callouts": "Les encadrés (note, astuce, attention, danger), insérés depuis le menu /",
     "wordCount": "Le nombre de mots de la note, sous le texte",
-    "contextMenu": "Le clic droit (ou l'appui long) dans une note : le même menu que /"
+    "contextMenu": "Le clic droit (ou l'appui long) dans une note : le même menu que /",
+    "paletteActions": "Dans la palette Cmd K : déplacer la note ou le dossier ouvert, le renommer, changer de thème"
   }
 }

@@ -47,7 +47,9 @@
     "noResultDescription": "No note contains “{q}”.",
     "empty": "Search the notes",
     "emptyDescription": "Type a word in the search bar.",
-    "fromSnippet": "New note from a snippet"
+    "fromSnippet": "New note from a snippet",
+    "moveTo": "Move to…",
+    "theme": "Change theme"
   },
   "items": {
     "cycle": "A folder cannot go into itself or its subfolders.",
@@ -284,6 +286,7 @@
     "codeHighlight": "Code blocks colored by their language",
     "callouts": "Callouts (note, tip, warning, danger), inserted from the / menu",
     "wordCount": "The word count of the note, below the text",
-    "contextMenu": "Right click (or long press) in a note: the same menu as /"
+    "contextMenu": "Right click (or long press) in a note: the same menu as /",
+    "paletteActions": "In the Cmd K palette: move the open note or folder, rename it, change the theme"
   }
 }
