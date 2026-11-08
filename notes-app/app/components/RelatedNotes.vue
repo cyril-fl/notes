@@ -4,7 +4,8 @@ import type { Neighbors } from '~/types/items';
 const { icons } = useIcons();
 const { t } = useI18n();
 
-const props = defineProps<{ noteId: string; defaultOpen?: boolean }>();
+// panel: in the context panel, open, without the graph link: the mini graph below has its own.
+const props = defineProps<{ noteId: string; panel?: boolean }>();
 
 const api = useApi();
 const { has } = usePro();
@@ -24,7 +25,7 @@ const total = computed(() => sections.value.reduce((sum, section) => sum + secti
 </script>
 
 <template>
-  <UCollapsible v-if="sections.length" :default-open="defaultOpen">
+  <UCollapsible v-if="sections.length" :default-open="panel">
     <template #default="{ open }">
       <div class="flex items-center py-2">
         <UButton
@@ -36,7 +37,7 @@ const total = computed(() => sections.value.reduce((sum, section) => sum + secti
           class="-ml-2"
         />
         <NuxtLink
-          v-if="has('graph')"
+          v-if="has('graph') && !panel"
           :to="{ path: '/graph', query: { note: noteId } }"
           class="ml-auto text-xs text-primary"
           @click.stop

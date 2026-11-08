@@ -627,7 +627,7 @@ const status = computed(() => {
           {{ heading.text }}
         </button>
       </nav>
-      <RelatedNotes v-if="id" :key="id" :note-id="id" default-open />
+      <RelatedNotes v-if="id" :key="id" :note-id="id" panel />
       <NoteHistory
         v-if="id && has('noteHistory')"
         :key="id"

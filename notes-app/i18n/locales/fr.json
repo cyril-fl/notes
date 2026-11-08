@@ -325,6 +325,7 @@
     "title": "Historique des versions",
     "empty": "Pas encore d'ancienne version. Quand le texte change, l'ancien est gardé, au plus une fois toutes les 5 minutes.",
     "restore": "Restaurer cette version",
-    "all": "Tout l'historique ({count})"
+    "all": "Tout l'historique ({count})",
+    "panelTitle": "Historique ({count})"
   }
 }

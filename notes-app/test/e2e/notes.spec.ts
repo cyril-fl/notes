@@ -433,7 +433,10 @@ test('the Pro history restores an earlier version', async ({ page }) => {
     await expect(page.locator('.ProseMirror')).toContainText('second');
     // The context panel lists the versions on a wide screen: a click shows one.
     const panel = page.getByRole('region', { name: 'Historique des versions' });
-    await panel.getByRole('button').first().click();
+    await panel
+      .getByRole('button', { name: /\d{2}:\d{2}/ })
+      .first()
+      .click();
     await expect(page.getByRole('dialog')).toContainText('first');
     await page.getByRole('button', { name: 'Restaurer cette version' }).click();
     await expect(page.locator('.ProseMirror')).toContainText('first');

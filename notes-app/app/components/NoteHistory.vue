@@ -45,22 +45,38 @@ function restore() {
 </script>
 
 <template>
-  <section v-if="panel" :aria-label="$t('history.title')">
-    <h2 class="mb-2 text-xs font-medium text-muted">{{ $t('history.title') }}</h2>
-    <p v-if="!versions.length" class="text-xs text-dimmed">{{ $t('history.empty') }}</p>
-    <button
-      v-for="version in versions.slice(0, shown)"
-      :key="version.id"
-      type="button"
-      class="block w-full truncate rounded py-1 text-left text-sm text-muted hover:text-default"
-      @click="show(version)"
-    >
-      {{ date(version) }}
-    </button>
-    <button v-if="versions.length > shown" type="button" class="py-1 text-xs text-primary" @click="show()">
-      {{ $t('history.all', { count: versions.length }) }}
-    </button>
-  </section>
+  <!-- Folds like the related notes above it. -->
+  <UCollapsible v-if="panel" default-open as="section" :aria-label="$t('history.title')">
+    <template #default="{ open: unfolded }">
+      <div class="flex items-center py-2">
+        <UButton
+          :label="$t('history.panelTitle', { count: versions.length })"
+          :trailing-icon="unfolded ? icons.chevronDown : icons.chevronUp"
+          color="neutral"
+          variant="ghost"
+          size="xs"
+          class="-ml-2"
+        />
+      </div>
+    </template>
+    <template #content>
+      <div class="pb-4">
+        <p v-if="!versions.length" class="text-xs text-dimmed">{{ $t('history.empty') }}</p>
+        <button
+          v-for="version in versions.slice(0, shown)"
+          :key="version.id"
+          type="button"
+          class="block w-full truncate rounded py-1 text-left text-sm text-muted hover:text-default"
+          @click="show(version)"
+        >
+          {{ date(version) }}
+        </button>
+        <button v-if="versions.length > shown" type="button" class="py-1 text-xs text-primary" @click="show()">
+          {{ $t('history.all', { count: versions.length }) }}
+        </button>
+      </div>
+    </template>
+  </UCollapsible>
   <UTooltip v-else :text="$t('history.title')">
     <UButton
       :icon="icons.history"
