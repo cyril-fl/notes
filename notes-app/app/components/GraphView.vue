@@ -9,11 +9,14 @@ type Link = NotesGraph['links'][number];
 const props = defineProps<{ graph: NotesGraph; selected?: string; mini?: boolean }>();
 
 const hovered = ref<string | null>(null);
+// The card keeps the last hovered note: the popover still draws it while it fades out.
+const carded = ref<string | null>(null);
 const anchor = ref<HTMLElement>();
 const [DefineCard, ReuseCard] = createReusableTemplate();
 
 function hover(id: string, event: Event) {
   hovered.value = id;
+  carded.value = id;
   anchor.value = event.currentTarget as HTMLElement;
 }
 const active = computed(() => hovered.value ?? props.selected ?? null);
@@ -29,11 +32,15 @@ const activeLinks = computed(() => props.graph.links.filter(isActiveLink));
 const linkedToActive = computed(() => new Set(activeLinks.value.flatMap((link) => [link.source, link.target])));
 
 const hoveredNote = computed(() => props.graph.notes.find((note) => note.id === hovered.value) ?? null);
+const cardNote = computed(() => props.graph.notes.find((note) => note.id === carded.value) ?? null);
+const cardLinks = computed(() =>
+  props.graph.links.filter((link) => link.source === carded.value || link.target === carded.value),
+);
 
 const titles = computed(() => new Map(props.graph.notes.map((note) => [note.id, note.title])));
 
 function otherEnd(link: Link) {
-  return link.source === hovered.value ? link.target : link.source;
+  return link.source === carded.value ? link.target : link.source;
 }
 
 function isDimmed(id: string) {
@@ -188,14 +195,14 @@ function linkClass(link: Link) {
         </template>
       </NuxtLink>
 
-      <DefineCard v-if="hoveredNote">
-        <span class="shrink-0 truncate font-medium">{{ displayTitle(hoveredNote.title, $t('untitled')) }}</span>
-        <span class="shrink-0 truncate text-muted">{{ hoveredNote.path }}</span>
+      <DefineCard v-if="cardNote">
+        <span class="shrink-0 truncate font-medium">{{ displayTitle(cardNote.title, $t('untitled')) }}</span>
+        <span class="shrink-0 truncate text-muted">{{ cardNote.path }}</span>
         <ul
-          v-if="activeLinks.length"
+          v-if="cardLinks.length"
           class="mt-1 flex min-h-0 flex-col gap-0.5 overflow-hidden border-t border-default pt-1"
         >
-          <li v-for="link in activeLinks" :key="`${link.source}-${link.target}`" class="flex gap-2">
+          <li v-for="link in cardLinks" :key="`${link.source}-${link.target}`" class="flex gap-2">
             <span class="truncate">{{ displayTitle(titles.get(otherEnd(link)), $t('untitled')) }}</span>
             <span class="ml-auto shrink-0 text-primary">{{
               [...(link.linked ? [$t('graph.link')] : []), ...link.tags.map((tag) => `#${tag}`)].join(' ')
