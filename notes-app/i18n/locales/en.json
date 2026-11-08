@@ -251,6 +251,12 @@
     "save": "Save",
     "pro": "Pro mode",
     "proMode": "Turn on Pro mode",
+    "feature": "Feature",
+    "standard": "Standard",
+    "currentPlan": "Current",
+    "included": "Included",
+    "notIncluded": "Not included",
+    "featureGroups": { "display": "Display", "editing": "Editing", "navigation": "Navigation" },
     "proDescription": "More tools, for advanced use:",
     "sections": {
       "general": "General",

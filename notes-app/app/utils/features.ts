@@ -19,8 +19,29 @@ export const features = {
 
 export type Feature = keyof typeof features;
 
-/** The features the Pro mode unlocks, listed by the settings. */
-export const proFeatures = (Object.keys(features) as Feature[]).filter((feature) => features[feature] === 'pro');
+/** The subsection of each feature in the settings' comparison: a Record, so a new feature cannot be left out. */
+const groups: Record<Feature, 'display' | 'editing' | 'navigation'> = {
+  graph: 'navigation',
+  focusMode: 'display',
+  contextPanel: 'display',
+  settingsNav: 'navigation',
+  slashCommands: 'editing',
+  tables: 'editing',
+  codeHighlight: 'display',
+  callouts: 'editing',
+  wordCount: 'display',
+  contextMenu: 'editing',
+  paletteActions: 'navigation',
+  sourceMode: 'editing',
+};
+
+/** The features the settings compare between the standard and the Pro mode, by subsection. */
+export const listedFeatures = (['display', 'editing', 'navigation'] as const).map((group) => ({
+  group,
+  features: (Object.keys(features) as Feature[]).filter(
+    (feature) => groups[feature] === group && (features[feature] as Level) !== 'off',
+  ),
+}));
 
 export function unlocked(level: Level, pro: boolean) {
   return level === 'base' || (level === 'pro' && pro);

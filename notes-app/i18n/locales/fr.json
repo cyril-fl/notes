@@ -251,6 +251,12 @@
     "save": "Enregistrer",
     "pro": "Mode Pro",
     "proMode": "Activer le mode Pro",
+    "feature": "Fonctionnalité",
+    "standard": "Standard",
+    "currentPlan": "Actuel",
+    "included": "Inclus",
+    "notIncluded": "Non inclus",
+    "featureGroups": { "display": "Affichage", "editing": "Édition", "navigation": "Navigation" },
     "proDescription": "Des outils en plus, pour un usage avancé :",
     "sections": {
       "general": "Général",

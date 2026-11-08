@@ -299,19 +299,62 @@ async function deleteData() {
 
       <section v-if="show('pro')">
         <SettingsHeading id="pro" />
-        <div class="flex items-center gap-4 rounded-lg border border-default px-4 py-3">
-          <div class="min-w-0 flex-1">
-            <p class="text-sm">{{ $t('settings.proMode') }}</p>
-            <ul class="mt-1 list-inside list-disc text-xs text-muted">
-              <li v-for="feature in proFeatures" :key="feature">{{ $t(`features.${feature}`) }}</li>
-            </ul>
+        <div class="overflow-hidden rounded-lg border border-default">
+          <div class="flex items-center gap-4 border-b border-default px-4 py-3">
+            <p class="min-w-0 flex-1 text-sm">{{ $t('settings.proMode') }}</p>
+            <USwitch
+              :model-value="pro"
+              :disabled="!me"
+              :aria-label="$t('settings.proMode')"
+              @update:model-value="changePro"
+            />
           </div>
-          <USwitch
-            :model-value="pro"
-            :disabled="!me"
-            :aria-label="$t('settings.proMode')"
-            @update:model-value="changePro"
-          />
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-default">
+                <th class="px-4 py-2 text-left text-xs font-normal text-muted">{{ $t('settings.feature') }}</th>
+                <th class="w-24 px-2 py-2 font-medium">
+                  <div class="flex flex-col items-center gap-1">
+                    {{ $t('settings.standard') }}
+                    <UBadge v-if="me && !pro" :label="$t('settings.currentPlan')" size="sm" variant="subtle" />
+                  </div>
+                </th>
+                <th class="w-24 bg-primary/5 px-2 py-2 font-medium text-primary">
+                  <div class="flex flex-col items-center gap-1">
+                    <span class="inline-flex items-center gap-1"><UIcon :name="icons.pro" />Pro</span>
+                    <UBadge v-if="pro" :label="$t('settings.currentPlan')" size="sm" variant="subtle" />
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody v-for="{ group, features: listed } in listedFeatures" :key="group">
+              <tr class="border-b border-default bg-elevated/50">
+                <th colspan="3" class="px-4 py-1.5 text-left text-xs font-medium text-muted">
+                  {{ $t(`settings.featureGroups.${group}`) }}
+                </th>
+              </tr>
+              <tr v-for="feature in listed" :key="feature" class="border-b border-default last:border-b-0">
+                <td class="px-4 py-2 text-xs">{{ $t(`features.${feature}`) }}</td>
+                <td class="px-2 text-center">
+                  <UIcon
+                    v-if="features[feature] === 'base'"
+                    :name="icons.current"
+                    :aria-label="$t('settings.included')"
+                    class="size-4 text-primary"
+                  />
+                  <UIcon
+                    v-else
+                    :name="icons.divider"
+                    :aria-label="$t('settings.notIncluded')"
+                    class="size-4 text-dimmed"
+                  />
+                </td>
+                <td class="bg-primary/5 px-2 text-center">
+                  <UIcon :name="icons.current" :aria-label="$t('settings.included')" class="size-4 text-primary" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </section>
     </div>
