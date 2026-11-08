@@ -295,13 +295,20 @@ function saveOnClose() {
     return void saver.flush(); // A plain request: the page hidden lives on, a closing tab was held by holdLongNote.
   }
   const url = `${baseURL}/api/notes${id.value ? `/${id.value}` : ''}`;
+  // Refused or not sent, the changes go back in the queue: a page that lives on sends them again, its errors shown (#90).
   return fetch(url, {
     method: id.value ? 'PATCH' : 'POST',
     body,
     keepalive: true,
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-  });
+  }).then(
+    (response) => {
+      if (!response.ok) saver.push(changes);
+      return response;
+    },
+    () => void saver.push(changes),
+  );
 }
 useEventListener(window, 'pagehide', saveOnClose);
 

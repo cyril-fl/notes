@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Route } from '@playwright/test';
 import { cursorAtEnd, sandbox } from './helpers';
 
 let box: Awaited<ReturnType<typeof sandbox>>;
@@ -274,6 +274,32 @@ test('locking the phone sends the last words at once, and typing on afterwards s
   await text.pressSequentially(' revenu');
   await page.clock.runFor(2000);
   await expect.poll(() => box.content(note.id)).toContain('caché revenu');
+});
+
+test('the last words that fail to go when the phone locks are sent again once it is back (#90)', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} panne`);
+  await page.clock.install();
+  await page.goto(`/notes/${note.id}`);
+  const text = page.locator('.ProseMirror');
+  await expect(text).toContainText('panne');
+  const visibility = (state: string) =>
+    page.evaluate((state) => {
+      Object.defineProperty(document, 'visibilityState', { value: state, configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+    }, state);
+
+  await cursorAtEnd(text);
+  await text.pressSequentially(' perdu');
+  const offline = (route: Route) => (route.request().method() === 'PATCH' ? route.abort() : route.fallback());
+  await page.route('**/api/notes/*', offline);
+  await visibility('hidden');
+  await page.waitForTimeout(500);
+  expect(await box.content(note.id)).not.toContain('perdu');
+
+  await page.unroute('**/api/notes/*', offline);
+  await visibility('visible');
+  await page.clock.runFor(2000);
+  await expect.poll(() => box.content(note.id)).toContain('perdu');
 });
 
 test('a note over 64 KiB still sends its last words when hidden (keepalive limit)', async ({ page }) => {
