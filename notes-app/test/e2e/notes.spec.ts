@@ -381,7 +381,7 @@ test('the Pro palette moves the open note', async ({ page }) => {
   }
 });
 
-// Pro: the palette renames the open note through its first heading, in the editor and in the source mode.
+// Pro: the palette renames the open note through its first heading, in the editor and in the source mode, where the word count is hidden.
 test('the Pro palette renames the open note', async ({ page }) => {
   const note = await box.note(`intro\n\n## ${box.prefix} old\n\ntext`);
   const rename = async (title: string) => {
@@ -397,7 +397,10 @@ test('the Pro palette renames the open note', async ({ page }) => {
     await rename(`${box.prefix} new`);
     await expect(page.locator('.ProseMirror h2')).toHaveText(`${box.prefix} new`);
     await expect.poll(() => box.content(note.id), { timeout: 5000 }).toBe(`intro\n\n## ${box.prefix} new\n\ntext`);
+    // The Pro word count belongs to the editor: hidden in the source mode.
+    await expect(page.getByText(/\d+ mots?$/)).toBeVisible();
     await page.getByRole('button', { name: 'Mode source' }).click();
+    await expect(page.getByText(/\d+ mots?$/)).toBeHidden();
     await rename(`${box.prefix} source`);
     await expect(page.getByRole('textbox', { name: 'Mode source' })).toHaveValue(
       `intro\n\n## ${box.prefix} source\n\ntext`,
