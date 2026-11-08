@@ -119,6 +119,21 @@ test('an email is a link: typed, pasted or given to the link button', async ({ p
     .toContain('[bouton@example.com](mailto:bouton@example.com "mini")');
 });
 
+// Past the API's 10 MB, the toast gives the limit in French, not the API's message (#58). The API's answer
+// is faked: pasting 10 MB freezes the editor longer than a test.
+test('a note too long says its limit', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} longue\n\nTexte`);
+  await page.route(`**/api/notes/${note.id}`, (route) =>
+    route.request().method() === 'PATCH'
+      ? route.fulfill({ status: 413, json: { error: 'request body too large' } })
+      : route.fallback(),
+  );
+  await page.goto(`/notes/${note.id}`);
+  await page.locator('.ProseMirror').getByText('Texte').click();
+  await page.keyboard.type(' long');
+  await expect(page.getByText('La note est trop longue (10 Mo au plus)').first()).toBeVisible();
+});
+
 // A 1×1 PNG.
 const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 

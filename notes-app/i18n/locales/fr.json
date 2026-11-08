@@ -23,6 +23,7 @@
   "api": {
     "down": "L'API ne répond pas.",
     "failed": "Une erreur est survenue.",
+    "tooLarge": "Envoi trop gros, l'API l'a refusé.",
     "tooManyTries": "Trop d’essais ratés : réessayez dans {wait}."
   },
   "sidebar": {
@@ -111,6 +112,7 @@
     "changedElsewhere": "La note a changé sur un autre appareil : copie ton texte puis recharge la page, il n'est plus enregistré.",
     "addLink": "Ajouter un lien",
     "linkPlaceholder": "https://… ou une adresse mail",
+    "tooLarge": "La note est trop longue (10 Mo au plus) : elle n'est plus enregistrée.",
     "imageTooLarge": "{name} est trop lourde (20 Mo au plus)",
     "imageType": "{name} n'est pas une image PNG, JPEG, GIF ou WebP",
     "imageFailed": "{name} n'a pas pu être envoyée",

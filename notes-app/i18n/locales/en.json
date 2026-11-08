@@ -23,6 +23,7 @@
   "api": {
     "down": "The API does not answer.",
     "failed": "Something went wrong.",
+    "tooLarge": "Too large, the API refused it.",
     "tooManyTries": "Too many wrong passwords: try again in {wait}."
   },
   "sidebar": {
@@ -111,6 +112,7 @@
     "changedElsewhere": "This note changed on another device: copy your text, then reload the page, it is no longer saved.",
     "addLink": "Add a link",
     "linkPlaceholder": "https://… or an email address",
+    "tooLarge": "This note is too long (10 MB at most): it is no longer saved.",
     "imageTooLarge": "{name} is too large (20 MB at most)",
     "imageType": "{name} is not a PNG, JPEG, GIF or WebP image",
     "imageFailed": "{name} could not be sent",

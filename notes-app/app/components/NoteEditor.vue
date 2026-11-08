@@ -72,7 +72,7 @@ async function send(changes: Changes): Promise<boolean | undefined> {
 
 async function createNote(changes: Changes) {
   const body = { ...changes, parent_id: parent.value };
-  const item = await api<Item>('/api/notes', { method: 'POST', body });
+  const item = await api<Item>('/api/notes', { method: 'POST', body, tooLarge: t('note.tooLarge') });
   id.value = item.id;
   emit('created', item.id);
   const note = await api<ItemDetail>(`/api/notes/${item.id}`);
@@ -86,6 +86,7 @@ async function patchNote(changes: Changes) {
     method: 'PATCH',
     body,
     conflict: t('note.changedElsewhere'),
+    tooLarge: t('note.tooLarge'),
   });
   remember(note);
   await readTags(changes, note);
@@ -231,7 +232,7 @@ onBeforeUnmount(() => renaming.value === rename && (renaming.value = undefined))
 function saveOnClose() {
   if (id.value && isEmpty.value) {
     saver.take();
-    fetch(`${baseURL}/api/notes/${id.value}`, { method: 'DELETE', keepalive: true });
+    fetch(`${baseURL}/api/notes/${id.value}`, { method: 'DELETE', keepalive: true, credentials: 'include' });
     return;
   }
   if (saver.isBusy() && !id.value) return; // The note is being created: a second POST would duplicate it.
@@ -240,14 +241,29 @@ function saveOnClose() {
 
   const url = `${baseURL}/api/notes${id.value ? `/${id.value}` : ''}`;
   const body = JSON.stringify(id.value ? { ...changes, updated_at: version } : { ...changes, parent_id: parent.value });
-  fetch(url, {
+  return fetch(url, {
     method: id.value ? 'PATCH' : 'POST',
     body,
     keepalive: true,
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
   });
 }
 useEventListener(window, 'pagehide', saveOnClose);
+
+// iOS sends no pagehide on a lock or an app switch, and freezes the 1.5 s timer (#65). The page lives on:
+// the answer gives the editor its new version, or the next PATCH would be stale. An emptied note is not trashed on a mere switch.
+async function saveOnHide() {
+  if (document.visibilityState !== 'hidden' || isEmpty.value || saver.isBusy()) return;
+  const response = await saveOnClose();
+  if (!response?.ok) return;
+  if (id.value) return remember(await response.json());
+  const item: Item = await response.json();
+  id.value = item.id;
+  emit('created', item.id);
+  remember(await api<ItemDetail>(`/api/notes/${item.id}`));
+}
+useEventListener(document, 'visibilitychange', saveOnHide);
 
 async function beforeLeave(to: RouteLocationNormalized) {
   if (to.params.id === id.value) return true; // The new note getting its address.
