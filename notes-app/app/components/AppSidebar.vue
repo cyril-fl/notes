@@ -47,11 +47,11 @@ const avatarSrc = computed(() => (me.value?.avatar ? imageSrc(`/api/files/${me.v
 const logout = useLogout();
 const accountMenu = computed(() => [
   [{ label: me.value?.name, type: 'label' as const }],
+  // The account is reached from the settings, which link to it: not repeated here.
   [
-    { label: t('sidebar.account'), icon: icons.account, to: '/account' },
     { label: t('common.settings'), icon: icons.settings, to: '/settings' },
+    { label: t('settings.logout'), icon: icons.logout, onSelect: logout },
   ],
-  [{ label: t('settings.logout'), icon: icons.logout, onSelect: logout }],
 ]);
 
 const rootLink = useTemplateRef('rootLink');
@@ -61,6 +61,11 @@ const isOverRoot = useDropFolder(rootLink, () => null);
 <template>
   <!-- Reduced to a rail of icons: the sidebar never leaves the screen. -->
   <nav v-if="collapsed" class="flex h-full flex-col items-center gap-1 py-3" :aria-label="$t('common.navigation')">
+    <UDropdownMenu :items="accountMenu" :content="{ side: 'right', align: 'start' }">
+      <UButton color="neutral" variant="ghost" :aria-label="$t('sidebar.accountMenu')">
+        <UAvatar :src="avatarSrc" :alt="me?.name" size="xs" />
+      </UButton>
+    </UDropdownMenu>
     <UTooltip :text="$t('common.search')" :kbds="['meta', 'K']" :content="{ side: 'right' }">
       <UButton
         :icon="icons.search"
@@ -107,6 +112,9 @@ const isOverRoot = useDropFolder(rootLink, () => null);
           :aria-label="$t('common.graph')"
         />
       </UTooltip>
+    </template>
+
+    <div class="mt-auto flex flex-col items-center gap-1 border-t border-default pt-2">
       <UTooltip :text="$t('common.trash')" :content="{ side: 'right' }">
         <UButton
           :icon="icons.trash"
@@ -117,14 +125,6 @@ const isOverRoot = useDropFolder(rootLink, () => null);
           :aria-label="$t('common.trash')"
         />
       </UTooltip>
-    </template>
-
-    <div class="mt-auto flex flex-col items-center gap-1 border-t border-default pt-2">
-      <UDropdownMenu :items="accountMenu" :content="{ side: 'right', align: 'end' }">
-        <UButton color="neutral" variant="ghost" :aria-label="$t('sidebar.accountMenu')">
-          <UAvatar :src="avatarSrc" :alt="me?.name" size="xs" />
-        </UButton>
-      </UDropdownMenu>
       <UTooltip
         v-if="colorMode.preference !== 'system'"
         :text="darkMode ? $t('sidebar.lightTheme') : $t('sidebar.darkTheme')"
@@ -145,18 +145,25 @@ const isOverRoot = useDropFolder(rootLink, () => null);
   </nav>
 
   <nav v-else class="flex h-full flex-col gap-4 p-3" :aria-label="$t('common.navigation')">
-    <UButton
-      :icon="icons.search"
-      :label="$t('common.search')"
-      color="neutral"
-      variant="soft"
-      size="sm"
-      block
-      class="justify-start text-muted"
-      @click="searchOpen = true"
-    >
-      <template #trailing> <UKbd value="meta" size="sm" class="ms-auto" /><UKbd value="K" size="sm" /> </template>
-    </UButton>
+    <div class="flex items-center gap-1">
+      <UDropdownMenu :items="accountMenu" :content="{ side: 'bottom', align: 'start' }">
+        <UButton color="neutral" variant="ghost" size="sm" :aria-label="$t('sidebar.accountMenu')">
+          <UAvatar :src="avatarSrc" :alt="me?.name" size="2xs" />
+        </UButton>
+      </UDropdownMenu>
+      <UButton
+        :icon="icons.search"
+        :label="$t('common.search')"
+        color="neutral"
+        variant="soft"
+        size="sm"
+        block
+        class="min-w-0 flex-1 justify-start text-muted"
+        @click="searchOpen = true"
+      >
+        <template #trailing> <UKbd value="meta" size="sm" class="ms-auto" /><UKbd value="K" size="sm" /> </template>
+      </UButton>
+    </div>
 
     <div v-if="settingsNav" class="min-h-0 flex-1 overflow-y-auto">
       <NuxtLink to="/" class="row font-medium">
@@ -275,37 +282,32 @@ const isOverRoot = useDropFolder(rootLink, () => null);
           <FolderTree />
         </section>
       </div>
-
-      <section v-if="tags.length" class="border-t border-default pt-3">
-        <h2 class="px-2 pb-2 text-xs font-medium text-muted">{{ $t('common.tags') }}</h2>
-        <!-- Capped so a long tag list never pushes the folders out of the sidebar. -->
-        <div class="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto px-2">
-          <UContextMenu v-for="tag in tags" :key="tag.value" :items="tagMenu(tag.value)">
-            <UButton
-              :to="tagPath(tag.value)"
-              :label="`#${tag.value}`"
-              size="xs"
-              color="neutral"
-              variant="soft"
-              active-color="primary"
-              class="max-w-full font-normal"
-              :ui="{ label: 'truncate' }"
-            />
-          </UContextMenu>
-        </div>
-      </section>
     </template>
+
+    <section v-if="!settingsNav && tags.length" class="border-t border-default pt-3">
+      <h2 class="px-2 pb-2 text-xs font-medium text-muted">{{ $t('common.tags') }}</h2>
+      <!-- Capped so a long tag list never pushes the folders out of the sidebar. -->
+      <div class="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto px-2">
+        <UContextMenu v-for="tag in tags" :key="tag.value" :items="tagMenu(tag.value)">
+          <UButton
+            :to="tagPath(tag.value)"
+            :label="`#${tag.value}`"
+            size="xs"
+            color="neutral"
+            variant="soft"
+            active-color="primary"
+            class="max-w-full font-normal"
+            :ui="{ label: 'truncate' }"
+          />
+        </UContextMenu>
+      </div>
+    </section>
 
     <div class="flex items-center justify-between border-t border-default pt-2">
       <NuxtLink to="/trash" class="row flex-1" :class="{ 'row-active': route.path === '/trash' }">
         <UIcon :name="icons.trash" class="size-4 shrink-0" />
         {{ $t('common.trash') }}
       </NuxtLink>
-      <UDropdownMenu :items="accountMenu" :content="{ side: 'top', align: 'start' }">
-        <UButton color="neutral" variant="ghost" size="sm" :aria-label="$t('sidebar.accountMenu')">
-          <UAvatar :src="avatarSrc" :alt="me?.name" size="2xs" />
-        </UButton>
-      </UDropdownMenu>
       <UTooltip
         v-if="colorMode.preference !== 'system'"
         :text="darkMode ? $t('sidebar.lightTheme') : $t('sidebar.darkTheme')"
