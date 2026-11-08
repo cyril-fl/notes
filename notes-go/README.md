@@ -182,7 +182,7 @@ notes serve --origin http://localhost:3000   # ou directement sur la machine
 | Graphe | `GET /graph` (tags comptés), `GET /graph/notes` (notes et tags qui les relient) | |
 | Recherche | `GET /search?q=<texte>`, `GET /recent` | |
 | Corbeille | `GET`, `DELETE /trash` (tout), `DELETE /trash/{id}` (une suppression et ce qui est parti avec), `POST /restore` | `ids` (restauration) |
-| Export / import | `GET /export` (zip), `POST /import?parent=<uuid>` (zip en corps, `Content-Type: application/zip`, racine sans `parent`) | |
+| Export / import | `GET /export` (zip), `POST /import?parent=<uuid>` (zip en corps, `Content-Type: application/zip`, ou formulaire `multipart/form-data` de fichiers `files` nommés par leur chemin, `dossier/note.md` ; racine sans `parent`) | |
 | Images | `POST /files?name=<nom>` (l'image en corps), `GET /files/{id}` | |
 
 - Tout, sauf `POST /login`, demande une session, sinon 401. La connexion pose un cookie `notes_session` (`HttpOnly`, `Secure`, `SameSite=Strict`), qui dure 30 jours prolongés à chaque requête. Les scripts peuvent envoyer le jeton dans `Authorization: Bearer <jeton>`. Les sessions expirées sont effacées de la base à la purge horaire du serveur.
@@ -195,7 +195,7 @@ notes serve --origin http://localhost:3000   # ou directement sur la machine
 - `PATCH /me` avec `name` renomme le compte (409 si le nom est pris). `PATCH /me/password` vérifie `current`, puis déconnecte les autres appareils : celui qui l'envoie reste connecté. L'image de `avatar` n'est pas purgée tant qu'elle sert d'avatar.
 - `DELETE /me/data` efface pour de bon toutes les notes, dossiers, tags et images du compte, corbeille comprise. Le compte, ses réglages et ses sessions restent. C'est la « Zone de danger » des réglages de l'app web.
 - Les éléments supprimés passent par la corbeille. Le serveur la purge toutes les heures. `DELETE /trash` la vide tout de suite et définitivement.
-- `GET /export` et `POST /import` font comme `notes export` et `notes import`, en zip. L'import va dans le dossier `parent`, à la racine sans lui. Il répond `{"folders": n, "notes": n}`, ou 409 si un dossier du zip existe déjà à cet endroit.
+- `GET /export` et `POST /import` font comme `notes export` et `notes import`, en zip ; l'import prend aussi un formulaire de fichiers, leurs chemins donnant les dossiers. L'import va dans le dossier `parent`, à la racine sans lui. Il répond `{"folders": n, "notes": n}`, ou 409 si un dossier du zip existe déjà à cet endroit.
 - `POST /files` répond le fichier créé (`id`, `name`, `content_type`, `size`), 415 si ce n'est pas une image acceptée. `GET /files/{id}` renvoie l'image, mise en cache par le navigateur : une image ne change jamais.
 - `make openapi` génère le contrat OpenAPI dans `docs/swagger.yaml`, à partir des commentaires `@` des routes.
 
