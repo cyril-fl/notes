@@ -1325,7 +1325,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/domain.Item'
+                $ref: '#/components/schemas/readitem.Result'
           description: OK
         "400":
           content:

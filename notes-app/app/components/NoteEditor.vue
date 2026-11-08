@@ -63,18 +63,16 @@ async function createNote(changes: Changes) {
   const item = await api<Item>('/api/notes', { method: 'POST', body });
   id.value = item.id;
   emit('created', item.id);
-  await readTags(changes);
+  await readTags(changes, await api<ItemDetail>(`/api/notes/${item.id}`));
 }
 
 async function patchNote(changes: Changes) {
-  await api(`/api/notes/${id.value}`, { method: 'PATCH', body: changes });
-  await readTags(changes);
+  await readTags(changes, await api<ItemDetail>(`/api/notes/${id.value}`, { method: 'PATCH', body: changes }));
 }
 
 // The API turns the #tags of the text into tags and its [[links]] into note ids: the sidebar, the related notes and the graph follow when they or the title change.
-async function readTags(changes: Changes) {
+async function readTags(changes: Changes, note: ItemDetail) {
   if (changes.content === undefined) return;
-  const note = await api<ItemDetail>(`/api/notes/${id.value}`);
   showResolvedLinks(changes.content, note.content ?? '');
   const changed =
     note.tags?.join() !== tags.value.join() ||

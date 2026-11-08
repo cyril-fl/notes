@@ -22,6 +22,7 @@ type Body struct {
 
 // Handler changes the fields given: PATCH /api/notes/{id}. The #tags of the content are the tags of the note,
 // its first heading (or first words) its title. Pinning alone leaves the note as it is, updated_at included.
+// It answers the note as GET does, so the app needs no second request after a save.
 // shortcut: reads then writes outside a transaction, a concurrent edit can be lost, fine for one user; use a tx if that changes.
 // @Summary  Change the fields given
 // @Tags     notes
@@ -29,7 +30,7 @@ type Body struct {
 // @Produce  json
 // @Param    id path string true "uuid"
 // @Param    body body Body true "body"
-// @Success  200 {object} domain.Item
+// @Success  200 {object} readitem.Result
 // @Failure  400 {object} respond.Failure
 // @Failure  404 {object} respond.Failure
 // @Failure  413 {object} respond.Failure
@@ -63,7 +64,10 @@ func Handler(db bun.IDB) http.HandlerFunc {
 			}
 		}
 		if changes.Content == nil && changes.Tags == nil {
-			respond.JSON(w, http.StatusOK, note.Item)
+			if changes.Pinned != nil {
+				note.Pinned = *changes.Pinned
+			}
+			reply(w, note)
 			return
 		}
 
@@ -83,6 +87,18 @@ func Handler(db bun.IDB) http.HandlerFunc {
 			respond.Error(w, process.GetErr())
 			return
 		}
-		respond.JSON(w, http.StatusOK, process.GetResult())
+		// The saved text is read back: editnote has turned its [[links]] into note ids.
+		saved := readitem.Process(r.Context(), db, domain.NOTE, id)
+		saved.Run()
+		if saved.HasErr() {
+			respond.Error(w, saved.GetErr())
+			return
+		}
+		reply(w, saved.GetResult())
 	}
+}
+
+func reply(w http.ResponseWriter, note readitem.Result) {
+	note.Tags = append([]string{}, note.Tags...)
+	respond.JSON(w, http.StatusOK, note)
 }

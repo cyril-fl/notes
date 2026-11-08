@@ -121,6 +121,7 @@ type detail struct {
 	Item     item     `json:"item"`
 	Path     string   `json:"path"`
 	Content  string   `json:"content"`
+	Pinned   bool     `json:"pinned"`
 	Tags     []string `json:"tags"`
 	Children []item   `json:"children"`
 }
@@ -151,14 +152,13 @@ func TestNotes(t *testing.T) {
 	}
 
 	// One field changed, the others kept; the tags are those of the text, the title its first words.
-	c.do("PATCH", path, `{"content":"changed #go"}`, http.StatusOK, nil)
-	c.do("GET", path, "", http.StatusOK, &read)
-	if read.Content != "changed #go" || read.Item.Title != "changed" || strings.Join(read.Tags, ",") != "go" {
+	// The PATCH answers the note as GET does.
+	c.do("PATCH", path, `{"content":"changed #go"}`, http.StatusOK, &read)
+	if read.Content != "changed #go" || read.Item.Title != "changed" || strings.Join(read.Tags, ",") != "go" || read.Path != "/changed" {
 		t.Errorf("after content patch: %+v", read)
 	}
 
-	c.do("PATCH", path, `{"tags":["go","sql"]}`, http.StatusOK, nil)
-	c.do("GET", path, "", http.StatusOK, &read)
+	c.do("PATCH", path, `{"tags":["go","sql"]}`, http.StatusOK, &read)
 	if read.Content != "changed #go\n\n#sql" || strings.Join(read.Tags, ",") != "go,sql" {
 		t.Errorf("tags are written into the text: %+v", read)
 	}
@@ -178,9 +178,8 @@ func TestNotes(t *testing.T) {
 	}
 
 	// Pinning alone leaves the text as it is.
-	c.do("PATCH", path, `{"pinned":true}`, http.StatusOK, nil)
-	c.do("GET", path, "", http.StatusOK, &read)
-	if !strings.Contains(c.raw(path), `"pinned":true`) || read.Content != "changed" || !strings.Contains(c.raw("/api/pinned"), note.ID) {
+	c.do("PATCH", path, `{"pinned":true}`, http.StatusOK, &read)
+	if !read.Pinned || read.Content != "changed" || !strings.Contains(c.raw(path), `"pinned":true`) || !strings.Contains(c.raw("/api/pinned"), note.ID) {
 		t.Errorf("after pin: %s", c.raw(path))
 	}
 	c.do("PATCH", path, `{"pinned":false}`, http.StatusOK, nil)

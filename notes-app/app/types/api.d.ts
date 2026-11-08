@@ -1326,7 +1326,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["domain.Item"];
+                        "application/json": components["schemas"]["readitem.Result"];
                     };
                 };
                 /** @description Bad Request */
