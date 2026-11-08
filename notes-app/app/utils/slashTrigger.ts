@@ -12,6 +12,8 @@ export const slashTrigger = (open: (range: Range, rect: DOMRect | null) => void)
           editor: this.editor,
           char: '/',
           pluginKey: new PluginKey('slashTrigger'),
+          // Not in code, where a / is text: // would open it.
+          allow: ({ state, range }) => !state.doc.resolve(range.from).parent.type.spec.code,
           // Only a bare /: the cursor coming back after a /word does not open it again.
           render: () => ({ onStart: (props) => props.query === '' && open(props.range, props.clientRect?.() ?? null) }),
         }),
