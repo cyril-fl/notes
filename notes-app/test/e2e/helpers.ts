@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
-import { request, type APIRequestContext } from '@playwright/test';
+import { expect, request, type APIRequestContext, type Locator } from '@playwright/test';
+import type { Editor } from '@tiptap/core';
 import { API, APP, SESSION } from '../../playwright.config';
 
 /** A folder of notes made through the API for one test, deleted for good afterwards: titles are unique per run. */
@@ -72,4 +73,26 @@ export async function throwaway() {
       );
     },
   };
+}
+
+/**
+ * Puts the cursor at the end of the note, or of the first block holding `text`, through the editor itself: Cmd+End
+ * does nothing on macOS, and a key sent right after a click lands where ProseMirror's old selection was.
+ */
+export async function cursorAtEnd(editor: Locator, text?: string) {
+  await editor.evaluate((element, text) => {
+    const tiptap = (element as { editor?: Editor } & HTMLElement).editor!;
+    let end: number | 'end' = 'end';
+    let found = !text;
+    tiptap.state.doc.descendants((node, pos) => {
+      if (found || !node.isTextblock || !node.textContent.includes(text!)) return !found;
+      end = pos + node.nodeSize - 1;
+      found = true;
+      return false;
+    });
+    if (!found) throw new Error(`cursorAtEnd: no block holds ${text}`);
+    tiptap.commands.focus(end);
+  }, text);
+  // The focus command gives the focus on the next frame.
+  await expect(editor).toBeFocused();
 }

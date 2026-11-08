@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { sandbox } from './helpers';
+import { cursorAtEnd, sandbox } from './helpers';
 
 let box: Awaited<ReturnType<typeof sandbox>>;
 test.beforeEach(async () => (box = await sandbox()));
@@ -20,8 +20,7 @@ test('[[ offers the notes and links by id', async ({ page }) => {
   const source = await box.note(`# ${box.prefix} source\n\nVoir`);
   await page.goto(`/notes/${source.id}`);
   const editor = page.locator('.ProseMirror');
-  await editor.click();
-  await page.keyboard.press('ControlOrMeta+End');
+  await cursorAtEnd(editor);
   await page.keyboard.type(' [[cible');
   await page.getByRole('option', { name: new RegExp(`${box.prefix} cible`) }).click();
   await expect(editor.locator(`a[data-note="${target.id}"]`)).toBeVisible();
@@ -36,8 +35,7 @@ test('# offers the existing tags', async ({ page }) => {
   const source = await box.note(`# ${box.prefix} source\n\nVoir`);
   await page.goto(`/notes/${source.id}`);
   const editor = page.locator('.ProseMirror');
-  await editor.click();
-  await page.keyboard.press('ControlOrMeta+End');
+  await cursorAtEnd(editor);
   await page.keyboard.type(` #${box.prefix}-t`);
   await page.getByRole('option', { name: `${box.prefix}-tag` }).click();
 
@@ -49,8 +47,7 @@ test('a [[link]] typed by hand waits, then the API points it to its note', async
   const source = await box.note(`# ${box.prefix} tapé\n\nVoir`);
   await page.goto(`/notes/${source.id}`);
   const editor = page.locator('.ProseMirror');
-  await editor.click();
-  await page.keyboard.press('ControlOrMeta+End');
+  await cursorAtEnd(editor);
   await page.keyboard.type(` [[${box.prefix} main]]`);
   await page.keyboard.press('Escape');
   await expect(editor.locator('a.wikilink-waiting')).toBeVisible();
@@ -81,8 +78,7 @@ test('a pasted address becomes a mini card', async ({ page }) => {
   const note = await box.note(`# ${box.prefix} collé\n\nVoir`);
   await page.goto(`/notes/${note.id}`);
   const editor = page.locator('.ProseMirror');
-  await editor.click();
-  await page.keyboard.press('ControlOrMeta+End');
+  await cursorAtEnd(editor);
   await editor.evaluate((el) => {
     const data = new DataTransfer();
     data.setData('text/plain', 'https://example.com/page');
@@ -98,8 +94,7 @@ test('an email is a link: typed, pasted or given to the link button', async ({ p
   const note = await box.note(`# ${box.prefix} mail\n\nÉcrire à`);
   await page.goto(`/notes/${note.id}`);
   const editor = page.locator('.ProseMirror');
-  await editor.getByText('Écrire à').click();
-  await page.keyboard.press('End');
+  await cursorAtEnd(editor, 'Écrire à');
   await page.keyboard.type(' tape@example.com ');
   await expect(editor.locator('a[href="mailto:tape@example.com"]')).toBeVisible();
 
@@ -128,8 +123,7 @@ test('after a conflict, reload copies the local text and reads the note again', 
   await expect(editor.getByText('Texte')).toBeVisible();
   await box.api.patch(`/api/notes/${note.id}`, { data: { content: `# ${box.prefix} conflit\n\nAilleurs` } });
 
-  await editor.getByText('Texte').click();
-  await page.keyboard.press('End');
+  await cursorAtEnd(editor, 'Texte');
   await page.keyboard.type(' ici');
   await page.getByRole('button', { name: 'Recharger' }).click();
   await expect(editor.getByText('Ailleurs')).toBeVisible();
@@ -159,8 +153,7 @@ test('a pasted image is sent to the API, shown, and cited by the note', async ({
   const note = await box.note(`# ${box.prefix} image\n\ntexte`);
   await page.goto(`/notes/${note.id}`);
   const editor = page.locator('.ProseMirror');
-  await editor.click();
-  await page.keyboard.press('ControlOrMeta+End');
+  await cursorAtEnd(editor);
   await editor.evaluate((element, png) => {
     const data = new DataTransfer();
     data.items.add(new File([Uint8Array.from(atob(png), (c) => c.charCodeAt(0))], 'point.png', { type: 'image/png' }));
@@ -241,7 +234,7 @@ test('a locked note is read-only, in the editor and for the API, until unlocked'
   await expect(text).toHaveAttribute('contenteditable', 'false');
   await page.getByRole('button', { name: 'Verrouiller en lecture seule' }).click();
   await expect(text).toHaveAttribute('contenteditable', 'true');
-  await text.press('ControlOrMeta+End');
+  await cursorAtEnd(text);
   await text.pressSequentially(' modifiée');
   await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('modifiée');
 });
@@ -253,7 +246,7 @@ test('a note left open does not overwrite the text written since on another devi
   await expect(text).toContainText('deux appareils');
   await box.api.patch(`/api/notes/${note.id}`, { data: { content: `# ${box.prefix} deux appareils\n\ntéléphone` } });
 
-  await text.press('ControlOrMeta+End');
+  await cursorAtEnd(text);
   await text.pressSequentially(' tablette');
   const toasts = page.getByRole('region', { name: /Notifications/ });
   await expect(toasts.getByText('La note a changé sur un autre appareil', { exact: false })).toBeVisible();
@@ -272,8 +265,7 @@ test('locking the phone sends the last words at once, and typing on afterwards s
       document.dispatchEvent(new Event('visibilitychange'));
     }, state);
 
-  await text.click();
-  await text.press('ControlOrMeta+End');
+  await cursorAtEnd(text);
   await text.pressSequentially(' caché');
   await visibility('hidden');
   await expect.poll(() => box.content(note.id)).toContain('caché');
@@ -290,8 +282,7 @@ test('a note over 64 KiB still sends its last words when hidden (keepalive limit
   await page.goto(`/notes/${note.id}`);
   const text = page.locator('.ProseMirror');
   await expect(text).toContainText('fin');
-  await text.click();
-  await text.press('ControlOrMeta+End');
+  await cursorAtEnd(text);
   await text.pressSequentially(' dernier');
   await page.evaluate(() => {
     Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
@@ -307,8 +298,7 @@ test('closing the page sends the last words of an open note', async ({ page }) =
   await page.goto(`/notes/${note.id}`);
   const text = page.locator('.ProseMirror');
   await expect(text).toContainText('fermée');
-  await text.click();
-  await text.press('ControlOrMeta+End');
+  await cursorAtEnd(text);
   await text.pressSequentially(' dernier');
   await page.goto('about:blank');
   await expect.poll(() => box.content(note.id)).toContain('dernier');
@@ -441,8 +431,7 @@ test('the source mode edits the markdown', async ({ page }) => {
   await page.getByRole('button', { name: 'Mode source' }).click();
   const source = page.getByRole('textbox', { name: 'Mode source' });
   await expect(source).toHaveValue(`# ${box.prefix} source\n\n**gras**`);
-  await source.press('ControlOrMeta+End');
-  await source.pressSequentially('\n\n- [ ] tâche');
+  await source.fill(`# ${box.prefix} source\n\n**gras**\n\n- [ ] tâche`);
   await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('- [ ] tâche');
   await page.getByRole('button', { name: 'Mode source' }).click();
   await expect(page.locator('.ProseMirror input[type="checkbox"]')).toBeVisible();
@@ -478,8 +467,7 @@ test('without Pro, editing a note keeps its table and callout', async ({ page })
   await box.api.patch('/api/me', { data: { pro: false } });
   await page.goto(`/notes/${note.id}`);
   await expect(page.locator('.ProseMirror table')).toBeVisible();
-  await page.locator('.ProseMirror h1').click();
-  await page.keyboard.press('End');
+  await cursorAtEnd(page.locator('.ProseMirror'), `${box.prefix} blocs`);
   await page.keyboard.type(' fin');
   await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('blocs fin');
   const saved = await box.content(note.id);

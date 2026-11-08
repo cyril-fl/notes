@@ -1,9 +1,8 @@
 import { copyFile, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import type { Editor } from '@tiptap/core';
 import { API, APP } from '../../playwright.config';
-import { sandbox } from './helpers';
+import { cursorAtEnd, sandbox } from './helpers';
 
 let box: Awaited<ReturnType<typeof sandbox>>;
 test.beforeEach(async () => (box = await sandbox()));
@@ -179,8 +178,7 @@ test('snippets are made in the settings and used in the notes', async ({ page })
     const note = await box.note(`# ${box.prefix} snippet\n\nTexte`);
     await page.goto(`/notes/${note.id}`);
     const editor = page.locator('.ProseMirror');
-    await editor.click();
-    await page.keyboard.press('ControlOrMeta+End');
+    await cursorAtEnd(editor);
     await page.keyboard.type(' ;;réunion');
     await page.getByRole('option', { name: new RegExp(`${box.prefix} réunion`) }).click();
     await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('Réunion #e2esnippet');
@@ -230,8 +228,7 @@ test('the Pro mode unlocks the focus mode and the context panel', async ({ page 
     // A [[link]] typed in the note draws its neighbor in the panel, without a reload.
     const panel = page.getByRole('complementary', { name: /panneau de contexte/ });
     await expect(panel.getByRole('heading', { name: 'Graphe' })).toHaveCount(0);
-    await page.getByRole('textbox').click();
-    await page.keyboard.press('End');
+    await cursorAtEnd(page.getByRole('textbox'));
     await page.keyboard.type(` [[Neighbor ${box.prefix}]]`);
     await expect(panel.getByRole('heading', { name: 'Graphe' })).toBeVisible({ timeout: 10_000 });
     // A renamed note shows its new title in the panel's graph, without a reload.
@@ -255,25 +252,15 @@ test('the Pro mode adds the / commands to the editor', async ({ page }) => {
   const editor = page.locator('.ProseMirror');
   try {
     await page.goto(`/notes/${note.id}`);
-    await editor.click();
-    await page.keyboard.press('ControlOrMeta+End');
+    await cursorAtEnd(editor);
     await page.keyboard.type(' /');
     await expect(page.getByRole('menuitem', { name: 'Bloc de code' })).toHaveCount(0);
 
     await box.api.patch('/api/me', { data: { pro: true } });
     await page.reload();
-    await editor.getByText('Texte').click();
-    // ProseMirror reads the click's selection a moment later: typed sooner, Enter splits the title.
-    await expect
-      .poll(() =>
-        editor.evaluate(
-          (e) => (e as { editor?: Editor } & HTMLElement).editor?.state.selection.$from.parent.textContent,
-        ),
-      )
-      .toContain('Texte');
+    await cursorAtEnd(editor, 'Texte');
     // Only a / just typed opens the menu, not the cursor put back after one.
     await expect(page.getByRole('menuitem', { name: 'Titres' })).toHaveCount(0);
-    await page.keyboard.press('End');
     await page.keyboard.press('Enter');
     await page.keyboard.type('/');
     // The menu has the focus: a letter is for it, not a shortcut of the page (t opens the snippets).
@@ -308,8 +295,7 @@ test('the Pro mode adds the tables to the editor', async ({ page }) => {
   try {
     await box.api.patch('/api/me', { data: { pro: true } });
     await page.goto(`/notes/${note.id}`);
-    await editor.click();
-    await page.keyboard.press('ControlOrMeta+End');
+    await cursorAtEnd(editor);
     await page.keyboard.press('Enter');
     await page.keyboard.type('/');
     await page.getByRole('menuitem', { name: 'Tableau' }).click();
@@ -339,8 +325,7 @@ test('the Pro mode colors the code blocks', async ({ page }) => {
     await box.api.patch('/api/me', { data: { pro: true } });
     await page.reload();
     await expect(keyword.first()).toHaveText('func');
-    await page.locator('.ProseMirror pre').click();
-    await page.keyboard.press('End');
+    await cursorAtEnd(page.locator('.ProseMirror'), 'func main');
     await page.keyboard.type(' // ok');
     await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('```go\nfunc main() {} // ok\n```');
   } finally {
@@ -360,8 +345,7 @@ test('the Pro mode counts the words of the note', async ({ page }) => {
     await box.api.patch('/api/me', { data: { pro: true } });
     await page.reload();
     const before = parseInt((await count.textContent()) ?? '');
-    await page.locator('.ProseMirror').getByText('Un deux trois').click();
-    await page.keyboard.press('End');
+    await cursorAtEnd(page.locator('.ProseMirror'), 'Un deux trois');
     await page.keyboard.type(' quatre, cinq !');
     await expect(count).toHaveText(`${before + 2} mots`);
   } finally {
@@ -377,16 +361,7 @@ test('the Pro mode adds the callouts to the editor', async ({ page }) => {
     await box.api.patch('/api/me', { data: { pro: true } });
     await page.goto(`/notes/${note.id}`);
     await expect(editor.locator('blockquote[data-callout=tip]')).toContainText('Lire la suite');
-    await editor.getByText('Texte', { exact: true }).click();
-    // ProseMirror reads the click's selection a moment later: typed sooner, Enter splits the title.
-    await expect
-      .poll(() =>
-        editor.evaluate(
-          (e) => (e as { editor?: Editor } & HTMLElement).editor?.state.selection.$from.parent.textContent,
-        ),
-      )
-      .toBe('Texte');
-    await page.keyboard.press('End');
+    await cursorAtEnd(editor, 'Texte');
     await page.keyboard.press('Enter');
     await page.keyboard.type('/');
     await page.getByRole('menuitem', { name: 'Encadrés' }).hover();

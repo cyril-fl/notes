@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { sandbox } from './helpers';
+import { cursorAtEnd, sandbox } from './helpers';
 
 let box: Awaited<ReturnType<typeof sandbox>>;
 test.beforeEach(async () => (box = await sandbox()));
@@ -25,8 +25,7 @@ test('the Pro context panel follows the note', async ({ page }) => {
 
     // Linked notes and the mini-graph show up once the [[link]] is saved, without a reload.
     await expect(panel.getByText('Liens', { exact: true })).toHaveCount(0);
-    await bottom.click();
-    await page.keyboard.press('End');
+    await cursorAtEnd(page.getByRole('textbox'), `Bottom ${box.prefix}`);
     await page.keyboard.type(` [[Target ${box.prefix}]]`);
     await expect(panel.getByText('Liens', { exact: true })).toBeVisible({ timeout: 10_000 });
     const graph = panel.locator('section').filter({ has: page.getByRole('heading', { name: 'Graphe' }) });
