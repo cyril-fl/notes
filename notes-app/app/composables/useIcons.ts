@@ -49,6 +49,7 @@ export function useIcons() {
     current: 'i-reicon-check',
     data: 'i-reicon-database',
     pro: 'i-reicon-sparkles',
+    source: 'i-reicon-document-code',
     focus: 'i-reicon-maximize',
     unfocus: 'i-reicon-minimize',
 

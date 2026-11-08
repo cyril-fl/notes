@@ -128,13 +128,35 @@ const unhook = useNuxtApp().hook('app:data:refresh', () => {
 });
 onBeforeUnmount(unhook);
 
-function onContent(markdown: string) {
-  if (!touched.value) return;
-  // The editor writes blank lines as non-breaking spaces, and & < > as HTML entities.
-  // Spaces first: a typed "&nbsp;" is written "&amp;nbsp;" and must come back as typed.
-  const content = decodeEntities(markdown.replace(/&nbsp;/gi, ' ').replace(/\u00a0/g, ' ')).trim();
+// The editor writes blank lines as non-breaking spaces, and & < > as HTML entities.
+// Spaces first: a typed "&nbsp;" is written "&amp;nbsp;" and must come back as typed.
+function clean(markdown: string) {
+  return decodeEntities(markdown.replace(/&nbsp;/gi, ' ').replace(/\u00a0/g, ' ')).trim();
+}
+
+function save(content: string) {
   isEmpty.value = !content;
   saver.push({ content: content || undefined });
+}
+
+function onContent(markdown: string) {
+  if (touched.value) save(clean(markdown));
+}
+
+// Pro: the markdown as text, in place of the editor; undefined in the editor. Back in the editor, it starts from that text.
+const source = ref<string>();
+function toggleSource() {
+  if (source.value !== undefined) {
+    initialContent.value = source.value;
+    source.value = undefined;
+    return;
+  }
+  const markdown = editorRef.value?.editor?.getMarkdown();
+  source.value = markdown === undefined ? initialContent.value : clean(markdown);
+}
+function onSource(text: string) {
+  source.value = text;
+  save(text.trim());
 }
 
 // shortcut: a keepalive body is limited to 64 KiB, a longer note loses its last 1.5 s when the tab closes; beacon has the same limit.
@@ -336,7 +358,17 @@ const status = computed(() => {
     @click="parts.onClick"
   >
     <!-- A div takes the menu's listeners: UEditor hands its own to TipTap. -->
-    <UContextMenu :items="contextMenu" :disabled="!contextMenu.length">
+    <UTextarea
+      v-if="source !== undefined"
+      :model-value="source"
+      variant="none"
+      autofocus
+      :aria-label="$t('note.source')"
+      class="flex min-h-0 flex-1"
+      :ui="{ base: 'h-full resize-none px-8 pb-8 font-mono text-sm' }"
+      @update:model-value="onSource"
+    />
+    <UContextMenu v-else :items="contextMenu" :disabled="!contextMenu.length">
       <div class="flex min-h-0 flex-1 flex-col" @contextmenu.capture="placeCursor">
         <UEditor
           ref="editor"
@@ -390,6 +422,17 @@ const status = computed(() => {
         <PathNav :path="path" />
         <span class="ml-auto shrink-0" :class="{ 'text-error': failed }" role="status">{{ status }}</span>
         <span v-if="has('wordCount')" class="shrink-0 tabular-nums">{{ $t('note.words', words) }}</span>
+        <UTooltip v-if="has('sourceMode')" :text="source === undefined ? $t('note.source') : $t('note.editor')">
+          <UButton
+            :icon="icons.source"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            :aria-label="$t('note.source')"
+            :aria-pressed="source !== undefined"
+            @click="toggleSource"
+          />
+        </UTooltip>
         <UTooltip v-if="has('focusMode')" :text="focus ? $t('note.unfocus') : $t('note.focus')" :kbds="['meta', '.']">
           <UButton
             :icon="focus ? icons.unfocus : icons.focus"

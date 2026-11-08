@@ -210,3 +210,23 @@ test('the Pro palette moves the open note', async ({ page }) => {
     await box.api.patch('/api/me', { data: { pro: false } });
   }
 });
+
+// Pro: the source mode shows the markdown as text, saves what is typed there, and the editor starts from it.
+test('the Pro source mode edits the markdown', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} source\n\n**gras**`);
+  try {
+    await box.api.patch('/api/me', { data: { pro: true } });
+    await page.goto(`/notes/${note.id}`);
+    await expect(page.locator('.ProseMirror')).toContainText('gras');
+    await page.getByRole('button', { name: 'Mode source' }).click();
+    const source = page.getByRole('textbox', { name: 'Mode source' });
+    await expect(source).toHaveValue(`# ${box.prefix} source\n\n**gras**`);
+    await source.press('ControlOrMeta+End');
+    await source.pressSequentially('\n\n- [ ] tâche');
+    await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('- [ ] tâche');
+    await page.getByRole('button', { name: 'Mode source' }).click();
+    await expect(page.locator('.ProseMirror input[type="checkbox"]')).toBeVisible();
+  } finally {
+    await box.api.patch('/api/me', { data: { pro: false } });
+  }
+});

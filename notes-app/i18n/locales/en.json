@@ -155,7 +155,9 @@
     "focus": "Focus mode",
     "unfocus": "Leave focus mode",
     "outline": "Outline",
-    "noOutline": "No headings"
+    "noOutline": "No headings",
+    "source": "Source mode",
+    "editor": "Back to the editor"
   },
   "tag": {
     "count": "{n} note | {n} notes",
@@ -287,6 +289,7 @@
     "callouts": "Callouts (note, tip, warning, danger), inserted from the / menu",
     "wordCount": "The word count of the note, below the text",
     "contextMenu": "Right click (or long press) in a note: the same menu as /",
-    "paletteActions": "In the Cmd K palette: move the open note or folder, rename it, change the theme"
+    "paletteActions": "In the Cmd K palette: move the open note or folder, rename it, change the theme",
+    "sourceMode": "Source mode: the note's markdown as plain text, from the button under the text"
   }
 }

@@ -155,7 +155,9 @@
     "focus": "Mode focus",
     "unfocus": "Quitter le mode focus",
     "outline": "Plan",
-    "noOutline": "Aucun titre"
+    "noOutline": "Aucun titre",
+    "source": "Mode source",
+    "editor": "Retour à l'éditeur"
   },
   "tag": {
     "count": "{n} note | {n} notes",
@@ -287,6 +289,7 @@
     "callouts": "Les encadrés (note, astuce, attention, danger), insérés depuis le menu /",
     "wordCount": "Le nombre de mots de la note, sous le texte",
     "contextMenu": "Le clic droit (ou l'appui long) dans une note : le même menu que /",
-    "paletteActions": "Dans la palette Cmd K : déplacer la note ou le dossier ouvert, le renommer, changer de thème"
+    "paletteActions": "Dans la palette Cmd K : déplacer la note ou le dossier ouvert, le renommer, changer de thème",
+    "sourceMode": "Le mode source : le markdown de la note en texte brut, depuis le bouton sous le texte"
   }
 }
