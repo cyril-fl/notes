@@ -179,6 +179,11 @@ test('the Pro mode adds the / commands to the editor', async ({ page }) => {
     await expect(page.getByRole('menuitem', { name: 'Titres' })).toBeVisible();
     await page.keyboard.type('t');
     await expect(page.getByRole('dialog')).toHaveCount(0);
+    // A backspace takes back the / and closes the menu.
+    await page.keyboard.press('Backspace');
+    await expect(page.getByRole('menuitem', { name: 'Titres' })).toHaveCount(0);
+    await expect(editor).not.toContainText('/');
+    await page.keyboard.type('/');
     await page.getByRole('menuitem', { name: 'Titres' }).hover();
     await page.getByRole('menuitem', { name: 'Titre 2' }).click();
     await page.keyboard.type('Sous-titre');

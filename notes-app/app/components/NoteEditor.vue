@@ -244,6 +244,14 @@ const slashOpen = computed({
     editorRef.value?.editor?.commands.focus();
   },
 });
+// The menu has the focus: a backspace there takes back the / and closes it, as in the text.
+function slashKey(event: KeyboardEvent) {
+  if (event.key !== 'Backspace' || !slashAt.value) return;
+  event.preventDefault();
+  editorRef.value?.editor?.chain().focus().deleteRange(slashAt.value.range).run();
+  slashAt.value = null;
+}
+useEventListener(window, 'keydown', slashKey);
 // The same menu on a right click or a long press.
 const contextMenu = computed(() => (has('contextMenu') ? slashMenu.value : []));
 // The menu keeps the browser from moving the cursor on a right click: it goes where the click was, unless inside the selected text.
