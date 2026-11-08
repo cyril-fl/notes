@@ -28,6 +28,7 @@ const settingsLinks = computed(() => [
 const { data: pinned } = usePinned();
 const favorites = computed(() => pinned.value.filter((item) => item.kind === 'folder'));
 const pinnedNotes = computed(() => pinned.value.filter((item) => item.kind === 'note'));
+// In system mode the OS decides: the sidebar shows no toggle that would override it.
 const darkMode = computed({
   get: () => colorMode.value === 'dark',
   set: (dark) => (colorMode.preference = dark ? 'dark' : 'light'),
@@ -124,7 +125,11 @@ const isOverRoot = useDropFolder(rootLink, () => null);
           <UAvatar :src="avatarSrc" :alt="me?.name" size="xs" />
         </UButton>
       </UDropdownMenu>
-      <UTooltip :text="darkMode ? $t('sidebar.lightTheme') : $t('sidebar.darkTheme')" :content="{ side: 'right' }">
+      <UTooltip
+        v-if="colorMode.preference !== 'system'"
+        :text="darkMode ? $t('sidebar.lightTheme') : $t('sidebar.darkTheme')"
+        :content="{ side: 'right' }"
+      >
         <UButton
           :icon="darkMode ? icons.lightMode : icons.darkMode"
           color="neutral"
@@ -301,7 +306,10 @@ const isOverRoot = useDropFolder(rootLink, () => null);
           <UAvatar :src="avatarSrc" :alt="me?.name" size="2xs" />
         </UButton>
       </UDropdownMenu>
-      <UTooltip :text="darkMode ? $t('sidebar.lightTheme') : $t('sidebar.darkTheme')">
+      <UTooltip
+        v-if="colorMode.preference !== 'system'"
+        :text="darkMode ? $t('sidebar.lightTheme') : $t('sidebar.darkTheme')"
+      >
         <UButton
           :icon="darkMode ? icons.lightMode : icons.darkMode"
           color="neutral"

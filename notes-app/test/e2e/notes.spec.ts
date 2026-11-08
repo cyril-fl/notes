@@ -155,15 +155,26 @@ test('pinning from the menu lists the note in the sidebar', async ({ page }) => 
   await box.api.patch(`/api/notes/${note.id}`, { data: { pinned: false } });
 });
 
+// In system mode the OS decides: the sidebar has no theme button. Set back to light, as every run expects.
 test('N opens a new note in the current folder, the theme button switches to dark', async ({ page }) => {
-  await page.goto(`/folders/${box.folder.id}`);
-  await expect(page.getByRole('heading', { name: box.prefix })).toBeVisible();
-  await page.keyboard.press('n');
-  await expect(page).toHaveURL(new RegExp(`/notes/new\\?parent=${box.folder.id}`));
+  try {
+    await box.api.patch('/api/me', { data: { color_mode: 'system' } });
+    await page.goto(`/folders/${box.folder.id}`);
+    await expect(page.getByRole('heading', { name: box.prefix })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Thème (sombre|clair)/ })).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Thème sombre' }).click();
-  await expect(page.locator('html')).toHaveClass(/dark/);
-  await page.getByRole('button', { name: 'Thème clair' }).click();
+    await box.api.patch('/api/me', { data: { color_mode: 'light' } });
+    await page.reload();
+    await expect(page.getByRole('heading', { name: box.prefix })).toBeVisible();
+    await page.keyboard.press('n');
+    await expect(page).toHaveURL(new RegExp(`/notes/new\\?parent=${box.folder.id}`));
+
+    await page.getByRole('button', { name: 'Thème sombre' }).click();
+    await expect(page.locator('html')).toHaveClass(/dark/);
+    await page.getByRole('button', { name: 'Thème clair' }).click();
+  } finally {
+    await box.api.patch('/api/me', { data: { color_mode: 'light' } });
+  }
 });
 
 test('< > & are saved as typed, not as HTML entities', async ({ page }) => {

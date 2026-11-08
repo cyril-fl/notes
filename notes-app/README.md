@@ -31,7 +31,7 @@ Coller ou glisser une image (PNG, JPEG, GIF, WebP, 20 Mo au plus) dans une note 
 
 `⌘K` ou `/` ouvre la palette (notes, récentes, actions, thème), `N` crée une note dans le dossier affiché, `T` une note qui commence par un snippet, `⇧N` un dossier, `⌘\` replie la barre latérale. Hors d'un champ de saisie seulement.
 
-La barre latérale se redimensionne en tirant son bord (sa largeur reste d'une visite à l'autre). Repliée, elle reste à l'écran en barre d'icônes (recherche, notes, graphe, corbeille, réglages, thème). Sur petit écran, elle devient un tiroir.
+La barre latérale se redimensionne en tirant son bord (sa largeur reste d'une visite à l'autre). Repliée, elle reste à l'écran en barre d'icônes (recherche, notes, graphe, corbeille, réglages, et le bouton clair/sombre sauf en mode système, où l'OS décide). Sur petit écran, elle devient un tiroir.
 
 Un clic droit sur un dossier le met en favori, un clic droit sur un tag le renomme ou le supprime.
 
