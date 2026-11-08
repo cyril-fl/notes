@@ -268,6 +268,16 @@ function linkClass(link: Link) {
           @click="recenter"
         />
       </UTooltip>
+      <UTooltip v-if="mini && selected" :text="$t('related.showGraph')">
+        <UButton
+          :icon="icons.expand"
+          :to="{ path: '/graph', query: { note: selected } }"
+          :aria-label="$t('related.showGraph')"
+          color="neutral"
+          variant="ghost"
+          size="sm"
+        />
+      </UTooltip>
     </div>
   </div>
 </template>

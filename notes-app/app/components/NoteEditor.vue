@@ -557,14 +557,6 @@ const status = computed(() => {
       <section v-if="has('graph') && nearGraph?.links.length" class="sticky bottom-0 mt-auto -mb-4 bg-default pb-4">
         <div class="mb-2 flex items-center justify-between">
           <h2 class="text-xs font-medium text-muted">{{ $t('common.graph') }}</h2>
-          <UButton
-            :icon="icons.expand"
-            :to="{ path: '/graph', query: { note: id } }"
-            :aria-label="$t('related.showGraph')"
-            color="neutral"
-            variant="ghost"
-            size="xs"
-          />
         </div>
         <GraphView :graph="nearGraph" :selected="id" mini class="h-56!" />
       </section>

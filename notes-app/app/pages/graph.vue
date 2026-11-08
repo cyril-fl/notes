@@ -9,20 +9,17 @@ const route = useRoute();
 const api = useApi();
 
 const { data: graph } = useLazyAsyncData('graph', () => api<NotesGraph>('/api/graph/notes'));
+
+const selectedNotePath = computed(() => {
+  const noteId = typeof route.query.note === 'string' ? route.query.note : undefined;
+  const path = graph.value?.notes.find((note) => note.id === noteId)?.path;
+  return path?.slice(0, path.lastIndexOf('/')) || '/';
+});
 </script>
 
 <template>
   <div class="flex h-full flex-col p-8">
-    <PageHeader :title="$t('common.graph')" :subtitle="$t('graph.subtitle')">
-      <UButton
-        v-if="route.query.note"
-        :icon="icons.back"
-        :label="$t('graph.backToNote')"
-        :to="`/notes/${route.query.note}`"
-        color="neutral"
-        variant="ghost"
-      />
-    </PageHeader>
+    <PageHeader :title="$t('common.graph')" />
     <template v-if="graph">
       <GraphView
         v-if="graph.notes.length"
@@ -38,5 +35,13 @@ const { data: graph } = useLazyAsyncData('graph', () => api<NotesGraph>('/api/gr
         :actions="[{ label: $t('common.newNote'), icon: icons.noteAdd, to: newNotePath() }]"
       />
     </template>
+    <footer
+      v-if="route.query.note"
+      class="sticky bottom-0 z-10 -mx-8 -mb-8 mt-auto border-t border-default bg-default px-8"
+    >
+      <div class="flex h-9 items-center text-xs text-muted">
+        <PathNav :path="selectedNotePath" />
+      </div>
+    </footer>
   </div>
 </template>
