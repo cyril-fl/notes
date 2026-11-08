@@ -33,6 +33,10 @@ var failed = &throttle{now: time.Now, byKey: map[string]strikes{}}
 func (t *throttle) wait(key string) time.Duration {
 	t.Lock()
 	defer t.Unlock()
+	return t.waitLocked(key)
+}
+
+func (t *throttle) waitLocked(key string) time.Duration {
 	s := t.byKey[key]
 	if s.count == 0 {
 		return 0
@@ -40,10 +44,22 @@ func (t *throttle) wait(key string) time.Duration {
 	return max(waits[min(s.count, len(waits))-1]-t.now().Sub(s.last), 0)
 }
 
+// fail counts a wrong password for key, t locked.
 func (t *throttle) fail(key string) {
+	t.byKey[key] = strikes{count: t.byKey[key].count + 1, last: t.now()}
+}
+
+// forgive takes back the try blocked counted, when it was not a wrong password.
+func (t *throttle) forgive(key string) {
 	t.Lock()
 	defer t.Unlock()
-	t.byKey[key] = strikes{count: t.byKey[key].count + 1, last: t.now()}
+	s := t.byKey[key]
+	if s.count <= 1 {
+		delete(t.byKey, key)
+		return
+	}
+	s.count--
+	t.byKey[key] = s
 }
 
 func (t *throttle) reset(key string) {
@@ -52,9 +68,15 @@ func (t *throttle) reset(key string) {
 	delete(t.byKey, key)
 }
 
-// blocked answers 429 with Retry-After while key waits.
+// blocked answers 429 with Retry-After while key waits, else counts the try as a wrong password before it is checked:
+// tries sent at once cannot all pass while argon2id runs. The caller resets on a good password, forgives on another error.
 func (t *throttle) blocked(w http.ResponseWriter, key string) bool {
-	wait := t.wait(key)
+	t.Lock()
+	wait := t.waitLocked(key)
+	if wait == 0 {
+		t.fail(key)
+	}
+	t.Unlock()
 	if wait == 0 {
 		return false
 	}

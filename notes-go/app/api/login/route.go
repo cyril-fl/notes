@@ -33,20 +33,19 @@ func Handler(db bun.IDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		address, _, _ := net.SplitHostPort(r.RemoteAddr)
 		key := "address " + address
-		if failed.blocked(w, key) {
-			return
-		}
-
 		var input createsession.Input
 		if !respond.Decode(w, r, &input) {
+			return
+		}
+		if failed.blocked(w, key) {
 			return
 		}
 
 		process := createsession.Process(r.Context(), db, input)
 		process.Run()
 		if process.HasErr() {
-			if errors.Is(process.GetErr(), createsession.ErrBadCredentials) {
-				failed.fail(key)
+			if !errors.Is(process.GetErr(), createsession.ErrBadCredentials) {
+				failed.forgive(key)
 			}
 			respond.Error(w, process.GetErr())
 			return
@@ -139,20 +138,19 @@ func EditMe(db bun.IDB) http.HandlerFunc {
 func EditPassword(db bun.IDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		key := "account " + domain.UserID(r.Context())
-		if failed.blocked(w, key) {
-			return
-		}
-
 		var input editpassword.Input
 		if !respond.Decode(w, r, &input) {
+			return
+		}
+		if failed.blocked(w, key) {
 			return
 		}
 
 		process := editpassword.Process(r.Context(), db, input, auth.Token(r))
 		process.Run()
 		if process.HasErr() {
-			if errors.Is(process.GetErr(), editpassword.ErrWrongPassword) {
-				failed.fail(key)
+			if !errors.Is(process.GetErr(), editpassword.ErrWrongPassword) {
+				failed.forgive(key)
 			}
 			respond.Error(w, process.GetErr())
 			return

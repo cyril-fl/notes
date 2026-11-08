@@ -3,6 +3,7 @@ package login
 import (
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 )
@@ -38,5 +39,33 @@ func TestThrottle(t *testing.T) {
 	th.fail("a")
 	if got := th.wait("a"); got != 0 {
 		t.Errorf("first failure after a reset: wait = %v, want 0", got)
+	}
+}
+
+func TestThrottleAtOnce(t *testing.T) {
+	th := &throttle{now: time.Now, byKey: map[string]strikes{}}
+
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	passed := 0
+	for range 100 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if !th.blocked(httptest.NewRecorder(), "a") {
+				mu.Lock()
+				passed++
+				mu.Unlock()
+			}
+		}()
+	}
+	wg.Wait()
+	if passed != 4 {
+		t.Errorf("tries sent at once: %d passed, want 4", passed)
+	}
+
+	th.forgive("a")
+	if got := th.byKey["a"].count; got != 3 {
+		t.Errorf("after forgive: count = %d, want 3", got)
 	}
 }
