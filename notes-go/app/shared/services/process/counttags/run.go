@@ -3,11 +3,11 @@ package counttags
 import (
 	"context"
 
-	"main.go/app/shared/services/secret"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
-	"main.go/app/shared/domain"
 )
 
 // TagCount is a tag with the number of live notes carrying it.

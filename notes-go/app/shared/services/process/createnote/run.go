@@ -6,15 +6,15 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/hashtag"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/notetitle"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createtag"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/linknotes"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/driver/pgdriver"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/hashtag"
-	"main.go/app/shared/services/notetitle"
-	"main.go/app/shared/services/process/createtag"
-	"main.go/app/shared/services/process/linknotes"
-	"main.go/app/shared/services/secret"
 )
 
 var (

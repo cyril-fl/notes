@@ -3,12 +3,12 @@ package editfolder
 import (
 	"net/http"
 
+	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/editfolder"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/pinnote"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readitem"
 	"github.com/uptrace/bun"
-	"main.go/app/api/services/respond"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/process/editfolder"
-	"main.go/app/shared/services/process/pinnote"
-	"main.go/app/shared/services/process/readitem"
 )
 
 // Body has pointers to tell a field left out: {"pinned": true} alone keeps the title.

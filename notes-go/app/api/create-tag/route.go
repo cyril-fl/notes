@@ -3,9 +3,9 @@ package createtag
 import (
 	"net/http"
 
+	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createtag"
 	"github.com/uptrace/bun"
-	"main.go/app/api/services/respond"
-	"main.go/app/shared/services/process/createtag"
 )
 
 type Body struct {

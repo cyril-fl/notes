@@ -7,16 +7,16 @@ import (
 
 	"charm.land/huh/v2"
 
+	cmdedittag "github.com/cyril-fl/notes/notes-go/app/cli/cmd-edit-tag"
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listtag"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readtag"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/screen"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/style"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	plumdebug "github.com/cyril-fl/plum/utils/debug"
 	"github.com/spf13/cobra"
-	cmdedittag "main.go/app/cli/cmd-edit-tag"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/listtag"
-	"main.go/app/shared/services/process/readtag"
-	"main.go/app/shared/services/screen"
-	"main.go/app/shared/services/style"
 )
 
 // Read shows one tag and its notes, or lists tags with --list, one value per line, or as YAML/JSON with --yaml/--json.

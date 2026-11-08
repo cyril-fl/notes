@@ -7,12 +7,12 @@ import (
 	"os"
 	"strings"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/resolveitem"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/uptrace/bun"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/resolveitem"
 )
 
 // stdinContent is the --content value meaning "read the content from stdin".

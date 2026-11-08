@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/process/readitem"
-	"main.go/app/shared/services/secret"
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readitem"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 )
 
 // tree: root holds folder A (with note N inside) and note R.

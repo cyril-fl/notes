@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
-	"main.go/app/shared/domain"
 )
 
 type run struct {

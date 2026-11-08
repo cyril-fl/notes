@@ -7,9 +7,9 @@ import (
 
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/style"
 	plumtypes "github.com/cyril-fl/plum/types"
 	"golang.org/x/term"
-	"main.go/app/shared/services/style"
 )
 
 // ErrQuit is returned when the user quits everything (ctrl+q), not just this view (esc):

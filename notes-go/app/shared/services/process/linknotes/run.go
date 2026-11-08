@@ -6,12 +6,12 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/notetitle"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/wikilink"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/notetitle"
-	"main.go/app/shared/services/secret"
-	"main.go/app/shared/services/wikilink"
 )
 
 // Input is a note as just saved: its id, content and title ("" = untitled), and the title it had

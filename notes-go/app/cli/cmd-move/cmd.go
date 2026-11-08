@@ -3,10 +3,10 @@ package cmdmove
 import (
 	"fmt"
 
+	millflagsmove "github.com/cyril-fl/notes/notes-go/app/cli/cmd-move/services/mill"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/moveitems"
 	"github.com/spf13/cobra"
-	millflagsmove "main.go/app/cli/cmd-move/services/mill"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/moveitems"
 )
 
 // Move puts notes and folders into the --parent folder, or at the root without it.

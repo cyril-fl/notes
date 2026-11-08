@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/password"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/password"
-	"main.go/app/shared/services/secret"
 )
 
 // Lifetime is how long a session lasts without use: each use starts it again (readsession).

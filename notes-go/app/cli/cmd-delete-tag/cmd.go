@@ -3,9 +3,9 @@ package cmddeletetag
 import (
 	"fmt"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deletetag"
 	"github.com/spf13/cobra"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/deletetag"
 )
 
 func Delete(cobra *cobra.Command, args []string) error {

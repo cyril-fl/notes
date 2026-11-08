@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/huhform"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createfolder"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listfolders"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/spf13/pflag"
 	"github.com/uptrace/bun"
-	"main.go/app/shared/services/huhform"
-	"main.go/app/shared/services/process/createfolder"
-	"main.go/app/shared/services/process/listfolders"
 )
 
 type mill struct {

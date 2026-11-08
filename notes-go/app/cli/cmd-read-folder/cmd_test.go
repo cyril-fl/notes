@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/process/readitem"
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readitem"
 )
 
 func TestInfo(t *testing.T) {

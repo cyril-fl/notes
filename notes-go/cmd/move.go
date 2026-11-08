@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	cmdmove "github.com/cyril-fl/notes/notes-go/app/cli/cmd-move"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
-	cmdmove "main.go/app/cli/cmd-move"
 )
 
 var cmdMove = &cobra.Command{

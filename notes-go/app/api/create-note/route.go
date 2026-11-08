@@ -3,9 +3,9 @@ package createnote
 import (
 	"net/http"
 
+	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createnote"
 	"github.com/uptrace/bun"
-	"main.go/app/api/services/respond"
-	"main.go/app/shared/services/process/createnote"
 )
 
 // Handler creates a note: POST /api/notes.

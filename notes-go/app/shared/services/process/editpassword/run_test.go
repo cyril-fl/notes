@@ -6,12 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/password"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/adduser"
-	"main.go/app/shared/services/process/createschema"
-	"main.go/app/shared/services/testaccount"
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/password"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/adduser"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createschema"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/testaccount"
 )
 
 func TestEditPassword(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"main.go/app/shared/services/hashtag"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/hashtag"
 )
 
 // MaxLength is the most runes a title keeps when it comes from the first words of the text.

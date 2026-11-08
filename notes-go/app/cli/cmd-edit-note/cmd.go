@@ -4,15 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	millflagseditnote "github.com/cyril-fl/notes/notes-go/app/cli/cmd-edit-note/services/mill"
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/editnote"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/pinnote"
+	"github.com/cyril-fl/notes/notes-go/config"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	millflagseditnote "main.go/app/cli/cmd-edit-note/services/mill"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/editnote"
-	"main.go/app/shared/services/process/pinnote"
-	"main.go/config"
 )
 
 // Edit loads the note, applies the flags (or a pre-filled form when none), then saves it.

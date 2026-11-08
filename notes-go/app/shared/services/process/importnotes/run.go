@@ -10,15 +10,15 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/notetitle"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createfile"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createfolder"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createnote"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/exportnotes"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/silo"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/notetitle"
-	"main.go/app/shared/services/process/createfile"
-	"main.go/app/shared/services/process/createfolder"
-	"main.go/app/shared/services/process/createnote"
-	"main.go/app/shared/services/process/exportnotes"
-	"main.go/app/shared/services/silo"
 )
 
 // imagePattern finds the markdown images ![alt](target "title") and ![alt](<target with spaces>): the target is

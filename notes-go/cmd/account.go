@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	cmdaccount "github.com/cyril-fl/notes/notes-go/app/cli/cmd-account"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
-	cmdaccount "main.go/app/cli/cmd-account"
 )
 
 var cmdLogin = &cobra.Command{

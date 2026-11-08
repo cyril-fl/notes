@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createsession"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readsession"
 	"github.com/uptrace/bun"
-	"main.go/app/api/services/respond"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/process/createsession"
-	"main.go/app/shared/services/process/readsession"
 )
 
 // Cookie holds the session token of the web app: HttpOnly, page scripts never see it.

@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	cmdrecent "github.com/cyril-fl/notes/notes-go/app/cli/cmd-recent"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
-	cmdrecent "main.go/app/cli/cmd-recent"
 )
 
 var cmdRecent = &cobra.Command{

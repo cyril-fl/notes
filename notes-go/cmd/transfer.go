@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	cmdexport "github.com/cyril-fl/notes/notes-go/app/cli/cmd-export"
+	cmdimport "github.com/cyril-fl/notes/notes-go/app/cli/cmd-import"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
-	cmdexport "main.go/app/cli/cmd-export"
-	cmdimport "main.go/app/cli/cmd-import"
 )
 
 var cmdExport = &cobra.Command{

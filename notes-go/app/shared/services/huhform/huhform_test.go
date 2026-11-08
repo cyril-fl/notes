@@ -5,7 +5,7 @@ import (
 
 	"charm.land/huh/v2"
 	"charm.land/lipgloss/v2"
-	"main.go/app/shared/services/process/listfolders"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listfolders"
 )
 
 func TestFitFillsHeight(t *testing.T) {

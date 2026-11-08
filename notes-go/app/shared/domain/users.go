@@ -6,8 +6,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 	"github.com/uptrace/bun"
-	"main.go/app/shared/services/secret"
 )
 
 // User is an account: every item and tag belongs to one.

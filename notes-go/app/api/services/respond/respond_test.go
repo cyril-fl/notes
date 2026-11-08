@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"main.go/app/shared/services/process/createnote"
-	"main.go/app/shared/services/process/edittag"
-	"main.go/app/shared/services/process/moveitems"
-	"main.go/app/shared/services/process/readitem"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createnote"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/edittag"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/moveitems"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readitem"
 )
 
 func TestError(t *testing.T) {

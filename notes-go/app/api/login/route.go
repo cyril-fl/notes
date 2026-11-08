@@ -6,15 +6,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/cyril-fl/notes/notes-go/app/api/services/auth"
+	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createsession"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deletesession"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/editpassword"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/edituser"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/purgeaccount"
 	"github.com/uptrace/bun"
-	"main.go/app/api/services/auth"
-	"main.go/app/api/services/respond"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/process/createsession"
-	"main.go/app/shared/services/process/deletesession"
-	"main.go/app/shared/services/process/editpassword"
-	"main.go/app/shared/services/process/edituser"
-	"main.go/app/shared/services/process/purgeaccount"
 )
 
 // Handler logs in: POST /api/login. The session token goes in an HttpOnly cookie, never in the body.

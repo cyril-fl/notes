@@ -3,9 +3,9 @@ package move
 import (
 	"net/http"
 
+	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/moveitems"
 	"github.com/uptrace/bun"
-	"main.go/app/api/services/respond"
-	"main.go/app/shared/services/process/moveitems"
 )
 
 // Handler moves items into a folder, to the root without parent_id: POST /api/move.

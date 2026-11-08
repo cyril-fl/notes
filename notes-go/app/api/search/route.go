@@ -3,9 +3,9 @@ package search
 import (
 	"net/http"
 
+	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/searchnotes"
 	"github.com/uptrace/bun"
-	"main.go/app/api/services/respond"
-	"main.go/app/shared/services/process/searchnotes"
 )
 
 // Handler finds notes by title or content: GET /api/search?q=.

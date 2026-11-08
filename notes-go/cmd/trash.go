@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	cmdrestore "github.com/cyril-fl/notes/notes-go/app/cli/cmd-restore"
+	cmdtrash "github.com/cyril-fl/notes/notes-go/app/cli/cmd-trash"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
-	cmdrestore "main.go/app/cli/cmd-restore"
-	cmdtrash "main.go/app/cli/cmd-trash"
 )
 
 var cmdTrash = &cobra.Command{

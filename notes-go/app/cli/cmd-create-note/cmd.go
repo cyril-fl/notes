@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	millflagscreatenote "github.com/cyril-fl/notes/notes-go/app/cli/cmd-create-note/services/mill"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createnote"
+	"github.com/cyril-fl/notes/notes-go/config"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	millflagscreatenote "main.go/app/cli/cmd-create-note/services/mill"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/createnote"
-	"main.go/config"
 )
 
 // Create resolves the note from flags (and a form for what is missing), then saves it.

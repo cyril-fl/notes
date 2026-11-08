@@ -4,15 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"main.go/app/shared/services/testaccount"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/testaccount"
 	"testing"
 	"time"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createfolder"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createnote"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createschema"
 	"github.com/uptrace/bun"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/createfolder"
-	"main.go/app/shared/services/process/createnote"
-	"main.go/app/shared/services/process/createschema"
 )
 
 const unknown = "00000000-0000-0000-0000-000000000000"

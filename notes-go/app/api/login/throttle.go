@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"main.go/app/api/services/respond"
+	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
 )
 
 // waits is how long to wait after 1, 2, 3... wrong passwords in a row, like an iPhone: a password cannot be guessed by trying them all.

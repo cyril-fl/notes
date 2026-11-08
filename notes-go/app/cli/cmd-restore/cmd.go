@@ -3,9 +3,9 @@ package cmdrestore
 import (
 	"fmt"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/restoreitems"
 	"github.com/spf13/cobra"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/restoreitems"
 )
 
 // Restore takes items out of the trash, by uuid, with everything removed at the same time.

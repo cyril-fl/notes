@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readfile"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/silo"
 	"github.com/uptrace/bun"
-	"main.go/app/api/services/respond"
-	"main.go/app/shared/services/process/readfile"
-	"main.go/app/shared/services/silo"
 )
 
 // Handler sends an image of the account: GET /api/files/{id}. Through the API, never Silo itself: the session

@@ -9,11 +9,11 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/wikilink"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/secret"
-	"main.go/app/shared/services/wikilink"
 )
 
 var ErrFolderNotFound = errors.New("folder not found")

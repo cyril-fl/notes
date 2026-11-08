@@ -5,11 +5,11 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/hashtag"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/hashtag"
-	"main.go/app/shared/services/secret"
 )
 
 var ErrNoValue = errors.New("no tag value given")

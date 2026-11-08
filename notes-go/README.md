@@ -16,6 +16,8 @@ make up                  # démarre Colima, PostgreSQL, Silo et LibreDB Studio
 go build -o "$(go env GOPATH)/bin/notes" .
 ```
 
+Sans le repo, par exemple sur le serveur : `go install github.com/cyril-fl/notes/notes-go@latest` installe la dernière version de `main` sous le nom `notes-go`, configurée par `~/.config/notes/.env` (ci-dessous).
+
 Le schéma est créé automatiquement à la première commande.
 
 ### Utiliser `notes` depuis n'importe quel dossier

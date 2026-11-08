@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"strings"
 
-	"main.go/app/api/services/respond"
+	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
 )
 
 var ErrInvalidOrigin = errors.New("origin must look like http://localhost:3000, with no path")

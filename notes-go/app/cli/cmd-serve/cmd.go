@@ -11,13 +11,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/cyril-fl/notes/notes-go/app/api"
+	"github.com/cyril-fl/notes/notes-go/app/api/services/guard"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/purgefiles"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/purgeitems"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/silo"
 	"github.com/spf13/cobra"
-	"main.go/app/api"
-	"main.go/app/api/services/guard"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/purgefiles"
-	"main.go/app/shared/services/process/purgeitems"
-	"main.go/app/shared/services/silo"
 )
 
 const (

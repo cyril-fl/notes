@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 	"github.com/uptrace/bun"
-	"main.go/app/shared/services/secret"
 )
 
 type Kind string

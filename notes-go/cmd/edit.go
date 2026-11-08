@@ -4,10 +4,10 @@ import (
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
 
-	cmdeditfolder "main.go/app/cli/cmd-edit-folder"
-	cmdeditnote "main.go/app/cli/cmd-edit-note"
-	cmdedittag "main.go/app/cli/cmd-edit-tag"
-	"main.go/app/shared/domain"
+	cmdeditfolder "github.com/cyril-fl/notes/notes-go/app/cli/cmd-edit-folder"
+	cmdeditnote "github.com/cyril-fl/notes/notes-go/app/cli/cmd-edit-note"
+	cmdedittag "github.com/cyril-fl/notes/notes-go/app/cli/cmd-edit-tag"
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 )
 
 var cmdEdit = &cobra.Command{

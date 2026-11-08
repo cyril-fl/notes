@@ -3,9 +3,9 @@ package readtrash
 import (
 	"net/http"
 
+	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listtrash"
 	"github.com/uptrace/bun"
-	"main.go/app/api/services/respond"
-	"main.go/app/shared/services/process/listtrash"
 )
 
 // Handler lists what was removed: GET /api/trash.

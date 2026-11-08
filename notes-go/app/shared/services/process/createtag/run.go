@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/hashtag"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/hashtag"
 )
 
 var ErrNoValue = errors.New("no tag value given")

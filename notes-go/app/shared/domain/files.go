@@ -4,8 +4,8 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 	"github.com/uptrace/bun"
-	"main.go/app/shared/services/secret"
 )
 
 // File is an image of a note: its bytes are in Silo under Key(), the notes cite it as FileURL(ID).

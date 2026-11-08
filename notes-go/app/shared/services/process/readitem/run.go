@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listitems"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/driver/pgdriver"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/process/listitems"
-	"main.go/app/shared/services/secret"
 )
 
 // invalidText is the Postgres SQLSTATE raised when the id is not a uuid.

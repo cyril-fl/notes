@@ -4,15 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	millflagseditfolder "github.com/cyril-fl/notes/notes-go/app/cli/cmd-edit-folder/services/mill"
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/editfolder"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/pinnote"
+	"github.com/cyril-fl/notes/notes-go/config"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	millflagseditfolder "main.go/app/cli/cmd-edit-folder/services/mill"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/editfolder"
-	"main.go/app/shared/services/process/pinnote"
-	"main.go/config"
 )
 
 // Edit loads the folder, applies --title (or a pre-filled form), then saves it; --pin and --unpin make it a favorite or not.

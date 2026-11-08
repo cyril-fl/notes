@@ -8,9 +8,9 @@ import (
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/screen"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/style"
 	plumtypes "github.com/cyril-fl/plum/types"
-	"main.go/app/shared/services/screen"
-	"main.go/app/shared/services/style"
 )
 
 // headerHeight is the title, path, info and blank line above the rows; footerHeight the blank and shortcut lines.

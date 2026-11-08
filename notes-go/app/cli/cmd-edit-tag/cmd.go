@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"charm.land/huh/v2"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/huhform"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/edittag"
 	"github.com/spf13/cobra"
-	"main.go/app/shared/services/huhform"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/edittag"
 )
 
 var errRequired = errors.New("required")

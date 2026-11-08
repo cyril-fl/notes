@@ -3,9 +3,9 @@ package readfinder
 import (
 	"net/http"
 
+	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listitems"
 	"github.com/uptrace/bun"
-	"main.go/app/api/services/respond"
-	"main.go/app/shared/services/process/listitems"
 )
 
 // Handler lists the direct children of a folder, of the root without parent: GET /api/items?parent=.

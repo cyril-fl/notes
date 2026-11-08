@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"strings"
 
+	cmdeditnote "github.com/cyril-fl/notes/notes-go/app/cli/cmd-edit-note"
+	cmdreadnote "github.com/cyril-fl/notes/notes-go/app/cli/cmd-read-note"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/navigator"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/searchnotes"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/screen"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
-	cmdeditnote "main.go/app/cli/cmd-edit-note"
-	cmdreadnote "main.go/app/cli/cmd-read-note"
-	"main.go/app/shared/services/navigator"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/searchnotes"
-	"main.go/app/shared/services/screen"
 )
 
 // Search lists the notes containing the text in their title or content; ↳ opens one, ^E edits it, --json prints them for scripts.

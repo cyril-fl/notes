@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deletetag"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readtag"
 	"github.com/uptrace/bun"
-	"main.go/app/api/services/respond"
-	"main.go/app/shared/services/process/deletetag"
-	"main.go/app/shared/services/process/readtag"
 )
 
 // Handler deletes a tag, not the notes carrying it: DELETE /api/tags/{value}.

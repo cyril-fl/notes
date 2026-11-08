@@ -7,13 +7,13 @@ import (
 	"runtime/debug"
 
 	"charm.land/huh/v2"
+	cmdaccount "github.com/cyril-fl/notes/notes-go/app/cli/cmd-account"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createschema"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/purgeitems"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/screen"
+	"github.com/cyril-fl/notes/notes-go/config"
 	"github.com/spf13/cobra"
-	cmdaccount "main.go/app/cli/cmd-account"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/createschema"
-	"main.go/app/shared/services/process/purgeitems"
-	"main.go/app/shared/services/screen"
-	"main.go/config"
 )
 
 var c = config.Current

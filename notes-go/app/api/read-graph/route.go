@@ -3,11 +3,11 @@ package readgraph
 import (
 	"net/http"
 
+	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/counttags"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readgraph"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readneighbors"
 	"github.com/uptrace/bun"
-	"main.go/app/api/services/respond"
-	"main.go/app/shared/services/process/counttags"
-	"main.go/app/shared/services/process/readgraph"
-	"main.go/app/shared/services/process/readneighbors"
 )
 
 // Handler gives every tag with how many notes carry it, most used first: GET /api/graph.

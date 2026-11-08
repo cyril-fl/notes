@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	cmdgraph "github.com/cyril-fl/notes/notes-go/app/cli/cmd-graph"
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	"github.com/spf13/cobra"
-	cmdgraph "main.go/app/cli/cmd-graph"
-	"main.go/app/shared/domain"
 )
 
 var cmdGraph = &cobra.Command{

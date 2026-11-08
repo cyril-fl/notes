@@ -3,9 +3,9 @@ package cmdcreatetag
 import (
 	"fmt"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createtag"
 	"github.com/spf13/cobra"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/createtag"
 )
 
 func Create(cobra *cobra.Command, args []string) error {

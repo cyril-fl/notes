@@ -3,12 +3,12 @@ package millflagseditfolder
 import (
 	"context"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/editfolder"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readitem"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/spf13/pflag"
 	"github.com/uptrace/bun"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/process/editfolder"
-	"main.go/app/shared/services/process/readitem"
 )
 
 type mill struct {

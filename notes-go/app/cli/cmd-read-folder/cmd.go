@@ -7,15 +7,15 @@ import (
 	"strings"
 
 	"charm.land/huh/v2"
+	cmdeditfolder "github.com/cyril-fl/notes/notes-go/app/cli/cmd-edit-folder"
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readitem"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/screen"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/style"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	plumdebug "github.com/cyril-fl/plum/utils/debug"
 	"github.com/spf13/cobra"
-	cmdeditfolder "main.go/app/cli/cmd-edit-folder"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/readitem"
-	"main.go/app/shared/services/screen"
-	"main.go/app/shared/services/style"
 )
 
 // Read shows the folder title and path, then one line per direct child with its uuid; ctrl+e edits it; --json prints it for scripts.

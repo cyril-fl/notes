@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/createschema"
-	"main.go/app/shared/services/testaccount"
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createschema"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/testaccount"
 )
 
 // Rewrap itself is tested in services/secret: here, keys already sealed by NOTES_SECRET stay, and one no secret

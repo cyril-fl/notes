@@ -4,10 +4,10 @@ import (
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
 
-	cmdcreatefolder "main.go/app/cli/cmd-create-folder"
-	cmdcreatenote "main.go/app/cli/cmd-create-note"
-	cmdcreatetag "main.go/app/cli/cmd-create-tag"
-	"main.go/app/shared/domain"
+	cmdcreatefolder "github.com/cyril-fl/notes/notes-go/app/cli/cmd-create-folder"
+	cmdcreatenote "github.com/cyril-fl/notes/notes-go/app/cli/cmd-create-note"
+	cmdcreatetag "github.com/cyril-fl/notes/notes-go/app/cli/cmd-create-tag"
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 )
 
 var cmdCreate = &cobra.Command{

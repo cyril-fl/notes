@@ -8,14 +8,14 @@ import (
 	"charm.land/glamour/v2"
 	"charm.land/huh/v2"
 	"charm.land/lipgloss/v2"
+	cmdeditnote "github.com/cyril-fl/notes/notes-go/app/cli/cmd-edit-note"
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readitem"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/screen"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/style"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
-	cmdeditnote "main.go/app/cli/cmd-edit-note"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/readitem"
-	"main.go/app/shared/services/screen"
-	"main.go/app/shared/services/style"
 )
 
 // Read shows the note path, then its content rendered as markdown; ctrl+e edits it, then shows it again.

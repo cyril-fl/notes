@@ -7,12 +7,12 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/exportnotes"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/resolveitem"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/silo"
 	"github.com/spf13/cobra"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/exportnotes"
-	"main.go/app/shared/services/process/resolveitem"
-	"main.go/app/shared/services/silo"
 )
 
 var ErrNotEmpty = errors.New("the directory is not empty")

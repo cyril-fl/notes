@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 	"github.com/uptrace/bun"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/secret"
 )
 
 // New creates an account in tx and returns ctx acting for it, with a savepoint of tx begun with that ctx: a bun.Tx

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"main.go/cmd"
+	"github.com/cyril-fl/notes/notes-go/cmd"
 )
 
 func main() {

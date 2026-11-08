@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/adduser"
-	"main.go/app/shared/services/process/createschema"
-	"main.go/app/shared/services/process/createsession"
-	"main.go/app/shared/services/process/deletesession"
-	"main.go/app/shared/services/process/readsession"
-	"main.go/app/shared/services/process/resetpassword"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/adduser"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createschema"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createsession"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deletesession"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readsession"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/resetpassword"
 )
 
 // An account from its creation to a new password: log in, find the session, log out.

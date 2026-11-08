@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	cmdsearch "github.com/cyril-fl/notes/notes-go/app/cli/cmd-search"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
-	cmdsearch "main.go/app/cli/cmd-search"
 )
 
 var cmdSearch = &cobra.Command{

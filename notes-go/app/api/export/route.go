@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/exportnotes"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/silo"
 	"github.com/uptrace/bun"
-	"main.go/app/api/services/respond"
-	"main.go/app/shared/services/process/exportnotes"
-	"main.go/app/shared/services/silo"
 )
 
 // Handler gives every live note as a zip of markdown files, one directory per folder, the images in _files:

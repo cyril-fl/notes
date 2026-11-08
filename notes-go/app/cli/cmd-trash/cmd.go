@@ -5,13 +5,13 @@ import (
 	"math"
 	"time"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listtrash"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/screen"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/style"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/listtrash"
-	"main.go/app/shared/services/screen"
-	"main.go/app/shared/services/style"
 )
 
 // Trash lists what was removed, each removal once with how many items went with it, and when it is purged.

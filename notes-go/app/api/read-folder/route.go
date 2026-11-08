@@ -3,11 +3,11 @@ package readfolder
 import (
 	"net/http"
 
+	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listfolders"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readitem"
 	"github.com/uptrace/bun"
-	"main.go/app/api/services/respond"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/process/listfolders"
-	"main.go/app/shared/services/process/readitem"
 )
 
 // Handler shows a folder and its direct children: GET /api/folders/{id}.

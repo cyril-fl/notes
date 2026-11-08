@@ -11,9 +11,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-	"main.go/app/shared/services/secret"
 )
 
 var ErrNotConfigured = errors.New("S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY and S3_BUCKET must be set")

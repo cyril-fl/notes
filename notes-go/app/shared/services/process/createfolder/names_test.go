@@ -5,19 +5,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"main.go/app/shared/services/testaccount"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/testaccount"
 	"testing"
 	"time"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createfolder"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createschema"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deleteitems"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/editfolder"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/moveitems"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/restoreitems"
 	"github.com/uptrace/bun"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/createfolder"
-	"main.go/app/shared/services/process/createschema"
-	"main.go/app/shared/services/process/deleteitems"
-	"main.go/app/shared/services/process/editfolder"
-	"main.go/app/shared/services/process/moveitems"
-	"main.go/app/shared/services/process/restoreitems"
 )
 
 func TestFolderNames(t *testing.T) {

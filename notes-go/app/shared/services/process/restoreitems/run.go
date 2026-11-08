@@ -5,14 +5,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"main.go/app/shared/services/secret"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 	"strings"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/linknotes"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/driver/pgdriver"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/process/linknotes"
 )
 
 // invalidText is the Postgres SQLSTATE raised when an id is not a uuid.

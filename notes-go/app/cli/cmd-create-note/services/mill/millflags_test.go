@@ -5,10 +5,10 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createnote"
+	"github.com/cyril-fl/notes/notes-go/config"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
-	"main.go/app/shared/services/process/createnote"
-	"main.go/config"
 )
 
 // resolve parses args with the flags declared in config.yaml: a renamed flag breaks this test.

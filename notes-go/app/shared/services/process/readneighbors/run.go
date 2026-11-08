@@ -3,12 +3,12 @@ package readneighbors
 import (
 	"context"
 
-	"main.go/app/shared/services/secret"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readitem"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/process/readitem"
 )
 
 // Neighbor is a note sharing at least one tag with the center, with the shared tags.

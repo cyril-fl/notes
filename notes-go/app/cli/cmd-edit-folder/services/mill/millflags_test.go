@@ -3,15 +3,15 @@ package millflagseditfolder
 import (
 	"context"
 	"errors"
-	"main.go/app/shared/services/testaccount"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/testaccount"
 	"testing"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createfolder"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readitem"
+	"github.com/cyril-fl/notes/notes-go/config"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/createfolder"
-	"main.go/app/shared/services/process/readitem"
-	"main.go/config"
 )
 
 func TestResolve(t *testing.T) {

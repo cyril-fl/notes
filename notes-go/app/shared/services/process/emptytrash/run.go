@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/editnote"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/process/editnote"
 )
 
 var ErrNotFound = errors.New("item not found in the trash")

@@ -12,17 +12,17 @@ import (
 	"strings"
 
 	"charm.land/huh/v2"
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/huhform"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/adduser"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createsession"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deletesession"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/purgeaccount"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readsession"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/resetpassword"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/rotatesecret"
 	"github.com/spf13/cobra"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/huhform"
-	"main.go/app/shared/services/postgrey"
-	"main.go/app/shared/services/process/adduser"
-	"main.go/app/shared/services/process/createsession"
-	"main.go/app/shared/services/process/deletesession"
-	"main.go/app/shared/services/process/purgeaccount"
-	"main.go/app/shared/services/process/readsession"
-	"main.go/app/shared/services/process/resetpassword"
-	"main.go/app/shared/services/process/rotatesecret"
 )
 
 // sessionFile keeps the CLI's session token, readable by the user only: it opens the account.

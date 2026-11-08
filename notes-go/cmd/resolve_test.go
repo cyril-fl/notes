@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	"github.com/spf13/pflag"
-	"main.go/app/shared/domain"
 )
 
 func contentFlags(t *testing.T, args ...string) *pflag.FlagSet {

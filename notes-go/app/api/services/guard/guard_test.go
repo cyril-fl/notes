@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"main.go/app/api/services/respond"
+	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
 )
 
 const web = "http://localhost:3001"

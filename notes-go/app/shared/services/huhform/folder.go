@@ -2,7 +2,7 @@ package huhform
 
 import (
 	"charm.land/huh/v2"
-	"main.go/app/shared/services/process/listfolders"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listfolders"
 )
 
 // PickFolder asks for a folder in a list of paths ("/" filters it) and returns its id ("" = the root).

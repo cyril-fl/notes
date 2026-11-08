@@ -1,6 +1,6 @@
 # notes-go
 
-Go module `main.go`: the CLI (cobra, `cmd/` + `app/cli/`) and the API (`notes serve`, `app/api/`) share the processes of `app/shared/services/process/` and the models of `app/shared/domain/`.
+Go module `github.com/cyril-fl/notes/notes-go` (`go install …/notes-go@latest`): the CLI (cobra, `cmd/` + `app/cli/`) and the API (`notes serve`, `app/api/`) share the processes of `app/shared/services/process/` and the models of `app/shared/domain/`.
 
 ## Commands
 

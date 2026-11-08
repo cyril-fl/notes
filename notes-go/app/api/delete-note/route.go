@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deleteitems"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readitem"
 	"github.com/uptrace/bun"
-	"main.go/app/api/services/respond"
-	"main.go/app/shared/domain"
-	"main.go/app/shared/services/process/deleteitems"
-	"main.go/app/shared/services/process/readitem"
 )
 
 // Handler moves the note to the trash: DELETE /api/notes/{id}.

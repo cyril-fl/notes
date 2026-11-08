@@ -3,9 +3,9 @@ package readrecent
 import (
 	"net/http"
 
+	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listrecent"
 	"github.com/uptrace/bun"
-	"main.go/app/api/services/respond"
-	"main.go/app/shared/services/process/listrecent"
 )
 
 // Handler lists the last changed notes: GET /api/recent.

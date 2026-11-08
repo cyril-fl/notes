@@ -6,8 +6,8 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/huh/v2"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/screen"
 	"golang.org/x/term"
-	"main.go/app/shared/services/screen"
 )
 
 // Act opens or edits the note of a row; the screen reopens where it was afterwards.

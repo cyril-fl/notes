@@ -1,4 +1,4 @@
-module main.go
+module github.com/cyril-fl/notes/notes-go
 
 go 1.27.2
 

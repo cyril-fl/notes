@@ -7,9 +7,9 @@ import (
 	"charm.land/bubbles/v2/key"
 	"charm.land/huh/v2"
 	"charm.land/lipgloss/v2"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/style"
 	plumtypes "github.com/cyril-fl/plum/types"
 	"golang.org/x/term"
-	"main.go/app/shared/services/style"
 )
 
 // New builds a one-group form with the shared key map and theme, as tall as the terminal.
