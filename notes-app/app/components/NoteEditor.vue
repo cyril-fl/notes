@@ -555,7 +555,17 @@ const status = computed(() => {
       <RelatedNotes v-if="id" :key="id" :note-id="id" default-open />
       <!-- At the bottom of the panel, kept in sight while the rest scrolls. -->
       <section v-if="has('graph') && nearGraph?.links.length" class="sticky bottom-0 mt-auto -mb-4 bg-default pb-4">
-        <h2 class="mb-2 text-xs font-medium text-muted">{{ $t('common.graph') }}</h2>
+        <div class="mb-2 flex items-center justify-between">
+          <h2 class="text-xs font-medium text-muted">{{ $t('common.graph') }}</h2>
+          <UButton
+            :icon="icons.expand"
+            :to="{ path: '/graph', query: { note: id } }"
+            :aria-label="$t('related.showGraph')"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+          />
+        </div>
         <GraphView :graph="nearGraph" :selected="id" mini class="h-56!" />
       </section>
     </Teleport>

@@ -13,7 +13,16 @@ const { data: graph } = useLazyAsyncData('graph', () => api<NotesGraph>('/api/gr
 
 <template>
   <div class="flex h-full flex-col p-8">
-    <PageHeader :title="$t('common.graph')" :subtitle="$t('graph.subtitle')" />
+    <PageHeader :title="$t('common.graph')" :subtitle="$t('graph.subtitle')">
+      <UButton
+        v-if="route.query.note"
+        :icon="icons.back"
+        :label="$t('graph.backToNote')"
+        :to="`/notes/${route.query.note}`"
+        color="neutral"
+        variant="ghost"
+      />
+    </PageHeader>
     <template v-if="graph">
       <GraphView
         v-if="graph.notes.length"

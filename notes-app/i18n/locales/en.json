@@ -87,6 +87,7 @@
     "forward": "Forward"
   },
   "graph": {
+    "backToNote": "Back to the note",
     "subtitle": "Drag to move around, wheel or pinch to zoom",
     "empty": "No notes yet",
     "emptyDescription": "Add #tags to your notes: the ones sharing a tag are linked here.",

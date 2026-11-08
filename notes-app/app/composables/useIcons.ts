@@ -25,6 +25,7 @@ export function useIcons() {
     search: 'i-reicon-search',
     searchEmpty: 'i-reicon-search-minus',
     graph: 'i-reicon-nodes',
+    expand: 'i-reicon-expand',
     settings: 'i-reicon-setting',
     account: 'i-reicon-user',
     logout: 'i-reicon-power-off',

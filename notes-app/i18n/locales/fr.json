@@ -87,6 +87,7 @@
     "forward": "Suivant"
   },
   "graph": {
+    "backToNote": "Retour à la note",
     "subtitle": "Glissez pour vous déplacer, molette ou pincement pour zoomer",
     "empty": "Aucune note pour le moment",
     "emptyDescription": "Ajoutez des #tags à vos notes : celles qui en partagent un sont reliées ici.",
