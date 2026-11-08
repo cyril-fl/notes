@@ -522,7 +522,7 @@ const status = computed(() => {
           :extensions="parts.extensions"
           :handlers="parts.handlers"
           class="flex min-h-0 w-full flex-1 flex-col"
-          :ui="{ content: 'min-h-0 overflow-y-auto px-8 pb-8', base: 'sm:px-0 px-0' }"
+          :ui="{ content: 'min-h-0 overflow-y-auto px-8 pt-1 pb-8', base: 'sm:px-0 px-0' }"
           @update:model-value="onContent"
         >
           <!-- Its commands write even in a read-only editor: hidden while locked. -->
