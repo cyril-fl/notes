@@ -53,5 +53,5 @@ test('a second folder of the same name is refused', async ({ page }) => {
   await page.getByRole('main').getByRole('button', { name: 'Nouveau dossier' }).click();
   await page.getByRole('dialog').getByRole('textbox').fill('doublon');
   await page.getByRole('dialog').getByRole('button', { name: 'Créer' }).click();
-  await expect(page.getByText('Un dossier porte déjà ce nom à cet endroit.')).toBeVisible();
+  await expect(page.getByText('Un dossier porte déjà ce nom à cet endroit.', { exact: true })).toBeVisible();
 });
