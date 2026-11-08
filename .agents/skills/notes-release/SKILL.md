@@ -25,7 +25,7 @@ description: Close a piece of work or a version of Notes - one commit per change
 
 ## Wiki
 
-Right after the tag, run the `notes-wiki` skill: a `Versions.md` section, the current version on `Home.md`, the page of the feature, committed in the wiki. Every tag, `fix:` included. The user pushes it with `develop`.
+Right after the tag, run the `notes-wiki` skill: a `Versions.md` section, the current version on `Home.md`, the page of the feature, committed and pushed. Every tag, `fix:` included.
 
 ## Issues
 

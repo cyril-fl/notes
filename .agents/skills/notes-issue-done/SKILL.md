@@ -9,7 +9,7 @@ Run these steps in order, once the work on the issue is done and its tests pass.
 
 1. **Commit**: on `develop`, paths staged explicitly, one commit per change, `Fixes #n` in the body.
 2. **Version**: the next tag after `git tag --sort=-v:refname | head -1`. Bump the minor version (`v0.28.0`) if the issue adds a `feat:`. Otherwise (`fix:`, `refactor:`, `docs:`) bump the patch (`v0.27.2`). Make it an annotated tag: `git tag -a vX.Y.Z -m "vX.Y.Z: <what the user gets>"`.
-3. **Wiki**: run the `notes-wiki` skill for the new tag (Versions, Home, the page of the feature, screenshots of a new screen), committed in the wiki.
+3. **Wiki**: run the `notes-wiki` skill for the new tag (Versions, Home, the page of the feature, screenshots of a new screen), committed and pushed in the wiki.
 4. **Close** the issue by hand, because `Fixes #n` closes nothing on `develop`. Do it even though nothing is pushed yet:
    ```sh
    gh issue close <n> -R cyril-fl/notes -c "Fait dans <short sha>, <tag> (sur develop) : <what changed>."
@@ -21,4 +21,4 @@ Run these steps in order, once the work on the issue is done and its tests pass.
    **À faire**
    - ..."
    ```
-6. **Report** to the user in French: the commit, the tag, the wiki pages updated, the closed issue, the new issue numbers, and what they must do (`git push origin develop --follow-tags`, `git -C ../notes.wiki push origin master`, a manual step). Never push.
+6. **Report** to the user in French: the commit, the tag, the wiki pages updated, the closed issue, the new issue numbers, and what they must do (`git push origin develop --follow-tags`, a manual step). Never push `develop`; the wiki is the exception.

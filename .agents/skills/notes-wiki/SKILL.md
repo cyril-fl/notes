@@ -1,6 +1,6 @@
 ---
 name: notes-wiki
-description: Bring the GitHub wiki of Notes (../notes.wiki) up to the version just tagged - a Versions.md section, the current version on Home.md, the pages the change touches (Application-web, Titres-et-tags, Thème, Données), screenshots of a new screen, then the wiki commit and the push left to the user. Use right after tagging a version (notes-release, notes-issue-done), or when the user says "wiki", "mets à jour le wiki", "doc utilisateur".
+description: Bring the GitHub wiki of Notes (../notes.wiki) up to the version just tagged - a Versions.md section, the current version on Home.md, the pages the change touches (Application-web, Titres-et-tags, Thème, Données), screenshots of a new screen, then commit and push the wiki. Use right after tagging a version (notes-release, notes-issue-done), or when the user says "wiki", "mets à jour le wiki", "doc utilisateur".
 ---
 
 # Update the wiki
@@ -42,12 +42,12 @@ A new screen or a visible change gets a PNG in `images/` (`app-<sujet>.png`), li
 - hide the Nuxt devtools button before the shot: `page.addStyleTag({ content: '#nuxt-devtools-container{display:none!important}' })`;
 - look at every PNG before copying it to `images/`.
 
-## Commit
+## Commit and push
 
 ```sh
 git add <pages> <images>    # explicit paths
 git commit -m "docs: vX.Y.Z, <what the pages now cover>"
-git log --oneline origin/master..master   # what the user still has to push
+git push origin master
 ```
 
-The user pushes, as for `develop`. An unpushed wiki commit is what left the online wiki behind: the report always lists the wiki commits not on `origin/master` and gives `git -C ../notes.wiki push origin master`.
+The agent pushes the wiki, unlike `develop`: an unpushed wiki commit is what left the online wiki behind. Say in the report that it was pushed.
