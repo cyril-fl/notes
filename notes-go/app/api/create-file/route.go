@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createfile"
@@ -29,6 +30,11 @@ const maxFile = 20 << 20
 // @Router   /api/files [post]
 func Handler(db bun.IDB, store silo.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// A full-size photo on a slow uplink outlasts the server's 30 s: the write deadline also runs from the headers.
+		control := http.NewResponseController(w)
+		_ = control.SetReadDeadline(time.Time{})
+		_ = control.SetWriteDeadline(time.Time{})
+
 		data, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxFile))
 		var tooLarge *http.MaxBytesError
 		if errors.As(err, &tooLarge) {
