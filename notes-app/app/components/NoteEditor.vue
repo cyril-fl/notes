@@ -255,11 +255,12 @@ const slashOpen = computed({
 });
 // The menu has the focus: a backspace there takes back the / and closes it, a second / is written (//), as in the text.
 function slashKey(event: KeyboardEvent) {
-  const chain = slashAt.value && editorRef.value?.editor?.chain().focus();
-  if (!chain || !slashAt.value) return;
+  const editor = editorRef.value?.editor;
+  if (!editor || !slashAt.value || (event.key !== 'Backspace' && event.key !== '/')) return;
+  // chain().focus() focuses the editor as soon as it is built, run or not: only for these two keys.
+  const chain = editor.chain().focus();
   if (event.key === 'Backspace') chain.deleteRange(slashAt.value.range).run();
-  else if (event.key === '/') chain.insertContent('/').run();
-  else return;
+  else chain.insertContent('/').run();
   event.preventDefault();
   slashAt.value = null;
 }
