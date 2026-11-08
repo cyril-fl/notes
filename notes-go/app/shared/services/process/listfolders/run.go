@@ -47,7 +47,7 @@ func (p *run) GetResult() []Folder {
 // Methods
 
 // loadFolders keeps the folders domain.Paths gives, which only holds live items: a folder inside a trashed one drops out too.
-// shortcut: loads every folder at once, page it if folders reach the thousands.
+// TODO: loads every folder at once, page it if folders reach the thousands.
 func (p *run) loadFolders() {
 	paths, err := domain.Paths(p.ctx, p.db)
 	if err != nil {

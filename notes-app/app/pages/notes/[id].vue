@@ -10,7 +10,7 @@ const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
 
 function editorFor(key: number) {
   const id = route.params.id as string;
-  // shortcut: a reload of /notes/new?snippet= before me is loaded starts empty, wait for me if that bites.
+  // TODO: a reload of /notes/new?snippet= before me is loaded starts empty, wait for me if that bites.
   const start = id === 'new' ? me.value?.snippets[Number(route.query.snippet)]?.content : undefined;
   return { key, noteId: id === 'new' ? undefined : id, parentId: route.query.parent as string | undefined, start };
 }

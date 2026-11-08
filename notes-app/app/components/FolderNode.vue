@@ -10,7 +10,7 @@ const { itemMenu } = useItems();
 
 const open = useState(`open:${props.folder.id}`, () => false);
 
-// shortcut: reads each shown folder's children one level ahead to know if it has subfolders (one request per folder); have the API tell it if that grows slow.
+// TODO: reads each shown folder's children one level ahead to know if it has subfolders (one request per folder); have the API tell it if that grows slow.
 const { data: children } = useChildren(props.folder.id);
 const hasSubfolders = computed(() => children.value.some((item) => item.kind === 'folder'));
 

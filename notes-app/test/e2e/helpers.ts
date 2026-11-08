@@ -35,7 +35,7 @@ export async function sandbox() {
 /**
  * An account of its own, for what would break the shared e2e account: a real purge, a password change, another
  * account's data. Made by the CLI in the API's container, deleted for good with its data afterwards.
- * shortcut: needs the containers of `make up` (note-api, note-postgres), give the API an admin route if E2E_API ever points elsewhere.
+ * TODO: needs the containers of `make up` (note-api, note-postgres), give the API an admin route if E2E_API ever points elsewhere.
  */
 export async function throwaway() {
   const name = `e2e-${Date.now()}`;

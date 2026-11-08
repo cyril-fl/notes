@@ -7,7 +7,7 @@ const { t } = useI18n();
 
 const destinations = useDestinations();
 
-// shortcut: matches folders by path, a folder name holding '/' gets no link; ask the API for the ancestors' ids if that matters.
+// TODO: matches folders by path, a folder name holding '/' gets no link; ask the API for the ancestors' ids if that matters.
 const breadcrumb = computed(() => {
   const byPath = new Map(destinations.value.map((folder) => [folder.label, folder.value]));
   const names = props.path.split('/').filter(Boolean);

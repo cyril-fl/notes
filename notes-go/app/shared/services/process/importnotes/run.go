@@ -23,7 +23,7 @@ import (
 
 // imagePattern finds the markdown images ![alt](target "title") and ![alt](<target with spaces>): the target is
 // the second group, or the third.
-// shortcut: Obsidian's ![[image.png]] stays as text, read it too if a vault is ever imported.
+// TODO: Obsidian's ![[image.png]] stays as text, read it too if a vault is ever imported.
 var imagePattern = regexp.MustCompile(`(!\[[^\]]*\]\()(?:<([^>]+)>|([^)\s]+))`)
 
 // Input is what to import: every directory and .md file of Dir, into the folder ParentID ("" = the root).

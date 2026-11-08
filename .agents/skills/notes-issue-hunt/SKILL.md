@@ -1,6 +1,6 @@
 ---
 name: notes-issue-hunt
-description: Find the GitHub issues Notes is missing - a full audit of notes-go and notes-app (bugs, security, data loss, timeouts, untested risky code), checked against the open issues and the `shortcut:` comments, then the new issues created in French. Use when the user says "cherche les issues manquantes", "analyse le code pour ajouter les issues", "audit", "qu'est-ce qui manque".
+description: Find the GitHub issues Notes is missing - a full audit of notes-go and notes-app (bugs, security, data loss, timeouts, untested risky code), checked against the open issues and the `TODO:` comments, then the new issues created in French. Use when the user says "cherche les issues manquantes", "analyse le code pour ajouter les issues", "audit", "qu'est-ce qui manque".
 ---
 
 # Find the missing issues
@@ -11,10 +11,10 @@ description: Find the GitHub issues Notes is missing - a full audit of notes-go 
 
 ```sh
 gh issue list -R cyril-fl/notes --state all --limit 200
-git grep -nE "shortcut:|TODO|FIXME" -- . ':!**/node_modules/**' ':!.claude/**' ':!.agents/**'
+git grep -nE "TODO|FIXME" -- . ':!**/node_modules/**' ':!.claude/**' ':!.agents/**'
 ```
 
-An open issue or a `shortcut:` comment that names its limit is already known: skip it, unless the real load (one account, 2-3 devices) already crosses that limit. A closed issue whose bug is back is a new finding.
+An open issue or a `TODO:` comment that names its limit is already known: skip it, unless the real load (one account, 2-3 devices) already crosses that limit. A closed issue whose bug is back is a new finding.
 
 ## 2. Audit
 

@@ -53,7 +53,7 @@ services:
       - postgres-data:/var/lib/postgresql
 
   # The images of the notes (S3, a MinIO fork): the API reads and writes them, the browser never reaches it.
-  # shortcut: the API uses the root account of Silo, give it its own user if Silo ever serves anything else.
+  # TODO: the API uses the root account of Silo, give it its own user if Silo ever serves anything else.
   silo:
     image: pgsty/silo:RELEASE.2026-10-26T00-00-00Z
     container_name: note-silo

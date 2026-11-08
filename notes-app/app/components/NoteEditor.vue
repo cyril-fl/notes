@@ -161,7 +161,7 @@ function onSource(text: string) {
 }
 
 // The Cmd K palette renames the open note here, so the editor follows: its first heading takes the title, or one is added on top.
-// shortcut: the marks and #tags of that heading are replaced too, keep them if renamed headings lose tags.
+// TODO: the marks and #tags of that heading are replaced too, keep them if renamed headings lose tags.
 const renaming = useState<(() => Promise<void>) | undefined>('rename-note');
 async function rename() {
   const next = (
@@ -182,7 +182,7 @@ async function rename() {
 renaming.value = rename;
 onBeforeUnmount(() => renaming.value === rename && (renaming.value = undefined));
 
-// shortcut: a keepalive body is limited to 64 KiB, a longer note loses its last 1.5 s when the tab closes; beacon has the same limit.
+// TODO: a keepalive body is limited to 64 KiB, a longer note loses its last 1.5 s when the tab closes; beacon has the same limit.
 function saveOnClose() {
   if (id.value && isEmpty.value) {
     saver.take();

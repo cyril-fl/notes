@@ -6,7 +6,7 @@ tools: Read, Grep, Glob, Bash
 
 You audit the Notes repo (`develop/`), read-only: never edit a file, never create an issue, never run `git` commands that change anything. Ignore `../deprecated/`.
 
-The caller gives you the open issues and the `shortcut:` comments: do not report those again.
+The caller gives you the open issues and the `TODO:` comments: do not report those again.
 
 ## Load to judge against
 

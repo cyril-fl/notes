@@ -17,7 +17,7 @@ A note-taking app, Obsidian-like: one Go program (`notes-go/`, CLI and HTTP API)
 - Talk to the user in French. Code, comments and commit messages in English; READMEs and wiki in French.
 - One commit per change (`feat:`/`fix:`/`refactor:`/`test:`/`docs:`/`chore:`/`style:`, checked by the lefthook `commit-msg` hook: `make setup` in `notes-go/`), an annotated tag per version, the user pushes. Details and issue handling: the `notes-release` skill.
 - Every tag updates the wiki in the same session (`notes-wiki` skill): its section in `Versions.md`, the page of the feature, committed and pushed in `../notes.wiki` (the only push the agent does).
-- Work left for later goes into GitHub issues (`gh issue list -R cyril-fl/notes`), and known limits into `shortcut:` comments in the code.
+- Work left for later goes into GitHub issues (`gh issue list -R cyril-fl/notes`), and known limits into `TODO:` comments in the code (`TODO: <the limit>, <when to fix it>`), not `shortcut:`.
 - Before deleting or migrating data: `make backup` in `notes-go/`.
 - Several agents share this checkout: files left uncommitted by another one are not yours (stage paths explicitly), and the branch may have been switched under you (`git branch --show-current` before committing; work goes on `develop`, `main` follows it at releases).
 - `AGENTS.md` files are links to these `CLAUDE.md`: edit the `CLAUDE.md`.

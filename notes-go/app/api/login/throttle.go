@@ -14,7 +14,7 @@ import (
 var waits = []time.Duration{0, 0, 0, 30 * time.Second, time.Minute, 5 * time.Minute, 15 * time.Minute, time.Hour}
 
 // throttle counts the wrong passwords in a row, by address for the login and by account for a new password.
-// shortcut: kept in memory, a restart of the API forgets it; enough behind Tailscale, store it if the API ever faces the internet.
+// TODO: kept in memory, a restart of the API forgets it; enough behind Tailscale, store it if the API ever faces the internet.
 type throttle struct {
 	sync.Mutex
 	now   func() time.Time

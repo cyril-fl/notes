@@ -16,7 +16,7 @@ up:
 	fi
 
 # Keeps Colima running: other projects may use it. --profile api: a plain down leaves the API out.
-# shortcut: stops whatever listens on the web port, add a pid file if another app ever uses it.
+# TODO: stops whatever listens on the web port, add a pid file if another app ever uses it.
 down:
 	@lsof -ti tcp:$(WEB_PORT) -sTCP:LISTEN | xargs kill 2>/dev/null || true
 	@cd notes-go && docker compose --profile api down

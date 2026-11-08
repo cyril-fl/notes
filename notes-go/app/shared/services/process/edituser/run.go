@@ -154,7 +154,7 @@ func (p *run) updateUser() {
 			query.Set("avatar = NULLIF(?, '')::uuid", *p.input.Avatar)
 		}
 
-		// shortcut: the last of two devices editing the snippets wins, per-snippet endpoints if that bites.
+		// TODO: the last of two devices editing the snippets wins, per-snippet endpoints if that bites.
 		if p.input.Snippets != nil {
 			sealed, err := domain.Snippets(*p.input.Snippets).Seal(domain.UserID(p.ctx))
 			if err != nil {

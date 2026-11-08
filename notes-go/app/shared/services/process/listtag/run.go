@@ -40,7 +40,7 @@ func (p *run) GetResult() []domain.Tag {
 
 // Methods
 
-// shortcut: loads every tag at once, add Limit/Offset if tags reach the thousands.
+// TODO: loads every tag at once, add Limit/Offset if tags reach the thousands.
 func (p *run) loadTags() {
 	p.SetErr(p.db.NewSelect().
 		Model(&p.cache.result).

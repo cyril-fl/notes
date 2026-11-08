@@ -37,7 +37,7 @@ type cache struct {
 // Process changes the fields given of a note, used by PATCH /api/notes/{id} and `edit note`. The #tags of the
 // content are the tags of the note, unless the tags are given: they then rewrite it. Pinning alone leaves
 // the note as it is, updated_at included.
-// shortcut: the read is not locked, a concurrent edit can still be lost, fine for one user; SELECT … FOR UPDATE if that changes.
+// TODO: the read is not locked, a concurrent edit can still be lost, fine for one user; SELECT … FOR UPDATE if that changes.
 func Process(ctx context.Context, db bun.IDB, input Input) *run {
 	return &run{
 		ctx:   ctx,
