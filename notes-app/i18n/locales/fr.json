@@ -217,7 +217,23 @@
     "save": "Enregistrer",
     "pro": "Mode Pro",
     "proMode": "Activer le mode Pro",
-    "proDescription": "Des outils en plus, pour un usage avancé :"
+    "proDescription": "Des outils en plus, pour un usage avancé :",
+    "sections": {
+      "general": "Général",
+      "generalDescription": "Le compte et la langue.",
+      "appearance": "Apparence",
+      "appearanceDescription": "Les couleurs et le mode de l’interface.",
+      "editor": "Éditeur",
+      "editorDescription": "Ce qui aide à écrire les notes.",
+      "trash": "Corbeille",
+      "trashDescription": "Ce que deviennent les éléments supprimés.",
+      "data": "Données",
+      "dataDescription": "Sortir les notes, ou en faire entrer.",
+      "pro": "Mode Pro",
+      "proDescription": "Des outils en plus, pour un usage avancé.",
+      "danger": "Zone de danger",
+      "dangerDescription": "Ce qui ne se défait pas."
+    }
   },
   "account": {
     "title": "Compte",
@@ -244,6 +260,7 @@
   "features": {
     "graph": "Le graphe des notes",
     "focusMode": "Le mode focus, qui ne laisse que la note à l'écran",
-    "contextPanel": "Le panneau de contexte à droite de la note : son plan et ses notes liées"
+    "contextPanel": "Le panneau de contexte à droite de la note : son plan et ses notes liées",
+    "settingsNav": "La barre latérale des réglages, une page par section"
   }
 }

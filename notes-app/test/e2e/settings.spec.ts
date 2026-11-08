@@ -120,6 +120,15 @@ test('the Pro mode unlocks the focus mode and the context panel', async ({ page 
     await page.goto('/settings');
     await page.getByRole('switch', { name: 'Activer le mode Pro' }).click();
     await expect.poll(async () => (await (await box.api.get('/api/me')).json()).pro).toBe(true);
+    // The sidebar becomes the settings nav, one page per section.
+    await page.goto('/settings');
+    await expect(page).toHaveURL(/\/settings\/general$/);
+    await page.getByRole('link', { name: 'Apparence' }).click();
+    await expect(page).toHaveURL(/\/settings\/appearance$/);
+    await expect(page.getByRole('heading', { name: 'Apparence' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Langue' })).toHaveCount(0);
+    await page.getByRole('link', { name: 'Retour aux notes' }).click();
+    await expect(page.getByRole('link', { name: 'Graphe', exact: true }).first()).toBeVisible();
 
     await page.goto(`/notes/${note.id}`);
     const sidebar = page.getByRole('link', { name: 'Graphe', exact: true }).first();

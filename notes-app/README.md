@@ -41,7 +41,7 @@ Le graphe se déplace en glissant et zoome à la molette, en pinçant le trackpa
 
 ## Réglages
 
-La page Réglages (menu de l'avatar en bas de la barre latérale, ou la palette) regroupe ce qui touche à l'app entière. Les réglages sont rangés sur le compte (`PATCH /api/me`) : ils suivent d'un appareil à l'autre.
+La page Réglages (menu de l'avatar en bas de la barre latérale, ou la palette) regroupe ce qui touche à l'app entière. Les réglages sont rangés sur le compte (`PATCH /api/me`) : ils suivent d'un appareil à l'autre. Ils sont rangés par sections (Général, Apparence, Éditeur, Corbeille, Données, Mode Pro, Zone de danger), listées dans `app/utils/settings.ts`. En mode Pro, la barre latérale devient la navigation des réglages (Compte puis une page par section, `/settings/<section>`), avec un lien de retour aux notes.
 
 - **Langue** de l'interface, français ou anglais.
 - **Apparence** : le thème, choisi d'un clic sur sa miniature parmi des jeux de couleurs tout faits (Notes, Dracula, Catppuccin, Nord, Gruvbox, Everforest), et le mode (système, clair, sombre). Un thème se déclare dans `app/utils/themes.ts`, ses palettes dans `main.css`, et son id dans `domain.Themes` côté Go. Le bouton de mode de la barre latérale enregistre aussi, comme celui de la vue des listes.

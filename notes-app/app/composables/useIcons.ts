@@ -44,6 +44,10 @@ export function useIcons() {
     export: 'i-reicon-download',
     import: 'i-reicon-upload',
     snippet: 'i-reicon-text-block',
+    appearance: 'i-reicon-palette',
+    data: 'i-reicon-database',
+    pro: 'i-reicon-sparkles',
+    danger: 'i-reicon-danger',
     focus: 'i-reicon-maximize',
     unfocus: 'i-reicon-minimize',
 

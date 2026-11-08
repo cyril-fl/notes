@@ -217,7 +217,23 @@
     "save": "Save",
     "pro": "Pro mode",
     "proMode": "Turn on Pro mode",
-    "proDescription": "More tools, for advanced use:"
+    "proDescription": "More tools, for advanced use:",
+    "sections": {
+      "general": "General",
+      "generalDescription": "The account and the language.",
+      "appearance": "Appearance",
+      "appearanceDescription": "The colors and the mode of the interface.",
+      "editor": "Editor",
+      "editorDescription": "What helps to write the notes.",
+      "trash": "Trash",
+      "trashDescription": "What becomes of deleted items.",
+      "data": "Data",
+      "dataDescription": "Take the notes out, or bring some in.",
+      "pro": "Pro mode",
+      "proDescription": "More tools, for advanced use.",
+      "danger": "Danger zone",
+      "dangerDescription": "What cannot be undone."
+    }
   },
   "account": {
     "title": "Account",
@@ -244,6 +260,7 @@
   "features": {
     "graph": "The graph of the notes",
     "focusMode": "Focus mode, which leaves only the note on screen",
-    "contextPanel": "The context panel beside the note: its outline and its related notes"
+    "contextPanel": "The context panel beside the note: its outline and its related notes",
+    "settingsNav": "The settings sidebar, one page per section"
   }
 }
