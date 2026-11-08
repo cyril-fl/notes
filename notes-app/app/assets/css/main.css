@@ -310,6 +310,15 @@
     @apply size-8;
   }
 
+  /* An image's size, as a share of the note's width: without one it keeps its own width. */
+  .ProseMirror img.note-image-small {
+    @apply w-1/3;
+  }
+
+  .ProseMirror img.note-image-medium {
+    @apply w-2/3;
+  }
+
   /* Tables are not in the Nuxt UI editor theme either. */
   .ProseMirror .tableWrapper {
     @apply my-4 overflow-x-auto;

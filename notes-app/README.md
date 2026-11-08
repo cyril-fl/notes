@@ -25,7 +25,7 @@ L'app demande de se connecter avec un compte créé par la CLI (`notes user add 
 
 ## Images
 
-Coller ou glisser une image (PNG, JPEG, GIF, WebP, 20 Mo au plus) dans une note l'envoie à l'API et l'insère à cet endroit. Elle est rangée dans Silo, voir le README de `notes-go`.
+Coller ou glisser une image (PNG, JPEG, GIF, WebP, 20 Mo au plus) dans une note l'envoie à l'API et l'insère à cet endroit. Elle est rangée dans Silo, voir le README de `notes-go`. Sélectionnée, une image propose trois tailles : petite (un tiers de la largeur), moyenne (deux tiers) ou grande (sa largeur à elle). La taille s'écrit dans le titre du markdown, `![photo](/api/files/<id> "small")` ou `"medium"`, comme celle des cartes de liens : ailleurs, ça reste une image normale.
 
 ## Raccourcis
 

@@ -1,8 +1,16 @@
 import Image from '@tiptap/extension-image';
 import { Plugin } from '@tiptap/pm/state';
-import { mergeAttributes } from '@tiptap/vue-3';
+import { mergeAttributes, type JSONContent } from '@tiptap/vue-3';
 
 const FILES = '/api/files/';
+
+export type ImageSize = 'small' | 'medium';
+
+/** The size of an image is the title of its markdown, like the cards of links: ![alt](src "small"). Left out, the image keeps its own width. */
+export function imageSize(title?: string | null): ImageSize | null {
+  const size = title?.toLowerCase();
+  return size === 'small' || size === 'medium' ? size : null;
+}
 
 /** What the markdown cites, /api/files/<id>, is on the API: in development it runs on another port. */
 export function imageSrc(src: string, baseURL: string) {
@@ -28,7 +36,23 @@ export function noteImage(baseURL: string, upload: (file: File) => Promise<strin
       return {
         ...this.parent?.(),
         src: { default: null, parseHTML: (element) => citedSrc(element.getAttribute('src') ?? '', baseURL) || null },
+        size: {
+          default: null,
+          parseHTML: (element) => imageSize(element.dataset.size),
+          renderHTML: ({ size }) => (size ? { 'data-size': size, class: `note-image-${size}` } : {}),
+        },
       };
+    },
+
+    parseMarkdown(token, helpers) {
+      const node = this.parent!(token, helpers) as JSONContent;
+      const size = imageSize(node.attrs?.title);
+      return size ? { ...node, attrs: { ...node.attrs, title: null, size } } : node;
+    },
+
+    renderMarkdown(node, helpers, context) {
+      const size = node.attrs?.size;
+      return this.parent!(size ? { ...node, attrs: { ...node.attrs, title: size } } : node, helpers, context) as string;
     },
 
     renderHTML({ HTMLAttributes }) {

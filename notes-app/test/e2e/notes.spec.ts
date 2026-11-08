@@ -175,6 +175,24 @@ test('a pasted image is sent to the API, shown, and cited by the note', async ({
     .toMatch(/!\[point\.png\]\(\/api\/files\/[0-9a-f-]{36}\)/);
 });
 
+test('the size of an image is picked over it and kept as the title of its markdown', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} taille\n\n![chat](https://x.org/chat.png "small")`);
+  await page.goto(`/notes/${note.id}`);
+  const image = page.locator('.ProseMirror img[alt="chat"]');
+  await expect(image).toHaveClass(/note-image-small/);
+
+  await image.click();
+  await page.getByRole('button', { name: 'Moyenne' }).click();
+  await expect(image).toHaveClass(/note-image-medium/);
+  await expect
+    .poll(() => box.content(note.id), { timeout: 5000 })
+    .toContain('![chat](https://x.org/chat.png "medium")');
+
+  await page.getByRole('button', { name: 'Grande' }).click();
+  await expect(image).not.toHaveClass(/note-image/);
+  await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('![chat](https://x.org/chat.png)');
+});
+
 test('pinning from the menu lists the note in the sidebar', async ({ page }) => {
   const note = await box.note(`# ${box.prefix} épinglée`);
   await page.goto(`/folders/${box.folder.id}`);
