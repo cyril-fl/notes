@@ -74,6 +74,7 @@ export function useIcons() {
     linkMini: 'i-reicon-minimize',
     linkLarge: 'i-reicon-maximize',
     image: 'i-reicon-gallery-wide-filled',
+    imageNormal: 'i-reicon-gallery-wide',
     linkOpen: 'i-reicon-arrow-up-right-square',
     mail: 'i-reicon-envelope',
     orderedList: 'i-reicon-ordered-list',

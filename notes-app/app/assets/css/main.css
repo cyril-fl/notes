@@ -310,8 +310,7 @@
     @apply size-8;
   }
 
-  /* An image's size, as a share of the note's width: without one it takes the whole width, or a narrow image
-     would be smaller large than medium. */
+  /* An image's size, as a share of the note's width: without one it keeps its own width. */
   .ProseMirror img.note-image-large {
     @apply w-full;
   }

@@ -19,5 +19,6 @@ test('cites the files of the API by their path, whatever the address they come w
 test('reads a size from the title of an image, any other title is not one', () => {
   assert.equal(imageSize('small'), 'small');
   assert.equal(imageSize('Medium'), 'medium');
-  for (const title of [null, undefined, '', 'large', 'Mon chat']) assert.equal(imageSize(title), null, String(title));
+  assert.equal(imageSize('large'), 'large');
+  for (const title of [null, undefined, '', 'huge', 'Mon chat']) assert.equal(imageSize(title), null, String(title));
 });

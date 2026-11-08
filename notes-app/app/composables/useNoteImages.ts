@@ -15,15 +15,18 @@ export function useNoteImages(baseURL: string, upload: (file: File) => Promise<s
   return {
     extensions: [noteImage(baseURL, upload)],
     handlers: {
+      imageNormal: sizeHandler(null),
       imageSmall: sizeHandler('small'),
       imageMedium: sizeHandler('medium'),
-      imageLarge: sizeHandler(null),
+      imageLarge: sizeHandler('large'),
     },
-    // Fixed sizes rather than handles: they work with a finger too. One icon, drawn at the size it gives.
+    // Fixed sizes rather than handles: they work with a finger too. One icon, drawn at the size it gives, after
+    // the image's own size.
     bubbles: [
       {
         pluginKey: 'imageMenu',
         items: [
+          [{ kind: 'imageNormal', icon: icons.imageNormal, tooltip: { text: t('note.imageNormal') } }],
           [
             {
               kind: 'imageSmall',

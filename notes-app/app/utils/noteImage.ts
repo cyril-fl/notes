@@ -4,12 +4,12 @@ import { mergeAttributes, type JSONContent } from '@tiptap/vue-3';
 
 const FILES = '/api/files/';
 
-export type ImageSize = 'small' | 'medium';
+export type ImageSize = 'small' | 'medium' | 'large';
 
-/** The size of an image is the title of its markdown, like the cards of links: ![alt](src "small"). Left out, the image takes the whole width. */
+/** The size of an image is the title of its markdown, like the cards of links: ![alt](src "small"). Left out, the image keeps its own width. */
 export function imageSize(title?: string | null): ImageSize | null {
   const size = title?.toLowerCase();
-  return size === 'small' || size === 'medium' ? size : null;
+  return size === 'small' || size === 'medium' || size === 'large' ? size : null;
 }
 
 /** What the markdown cites, /api/files/<id>, is on the API: in development it runs on another port. */
@@ -39,8 +39,7 @@ export function noteImage(baseURL: string, upload: (file: File) => Promise<strin
         size: {
           default: null,
           parseHTML: (element) => imageSize(element.dataset.size),
-          renderHTML: ({ size }) =>
-            size ? { 'data-size': size, class: `note-image-${size}` } : { class: 'note-image-large' },
+          renderHTML: ({ size }) => (size ? { 'data-size': size, class: `note-image-${size}` } : {}),
         },
       };
     },
