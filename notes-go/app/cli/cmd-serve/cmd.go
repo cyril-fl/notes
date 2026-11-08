@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -42,6 +44,10 @@ func Serve(cobra *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	behindProxy, err := cobra.Flags().GetBool("behind-proxy")
+	if err != nil {
+		return err
+	}
 
 	ctx, stop := signal.NotifyContext(cobra.Context(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -68,6 +74,9 @@ func Serve(cobra *cobra.Command, args []string) error {
 	handler := api.New(db, store, origin)
 	if web != "" {
 		handler = withWeb(web, handler)
+	}
+	if behindProxy {
+		handler = withProxy(handler)
 	}
 	server := &http.Server{
 		Addr:              addr,
@@ -111,6 +120,22 @@ func every(ctx context.Context, interval time.Duration, task func()) {
 			task()
 		}
 	}
+}
+
+// withProxy gives the requests the client's address: behind a proxy, RemoteAddr is the proxy's for every device, and
+// the login delay would block them all. The last X-Forwarded-For entry is the one the proxy wrote, the client cannot
+// forge it; only trust it when nothing but the proxy reaches the API.
+func withProxy(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		forwarded := r.Header.Values("X-Forwarded-For")
+		if len(forwarded) > 0 {
+			entries := strings.Split(forwarded[len(forwarded)-1], ",")
+			if address := strings.TrimSpace(entries[len(entries)-1]); address != "" {
+				r.RemoteAddr = net.JoinHostPort(address, "0")
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // withWeb serves the web app of dir next to the API, so both share one origin. A path that is no file is a page of

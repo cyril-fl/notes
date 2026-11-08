@@ -279,6 +279,11 @@ commands:
         value: ""
         usage: "Folder of the generated web app, served on the same address as the API (none when empty)"
         type: "string"
+      - name: "behind-proxy"
+        shorthand: ""
+        value: ""
+        usage: "Take the client's address from the last X-Forwarded-For entry, set by the proxy in front (tailscale serve)"
+        type: "bool"
   login:
     use: "login"
     short: "Log the CLI in to an account"
