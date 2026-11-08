@@ -287,6 +287,31 @@
     @apply bg-primary/10;
   }
 
+  /* Callouts: a quote with a type (> [!tip]), named above it; the types of Obsidian and GitHub, others in the info color. */
+  .ProseMirror blockquote[data-callout] {
+    --callout: var(--ui-info);
+    @apply rounded-e-md py-2 pe-3 not-italic! border-s-(--callout)!;
+    background: color-mix(in oklab, var(--callout) 10%, transparent);
+  }
+
+  .ProseMirror blockquote[data-callout]::before {
+    content: attr(data-callout);
+    @apply block text-xs font-semibold uppercase;
+    color: var(--callout);
+  }
+
+  .ProseMirror blockquote:is([data-callout='tip' i], [data-callout='success' i]) {
+    --callout: var(--ui-success);
+  }
+
+  .ProseMirror blockquote:is([data-callout='warning' i], [data-callout='important' i]) {
+    --callout: var(--ui-warning);
+  }
+
+  .ProseMirror blockquote:is([data-callout='danger' i], [data-callout='caution' i], [data-callout='error' i]) {
+    --callout: var(--ui-error);
+  }
+
   /* The highlight.js classes lowlight puts in code blocks, on the theme's colors. */
   .ProseMirror pre :is(.hljs-comment, .hljs-quote) {
     @apply text-muted italic;

@@ -134,6 +134,12 @@
     "tableDeleteRow": "Supprimer la ligne",
     "tableDeleteColumn": "Supprimer la colonne",
     "tableDelete": "Supprimer le tableau",
+    "callouts": {
+      "note": "Encadré note",
+      "tip": "Encadré astuce",
+      "warning": "Encadré attention",
+      "danger": "Encadré danger"
+    },
     "notSaved": "Non enregistré",
     "emptyWillTrash": "Vide : ira à la corbeille en la quittant",
     "saving": "Enregistrement…",
@@ -269,6 +275,7 @@
     "settingsNav": "La barre latérale des réglages, une page par section",
     "slashCommands": "Les commandes / dans les notes : titres, listes, bloc de code…",
     "tables": "Les tableaux dans les notes, insérés avec /tableau",
-    "codeHighlight": "Les blocs de code colorés selon leur langage"
+    "codeHighlight": "Les blocs de code colorés selon leur langage",
+    "callouts": "Les encadrés (note, astuce, attention, danger), insérés avec /encadré"
   }
 }

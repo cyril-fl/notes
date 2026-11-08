@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import type { Editor } from '@tiptap/core';
 import { API, APP } from '../../playwright.config';
 import { sandbox } from './helpers';
 
@@ -224,6 +225,35 @@ test('the Pro mode colors the code blocks', async ({ page }) => {
     await page.keyboard.press('End');
     await page.keyboard.type(' // ok');
     await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('```go\nfunc main() {} // ok\n```');
+  } finally {
+    await box.api.patch('/api/me', { data: { pro: false } });
+  }
+});
+
+// A callout comes from the / menu and is saved as an Obsidian and GitHub callout; one already in a note keeps its title.
+test('the Pro mode adds the callouts to the editor', async ({ page }) => {
+  const note = await box.note(`# Encadré ${box.prefix}\n\n> [!tip] Astuce\n> Lire la suite\n\nTexte`);
+  const editor = page.locator('.ProseMirror');
+  try {
+    await box.api.patch('/api/me', { data: { pro: true } });
+    await page.goto(`/notes/${note.id}`);
+    await expect(editor.locator('blockquote[data-callout=tip]')).toContainText('Lire la suite');
+    await editor.getByText('Texte', { exact: true }).click();
+    // ProseMirror reads the click's selection a moment later: typed sooner, Enter splits the title.
+    await expect
+      .poll(() =>
+        editor.evaluate(
+          (e) => (e as { editor?: Editor } & HTMLElement).editor?.state.selection.$from.parent.textContent,
+        ),
+      )
+      .toBe('Texte');
+    await page.keyboard.press('End');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('/encadré');
+    await page.getByRole('option', { name: 'Encadré attention' }).click();
+    await page.keyboard.type('Prudence');
+    await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('> [!warning]\n> Prudence');
+    expect(await box.content(note.id)).toContain('> [!tip] Astuce\n> Lire la suite');
   } finally {
     await box.api.patch('/api/me', { data: { pro: false } });
   }

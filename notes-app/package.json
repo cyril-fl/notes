@@ -23,6 +23,7 @@
     "@iconify-json/reicon": "^1.2.6",
     "@nuxt/ui": "^4.12.0",
     "@nuxtjs/i18n": "^10.6.0",
+    "@tiptap/extension-blockquote": "3.32.2",
     "@tiptap/extension-code-block-lowlight": "3.32.2",
     "@tiptap/extension-image": "^3.32.2",
     "@tiptap/extension-list": "^3.32.2",

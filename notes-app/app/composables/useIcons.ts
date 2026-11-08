@@ -79,6 +79,10 @@ export function useIcons() {
     tableAddColumn: 'i-lucide-between-vertical-end',
     tableDeleteRow: 'i-lucide-rows-3',
     tableDeleteColumn: 'i-lucide-columns-3',
+    calloutNote: 'i-lucide-info',
+    calloutTip: 'i-lucide-lightbulb',
+    calloutWarning: 'i-lucide-triangle-alert',
+    calloutDanger: 'i-lucide-octagon-alert',
   };
 
   return { icons };

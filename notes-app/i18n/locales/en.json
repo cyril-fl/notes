@@ -134,6 +134,12 @@
     "tableDeleteRow": "Delete the row",
     "tableDeleteColumn": "Delete the column",
     "tableDelete": "Delete the table",
+    "callouts": {
+      "note": "Note callout",
+      "tip": "Tip callout",
+      "warning": "Warning callout",
+      "danger": "Danger callout"
+    },
     "notSaved": "Not saved",
     "emptyWillTrash": "Empty: goes to the trash when you leave it",
     "saving": "Saving…",
@@ -269,6 +275,7 @@
     "settingsNav": "The settings sidebar, one page per section",
     "slashCommands": "The / commands in the notes: headings, lists, code block…",
     "tables": "Tables in the notes, inserted with /table",
-    "codeHighlight": "Code blocks colored by their language"
+    "codeHighlight": "Code blocks colored by their language",
+    "callouts": "Callouts (note, tip, warning, danger), inserted with /callout"
   }
 }
