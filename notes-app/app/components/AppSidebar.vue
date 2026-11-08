@@ -36,6 +36,10 @@ const darkMode = computed({
 const { data: recent } = useLazyAsyncData('recent', () => api<Recent[]>('/api/recent', { quiet: true }), {
   default: () => [] as Recent[],
 });
+// A pinned note is already one click away: Recent lists the others, so the open note lights up once.
+const recentNotes = computed(() =>
+  recent.value.filter((note) => !pinnedNotes.value.some((pinned) => pinned.id === note.id)).slice(0, 5),
+);
 const { data: tags } = useLazyAsyncData('tags', () => api<TagCount[]>('/api/graph'), {
   default: () => [] as TagCount[],
 });
@@ -243,16 +247,14 @@ const isOverRoot = useDropFolder(rootLink, () => null);
           </div>
         </section>
 
-        <section v-if="recent.length">
+        <section v-if="recentNotes.length">
           <h2 class="px-2 pb-1 text-xs font-medium text-muted">{{ $t('sidebar.recent') }}</h2>
           <NuxtLink
-            v-for="note in recent.slice(0, 5)"
+            v-for="note in recentNotes"
             :key="note.id"
             :to="`/notes/${note.id}`"
             class="row"
-            :class="{
-              'row-active': route.params.id === note.id && !pinnedNotes.some((pinned) => pinned.id === note.id),
-            }"
+            :class="{ 'row-active': route.params.id === note.id }"
           >
             <UIcon :name="icons.recent" class="size-4 shrink-0 text-muted" />
             <span class="truncate">{{ displayTitle(note.title, $t('untitled')) }}</span>
