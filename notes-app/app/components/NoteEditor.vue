@@ -176,14 +176,17 @@ async function askLink(editor: Editor) {
   const current = editor.getAttributes('link').href as string | undefined;
   if (current) return editor.chain().focus().unsetLink().run();
 
-  const href = await prompt({ title: t('note.addLink'), placeholder: 'https://', action: t('common.add') });
+  const href = await prompt({
+    title: t('note.addLink'),
+    placeholder: t('note.linkPlaceholder'),
+    action: t('common.add'),
+  });
   if (!href) return;
   const { from, to } = editor.state.selection;
-  const text = editor.state.doc.textBetween(from, to);
   editor
     .chain()
     .focus()
-    .insertContent(linkContent(/^[a-z]+:/i.test(href) ? href : `https://${href}`, text))
+    .insertContent(linkContent(toHref(href), editor.state.doc.textBetween(from, to)))
     .run();
 }
 
@@ -287,7 +290,7 @@ const handlers = {
       return editor.chain();
     },
     isActive: (editor: Editor) => editor.isActive('link'),
-    isDisabled: (editor: Editor) => editor.state.selection.empty && !editor.isActive('link'),
+    isDisabled: () => false,
   },
   linkHyperlink: linkSizeHandler('hyperlink'),
   linkMini: linkSizeHandler('mini'),
@@ -345,8 +348,11 @@ const starterKit = {
   underline: false,
   link: {
     openOnClick: false,
-    isAllowedUri: (url: string, ctx: { defaultValidate: (url: string) => boolean }) =>
-      ALLOWED_LINKS.includes((url.split(':')[0] ?? '').toLowerCase()) && ctx.defaultValidate(url),
+    // Autolink asks with the text as typed: an email or a domain has no scheme yet, it gets mailto: or https:.
+    isAllowedUri: (url: string, ctx: { defaultValidate: (url: string) => boolean }) => {
+      const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(url)?.[1];
+      return (!scheme || ALLOWED_LINKS.includes(scheme.toLowerCase())) && ctx.defaultValidate(url);
+    },
   },
 } as object;
 // A dropped image takes no focus: the upload is an interaction, its image an edit.

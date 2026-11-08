@@ -94,6 +94,31 @@ test('a pasted address becomes a mini card', async ({ page }) => {
     .toContain('[example.com](https://example.com/page "mini")');
 });
 
+test('an email is a link: typed, pasted or given to the link button', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} mail\n\nÉcrire à`);
+  await page.goto(`/notes/${note.id}`);
+  const editor = page.locator('.ProseMirror');
+  await editor.getByText('Écrire à').click();
+  await page.keyboard.press('End');
+  await page.keyboard.type(' tape@example.com ');
+  await expect(editor.locator('a[href="mailto:tape@example.com"]')).toBeVisible();
+
+  await editor.evaluate((el) => {
+    const data = new DataTransfer();
+    data.setData('text/plain', 'colle@example.com');
+    el.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }));
+  });
+  await expect(editor.locator('a.link-card-mini')).toContainText('colle@example.com');
+
+  await page.getByRole('button', { name: 'Lien', exact: true }).click();
+  await page.getByPlaceholder('https://… ou une adresse mail').fill('bouton@example.com');
+  await page.getByRole('button', { name: 'Ajouter' }).click();
+  await expect(editor.locator('a.link-card-mini').nth(1)).toContainText('bouton@example.com');
+  await expect
+    .poll(() => box.content(note.id), { timeout: 5000 })
+    .toContain('[bouton@example.com](mailto:bouton@example.com "mini")');
+});
+
 // A 1×1 PNG.
 const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 

@@ -6,6 +6,7 @@ import {
   linkContent,
   linkHost,
   readLinkCard,
+  toHref,
   writeLinkCard,
 } from '../app/utils/linkCard.ts';
 
@@ -71,4 +72,11 @@ test('a link in a size: a card for the web, a hyperlink otherwise', () => {
   });
   assert.equal(linkContent('mailto:a@b.c', '', 'large').attrs?.text, 'a@b.c');
   assert.equal(linkContent('tel:0600', '', 'large').type, 'text');
+});
+
+test('an address typed for the link button gets its scheme', () => {
+  assert.equal(toHref(' nasfwg@gmail.com '), 'mailto:nasfwg@gmail.com');
+  assert.equal(toHref('example.com/a'), 'https://example.com/a');
+  assert.equal(toHref('https://user@example.com'), 'https://user@example.com');
+  assert.equal(toHref('mailto:a@b.c'), 'mailto:a@b.c');
 });

@@ -105,6 +105,7 @@
     "unsavedDescription": "Your last changes will be lost.",
     "leaveAnyway": "Leave anyway",
     "addLink": "Add a link",
+    "linkPlaceholder": "https://… or an email address",
     "imageTooLarge": "{name} is too large (20 MB at most)",
     "imageType": "{name} is not a PNG, JPEG, GIF or WebP image",
     "imageFailed": "{name} could not be sent",

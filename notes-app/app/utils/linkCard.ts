@@ -33,6 +33,15 @@ export function isCardLink(href?: string | null) {
   return !!href && /^(https?:\/\/|mailto:)/i.test(href);
 }
 
+const EMAIL = /^[^\s@/:]+@[^\s@/:]+\.[^\s@/:]+$/;
+
+/** The href of an address typed or pasted: an email gets mailto:, an address with no scheme https://. */
+export function toHref(input: string) {
+  const text = input.trim();
+  if (EMAIL.test(text)) return `mailto:${text}`;
+  return /^[a-z][a-z0-9+.-]*:/i.test(text) ? text : `https://${text}`;
+}
+
 export function isMailLink(href: string) {
   return /^mailto:/i.test(href);
 }
@@ -94,20 +103,22 @@ export function linkCard(view: Component) {
       return writeLinkCard(node.attrs.text, node.attrs.href, node.attrs.size);
     },
 
-    // A pasted address becomes a link in the default size, on the selected text if any.
+    // A pasted address or email becomes a link in the default size, on the selected text if any.
     addProseMirrorPlugins() {
       const { editor } = this;
       return [
         new Plugin({
           props: {
             handlePaste(view, event) {
-              const href = event.clipboardData?.getData('text/plain').trim();
-              if (!isCardLink(href) || /\s/.test(href!)) return false;
+              const text = event.clipboardData?.getData('text/plain').trim() ?? '';
+              // Not a bare domain: example.com may be a word, the link mark's paste rule makes it a hyperlink.
+              const href = EMAIL.test(text) ? toHref(text) : text;
+              if (!isCardLink(href) || /\s/.test(href)) return false;
               const { from, to } = view.state.selection;
               editor
                 .chain()
                 .focus()
-                .insertContent(linkContent(href!, view.state.doc.textBetween(from, to)))
+                .insertContent(linkContent(href, view.state.doc.textBetween(from, to)))
                 .run();
               return true;
             },

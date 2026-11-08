@@ -105,6 +105,7 @@
     "unsavedDescription": "Tes dernières modifications seront perdues.",
     "leaveAnyway": "Quitter quand même",
     "addLink": "Ajouter un lien",
+    "linkPlaceholder": "https://… ou une adresse mail",
     "imageTooLarge": "{name} est trop lourde (20 Mo au plus)",
     "imageType": "{name} n'est pas une image PNG, JPEG, GIF ou WebP",
     "imageFailed": "{name} n'a pas pu être envoyée",
