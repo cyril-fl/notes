@@ -135,16 +135,14 @@ const groups = computed<CommandPaletteGroup[]>(() => {
     :loading="status === 'pending'"
     :placeholder="$t('search.placeholder')"
   >
-    <!-- The default label, plus the padlock of a locked note after its title. -->
-    <template #note-label="{ item, ui }">
-      <span :class="ui.itemLabelBase()">{{ item.label }}</span>
+    <!-- The padlock of a locked note at the end of its row, where folders and actions show their chevron. -->
+    <template #note-trailing="{ item }">
       <UIcon
         v-if="item.readonly"
         :name="icons.lock"
         :aria-label="$t('note.readonly')"
-        class="inline-block size-3.5 align-middle text-muted"
+        class="size-3.5 shrink-0 text-muted"
       />
-      <span :class="ui.itemLabelSuffix()">{{ item.suffix }}</span>
     </template>
   </UDashboardSearch>
 </template>

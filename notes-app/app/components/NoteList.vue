@@ -36,7 +36,7 @@ const { icons } = useIcons();
             v-if="note.readonly"
             :name="icons.lock"
             :aria-label="$t('note.readonly')"
-            class="size-3.5 shrink-0 text-muted"
+            class="ml-auto size-3.5 shrink-0 text-muted"
           />
         </p>
         <p class="truncate text-xs text-muted">{{ note.snippet ?? note.path }}</p>

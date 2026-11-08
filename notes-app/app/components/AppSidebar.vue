@@ -243,12 +243,10 @@ const isOverRoot = useDropFolder(rootLink, () => null);
             </UTooltip>
             <NuxtLink :to="`/notes/${note.id}`" class="flex min-w-0 flex-1 items-center gap-2 self-stretch leading-7">
               <span class="truncate">{{ displayTitle(note.title, $t('untitled')) }}</span>
-              <UIcon
-                v-if="note.readonly"
-                :name="icons.lock"
-                :aria-label="$t('note.readonly')"
-                class="size-3.5 shrink-0 text-muted"
-              />
+              <!-- At the end of the row, in line with the chevrons of the folders. -->
+              <span v-if="note.readonly" class="ml-auto flex size-5 shrink-0 items-center justify-center">
+                <UIcon :name="icons.lock" :aria-label="$t('note.readonly')" class="size-3.5 text-muted" />
+              </span>
             </NuxtLink>
           </div>
         </section>
@@ -264,12 +262,10 @@ const isOverRoot = useDropFolder(rootLink, () => null);
           >
             <UIcon :name="icons.recent" class="size-4 shrink-0 text-muted" />
             <span class="truncate">{{ displayTitle(note.title, $t('untitled')) }}</span>
-            <UIcon
-              v-if="note.readonly"
-              :name="icons.lock"
-              :aria-label="$t('note.readonly')"
-              class="size-3.5 shrink-0 text-muted"
-            />
+            <!-- At the end of the row, in line with the chevrons of the folders. -->
+            <span v-if="note.readonly" class="ml-auto flex size-5 shrink-0 items-center justify-center">
+              <UIcon :name="icons.lock" :aria-label="$t('note.readonly')" class="size-3.5 text-muted" />
+            </span>
           </NuxtLink>
         </section>
 
