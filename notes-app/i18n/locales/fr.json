@@ -56,6 +56,7 @@
     "parentInTrash": "Le dossier parent est dans la corbeille : restaure-le d'abord.",
     "nameTaken": "Un dossier porte déjà ce nom à cet endroit.",
     "folderName": "Nom du dossier",
+    "renameNote": "Renommer la note",
     "renameFolder": "Renommer le dossier",
     "renameTag": "Renommer le tag",
     "tagTaken": "Ce tag existe déjà.",

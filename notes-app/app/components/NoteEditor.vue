@@ -18,7 +18,7 @@ const props = defineProps<{ noteId?: string; parentId?: string; start?: string }
 const emit = defineEmits<{ created: [id: string] }>();
 
 const api = useApi();
-const { confirm } = useDialogs();
+const { confirm, prompt } = useDialogs();
 const { removeItem } = useItems();
 const baseURL = useRuntimeConfig().public.apiBase;
 const toast = useToast();
@@ -159,6 +159,28 @@ function onSource(text: string) {
   if (has('wordCount')) words.value = countWords(text);
   save(text.trim());
 }
+
+// The Cmd K palette renames the open note here, so the editor follows: its first heading takes the title, or one is added on top.
+// shortcut: the marks and #tags of that heading are replaced too, keep them if renamed headings lose tags.
+const renaming = useState<(() => Promise<void>) | undefined>('rename-note');
+async function rename() {
+  const next = (
+    await prompt({ title: t('items.renameNote'), value: displayTitle(title.value, ''), action: t('common.rename') })
+  )?.trim();
+  if (!next || next === title.value) return;
+  touched.value = true;
+  if (source.value !== undefined) return onSource(retitle(source.value, next));
+  const editor = editorRef.value?.editor;
+  if (!editor) return;
+  const { tr, doc, schema } = editor.state;
+  const first = outline.value[0];
+  const node = first && doc.nodeAt(first.pos);
+  if (first && node) tr.insertText(next, first.pos + 1, first.pos + node.nodeSize - 1);
+  else tr.insert(0, schema.nodes.heading!.create({ level: 1 }, schema.text(next)));
+  editor.view.dispatch(tr);
+}
+renaming.value = rename;
+onBeforeUnmount(() => renaming.value === rename && (renaming.value = undefined));
 
 // shortcut: a keepalive body is limited to 64 KiB, a longer note loses its last 1.5 s when the tab closes; beacon has the same limit.
 function saveOnClose() {

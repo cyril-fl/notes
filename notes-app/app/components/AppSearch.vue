@@ -44,6 +44,8 @@ const here = computed(() => {
   if (route.path.startsWith('/tags/')) return { kind: 'tag' as const, id: route.params.value as string };
   return undefined;
 });
+// Set by the open note's editor, which renames it.
+const renameNote = useState<(() => Promise<void>) | undefined>('rename-note');
 const destinations = useDestinations(() => (here.value?.kind === 'folder' ? [here.value.id] : []));
 
 async function changeTheme(theme: string) {
@@ -62,7 +64,8 @@ const proActions = computed<CommandPaletteItem[]>(() => {
     }));
     actions.push({ label: t('search.moveTo'), icon: icons.move, children });
   }
-  // A note is renamed by its first line, in the editor.
+  if (target?.kind === 'note' && renameNote.value)
+    actions.push({ label: t('common.rename'), icon: icons.rename, onSelect: renameNote.value });
   const folder = target?.kind === 'folder' && useNuxtData<ItemDetail>(`folder:${target.id}`).data.value?.item;
   if (folder) actions.push({ label: t('common.rename'), icon: icons.rename, onSelect: () => renameFolder(folder) });
   if (target?.kind === 'tag')

@@ -211,6 +211,33 @@ test('the Pro palette moves the open note', async ({ page }) => {
   }
 });
 
+// Pro: the palette renames the open note through its first heading, in the editor and in the source mode.
+test('the Pro palette renames the open note', async ({ page }) => {
+  const note = await box.note(`intro\n\n## ${box.prefix} old\n\ntext`);
+  const rename = async (title: string) => {
+    await page.keyboard.press('ControlOrMeta+k');
+    await page.getByRole('option', { name: 'Renommer' }).click();
+    await page.getByRole('dialog').getByRole('textbox').fill(title);
+    await page.getByRole('dialog').getByRole('button', { name: 'Renommer' }).click();
+  };
+  try {
+    await box.api.patch('/api/me', { data: { pro: true } });
+    await page.goto(`/notes/${note.id}`);
+    await expect(page.locator('.ProseMirror')).toContainText('old');
+    await rename(`${box.prefix} new`);
+    await expect(page.locator('.ProseMirror h2')).toHaveText(`${box.prefix} new`);
+    await expect.poll(() => box.content(note.id), { timeout: 5000 }).toBe(`intro\n\n## ${box.prefix} new\n\ntext`);
+    await page.getByRole('button', { name: 'Mode source' }).click();
+    await rename(`${box.prefix} source`);
+    await expect(page.getByRole('textbox', { name: 'Mode source' })).toHaveValue(
+      `intro\n\n## ${box.prefix} source\n\ntext`,
+    );
+    await expect(page).toHaveTitle(new RegExp(`${box.prefix} source`));
+  } finally {
+    await box.api.patch('/api/me', { data: { pro: false } });
+  }
+});
+
 // Pro: the source mode shows the markdown as text, saves what is typed there, and the editor starts from it.
 test('the Pro source mode edits the markdown', async ({ page }) => {
   const note = await box.note(`# ${box.prefix} source\n\n**gras**`);
