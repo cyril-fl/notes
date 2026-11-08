@@ -107,6 +107,7 @@
     "unsaved": "The note is not saved",
     "unsavedDescription": "Your last changes will be lost.",
     "leaveAnyway": "Leave anyway",
+    "changedElsewhere": "This note changed on another device: copy your text, then reload the page, it is no longer saved.",
     "addLink": "Add a link",
     "linkPlaceholder": "https://… or an email address",
     "imageTooLarge": "{name} is too large (20 MB at most)",

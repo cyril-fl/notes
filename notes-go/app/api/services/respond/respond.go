@@ -75,7 +75,7 @@ var statuses = []struct {
 		createfile.ErrNotImage,
 	}},
 	{http.StatusConflict, []error{
-		domain.ErrFolderExists, edittag.ErrAlreadyExists, adduser.ErrNameTaken, moveitems.ErrCycle, restoreitems.ErrParentInTrash, patchnote.ErrLocked,
+		domain.ErrFolderExists, edittag.ErrAlreadyExists, adduser.ErrNameTaken, moveitems.ErrCycle, restoreitems.ErrParentInTrash, patchnote.ErrLocked, patchnote.ErrStale,
 	}},
 }
 

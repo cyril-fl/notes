@@ -107,6 +107,7 @@
     "unsaved": "La note n'est pas enregistrée",
     "unsavedDescription": "Tes dernières modifications seront perdues.",
     "leaveAnyway": "Quitter quand même",
+    "changedElsewhere": "La note a changé sur un autre appareil : copie ton texte puis recharge la page, il n'est plus enregistré.",
     "addLink": "Ajouter un lien",
     "linkPlaceholder": "https://… ou une adresse mail",
     "imageTooLarge": "{name} est trop lourde (20 Mo au plus)",

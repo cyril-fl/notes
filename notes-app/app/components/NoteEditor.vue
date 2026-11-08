@@ -42,6 +42,11 @@ const isEmpty = ref(!props.noteId);
 // The editor can change its document while loading: only what follows a user interaction is an edit,
 // or merely opening a note would rewrite the markdown written with the CLI. Pointerdown too: a task checkbox takes no focus.
 const touched = ref(false);
+// The version the text is written over (#62): once another device changed the note, the API answers 409 and nothing more is sent.
+let version: string | undefined;
+// The text on the API as this editor last saw it: a moved note gets a new updated_at, not a new text.
+let saved = '';
+let stale = false;
 
 const saver = createSaver(send);
 const editorRef = useTemplateRef<{ editor?: Editor }>('editor');
@@ -50,6 +55,7 @@ async function send(changes: Changes): Promise<boolean | undefined> {
   if (id.value && Object.values(changes).every((value) => value === undefined)) return;
   // The API refuses a note with no content: a new one waits for its first text.
   if (!id.value && !changes.content) return false;
+  if (stale) return false;
 
   saving.value = true;
   try {
@@ -57,6 +63,7 @@ async function send(changes: Changes): Promise<boolean | undefined> {
     failed.value = false;
   } catch (error) {
     failed.value = true;
+    stale = (error as FetchError).status === 409;
     throw error;
   } finally {
     saving.value = false;
@@ -68,11 +75,25 @@ async function createNote(changes: Changes) {
   const item = await api<Item>('/api/notes', { method: 'POST', body });
   id.value = item.id;
   emit('created', item.id);
-  await readTags(changes, await api<ItemDetail>(`/api/notes/${item.id}`));
+  const note = await api<ItemDetail>(`/api/notes/${item.id}`);
+  remember(note);
+  await readTags(changes, note);
 }
 
 async function patchNote(changes: Changes) {
-  await readTags(changes, await api<ItemDetail>(`/api/notes/${id.value}`, { method: 'PATCH', body: changes }));
+  const body = { ...changes, updated_at: version };
+  const note = await api<ItemDetail>(`/api/notes/${id.value}`, {
+    method: 'PATCH',
+    body,
+    conflict: t('note.changedElsewhere'),
+  });
+  remember(note);
+  await readTags(changes, note);
+}
+
+function remember(note: ItemDetail) {
+  version = note.item.updated_at ?? note.item.created_at; // A note never edited has no updated_at.
+  saved = note.content ?? '';
 }
 
 // The API turns the #tags of the text into tags and its [[links]] into note ids: the sidebar, the related notes and the graph follow when they or the title change.
@@ -111,6 +132,7 @@ async function load() {
     links = linkedNotes(initialContent.value);
     title.value = note.item.title;
     readonly.value = !!note.readonly;
+    remember(note);
     place(note);
     isEmpty.value = false;
   } catch {
@@ -125,9 +147,16 @@ function place(note: ItemDetail) {
   path.value = note.path.slice(0, note.path.lastIndexOf('/')) || '/';
   parent.value = note.item.parent_id ?? undefined;
 }
-// The note moved from the Cmd K palette: its path follows when the views read again, without holding them up.
+// The note moved from the Cmd K palette: its path follows when the views read again, without holding them up, and its version when its text is the one saved.
 const unhook = useNuxtApp().hook('app:data:refresh', () => {
-  if (id.value) api<ItemDetail>(`/api/notes/${id.value}`, { quiet: true }).then(place, () => {});
+  if (!id.value) return;
+  api<ItemDetail>(`/api/notes/${id.value}`, { quiet: true }).then(
+    (note) => {
+      place(note);
+      if (note.content === saved) remember(note);
+    },
+    () => {},
+  );
 });
 onBeforeUnmount(unhook);
 
@@ -210,7 +239,7 @@ function saveOnClose() {
   if (!changes || (!id.value && !changes.content)) return;
 
   const url = `${baseURL}/api/notes${id.value ? `/${id.value}` : ''}`;
-  const body = JSON.stringify(id.value ? changes : { ...changes, parent_id: parent.value });
+  const body = JSON.stringify(id.value ? { ...changes, updated_at: version } : { ...changes, parent_id: parent.value });
   fetch(url, {
     method: id.value ? 'PATCH' : 'POST',
     body,

@@ -2138,6 +2138,8 @@ export interface components {
             pinned?: boolean;
             readonly?: boolean;
             tags?: string[];
+            /** @description UpdatedAt is updated_at as read, or created_at for a note never edited: a 409 if the note changed since. */
+            updated_at?: string;
         };
         "editpassword.Input": {
             current: string;

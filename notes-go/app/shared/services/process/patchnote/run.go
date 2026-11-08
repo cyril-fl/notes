@@ -3,6 +3,7 @@ package patchnote
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/hashtag"
@@ -13,7 +14,10 @@ import (
 	"github.com/uptrace/bun"
 )
 
-var ErrLocked = errors.New("note is read-only, unlock it first")
+var (
+	ErrLocked = errors.New("note is read-only, unlock it first")
+	ErrStale  = errors.New("note changed elsewhere since it was read")
+)
 
 // Input has pointers to tell a field left out from an empty one: editnote replaces everything,
 // so a change without tags must keep them, not clear them.
@@ -23,6 +27,8 @@ type Input struct {
 	Readonly *bool
 	Content  *string
 	Tags     *[]string
+	// UpdatedAt is the version the text was written over: content and tags are refused once the note changed since.
+	UpdatedAt *time.Time
 }
 
 type run struct {
@@ -41,7 +47,7 @@ type cache struct {
 // Process changes the fields given of a note, used by PATCH /api/notes/{id} and `edit note`. The #tags of the
 // content are the tags of the note, unless the tags are given: they then rewrite it. Pinning or locking alone
 // leaves the note as it is, updated_at included. A locked note refuses content and tags, unless unlocked in the same call.
-// TODO: the read is not locked, a concurrent edit can still be lost, fine for one user; SELECT … FOR UPDATE if that changes.
+// TODO: the read is not locked, two edits within the same instant can both pass the UpdatedAt check; SELECT … FOR UPDATE if that happens.
 func Process(ctx context.Context, db bun.IDB, input Input) *run {
 	return &run{
 		ctx:   ctx,
@@ -120,6 +126,14 @@ func (p *run) editNote(tx bun.Tx) error {
 	}
 	if p.cache.note.Readonly {
 		return ErrLocked
+	}
+	// A note never edited has no updated_at: its version is created_at.
+	seen := p.cache.note.Item.UpdatedAt
+	if seen.IsZero() {
+		seen = p.cache.note.Item.CreatedAt
+	}
+	if p.input.UpdatedAt != nil && !seen.Equal(*p.input.UpdatedAt) {
+		return ErrStale
 	}
 
 	input := editnote.Input{ID: p.input.ID, Content: p.cache.note.Content}

@@ -201,6 +201,10 @@ components:
             type: string
           type: array
           uniqueItems: false
+        updated_at:
+          description: 'UpdatedAt is updated_at as read, or created_at for a note
+            never edited: a 409 if the note changed since.'
+          type: string
       type: object
     editpassword.Input:
       properties:

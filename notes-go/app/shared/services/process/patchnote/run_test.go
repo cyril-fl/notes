@@ -5,6 +5,7 @@ import (
 	"errors"
 	"slices"
 	"testing"
+	"time"
 
 	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/hashtag"
@@ -79,5 +80,26 @@ func TestPatchNote(t *testing.T) {
 	}
 	if got := patch(Input{Readonly: &no, Tags: &[]string{"c"}}); got.HasErr() || got.GetResult().Readonly || !slices.Equal(got.GetResult().Tags, []string{"c"}) {
 		t.Errorf("unlock and edit: %+v, %v", got.GetResult(), got.GetErr())
+	}
+
+	// A text written over an older version is refused, over the current one saved (#62).
+	// current_timestamp is the start of the transaction, the same for every write here: an older version is made up.
+	older := read.GetResult().Item.UpdatedAt.Add(-time.Second)
+	if got := patch(Input{Content: &content, UpdatedAt: &older}); !errors.Is(got.GetErr(), ErrStale) {
+		t.Errorf("stale: err = %v, want %v", got.GetErr(), ErrStale)
+	}
+	current := read.GetResult().Item.UpdatedAt
+	if got := patch(Input{Content: &content, UpdatedAt: &current}); got.HasErr() {
+		t.Errorf("current: %v", got.GetErr())
+	}
+
+	// A note never edited: its version is created_at.
+	fresh := createnote.Process(ctx, tx, createnote.Input{Content: "fresh"})
+	fresh.Run()
+	created := fresh.GetResult().CreatedAt
+	edit := Process(ctx, tx, Input{ID: fresh.GetResult().ID, Content: &content, UpdatedAt: &created})
+	edit.Run()
+	if edit.HasErr() {
+		t.Errorf("never edited: %v", edit.GetErr())
 	}
 }
