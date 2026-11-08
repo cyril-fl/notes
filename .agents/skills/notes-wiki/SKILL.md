@@ -1,11 +1,11 @@
 ---
 name: notes-wiki
-description: Bring the GitHub wiki of Notes (../notes.wiki) up to the version just tagged - a Versions.md section, the current version on Home.md, the pages the change touches (Application-web, Titres-et-tags, Thème, Données), screenshots of a new screen, then commit and push the wiki. Use right after tagging a version (notes-release, notes-issue-done), or when the user says "wiki", "mets à jour le wiki", "doc utilisateur".
+description: Bring the GitHub wiki of Notes (../notes.wiki) up to the latest tag, catching up every version since the last one it knows - a Versions.md section, the current version on Home.md, the pages the change touches (Application-web, Titres-et-tags, Thème, Données), screenshots of a new screen, then commit and push the wiki. Use only when the user asks for it, never on your own after a fix or a tag: when the user says "wiki", "mets à jour le wiki", "doc utilisateur".
 ---
 
 # Update the wiki
 
-The wiki is a separate repo, `../notes.wiki` (from `develop/`), in French. It fell seven versions behind once (issue #44) because no step owned it: every tag now gets its wiki update, in the same session.
+The wiki is a separate repo, `../notes.wiki` (from `develop/`), in French. It is updated only when the user asks, since doing it after every tag cost too much time and tokens: it catches up all the tags since the last version it knows.
 
 ## Start from GitHub
 

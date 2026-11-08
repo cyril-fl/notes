@@ -23,10 +23,6 @@ description: Close a piece of work or a version of Notes - one commit per change
 - `git tag -a vX.Y.0 -m "vX.Y.0: <what the user gets>"`. Check `git tag --sort=-v:refname | head` first: another agent may already have used the next number.
 - A tag not yet pushed (`git branch -r --contains` / not in `origin/develop`) may be moved with `git tag -fa`; a pushed one never.
 
-## Wiki
-
-Right after the tag, run the `notes-wiki` skill: a `Versions.md` section, the current version on `Home.md`, the page of the feature, committed and pushed. Every tag, `fix:` included.
-
 ## Issues
 
 `gh issue list -R cyril-fl/notes`. `develop` is not the default branch: `Fixes #n` does not close anything. Close by hand once the work is committed:
