@@ -17,8 +17,9 @@ services:
       S3_BUCKET: ${S3_BUCKET:-notes}
       NOTES_SECRET: ${NOTES_SECRET:?set NOTES_SECRET in .env}
       CONFIG_FILE: ""
-    # The address the browser types: requests from any other page are refused.
-    command: serve --addr :8080 --web /web --behind-proxy=${NOTES_BEHIND_PROXY:-true} --origin=${WEB_ORIGIN:?set WEB_ORIGIN in .env}
+    # The address the browser types: requests from any other page are refused. Published on 127.0.0.1, only the proxy
+    # reaches the API, which then reads the address of each device in X-Forwarded-For.
+    command: serve --addr :8080 --web /web --published=${NOTES_LISTEN:-127.0.0.1:8080} --origin=${WEB_ORIGIN:?set WEB_ORIGIN in .env}
     # Plain HTTP, and the session cookie needs HTTPS: a proxy in front gives it.
     ports:
       - "${NOTES_LISTEN:-127.0.0.1:8080}:8080"

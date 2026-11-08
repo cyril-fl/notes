@@ -170,7 +170,7 @@ make api                                     # dans Docker, avec WEB_ORIGIN déf
 notes serve --origin http://localhost:3000   # ou directement sur la machine
 ```
 
-`--addr` choisit l'adresse d'écoute (`127.0.0.1:8080` par défaut) et `--origin` l'origine de l'app web autorisée, `--web` un dossier de l'app générée (`bun run generate`) servi à la même adresse que l'API. Derrière un proxy (`tailscale serve`), `--behind-proxy` prend l'adresse de chaque appareil dans `X-Forwarded-For`, pour que le délai après de mauvais mots de passe ne bloque que l'appareil fautif : seul le proxy doit alors pouvoir joindre l'API.
+`--addr` choisit l'adresse d'écoute (`127.0.0.1:8080` par défaut) et `--origin` l'origine de l'app web autorisée, `--web` un dossier de l'app générée (`bun run generate`) servi à la même adresse que l'API. Quand l'API n'est joignable que depuis la machine (`127.0.0.1`), elle prend l'adresse de chaque appareil dans le `X-Forwarded-For` du proxy (`tailscale serve`), pour que le délai après de mauvais mots de passe ne bloque que l'appareil fautif. Dans un conteneur, `--published` donne l'adresse publiée côté machine (`NOTES_LISTEN`), à la place de `--addr`.
 
 | Ressource | Routes (préfixe `/api`) | Corps JSON |
 |---|---|---|

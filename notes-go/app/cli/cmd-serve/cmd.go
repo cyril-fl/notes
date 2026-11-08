@@ -44,9 +44,12 @@ func Serve(cobra *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	behindProxy, err := cobra.Flags().GetBool("behind-proxy")
+	published, err := cobra.Flags().GetString("published")
 	if err != nil {
 		return err
+	}
+	if published == "" {
+		published = addr
 	}
 
 	ctx, stop := signal.NotifyContext(cobra.Context(), os.Interrupt, syscall.SIGTERM)
@@ -75,7 +78,7 @@ func Serve(cobra *cobra.Command, args []string) error {
 	if web != "" {
 		handler = withWeb(web, handler)
 	}
-	if behindProxy {
+	if onLoopback(published) {
 		handler = withProxy(handler)
 	}
 	server := &http.Server{
@@ -122,9 +125,23 @@ func every(ctx context.Context, interval time.Duration, task func()) {
 	}
 }
 
+// onLoopback tells if only this machine reaches addr: then the X-Forwarded-For of a request can only come from a proxy
+// running here (tailscale serve), never from a client.
+func onLoopback(addr string) bool {
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		return false
+	}
+	if host == "localhost" {
+		return true
+	}
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
+}
+
 // withProxy gives the requests the client's address: behind a proxy, RemoteAddr is the proxy's for every device, and
 // the login delay would block them all. The last X-Forwarded-For entry is the one the proxy wrote, the client cannot
-// forge it; only trust it when nothing but the proxy reaches the API.
+// forge it.
 func withProxy(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		forwarded := r.Header.Values("X-Forwarded-For")
