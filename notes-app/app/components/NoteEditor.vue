@@ -217,12 +217,17 @@ function readOutline(editor: Editor) {
   });
   outline.value = headings;
 }
+const words = ref(0);
+function readText(editor: Editor) {
+  readOutline(editor);
+  if (has('wordCount')) words.value = countWords(editor.getText());
+}
 watch(
   () => editorRef.value?.editor,
   (editor) => {
     if (!editor) return;
-    readOutline(editor);
-    editor.on('update', () => readOutline(editor));
+    readText(editor);
+    editor.on('update', () => readText(editor));
   },
 );
 function scrollTo(pos: number) {
@@ -300,6 +305,7 @@ const status = computed(() => {
       <div class="flex h-9 items-center gap-2 text-xs text-muted">
         <PathNav :path="path" />
         <span class="ml-auto shrink-0" :class="{ 'text-error': failed }" role="status">{{ status }}</span>
+        <span v-if="has('wordCount')" class="shrink-0 tabular-nums">{{ $t('note.words', words) }}</span>
         <UTooltip v-if="has('focusMode')" :text="focus ? $t('note.unfocus') : $t('note.focus')" :kbds="['meta', '.']">
           <UButton
             :icon="focus ? icons.unfocus : icons.focus"

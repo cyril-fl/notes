@@ -11,6 +11,7 @@ export const features = {
   tables: 'pro',
   codeHighlight: 'pro',
   callouts: 'pro',
+  wordCount: 'pro',
 } as const satisfies Record<string, Level>;
 
 export type Feature = keyof typeof features;

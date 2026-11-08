@@ -230,6 +230,27 @@ test('the Pro mode colors the code blocks', async ({ page }) => {
   }
 });
 
+// The word count is the Pro mode's, and follows the typing.
+test('the Pro mode counts the words of the note', async ({ page }) => {
+  const note = await box.note(`# Mots ${box.prefix}\n\nUn deux trois`);
+  const count = page.getByText(/^\d+ mots$/);
+  try {
+    await page.goto(`/notes/${note.id}`);
+    await expect(page.locator('.ProseMirror')).toContainText('Un deux trois');
+    await expect(count).toHaveCount(0);
+
+    await box.api.patch('/api/me', { data: { pro: true } });
+    await page.reload();
+    const before = parseInt((await count.textContent()) ?? '');
+    await page.locator('.ProseMirror').getByText('Un deux trois').click();
+    await page.keyboard.press('End');
+    await page.keyboard.type(' quatre, cinq !');
+    await expect(count).toHaveText(`${before + 2} mots`);
+  } finally {
+    await box.api.patch('/api/me', { data: { pro: false } });
+  }
+});
+
 // A callout comes from the / menu and is saved as an Obsidian and GitHub callout; one already in a note keeps its title.
 test('the Pro mode adds the callouts to the editor', async ({ page }) => {
   const note = await box.note(`# Encadré ${box.prefix}\n\n> [!tip] Astuce\n> Lire la suite\n\nTexte`);

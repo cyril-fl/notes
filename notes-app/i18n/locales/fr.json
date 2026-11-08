@@ -140,6 +140,7 @@
       "warning": "Encadré attention",
       "danger": "Encadré danger"
     },
+    "words": "aucun mot | {n} mot | {n} mots",
     "notSaved": "Non enregistré",
     "emptyWillTrash": "Vide : ira à la corbeille en la quittant",
     "saving": "Enregistrement…",
@@ -278,6 +279,7 @@
     "slashCommands": "Les commandes / dans les notes : titres, listes, bloc de code…",
     "tables": "Les tableaux dans les notes, insérés avec /tableau",
     "codeHighlight": "Les blocs de code colorés selon leur langage",
-    "callouts": "Les encadrés (note, astuce, attention, danger), insérés avec /encadré"
+    "callouts": "Les encadrés (note, astuce, attention, danger), insérés avec /encadré",
+    "wordCount": "Le nombre de mots de la note, sous le texte"
   }
 }

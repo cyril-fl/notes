@@ -140,6 +140,7 @@
       "warning": "Warning callout",
       "danger": "Danger callout"
     },
+    "words": "no words | {n} word | {n} words",
     "notSaved": "Not saved",
     "emptyWillTrash": "Empty: goes to the trash when you leave it",
     "saving": "Saving…",
@@ -278,6 +279,7 @@
     "slashCommands": "The / commands in the notes: headings, lists, code block…",
     "tables": "Tables in the notes, inserted with /table",
     "codeHighlight": "Code blocks colored by their language",
-    "callouts": "Callouts (note, tip, warning, danger), inserted with /callout"
+    "callouts": "Callouts (note, tip, warning, danger), inserted with /callout",
+    "wordCount": "The word count of the note, below the text"
   }
 }
