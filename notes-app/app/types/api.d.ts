@@ -2201,6 +2201,8 @@ export interface components {
             content?: string;
             pinned?: boolean;
             readonly?: boolean;
+            /** @description Restore says the content is a version restored: the text it replaces is kept in the history. */
+            restore?: boolean;
             tags?: string[];
             /** @description UpdatedAt is updated_at as read, or created_at for a note never edited: a 409 if the note changed since. */
             updated_at?: string;

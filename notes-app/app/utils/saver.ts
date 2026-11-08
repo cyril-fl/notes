@@ -1,4 +1,5 @@
-export type Changes = { content?: string };
+// restore: the content is a version restored, the API keeps the text it replaces in the history.
+export type Changes = { content?: string; restore?: true };
 
 // send returns false when the changes cannot go yet: they wait for the next ones.
 export type Send = (changes: Changes) => Promise<boolean | undefined>;

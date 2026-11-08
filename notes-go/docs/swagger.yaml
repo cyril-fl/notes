@@ -212,6 +212,10 @@ components:
           type: boolean
         readonly:
           type: boolean
+        restore:
+          description: 'Restore says the content is a version restored: the text it
+            replaces is kept in the history.'
+          type: boolean
         tags:
           items:
             type: string

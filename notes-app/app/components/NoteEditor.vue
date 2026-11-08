@@ -218,8 +218,11 @@ async function toggleLock() {
   readonly.value = !!note.readonly;
 }
 // A version from the history (#61) replaces the text as if typed: saved by the usual PATCH, undone by Cmd Z.
-function restoreVersion(content: string) {
+// What is typed before is saved first: the restore then replaces the text as saved, which the API keeps (#94).
+async function restoreVersion(content: string) {
+  await saver.flush();
   touched.value = true;
+  saver.push({ restore: true });
   if (source.value !== undefined) {
     source.value = content;
     return onSource(content);

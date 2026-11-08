@@ -108,6 +108,19 @@ func TestPatchNote(t *testing.T) {
 		t.Errorf("versions within 5 minutes: %d, want 1", len(got))
 	}
 
+	// A restored version keeps the text it replaces, even within 5 minutes (#94).
+	restored := "restored"
+	if got := patch(Input{Content: &restored, Restore: true}); got.HasErr() {
+		t.Fatalf("restore: %v", got.GetErr())
+	}
+	// One transaction, one current_timestamp: the versions tie on created_at, look for the text among them.
+	if got := versions(); len(got) != 2 || !slices.ContainsFunc(got, func(v domain.NoteVersion) bool { return string(v.Content) == content }) {
+		t.Errorf("versions after a restore: %+v, want 2 with %q", got, content)
+	}
+	if got := patch(Input{Content: &content}); got.HasErr() {
+		t.Fatalf("back to content: %v", got.GetErr())
+	}
+
 	// Past 5 minutes the text is kept again, and only the versionsKept last stay.
 	if _, err := tx.NewRaw("UPDATE note_versions SET created_at = created_at - interval '1 day' WHERE item_id = ?", id).Exec(ctx); err != nil {
 		t.Fatal(err)

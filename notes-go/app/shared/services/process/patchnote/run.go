@@ -36,6 +36,8 @@ type Input struct {
 	Tags     *[]string
 	// UpdatedAt is the version the text was written over: content and tags are refused once the note changed since.
 	UpdatedAt *time.Time
+	// Restore is a version restored: the text it replaces is kept even within versionEvery, it may be nowhere else.
+	Restore bool
 }
 
 type run struct {
@@ -165,8 +167,8 @@ func (p *run) editNote(tx bun.Tx) error {
 	return p.readNote(tx)
 }
 
-// keepVersion copies the text about to be replaced into note_versions, unless a version is younger than versionEvery,
-// then drops the versions past the versionsKept last.
+// keepVersion copies the text about to be replaced into note_versions, unless a version is younger than versionEvery
+// (a restore keeps it anyway), then drops the versions past the versionsKept last.
 func (p *run) keepVersion(tx bun.Tx) error {
 	old := p.cache.note.Content
 	if p.input.Content == nil || *p.input.Content == old || old == "" {
@@ -178,7 +180,7 @@ func (p *run) keepVersion(tx bun.Tx) error {
 		Model((*domain.NoteVersion)(nil)).
 		Where("item_id = ? AND created_at > current_timestamp - ?::interval", id, versionEvery).
 		Exists(p.ctx)
-	if err != nil || recent {
+	if err != nil || recent && !p.input.Restore {
 		return err
 	}
 

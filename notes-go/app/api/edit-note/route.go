@@ -18,6 +18,8 @@ type Body struct {
 	Tags     *[]string `json:"tags" binding:"optional"`
 	// UpdatedAt is updated_at as read, or created_at for a note never edited: a 409 if the note changed since.
 	UpdatedAt *time.Time `json:"updated_at" binding:"optional"`
+	// Restore says the content is a version restored: the text it replaces is kept in the history.
+	Restore bool `json:"restore,omitempty" binding:"optional"`
 }
 
 // Handler changes the fields given: PATCH /api/notes/{id}, through patchnote (shared with `edit note`).
@@ -47,7 +49,7 @@ func Handler(db bun.IDB) http.HandlerFunc {
 			return
 		}
 
-		process := patchnote.Process(r.Context(), db, patchnote.Input{ID: id, Pinned: changes.Pinned, Readonly: changes.Readonly, Content: changes.Content, Tags: changes.Tags, UpdatedAt: changes.UpdatedAt})
+		process := patchnote.Process(r.Context(), db, patchnote.Input{ID: id, Pinned: changes.Pinned, Readonly: changes.Readonly, Content: changes.Content, Tags: changes.Tags, UpdatedAt: changes.UpdatedAt, Restore: changes.Restore})
 		process.Run()
 		if process.HasErr() {
 			respond.Error(w, process.GetErr())
