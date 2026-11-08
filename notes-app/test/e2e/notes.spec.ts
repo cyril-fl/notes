@@ -206,6 +206,30 @@ test('a note left open does not overwrite the text written since on another devi
   expect(await box.content(note.id)).toContain('téléphone');
 });
 
+test('locking the phone sends the last words at once, and typing on afterwards still saves (#65)', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} verrou`);
+  await page.clock.install(); // iOS freezes the 1.5 s timer: here it never runs on its own.
+  await page.goto(`/notes/${note.id}`);
+  const text = page.locator('.ProseMirror');
+  await expect(text).toContainText('verrou');
+  const visibility = (state: string) =>
+    page.evaluate((state) => {
+      Object.defineProperty(document, 'visibilityState', { value: state, configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+    }, state);
+
+  await text.click();
+  await text.press('ControlOrMeta+End');
+  await text.pressSequentially(' caché');
+  await visibility('hidden');
+  await expect.poll(() => box.content(note.id)).toContain('caché');
+
+  await visibility('visible');
+  await text.pressSequentially(' revenu');
+  await page.clock.runFor(2000);
+  await expect.poll(() => box.content(note.id)).toContain('caché revenu');
+});
+
 // In system mode the OS decides: the sidebar has no theme button. Set back to light, as every run expects.
 test('N opens a new note in the current folder, the theme button switches to dark', async ({ page }) => {
   try {
