@@ -51,11 +51,13 @@ watch([() => colorMode.preference, view], async ([mode, next]) => {
 });
 
 // Single keys, like Notion or Linear: Nuxt UI skips them while typing in a field or the editor.
+// Not in an open menu either (the / menu, the right click): it takes the focus out of the editor, the keys are for it.
+const outsideMenu = (handler: () => unknown) => () => document.activeElement?.closest('[role="menu"]') || handler();
 defineShortcuts({
-  '/': () => (searchOpen.value = true),
-  n: () => navigateTo(newNotePath(currentFolder(route))),
-  shift_n: () => createFolder(currentFolder(route)),
-  t: () => (searchSnippets.value = searchOpen.value = true),
+  '/': outsideMenu(() => (searchOpen.value = true)),
+  n: outsideMenu(() => navigateTo(newNotePath(currentFolder(route)))),
+  shift_n: outsideMenu(() => createFolder(currentFolder(route))),
+  t: outsideMenu(() => (searchSnippets.value = searchOpen.value = true)),
   'meta_\\': () => (collapsed.value = !collapsed.value),
   'meta_.': { usingInput: true, handler: () => has('focusMode') && (focus.value = !focus.value) },
 });

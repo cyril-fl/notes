@@ -175,6 +175,10 @@ test('the Pro mode adds the / commands to the editor', async ({ page }) => {
     await page.keyboard.press('ControlOrMeta+End');
     await page.keyboard.press('Enter');
     await page.keyboard.type('/');
+    // The menu has the focus: a letter is for it, not a shortcut of the page (t opens the snippets).
+    await expect(page.getByRole('menuitem', { name: 'Titres' })).toBeVisible();
+    await page.keyboard.type('t');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.getByRole('menuitem', { name: 'Titres' }).hover();
     await page.getByRole('menuitem', { name: 'Titre 2' }).click();
     await page.keyboard.type('Sous-titre');
