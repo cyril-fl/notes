@@ -45,9 +45,10 @@ func Handler(db bun.IDB, store silo.Store) http.HandlerFunc {
 				err = write(r, store, entry, file)
 			}
 			if err != nil {
-				// The status is sent: the download breaks off, the browser shows it failed.
+				// The status is sent: cut the connection, or net/http ends the body cleanly and the browser keeps a
+				// broken zip as a finished download.
 				log.Printf("write export: %v", err)
-				return
+				panic(http.ErrAbortHandler)
 			}
 		}
 		if err := archive.Close(); err != nil {

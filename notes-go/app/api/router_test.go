@@ -34,6 +34,7 @@ type client struct {
 	handler http.Handler // logged in
 	api     http.Handler // as a request without session gets it
 	db      bun.Tx
+	store   *silo.Memory
 }
 
 func newClient(t *testing.T) *client {
@@ -72,8 +73,9 @@ func logIn(t *testing.T, tx bun.Tx) *client {
 	if _, err := savepoint.NewInsert().Model(&session).Exec(ctx); err != nil {
 		t.Fatal(err)
 	}
-	api := New(bun.IDB(savepoint), silo.NewMemory(), "")
-	return &client{t: t, api: api, db: savepoint, handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	store := silo.NewMemory()
+	api := New(bun.IDB(savepoint), store, "")
+	return &client{t: t, api: api, db: savepoint, store: store, handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.Header.Set("Authorization", "Bearer "+token)
 		api.ServeHTTP(w, r)
 	})}
@@ -701,6 +703,15 @@ func TestFiles(t *testing.T) {
 			t.Errorf("%s = %q, want %q in it", name, data, want)
 		}
 	}
+
+	// An image gone from Silo cuts the export off rather than ending a broken zip as a finished download.
+	clear(c.store.Objects)
+	defer func() {
+		if got := recover(); got != http.ErrAbortHandler {
+			t.Errorf("export without its image: recover() = %v, want http.ErrAbortHandler", got)
+		}
+	}()
+	c.raw("/api/export")
 }
 
 // Two accounts in one base: neither sees, changes nor links to what the other has.
