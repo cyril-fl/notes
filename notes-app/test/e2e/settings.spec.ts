@@ -1,3 +1,5 @@
+import { copyFile, mkdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import type { Editor } from '@tiptap/core';
 import { API, APP } from '../../playwright.config';
@@ -54,6 +56,25 @@ test('loose .md files are imported into the chosen folder', async ({ page }) => 
   await page.goto(`/folders/${box.folder.id}`);
   await expect(page.getByRole('main').getByText('Une.md')).toBeVisible();
   await expect(page.getByRole('main').getByText('Deux.md')).toBeVisible();
+});
+
+// A picked folder keeps its notes but not its zips, which would gray out the button.
+test('a picked folder holding a zip imports its notes', async ({ page }) => {
+  const vault = test.info().outputPath('Coffre');
+  await mkdir(join(vault, 'attachments'), { recursive: true });
+  await writeFile(join(vault, 'Une.md'), '# Une');
+  await copyFile('test/e2e/fixtures/notes.zip', join(vault, 'attachments', 'backup.zip'));
+
+  await page.goto('/settings');
+  await page.getByRole('button', { name: 'Importer', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('button', { name: 'Importer dans' }).click();
+  await page.getByRole('option', { name: `/${box.prefix}` }).click();
+  await dialog.locator('input[webkitdirectory]').setInputFiles(vault);
+  await expect(dialog.getByText('Une.md')).toBeVisible();
+  await expect(dialog.getByText('backup.zip')).toBeHidden();
+  await dialog.getByRole('button', { name: 'Importer', exact: true }).click();
+  await expect(page.getByText('1 note(s) et 1 dossier(s) importés').first()).toBeVisible();
 });
 
 // The language is the account's: without the cookie that remembers it, the API gives it back after a reload.
