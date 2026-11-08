@@ -133,6 +133,15 @@ async function readTags(changes: Changes, note: ItemDetail) {
   if (changed) await refreshNuxtData();
 }
 
+// The note scrolls in its own box, which the menus over the text do not watch (only the window): they follow it here.
+function placeBubbles() {
+  const editor = editorRef.value?.editor;
+  if (!editor) return;
+  const { tr } = editor.state;
+  for (const bubble of parts.value.bubbles) tr.setMeta(bubble.pluginKey, 'updatePosition');
+  editor.view.dispatch(tr);
+}
+
 // The API points the typed [[links]] to their note: the editor shows them resolved, without touching the cursor or the undo history.
 function showResolvedLinks(sent: string, saved: string) {
   const editor = editorRef.value?.editor;
@@ -508,7 +517,7 @@ const status = computed(() => {
       @update:model-value="onSource"
     />
     <UContextMenu v-else :items="contextMenu" :disabled="!contextMenu.length">
-      <div class="flex min-h-0 flex-1 flex-col" @contextmenu.capture="placeCursor">
+      <div class="flex min-h-0 flex-1 flex-col" @contextmenu.capture="placeCursor" @scroll.capture="placeBubbles">
         <UEditor
           ref="editor"
           v-slot="{ editor }"
@@ -539,7 +548,14 @@ const status = computed(() => {
             :items="bubble.items"
             layout="bubble"
             :plugin-key="bubble.pluginKey"
-            :options="{ placement: 'top-start' }"
+            :options="{
+              placement: 'top-start',
+              // Above, or below when it fits only there; along a tall image, at the top of what shows of it, gone with it.
+              flip: { fallbackStrategy: 'initialPlacement' },
+              // 16: tiptap moves it by its offset (8) after the shift, which would leave it against the edge.
+              shift: { crossAxis: true, padding: 16 },
+              hide: true,
+            }"
             :should-show="bubble.shouldShow"
             class="rounded-md border border-default bg-default p-1 shadow-sm"
           />
