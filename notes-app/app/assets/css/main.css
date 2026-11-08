@@ -26,7 +26,7 @@
 }
 
 /* The themes of app/utils/themes.ts, an accent and its greys each, taken from the key colors of the open source schemes
-   of the same name (notes: the Tailwind blue on the plain greys; dracula: the darker backgrounds of OM Theme Default Dracula Italic), the shades used for text and buttons darkened or lightened to reach WCAG AA (4.5:1) in both modes.
+   of the same name (notes: the Tailwind blue on the plain greys; dracula: the darker backgrounds of OM Theme Default Dracula Italic, mirrored in light as cool lavender whites), the shades used for text and buttons darkened or lightened to reach WCAG AA (4.5:1) in both modes.
    Static: Tailwind keeps them though no class uses them. The greys serve both modes, like plain. */
 @theme static {
   --color-notes-50: #eff6ff;
@@ -53,10 +53,10 @@
   --color-dracula-900: #522e85;
   --color-dracula-950: #351a5e;
 
-  --color-dracula-gray-50: #f8f8f2;
-  --color-dracula-gray-100: #eeeee8;
-  --color-dracula-gray-200: #dcdce0;
-  --color-dracula-gray-300: #c0c2cf;
+  --color-dracula-gray-50: #f5f5fa;
+  --color-dracula-gray-100: #ebebf4;
+  --color-dracula-gray-200: #dadbea;
+  --color-dracula-gray-300: #c0c2d9;
   --color-dracula-gray-400: #9aa1c0;
   --color-dracula-gray-500: #5b6996;
   --color-dracula-gray-600: #4f5a80;
