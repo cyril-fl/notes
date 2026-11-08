@@ -50,6 +50,29 @@ test('merges the modules in order', () => {
   assert.deepEqual(clicks, ['first', 'last']);
 });
 
+test('joins the menus of the same key, keeping the first one options', () => {
+  const merged = mergeModules(
+    [
+      {
+        menus: [{ char: '/', pluginKey: 'slashMenu', items: [{ label: 'Titre' }], suggestion: { allowSpaces: true } }],
+      },
+      { menus: [{ char: '#', pluginKey: 'tagMenu', items: [] }] },
+      { menus: [{ char: '/', pluginKey: 'slashMenu', items: () => [{ label: 'Tableau' }] }] },
+    ],
+    () => true,
+  );
+  assert.deepEqual(
+    merged.menus.map((menu) => menu.pluginKey),
+    ['slashMenu', 'tagMenu'],
+  );
+  const [slash] = merged.menus;
+  assert.deepEqual(slash!.suggestion, { allowSpaces: true });
+  assert.deepEqual(
+    (slash!.items as () => { label: string }[])().map((item) => item.label),
+    ['Titre', 'Tableau'],
+  );
+});
+
 test('keeps the module of a feature only when the account has it', () => {
   const modules = [{ extensions: ['base' as never] }, { feature: 'focusMode' as const, extensions: ['pro' as never] }];
   assert.deepEqual(mergeModules(modules, () => false).extensions, ['base']);

@@ -1,6 +1,6 @@
 import type { EditorHandler, EditorSuggestionMenuItem, EditorSuggestionMenuProps, EditorToolbarItem } from '@nuxt/ui';
 import type { Editor, Extensions } from '@tiptap/vue-3';
-import type { MaybeRefOrGetter } from 'vue';
+import { toValue, type MaybeRefOrGetter } from 'vue';
 import type { Feature } from './features';
 
 /** A floating toolbar, shown over the text when shouldShow says so. */
@@ -37,7 +37,20 @@ export function command(
   return { canExecute: () => true, execute, isActive };
 }
 
-/** The modules the account has, in order: lists are joined, handlers and starter kit options merged, every click handler called. */
+/** The menus of the same pluginKey as one: the first one's options, the items of all of them in order. */
+function joinMenus(menus: EditorMenu[]) {
+  const byKey = new Map<string, EditorMenu>();
+  for (const menu of menus) {
+    const first = byKey.get(menu.pluginKey);
+    byKey.set(
+      menu.pluginKey,
+      first ? { ...first, items: () => [...toValue(first.items), ...toValue(menu.items)] } : menu,
+    );
+  }
+  return [...byKey.values()];
+}
+
+/** The modules the account has, in order: lists are joined, menus of the same key too, handlers and starter kit options merged, every click handler called. */
 export function mergeModules(all: EditorModule[], has: (feature: Feature) => boolean) {
   const modules = all.filter((module) => !module.feature || has(module.feature));
   return {
@@ -46,7 +59,7 @@ export function mergeModules(all: EditorModule[], has: (feature: Feature) => boo
     handlers: Object.assign({}, ...modules.map((module) => module.handlers)) as Record<string, EditorHandler>,
     toolbar: modules.flatMap((module) => module.toolbar ?? []),
     bubbles: modules.flatMap((module) => module.bubbles ?? []),
-    menus: modules.flatMap((module) => module.menus ?? []),
+    menus: joinMenus(modules.flatMap((module) => module.menus ?? [])),
     onClick: (event: MouseEvent) => modules.forEach((module) => module.onClick?.(event)),
   };
 }
