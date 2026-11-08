@@ -96,6 +96,14 @@ func TestSearchNotes(t *testing.T) {
 	if got := search.GetResult()[1].Snippet; got != "has "+strings.ToUpper(word)+" inside" {
 		t.Errorf("snippet = %q, want the matching line", got)
 	}
+	if _, err := tx.NewRaw("UPDATE metadata_notes SET readonly = true WHERE item_id = ?", ids["A in content"]).Exec(ctx); err != nil {
+		t.Fatal(err)
+	}
+	search = Process(ctx, tx, word)
+	search.Run()
+	if search.HasErr() || !search.GetResult()[1].Readonly {
+		t.Errorf("search readonly = %v, %v; want true", search.GetResult(), search.GetErr())
+	}
 
 	// % is literal: only the note containing "100%" matches.
 	percent := Process(ctx, tx, word+"100%")

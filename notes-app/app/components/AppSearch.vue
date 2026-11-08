@@ -78,10 +78,10 @@ const proActions = computed<CommandPaletteItem[]>(() => {
   return [...actions, { label: t('search.theme'), icon: icons.appearance, children }];
 });
 
-const toNote = (note: { id: string; title: string; path: string }): CommandPaletteItem => ({
+const toNote = (note: { id: string; title: string; path: string; readonly?: boolean }): CommandPaletteItem => ({
   label: displayTitle(note.title, t('untitled')),
   suffix: note.path,
-  icon: icons.note,
+  icon: note.readonly ? icons.lock : icons.note,
   to: `/notes/${note.id}`,
 });
 

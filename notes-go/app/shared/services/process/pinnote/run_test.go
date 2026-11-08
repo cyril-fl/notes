@@ -69,6 +69,14 @@ func TestPin(t *testing.T) {
 	if got := pinned(t, ctx, tx); !slices.Contains(got, ids[0]) || slices.Contains(got, ids[1]) {
 		t.Errorf("pinned = %v, want the live note only", got)
 	}
+	if _, err := tx.NewRaw("UPDATE metadata_notes SET readonly = true WHERE item_id = ?", ids[0]).Exec(ctx); err != nil {
+		t.Fatal(err)
+	}
+	list := listpinned.Process(ctx, tx)
+	list.Run()
+	if list.HasErr() || !list.GetResult()[0].Readonly {
+		t.Errorf("pinned readonly = %v, %v; want true", list.GetResult(), list.GetErr())
+	}
 
 	unpin := Process(ctx, tx, domain.NOTE, ids[0], false)
 	unpin.Run()

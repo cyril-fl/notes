@@ -182,6 +182,20 @@ test('a locked note is read-only, in the editor and for the API, until unlocked'
   // The folder shows its padlock, in the list and on its card.
   await page.goto(`/folders/${box.folder.id}`);
   await expect(page.getByRole('main').getByLabel('Verrouillée')).toBeVisible();
+  await expect(page.getByLabel('Verrouillée')).toHaveCount(2); // the folder row and Recent
+
+  await page.getByRole('button', { name: /Rechercher/ }).click();
+  await page.getByPlaceholder('Chercher une note, une action…').fill(`${box.prefix} verrouillée`);
+  await expect(
+    page
+      .getByRole('option', { name: new RegExp(`${box.prefix} verrouillée`) })
+      .locator('[class*="i-reicon-lock-filled"]'),
+  ).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  await box.api.patch(`/api/notes/${note.id}`, { data: { pinned: true } });
+  await page.reload();
+  await expect(page.getByLabel('Verrouillée')).toHaveCount(2); // the folder row and Pinned
 
   await page.goto(`/notes/${note.id}`);
   await expect(text).toHaveAttribute('contenteditable', 'false');

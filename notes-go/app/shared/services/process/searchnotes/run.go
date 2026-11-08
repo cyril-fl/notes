@@ -19,10 +19,11 @@ var ErrNoValue = errors.New("no text to search")
 
 // Match is a note containing the text, with the content line where it was found.
 type Match struct {
-	ID      string `json:"id"`
-	Title   string `json:"title"`
-	Path    string `json:"path"`
-	Snippet string `json:"snippet"`
+	ID       string `json:"id"`
+	Title    string `json:"title"`
+	Path     string `json:"path"`
+	Snippet  string `json:"snippet"`
+	Readonly bool   `json:"readonly,omitempty" binding:"optional"`
 }
 
 type run struct {
@@ -42,10 +43,11 @@ type cache struct {
 
 // row is what the query returns: the whole content, cut down to a snippet in makeMatches.
 type row struct {
-	ID      string
-	Title   secret.Text
-	Path    string
-	Content secret.Text
+	ID       string
+	Title    secret.Text
+	Path     string
+	Content  secret.Text
+	Readonly bool
 }
 
 func Process(ctx context.Context, db bun.IDB, text string) *run {
@@ -87,7 +89,7 @@ func (p *run) searchNotes() {
 	}
 
 	p.SetErr(p.db.NewRaw(domain.LiveCTE+`
-		SELECT i.id, i.title, mn.content
+		SELECT i.id, i.title, mn.content, mn.readonly
 		FROM items AS i
 		JOIN metadata_notes AS mn ON mn.item_id = i.id
 		JOIN live ON live.id = i.id
@@ -116,7 +118,7 @@ func (p *run) makeMatches() {
 	inTitle := func(r row) bool { return strings.Contains(strings.ToLower(string(r.Title)), text) }
 	for _, r := range p.cache.rows {
 		if inTitle(r) || strings.Contains(strings.ToLower(string(r.Content)), text) {
-			p.cache.result = append(p.cache.result, Match{ID: r.ID, Title: string(r.Title), Path: r.Path, Snippet: snippet(string(r.Content), p.cache.text)})
+			p.cache.result = append(p.cache.result, Match{ID: r.ID, Title: string(r.Title), Path: r.Path, Snippet: snippet(string(r.Content), p.cache.text), Readonly: r.Readonly})
 		}
 	}
 	slices.SortStableFunc(p.cache.result, func(a, b Match) int {

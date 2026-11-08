@@ -58,6 +58,9 @@ func TestListRecent(t *testing.T) {
 	if _, err := tx.NewRaw("UPDATE items SET updated_at = ? WHERE id = ?", future.Add(time.Hour), edited).Exec(ctx); err != nil {
 		t.Fatal(err)
 	}
+	if _, err := tx.NewRaw("UPDATE metadata_notes SET readonly = true WHERE item_id = ?", edited).Exec(ctx); err != nil {
+		t.Fatal(err)
+	}
 
 	// The newest of all, but trashed: it must not show.
 	trashed := note("trashed", -10)
@@ -82,5 +85,8 @@ func TestListRecent(t *testing.T) {
 	}
 	if result[1].Path != "/note-00" {
 		t.Errorf("path = %q, want /note-00", result[1].Path)
+	}
+	if !result[0].Readonly {
+		t.Errorf("readonly = false, want true for edited")
 	}
 }

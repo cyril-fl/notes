@@ -280,6 +280,8 @@ components:
           $ref: '#/components/schemas/domain.Kind'
         path:
           type: string
+        readonly:
+          type: boolean
         title:
           type: string
       required:
@@ -294,6 +296,8 @@ components:
           type: string
         path:
           type: string
+        readonly:
+          type: boolean
         title:
           type: string
         updated_at:
@@ -519,6 +523,8 @@ components:
           type: string
         path:
           type: string
+        readonly:
+          type: boolean
         snippet:
           type: string
         title:

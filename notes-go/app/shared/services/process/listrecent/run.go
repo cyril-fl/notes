@@ -20,6 +20,7 @@ type Recent struct {
 	Title     secret.Text `json:"title" swaggertype:"string"`
 	Path      string      `json:"path"`
 	UpdatedAt time.Time   `json:"updated_at"`
+	Readonly  bool        `json:"readonly,omitempty" binding:"optional"`
 }
 
 type run struct {
@@ -57,8 +58,9 @@ func (p *run) GetResult() []Recent {
 // loadNotes falls back on created_at: a note never edited has no updated_at. Joining live keeps live notes only.
 func (p *run) loadNotes() {
 	p.SetErr(p.db.NewRaw(domain.LiveCTE+`
-		SELECT i.id, i.title, coalesce(i.updated_at, i.created_at) AS updated_at
+		SELECT i.id, i.title, coalesce(i.updated_at, i.created_at) AS updated_at, mn.readonly
 		FROM items AS i
+		JOIN metadata_notes AS mn ON mn.item_id = i.id
 		JOIN live ON live.id = i.id
 		WHERE i.kind = ?
 		ORDER BY updated_at DESC, i.id

@@ -2175,11 +2175,13 @@ export interface components {
             id: string;
             kind: components["schemas"]["domain.Kind"];
             path: string;
+            readonly?: boolean;
             title: string;
         };
         "listrecent.Recent": {
             id: string;
             path: string;
+            readonly?: boolean;
             title: string;
             updated_at: string;
         };
@@ -2255,6 +2257,7 @@ export interface components {
         "searchnotes.Match": {
             id: string;
             path: string;
+            readonly?: boolean;
             snippet: string;
             title: string;
         };

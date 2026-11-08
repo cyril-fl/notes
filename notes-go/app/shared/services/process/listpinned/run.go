@@ -12,10 +12,11 @@ import (
 
 // Pinned is a pinned note or a favorite folder.
 type Pinned struct {
-	ID    string      `json:"id"`
-	Kind  domain.Kind `json:"kind"`
-	Title secret.Text `json:"title" swaggertype:"string"`
-	Path  string      `json:"path"`
+	ID       string      `json:"id"`
+	Kind     domain.Kind `json:"kind"`
+	Title    secret.Text `json:"title" swaggertype:"string"`
+	Path     string      `json:"path"`
+	Readonly bool        `json:"readonly,omitempty" binding:"optional"`
 }
 
 type run struct {
@@ -41,7 +42,7 @@ func Process(ctx context.Context, db bun.IDB) *run {
 func (p *run) Run() {
 	p.cache.result = []Pinned{}
 	p.SetErr(p.db.NewRaw(domain.LiveCTE+`
-		SELECT i.id, i.kind, i.title
+		SELECT i.id, i.kind, i.title, COALESCE(mn.readonly, false) AS readonly
 		FROM items AS i
 		JOIN live ON live.id = i.id
 		LEFT JOIN metadata_notes AS mn ON mn.item_id = i.id
