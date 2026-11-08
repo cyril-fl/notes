@@ -84,10 +84,12 @@ function zoomBy(factor: number, x?: number, y?: number) {
 }
 
 // The wheel, and a trackpad pinch (a wheel with ctrlKey for the browser); passive: false to keep the page from scrolling.
+// mini: the bare wheel scrolls the panel, only ⌘/Ctrl + wheel or a pinch zooms.
 useEventListener(
   view,
   'wheel',
   (event: WheelEvent) => {
+    if (props.mini && !event.ctrlKey && !event.metaKey) return;
     event.preventDefault();
     const rect = view.value!.getBoundingClientRect();
     zoomBy(
