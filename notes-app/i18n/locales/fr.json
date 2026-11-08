@@ -125,6 +125,9 @@
     "orderedList": "Liste numérotée",
     "taskList": "Tâches",
     "quote": "Citation",
+    "paragraph": "Texte",
+    "codeBlock": "Bloc de code",
+    "divider": "Séparateur",
     "notSaved": "Non enregistré",
     "emptyWillTrash": "Vide : ira à la corbeille en la quittant",
     "saving": "Enregistrement…",
@@ -257,6 +260,7 @@
     "graph": "Le graphe des notes",
     "focusMode": "Le mode focus, qui ne laisse que la note à l'écran",
     "contextPanel": "Le panneau de contexte à droite de la note : son plan et ses notes liées",
-    "settingsNav": "La barre latérale des réglages, une page par section"
+    "settingsNav": "La barre latérale des réglages, une page par section",
+    "slashCommands": "Les commandes / dans les notes : titres, listes, bloc de code…"
   }
 }

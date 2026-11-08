@@ -157,6 +157,31 @@ test('the Pro mode unlocks the focus mode and the context panel', async ({ page 
   }
 });
 
+// The / menu is the Pro mode's: without it a / stays text, with it the line becomes the block picked.
+test('the Pro mode adds the / commands to the editor', async ({ page }) => {
+  const note = await box.note(`# Slash ${box.prefix}\n\nTexte`);
+  const editor = page.locator('.ProseMirror');
+  try {
+    await page.goto(`/notes/${note.id}`);
+    await editor.click();
+    await page.keyboard.press('ControlOrMeta+End');
+    await page.keyboard.type(' /');
+    await expect(page.getByRole('option', { name: 'Bloc de code' })).toHaveCount(0);
+
+    await box.api.patch('/api/me', { data: { pro: true } });
+    await page.reload();
+    await editor.click();
+    await page.keyboard.press('ControlOrMeta+End');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('/titre');
+    await page.getByRole('option', { name: 'Titre 2' }).click();
+    await page.keyboard.type('Sous-titre');
+    await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('## Sous-titre');
+  } finally {
+    await box.api.patch('/api/me', { data: { pro: false } });
+  }
+});
+
 // A page per section is the Pro mode's: without it a section's URL shows the whole page, and the switch moves between both.
 test('the settings follow the Pro mode, one page or a page per section', async ({ page }) => {
   try {

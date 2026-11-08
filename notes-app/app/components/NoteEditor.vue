@@ -196,6 +196,7 @@ const modules = [
   useNoteFormatting(),
   useNoteLinks(id),
   useNoteSuggestions(),
+  useNoteSlash(),
   { extensions: [noteImage(baseURL, upload)] },
 ];
 const parts = computed(() => mergeModules(modules, has));

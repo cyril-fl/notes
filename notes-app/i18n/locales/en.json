@@ -125,6 +125,9 @@
     "orderedList": "Numbered list",
     "taskList": "Tasks",
     "quote": "Quote",
+    "paragraph": "Text",
+    "codeBlock": "Code block",
+    "divider": "Divider",
     "notSaved": "Not saved",
     "emptyWillTrash": "Empty: goes to the trash when you leave it",
     "saving": "Saving…",
@@ -257,6 +260,7 @@
     "graph": "The graph of the notes",
     "focusMode": "Focus mode, which leaves only the note on screen",
     "contextPanel": "The context panel beside the note: its outline and its related notes",
-    "settingsNav": "The settings sidebar, one page per section"
+    "settingsNav": "The settings sidebar, one page per section",
+    "slashCommands": "The / commands in the notes: headings, lists, code block…"
   }
 }

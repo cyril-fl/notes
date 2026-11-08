@@ -55,7 +55,7 @@ export function useIcons() {
     zoomOut: 'i-reicon-minus',
     recenter: 'i-reicon-target',
 
-    // Editor (Reicon has no headings nor strikethrough: Lucide's.)
+    // Editor (Reicon has no headings, strikethrough, pilcrow nor code block: Lucide's.)
     heading1: 'i-lucide-heading-1',
     heading2: 'i-lucide-heading-2',
     heading3: 'i-lucide-heading-3',
@@ -71,6 +71,9 @@ export function useIcons() {
     orderedList: 'i-reicon-ordered-list',
     taskList: 'i-reicon-list-check',
     quote: 'i-reicon-quote-up',
+    paragraph: 'i-lucide-pilcrow',
+    codeBlock: 'i-lucide-square-code',
+    divider: 'i-lucide-minus',
   };
 
   return { icons };
