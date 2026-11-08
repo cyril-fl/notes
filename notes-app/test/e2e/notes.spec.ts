@@ -218,9 +218,11 @@ test('the Pro source mode edits the markdown', async ({ page }) => {
     await box.api.patch('/api/me', { data: { pro: true } });
     await page.goto(`/notes/${note.id}`);
     await expect(page.locator('.ProseMirror')).toContainText('gras');
+    await expect(page.getByText(/\d+ mots?$/)).toBeVisible();
     await page.getByRole('button', { name: 'Mode source' }).click();
     const source = page.getByRole('textbox', { name: 'Mode source' });
     await expect(source).toHaveValue(`# ${box.prefix} source\n\n**gras**`);
+    await expect(page.getByText(/\d+ mots?$/)).toBeHidden();
     await source.press('ControlOrMeta+End');
     await source.pressSequentially('\n\n- [ ] tâche');
     await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('- [ ] tâche');

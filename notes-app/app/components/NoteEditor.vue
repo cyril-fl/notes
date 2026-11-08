@@ -156,6 +156,7 @@ function toggleSource() {
 }
 function onSource(text: string) {
   source.value = text;
+  if (has('wordCount')) words.value = countWords(text);
   save(text.trim());
 }
 
@@ -421,7 +422,10 @@ const status = computed(() => {
       <div class="flex h-9 items-center gap-2 text-xs text-muted">
         <PathNav :path="path" />
         <span class="ml-auto shrink-0" :class="{ 'text-error': failed }" role="status">{{ status }}</span>
-        <span v-if="has('wordCount')" class="shrink-0 tabular-nums">{{ $t('note.words', words) }}</span>
+        <!-- The word count and the outline belong to the editor: hidden in the source mode. Dropping `source === undefined` shows the count, which follows the text; the outline would also need its headings read from the text. -->
+        <span v-if="has('wordCount') && source === undefined" class="shrink-0 tabular-nums">{{
+          $t('note.words', words)
+        }}</span>
         <UTooltip v-if="has('sourceMode')" :text="source === undefined ? $t('note.source') : $t('note.editor')">
           <UButton
             :icon="icons.source"
@@ -449,7 +453,7 @@ const status = computed(() => {
 
     <!-- Drawn by the layout beside the note, like the sidebar. -->
     <Teleport v-if="panel" to="#context-panel" defer>
-      <nav :aria-label="$t('note.outline')">
+      <nav v-if="source === undefined" :aria-label="$t('note.outline')">
         <h2 class="mb-2 text-xs font-medium text-muted">{{ $t('note.outline') }}</h2>
         <p v-if="!outline.length" class="text-xs text-dimmed">{{ $t('note.noOutline') }}</p>
         <button
