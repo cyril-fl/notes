@@ -2,6 +2,7 @@
 package huhform
 
 import (
+	"io"
 	"os"
 
 	"charm.land/bubbles/v2/key"
@@ -11,6 +12,10 @@ import (
 	plumtypes "github.com/cyril-fl/plum/types"
 	"golang.org/x/term"
 )
+
+// Input stands for the terminal in tests: the keys typed, as bytes ("name\rpassword\r"). Nil, bubbletea reads
+// the terminal, /dev/tty when stdin is piped.
+var Input io.Reader
 
 // New builds a one-group form with the shared key map and theme, as tall as the terminal.
 // The help line always shows so the form keeps its height when an error replaces it.
@@ -45,7 +50,11 @@ func fit(fields []huh.Field, width, height int) *huh.Form {
 }
 
 func build(fields []huh.Field) *huh.Form {
-	return huh.NewForm(huh.NewGroup(fields...)).WithKeyMap(keyMap()).WithTheme(huh.ThemeFunc(theme))
+	form := huh.NewForm(huh.NewGroup(fields...)).WithKeyMap(keyMap()).WithTheme(huh.ThemeFunc(theme))
+	if Input != nil {
+		form = form.WithInput(Input).WithOutput(io.Discard)
+	}
+	return form
 }
 
 func lastText(fields []huh.Field) *huh.Text {
