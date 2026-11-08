@@ -108,3 +108,38 @@ jobs:
       - if: failure()
         working-directory: notes-go
         run: docker compose --profile api logs api; cat /tmp/notes-app.log
+
+  # The image of image.yml, amd64 only and not pushed, run from compose.prod.yaml: a broken Dockerfile shows before the tag.
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: ghcr.io/cyril-fl/notes:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      # Not secrets: a throwaway base.
+      - name: Start the image with Postgres and Silo
+        run: |
+          cat > .env <<'ENV'
+          NOTES_VERSION=ci
+          POSTGRES_USER=app
+          POSTGRES_PASSWORD=password
+          POSTGRES_DB=notes
+          S3_ACCESS_KEY=notes
+          S3_SECRET_KEY=silo-password-of-the-ci
+          NOTES_SECRET=dGVzdCBrZXkgb2YgdGhlIENJLCBub3QgYSBzZWNyZXQ=
+          WEB_ORIGIN=http://localhost:8080
+          ENV
+          docker compose -f compose.prod.yaml up -d --wait
+      # 401 on /api/me: the API answers, not the web app's fallback page.
+      - name: The web app and the API answer
+        run: |
+          curl -fs --retry 20 --retry-delay 1 --retry-all-errors -o /dev/null http://localhost:8080/
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/me)" = 401
+      - if: failure()
+        run: docker compose -f compose.prod.yaml logs notes

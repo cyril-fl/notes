@@ -10,7 +10,7 @@ A note-taking app, Obsidian-like: one Go program (`notes-go/`, CLI and HTTP API)
 
 - `make up` / `make down` at the root: Postgres and the API in Docker (Colima), the web app on :3000 (log in `.build/notes-app.log`).
 - `make e2e`: the browser tests against that stack.
-- CI (`.github/workflows/ci.yml`, on push and PR): gofmt, vet and the Go tests on a Postgres service; lint, Prettier, unit tests, typecheck and build of the app; swagger.yaml and api.d.ts up to date, then the e2e on the compose stack.
+- CI (`.github/workflows/ci.yml`, on push and PR): gofmt, vet and the Go tests on a Postgres service; lint, Prettier, unit tests, typecheck and build of the app; swagger.yaml and api.d.ts up to date, then the e2e on the compose stack; the server image built (not pushed) and started from `compose.prod.yaml`.
 
 ## Working with the user
 
