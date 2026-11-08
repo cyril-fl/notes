@@ -185,7 +185,7 @@ notes serve --origin http://localhost:3000   # ou directement sur la machine
 | Export / import | `GET /export` (zip), `POST /import?parent=<uuid>` (zip en corps, `Content-Type: application/zip`, racine sans `parent`) | |
 | Images | `POST /files?name=<nom>` (l'image en corps), `GET /files/{id}` | |
 
-- Tout, sauf `POST /login`, demande une session, sinon 401. La connexion pose un cookie `notes_session` (`HttpOnly`, `Secure`, `SameSite=Strict`), qui dure 30 jours prolongés à chaque requête. Les scripts peuvent envoyer le jeton dans `Authorization: Bearer <jeton>`.
+- Tout, sauf `POST /login`, demande une session, sinon 401. La connexion pose un cookie `notes_session` (`HttpOnly`, `Secure`, `SameSite=Strict`), qui dure 30 jours prolongés à chaque requête. Les scripts peuvent envoyer le jeton dans `Authorization: Bearer <jeton>`. Les sessions expirées sont effacées de la base à la purge horaire du serveur.
 - Après des mauvais mots de passe d'affilée (par adresse pour `POST /login`, par compte pour `PATCH /me/password`), la route répond 429 avec `Retry-After` (en secondes) : rien jusqu'à 3 échecs, puis 30 s, 1 min, 5 min, 15 min, et 1 h dès 8. Une réussite remet le compteur à zéro.
 - Le titre d'une note vient de son contenu, comme dans la CLI : l'API refuse un champ `title` pour une note.
 - `PATCH /notes/{id}` ne change que les champs envoyés. `{"pinned": true}` seul épingle la note sans toucher à son texte ni à sa date de modification. Sans `tags`, les tags sont les `#mots` du contenu. Avec `tags`, cette liste réécrit le contenu : `"tags": []` efface tous ses `#mots`.

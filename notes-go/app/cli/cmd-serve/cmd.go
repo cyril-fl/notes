@@ -18,6 +18,7 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/purgefiles"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/purgeitems"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/purgesessions"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/silo"
 	"github.com/spf13/cobra"
 )
@@ -71,6 +72,11 @@ func Serve(cobra *cobra.Command, args []string) error {
 		files.Run()
 		if files.HasErr() && ctx.Err() == nil {
 			log.Printf("purge files: %v", files.GetErr())
+		}
+		sessions := purgesessions.Process(ctx, db)
+		sessions.Run()
+		if sessions.HasErr() && ctx.Err() == nil {
+			log.Printf("purge sessions: %v", sessions.GetErr())
 		}
 	})
 
