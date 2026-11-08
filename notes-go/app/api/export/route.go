@@ -30,6 +30,8 @@ func Handler(db bun.IDB, store silo.Store) http.HandlerFunc {
 			return
 		}
 
+		// Every image goes out: a big account outlasts the server's 30 s.
+		_ = http.NewResponseController(w).SetWriteDeadline(time.Time{})
 		w.Header().Set("Content-Type", "application/zip")
 		w.Header().Set("Content-Disposition", `attachment; filename="notes-`+time.Now().Format("2006-01-02")+`.zip"`)
 		archive := zip.NewWriter(w)

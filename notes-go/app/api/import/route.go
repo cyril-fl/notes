@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/importnotes"
@@ -39,6 +40,11 @@ func Handler(db bun.IDB, store silo.Store) http.HandlerFunc {
 		if !respond.ValidIDs(w, parent) {
 			return
 		}
+
+		// A big zip from the phone outlasts the server's 30 s: the write deadline also runs from the headers.
+		control := http.NewResponseController(w)
+		_ = control.SetReadDeadline(time.Time{})
+		_ = control.SetWriteDeadline(time.Time{})
 
 		data, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxZip))
 		var tooLarge *http.MaxBytesError
