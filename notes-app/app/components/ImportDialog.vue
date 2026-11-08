@@ -29,13 +29,17 @@ function addFolder(event: Event) {
 const isZip = (file: File) => file.name.toLowerCase().endsWith('.zip');
 const mixed = computed(() => files.value.length > 1 && files.value.some(isZip));
 
+// Loose files are named by their name alone: two of the same name would be one note, the API refuses them.
+const path = (file: File) => file.webkitRelativePath || file.name;
+const duplicate = computed(() => files.value.map(path).find((name, i, names) => names.indexOf(name) !== i));
+
 function body() {
   const [first] = files.value;
   if (files.value.length === 1 && first && isZip(first)) {
     return { body: first, headers: { 'Content-Type': 'application/zip' } };
   }
   const form = new FormData();
-  for (const file of files.value) form.append('files', file, file.webkitRelativePath || file.name);
+  for (const file of files.value) form.append('files', file, path(file));
   return { body: form };
 }
 
@@ -89,6 +93,7 @@ async function submit() {
         </UFileUpload>
         <input ref="folderInput" type="file" webkitdirectory class="hidden" @change="addFolder" />
         <p v-if="mixed" class="text-sm text-error">{{ $t('settings.importZipAlone') }}</p>
+        <p v-if="duplicate" class="text-sm text-error">{{ $t('settings.importDuplicate', { name: duplicate }) }}</p>
       </form>
     </template>
     <template #footer>
@@ -99,7 +104,7 @@ async function submit() {
           form="import"
           :label="$t('settings.import')"
           :loading="importing"
-          :disabled="!files.length || mixed"
+          :disabled="!files.length || mixed || !!duplicate"
         />
       </div>
     </template>

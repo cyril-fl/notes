@@ -207,6 +207,7 @@
     "importFiles": "Drop a zip, .md files and their images",
     "importFilesDescription": "or click to pick them",
     "importFolder": "Pick a folder",
+    "importDuplicate": "Two files are named {name}: remove one or import their folders.",
     "importZipAlone": "A zip is imported alone: remove the other files.",
     "importInto": "Import into",
     "importConflict": "A folder of the zip already exists here: import elsewhere, or rename it.",

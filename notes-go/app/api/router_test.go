@@ -618,6 +618,8 @@ func TestImportForm(t *testing.T) {
 	}
 	body, kind = form("../" + folder + ".md")
 	send(body, kind, http.StatusBadRequest, nil)
+	body, kind = form(folder+"-Double.md", folder+"-Double.md")
+	send(body, kind, http.StatusBadRequest, nil)
 	body, kind = form(folder + "/Coupé.md")
 	send(body[:len(body)-10], kind, http.StatusBadRequest, nil)
 }

@@ -61,7 +61,7 @@ func Handler(db bun.IDB, store silo.Store) http.HandlerFunc {
 			respond.JSON(w, http.StatusRequestEntityTooLarge, respond.Failure{Error: "request body too large"})
 			return
 		}
-		if errors.Is(err, errBadBody) {
+		if errors.Is(err, errBadBody) || errors.Is(err, errDuplicate) {
 			respond.JSON(w, http.StatusBadRequest, respond.Failure{Error: err.Error()})
 			return
 		}
@@ -87,6 +87,8 @@ func Handler(db bun.IDB, store silo.Store) http.HandlerFunc {
 var (
 	errBadBody  = errors.New("not a zip file nor a form of files")
 	errTooLarge = errors.New("zip content too large")
+	// Loose files have no folder in their path: two of the same name would keep the last one only (#69).
+	errDuplicate = errors.New("two files have the same path")
 )
 
 // read gives the files of the body: a zip, or a multipart form.
@@ -137,6 +139,9 @@ func readForm(form *multipart.Reader) (fs.FS, error) {
 		data, err := io.ReadAll(part)
 		if err != nil {
 			return nil, fmt.Errorf("%w: %w", errBadBody, err)
+		}
+		if _, dup := dir[name]; dup {
+			return nil, fmt.Errorf("%w: %s", errDuplicate, name)
 		}
 		dir[name] = &fstest.MapFile{Data: data}
 	}

@@ -207,6 +207,7 @@
     "importFiles": "Déposez un zip, des fichiers .md et leurs images",
     "importFilesDescription": "ou cliquez pour les choisir",
     "importFolder": "Choisir un dossier",
+    "importDuplicate": "Deux fichiers s'appellent {name} : retirez-en un ou importez leurs dossiers.",
     "importZipAlone": "Un zip s'importe seul : retirez les autres fichiers.",
     "importInto": "Importer dans",
     "importConflict": "Un dossier du zip existe déjà à cet endroit : importez ailleurs, ou renommez-le.",
