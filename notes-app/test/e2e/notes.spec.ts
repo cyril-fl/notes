@@ -189,7 +189,7 @@ test('the size of an image is picked over it and kept as the title of its markdo
     .toContain('![chat](https://x.org/chat.png "medium")');
 
   await page.getByRole('button', { name: 'Grande' }).click();
-  await expect(image).not.toHaveClass(/note-image/);
+  await expect(image).toHaveClass(/note-image-large/);
   await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('![chat](https://x.org/chat.png)');
 });
 

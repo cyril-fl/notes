@@ -6,7 +6,7 @@ const FILES = '/api/files/';
 
 export type ImageSize = 'small' | 'medium';
 
-/** The size of an image is the title of its markdown, like the cards of links: ![alt](src "small"). Left out, the image keeps its own width. */
+/** The size of an image is the title of its markdown, like the cards of links: ![alt](src "small"). Left out, the image takes the whole width. */
 export function imageSize(title?: string | null): ImageSize | null {
   const size = title?.toLowerCase();
   return size === 'small' || size === 'medium' ? size : null;
@@ -39,7 +39,8 @@ export function noteImage(baseURL: string, upload: (file: File) => Promise<strin
         size: {
           default: null,
           parseHTML: (element) => imageSize(element.dataset.size),
-          renderHTML: ({ size }) => (size ? { 'data-size': size, class: `note-image-${size}` } : {}),
+          renderHTML: ({ size }) =>
+            size ? { 'data-size': size, class: `note-image-${size}` } : { class: 'note-image-large' },
         },
       };
     },
