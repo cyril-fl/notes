@@ -9,6 +9,7 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/password"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/adduser"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/resetpassword"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/testaccount"
 	"io"
 	"net/http"
@@ -744,5 +745,37 @@ func TestLogin(t *testing.T) {
 	send("POST", "/api/logout", "", cookies[0])
 	if w := send("GET", "/api/me", "", cookies[0]); w.Code != http.StatusUnauthorized {
 		t.Errorf("me after logout: status = %d, want 401", w.Code)
+	}
+
+	login := func() *http.Cookie {
+		t.Helper()
+		cookies := send("POST", "/api/login", fmt.Sprintf(`{"name":%q,"password":"battery staple"}`, name), nil).Result().Cookies()
+		if len(cookies) != 1 {
+			t.Fatalf("login: cookies = %v", cookies)
+		}
+		return cookies[0]
+	}
+
+	// An expired session is refused.
+	expired := login()
+	if _, err := c.db.NewUpdate().Model((*domain.Session)(nil)).
+		Set("expires_at = current_timestamp - interval '1 minute'").
+		Where("token_hash = ?", password.TokenHash(expired.Value)).
+		Exec(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if w := send("GET", "/api/me", "", expired); w.Code != http.StatusUnauthorized {
+		t.Errorf("expired session: status = %d, want 401", w.Code)
+	}
+
+	// The admin's new password logs every device out.
+	revoked := login()
+	reset := resetpassword.Process(context.Background(), c.db, name, "horse battery")
+	reset.Run()
+	if reset.HasErr() {
+		t.Fatal(reset.GetErr())
+	}
+	if w := send("GET", "/api/me", "", revoked); w.Code != http.StatusUnauthorized {
+		t.Errorf("session after resetpassword: status = %d, want 401", w.Code)
 	}
 }
