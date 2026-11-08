@@ -82,7 +82,7 @@ var Locales = []string{"fr", "en"}
 // Themes, ColorModes and Views are the other settings of the web app, the first one by default.
 // Themes repeats the ids of notes-app/app/utils/themes.ts, users_test.go checks they match.
 var (
-	Themes     = []string{"notes", "dracula", "catppuccin", "nord", "gruvbox", "everforest"}
+	Themes     = []string{"notes", "dracula", "catppuccin", "nord", "gruvbox", "everforest", "tokyo"}
 	ColorModes = []string{"system", "light", "dark"}
 	Views      = []string{"list", "grid"}
 )

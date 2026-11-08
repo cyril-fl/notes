@@ -26,7 +26,7 @@
 }
 
 /* The themes of app/utils/themes.ts, an accent and its greys each, taken from the key colors of the open source schemes
-   of the same name (notes: the Tailwind blue on the plain greys; dracula: the darker backgrounds of OM Theme Default Dracula Italic, mirrored in light as cool lavender whites), the shades used for text and buttons darkened or lightened to reach WCAG AA (4.5:1) in both modes.
+   of the same name (notes: the Tailwind blue on the plain greys; dracula: the darker backgrounds of OM Theme Default Dracula Italic, mirrored in light as cool lavender whites; tokyo: Tokyo Night with its red as the accent), the shades used for text and buttons darkened or lightened to reach WCAG AA (4.5:1) in both modes.
    Static: Tailwind keeps them though no class uses them. The greys serve both modes, like plain. */
 @theme static {
   --color-notes-50: #eff6ff;
@@ -160,6 +160,30 @@
   --color-everforest-gray-800: #343f44;
   --color-everforest-gray-900: #2d353b;
   --color-everforest-gray-950: #232a2e;
+
+  --color-tokyo-50: #fef1f3;
+  --color-tokyo-100: #fde3e8;
+  --color-tokyo-200: #fbc8d2;
+  --color-tokyo-300: #f9a0b2;
+  --color-tokyo-400: #f7768e;
+  --color-tokyo-500: #e5476a;
+  --color-tokyo-600: #c42d52;
+  --color-tokyo-700: #a3263f;
+  --color-tokyo-800: #872138;
+  --color-tokyo-900: #711f33;
+  --color-tokyo-950: #3f0c18;
+
+  --color-tokyo-gray-50: #eceef4;
+  --color-tokyo-gray-100: #e1e3eb;
+  --color-tokyo-gray-200: #cdd3f0;
+  --color-tokyo-gray-300: #b4b7c4;
+  --color-tokyo-gray-400: #8a90b4;
+  --color-tokyo-gray-500: #5f6380;
+  --color-tokyo-gray-600: #414868;
+  --color-tokyo-gray-700: #343b58;
+  --color-tokyo-gray-800: #16161e;
+  --color-tokyo-gray-900: #1a1b26;
+  --color-tokyo-gray-950: #101014;
 }
 
 :root {
