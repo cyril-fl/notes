@@ -204,6 +204,16 @@ async function toggleLock() {
   });
   readonly.value = !!note.readonly;
 }
+// A version from the history (#61) replaces the text as if typed: saved by the usual PATCH, undone by Cmd Z.
+function restoreVersion(content: string) {
+  touched.value = true;
+  if (source.value !== undefined) {
+    source.value = content;
+    return onSource(content);
+  }
+  editorRef.value?.editor?.commands.setContent(content, { contentType: 'markdown' });
+}
+
 // false: no update event, unlocking must not save the note again.
 watch([() => editorRef.value?.editor, readonly], ([editor, locked]) => editor?.setEditable(!locked, false));
 
@@ -567,6 +577,7 @@ const status = computed(() => {
             @click="toggleLock"
           />
         </UTooltip>
+        <NoteHistory v-if="id && has('noteHistory')" :note-id="id" :readonly="readonly" @restore="restoreVersion" />
         <UTooltip v-if="has('sourceMode')" :text="source === undefined ? $t('note.source') : $t('note.editor')">
           <UButton
             :icon="icons.source"

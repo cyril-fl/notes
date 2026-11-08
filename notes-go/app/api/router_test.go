@@ -158,6 +158,17 @@ func TestNotes(t *testing.T) {
 	if read.Content != "changed #go" || read.Item.Title != "changed" || strings.Join(read.Tags, ",") != "go" || read.Path != "/changed" {
 		t.Errorf("after content patch: %+v", read)
 	}
+	// The text replaced is kept as a version, the next edits within 5 minutes are not (#61).
+	c.do("PATCH", path, `{"content":"changed again #go"}`, http.StatusOK, nil)
+	c.do("PATCH", path, `{"content":"changed #go"}`, http.StatusOK, nil)
+	var versions []struct {
+		Content string `json:"content"`
+	}
+	c.do("GET", path+"/versions", "", http.StatusOK, &versions)
+	if len(versions) != 1 || versions[0].Content != "# "+title+"\n\nhello\n\n#go #sql" {
+		t.Errorf("versions = %+v", versions)
+	}
+	c.do("GET", "/api/notes/"+unknownID+"/versions", "", http.StatusNotFound, nil)
 
 	c.do("PATCH", path, `{"tags":["go","sql"]}`, http.StatusOK, &read)
 	if read.Content != "changed #go\n\n#sql" || strings.Join(read.Tags, ",") != "go,sql" {
@@ -703,6 +714,7 @@ func TestAccountsAreApart(t *testing.T) {
 	bob.do("GET", "/api/notes/"+note.ID, "", http.StatusNotFound, nil)
 	bob.do("GET", "/api/folders/"+folder.ID, "", http.StatusNotFound, nil)
 	bob.do("PATCH", "/api/notes/"+note.ID, `{"content":"# volé"}`, http.StatusNotFound, nil)
+	bob.do("GET", "/api/notes/"+note.ID+"/versions", "", http.StatusNotFound, nil)
 	bob.do("DELETE", "/api/notes/"+note.ID, "", http.StatusNotFound, nil)
 	bob.do("POST", "/api/notes", fmt.Sprintf(`{"content":"# Intrus","parent_id":%q}`, folder.ID), http.StatusBadRequest, nil)
 	for _, path := range []string{"/api/items", "/api/search?q=Secret", "/api/graph", "/api/graph/notes", "/api/recent", "/api/folders", "/api/tags"} {

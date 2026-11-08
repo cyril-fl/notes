@@ -264,7 +264,11 @@
     "currentPlan": "Actuel",
     "included": "Inclus",
     "notIncluded": "Non inclus",
-    "featureGroups": { "display": "Affichage", "editing": "Édition", "navigation": "Navigation" },
+    "featureGroups": {
+      "display": "Affichage",
+      "editing": "Édition",
+      "navigation": "Navigation"
+    },
     "proDescription": "Des outils en plus, pour un usage avancé :",
     "sections": {
       "general": "Général",
@@ -314,6 +318,12 @@
     "contextMenu": "Le clic droit (ou l'appui long) dans une note : le même menu que /",
     "paletteActions": "Dans la palette Cmd K : déplacer la note ou le dossier ouvert, le renommer, changer de thème",
     "sourceMode": "Le mode source : le markdown de la note en texte brut, depuis le bouton sous le texte",
-    "noteLock": "Verrouiller une note en lecture seule, depuis le cadenas sous le texte"
+    "noteLock": "Verrouiller une note en lecture seule, depuis le cadenas sous le texte",
+    "noteHistory": "Revenir à une version précédente d'une note, depuis l'horloge sous le texte"
+  },
+  "history": {
+    "title": "Historique des versions",
+    "empty": "Aucune version précédente : elles sont gardées au plus toutes les 5 minutes, dès que le texte change.",
+    "restore": "Restaurer cette version"
   }
 }

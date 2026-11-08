@@ -16,6 +16,7 @@ export const features = {
   paletteActions: 'pro',
   sourceMode: 'pro',
   noteLock: 'base',
+  noteHistory: 'pro',
 } as const satisfies Record<string, Level>;
 
 export type Feature = keyof typeof features;
@@ -35,6 +36,7 @@ const groups: Record<Feature, 'display' | 'editing' | 'navigation'> = {
   paletteActions: 'navigation',
   sourceMode: 'editing',
   noteLock: 'editing',
+  noteHistory: 'editing',
 };
 
 /** The features the settings compare between the standard and the Pro mode, by subsection. */

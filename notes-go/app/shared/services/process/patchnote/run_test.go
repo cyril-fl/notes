@@ -60,6 +60,17 @@ func TestPatchNote(t *testing.T) {
 		t.Errorf("content only: %+v, %v", got.GetResult(), got.GetErr())
 	}
 
+	// The text replaced is kept, once every 5 minutes: the other edits of this transaction add none (#61).
+	versions := func() (got []domain.NoteVersion) {
+		if err := tx.NewSelect().Model(&got).Where("item_id = ?", id).OrderExpr("created_at DESC").Scan(ctx); err != nil {
+			t.Fatal(err)
+		}
+		return got
+	}
+	if got := versions(); len(got) != 1 || got[0].Content != "old\n\n#a" {
+		t.Errorf("versions after an edit: %+v", got)
+	}
+
 	// A failed edit undoes the pin of the same call (#39).
 	no := false
 	if got := patch(Input{Pinned: &no, Tags: &bad}); !errors.Is(got.GetErr(), hashtag.ErrInvalid) {
@@ -91,6 +102,25 @@ func TestPatchNote(t *testing.T) {
 	current := read.GetResult().Item.UpdatedAt
 	if got := patch(Input{Content: &content, UpdatedAt: &current}); got.HasErr() {
 		t.Errorf("current: %v", got.GetErr())
+	}
+
+	if got := versions(); len(got) != 1 {
+		t.Errorf("versions within 5 minutes: %d, want 1", len(got))
+	}
+
+	// Past 5 minutes the text is kept again, and only the versionsKept last stay.
+	if _, err := tx.NewRaw("UPDATE note_versions SET created_at = created_at - interval '1 day' WHERE item_id = ?", id).Exec(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tx.NewRaw("INSERT INTO note_versions (item_id, content, created_at) SELECT item_id, content, created_at - g * interval '1 hour' FROM note_versions, generate_series(1, ?) AS g WHERE item_id = ?", versionsKept, id).Exec(ctx); err != nil {
+		t.Fatal(err)
+	}
+	again := "again"
+	if got := patch(Input{Content: &again}); got.HasErr() {
+		t.Fatalf("edit past 5 minutes: %v", got.GetErr())
+	}
+	if got := versions(); len(got) != versionsKept || string(got[0].Content) != content {
+		t.Errorf("versions past 5 minutes: %d, newest %q", len(got), got[0].Content)
 	}
 
 	// A note never edited: its version is created_at.

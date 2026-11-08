@@ -65,3 +65,13 @@ type MetadataFolder struct {
 
 	Pinned bool `bun:",notnull,default:false"` // a favorite
 }
+
+// NoteVersion is a text a note had before an edit replaced it, kept by patchnote (#61). Deleted with its note.
+type NoteVersion struct {
+	bun.BaseModel `bun:"table:note_versions,alias:nv" json:"-"`
+
+	ID        string      `bun:",pk,type:uuid,default:gen_random_uuid()" json:"id"`
+	ItemID    string      `bun:",type:uuid,notnull" json:"-"`
+	Content   secret.Text `bun:",type:text,notnull" json:"content" swaggertype:"string"`
+	CreatedAt time.Time   `bun:",notnull,default:current_timestamp" json:"created_at"`
+}

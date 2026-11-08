@@ -264,7 +264,11 @@
     "currentPlan": "Current",
     "included": "Included",
     "notIncluded": "Not included",
-    "featureGroups": { "display": "Display", "editing": "Editing", "navigation": "Navigation" },
+    "featureGroups": {
+      "display": "Display",
+      "editing": "Editing",
+      "navigation": "Navigation"
+    },
     "proDescription": "More tools, for advanced use:",
     "sections": {
       "general": "General",
@@ -314,6 +318,12 @@
     "contextMenu": "Right click (or long press) in a note: the same menu as /",
     "paletteActions": "In the Cmd K palette: move the open note or folder, rename it, change the theme",
     "sourceMode": "Source mode: the note's markdown as plain text, from the button under the text",
-    "noteLock": "Lock a note read-only, from the padlock under the text"
+    "noteLock": "Lock a note read-only, from the padlock under the text",
+    "noteHistory": "Go back to an earlier version of a note, from the clock under the text"
+  },
+  "history": {
+    "title": "Version history",
+    "empty": "No earlier version: one is kept at most every 5 minutes, once the text changes.",
+    "restore": "Restore this version"
   }
 }

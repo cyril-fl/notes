@@ -115,6 +115,19 @@ components:
       x-enum-varnames:
       - FOLDER
       - NOTE
+    domain.NoteVersion:
+      properties:
+        content:
+          type: string
+        created_at:
+          type: string
+        id:
+          type: string
+      required:
+      - content
+      - created_at
+      - id
+      type: object
     domain.Snippet:
       properties:
         content:
@@ -1411,6 +1424,39 @@ paths:
                 $ref: '#/components/schemas/respond.Failure'
           description: Internal Server Error
       summary: Read a note and the notes sharing its tags
+      tags:
+      - notes
+  /api/notes/{id}/versions:
+    get:
+      parameters:
+      - description: uuid
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/domain.NoteVersion'
+                type: array
+          description: OK
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: List the versions of a note
       tags:
       - notes
   /api/pinned:

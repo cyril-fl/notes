@@ -10,6 +10,7 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/editnote"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/pinnote"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readitem"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 )
@@ -17,6 +18,12 @@ import (
 var (
 	ErrLocked = errors.New("note is read-only, unlock it first")
 	ErrStale  = errors.New("note changed elsewhere since it was read")
+)
+
+// A text replaced is kept at most once every versionEvery per note, the versionsKept last ones (#61).
+const (
+	versionEvery = "5 minutes"
+	versionsKept = 50
 )
 
 // Input has pointers to tell a field left out from an empty one: editnote replaces everything,
@@ -145,6 +152,10 @@ func (p *run) editNote(tx bun.Tx) error {
 		input.Tags = *p.input.Tags
 	}
 
+	if err := p.keepVersion(tx); err != nil {
+		return err
+	}
+
 	process := editnote.Process(p.ctx, tx, input)
 	process.Run()
 	if process.HasErr() {
@@ -152,4 +163,37 @@ func (p *run) editNote(tx bun.Tx) error {
 	}
 	// The saved text is read back: editnote has turned its [[links]] into note ids.
 	return p.readNote(tx)
+}
+
+// keepVersion copies the text about to be replaced into note_versions, unless a version is younger than versionEvery,
+// then drops the versions past the versionsKept last.
+func (p *run) keepVersion(tx bun.Tx) error {
+	old := p.cache.note.Content
+	if p.input.Content == nil || *p.input.Content == old || old == "" {
+		return nil
+	}
+
+	id := p.cache.note.Item.ID
+	recent, err := tx.NewSelect().
+		Model((*domain.NoteVersion)(nil)).
+		Where("item_id = ? AND created_at > current_timestamp - ?::interval", id, versionEvery).
+		Exists(p.ctx)
+	if err != nil || recent {
+		return err
+	}
+
+	content, err := secret.Seal(domain.UserID(p.ctx), old)
+	if err != nil {
+		return err
+	}
+	_, err = tx.NewInsert().Model(&domain.NoteVersion{ItemID: id, Content: content}).Exec(p.ctx)
+	if err != nil {
+		return err
+	}
+	_, err = tx.NewDelete().
+		Model((*domain.NoteVersion)(nil)).
+		Where("item_id = ?", id).
+		Where("id NOT IN (SELECT id FROM note_versions WHERE item_id = ? ORDER BY created_at DESC LIMIT ?)", id, versionsKept).
+		Exec(p.ctx)
+	return err
 }

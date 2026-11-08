@@ -130,6 +130,8 @@ func getTables(tx bun.Tx) []*bun.CreateTableQuery {
 		tx.NewCreateTable().Model((*domain.NoteLink)(nil)).
 			ForeignKey(`("source_id") REFERENCES "metadata_notes" ("item_id") ON DELETE CASCADE`).
 			ForeignKey(`("target_id") REFERENCES "metadata_notes" ("item_id") ON DELETE CASCADE`),
+		tx.NewCreateTable().Model((*domain.NoteVersion)(nil)).
+			ForeignKey(`("item_id") REFERENCES "metadata_notes" ("item_id") ON DELETE CASCADE`),
 		// TODO: deleting an account leaves its objects in Silo, remove the prefix <user_id>/ if accounts ever get deleted.
 		tx.NewCreateTable().Model((*domain.File)(nil)).
 			ForeignKey(`("user_id") REFERENCES "users" ("id") ON DELETE CASCADE`),
@@ -155,6 +157,7 @@ func getIndexes(tx bun.Tx) []*bun.CreateIndexQuery {
 		// The primary key (source_id, target_id) only covers the links of a note, not its backlinks.
 		tx.NewCreateIndex().Model((*domain.NoteLink)(nil)).Index("idx_notes_on_links_target_id").Column("target_id"),
 		tx.NewCreateIndex().Model((*domain.NoteFile)(nil)).Index("idx_notes_on_files_file_id").Column("file_id"),
+		tx.NewCreateIndex().Model((*domain.NoteVersion)(nil)).Index("idx_note_versions_item_id").ColumnExpr("item_id, created_at"),
 	}
 }
 

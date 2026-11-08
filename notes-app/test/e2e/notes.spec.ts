@@ -430,6 +430,24 @@ test('the Pro source mode edits the markdown', async ({ page }) => {
   }
 });
 
+// Pro (#61): the text replaced by an edit is kept, and restoring it saves it back.
+test('the Pro history restores an earlier version', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} history\n\nfirst`);
+  await box.api.patch(`/api/notes/${note.id}`, { data: { content: `# ${box.prefix} history\n\nsecond` } });
+  try {
+    await box.api.patch('/api/me', { data: { pro: true } });
+    await page.goto(`/notes/${note.id}`);
+    await expect(page.locator('.ProseMirror')).toContainText('second');
+    await page.getByRole('button', { name: 'Historique des versions' }).click();
+    await expect(page.getByRole('dialog')).toContainText('first');
+    await page.getByRole('button', { name: 'Restaurer cette version' }).click();
+    await expect(page.locator('.ProseMirror')).toContainText('first');
+    await expect.poll(() => box.content(note.id), { timeout: 5000 }).toBe(`# ${box.prefix} history\n\nfirst`);
+  } finally {
+    await box.api.patch('/api/me', { data: { pro: false } });
+  }
+});
+
 // Without the Pro mode the editor still reads and writes tables and callouts: editing a note keeps the ones written elsewhere.
 test('without Pro, editing a note keeps its table and callout', async ({ page }) => {
   const markdown = `# ${box.prefix} blocs\n\n| a | b |\n| --- | --- |\n| 1 | 2 |\n\n> [!note]\n> encadré`;
