@@ -39,12 +39,7 @@ export function useDropFolder(target: Target, folderId: () => string | null) {
       dropTargetForElements({
         element,
         // contains: a folder of the tree cannot go into itself or a subfolder rendered inside it.
-        canDrop: ({ source }) =>
-          typeof source.data.itemId === 'string' &&
-          source.data.parentId !== folderId() &&
-          source.data.itemId !== folderId() &&
-          !(source.data.itemIds as string[]).includes(folderId() ?? '') &&
-          !source.element.contains(element),
+        canDrop: ({ source }) => canDropInto(source.data, folderId()) && !source.element.contains(element),
         // Targets nest (a folder row inside the panel of its parent): only the innermost one reacts.
         onDropTargetChange: ({ location, self }) => {
           isOver.value = location.current.dropTargets[0]?.element === self.element;

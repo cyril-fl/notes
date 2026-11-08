@@ -17,15 +17,16 @@ function select(event: MouseEvent, index: number) {
   if (!event.metaKey && !event.ctrlKey && !event.shiftKey) return;
   event.preventDefault();
   event.stopPropagation(); // The link under it must not open.
-  const id = props.items[index]!.id;
   if (event.shiftKey && anchor >= 0) {
-    const range = props.items.slice(Math.min(anchor, index), Math.max(anchor, index) + 1).map((item) => item.id);
-    selection.value = [...new Set([...selection.value, ...range])];
+    selection.value = selectRange(
+      selection.value,
+      props.items.map((item) => item.id),
+      anchor,
+      index,
+    );
     return;
   }
-  selection.value = selection.value.includes(id)
-    ? selection.value.filter((other) => other !== id)
-    : [...selection.value, id];
+  selection.value = toggleSelected(selection.value, props.items[index]!.id);
   anchor = index;
 }
 
