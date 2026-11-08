@@ -408,26 +408,19 @@ test('the Pro palette renames the open note', async ({ page }) => {
   }
 });
 
-// Pro: the source mode shows the markdown as text, saves what is typed there, and the editor starts from it.
-test('the Pro source mode edits the markdown', async ({ page }) => {
+// The source mode, for everyone: the markdown as text, saves what is typed there, and the editor starts from it.
+test('the source mode edits the markdown', async ({ page }) => {
   const note = await box.note(`# ${box.prefix} source\n\n**gras**`);
-  try {
-    await box.api.patch('/api/me', { data: { pro: true } });
-    await page.goto(`/notes/${note.id}`);
-    await expect(page.locator('.ProseMirror')).toContainText('gras');
-    await expect(page.getByText(/\d+ mots?$/)).toBeVisible();
-    await page.getByRole('button', { name: 'Mode source' }).click();
-    const source = page.getByRole('textbox', { name: 'Mode source' });
-    await expect(source).toHaveValue(`# ${box.prefix} source\n\n**gras**`);
-    await expect(page.getByText(/\d+ mots?$/)).toBeHidden();
-    await source.press('ControlOrMeta+End');
-    await source.pressSequentially('\n\n- [ ] tâche');
-    await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('- [ ] tâche');
-    await page.getByRole('button', { name: 'Mode source' }).click();
-    await expect(page.locator('.ProseMirror input[type="checkbox"]')).toBeVisible();
-  } finally {
-    await box.api.patch('/api/me', { data: { pro: false } });
-  }
+  await page.goto(`/notes/${note.id}`);
+  await expect(page.locator('.ProseMirror')).toContainText('gras');
+  await page.getByRole('button', { name: 'Mode source' }).click();
+  const source = page.getByRole('textbox', { name: 'Mode source' });
+  await expect(source).toHaveValue(`# ${box.prefix} source\n\n**gras**`);
+  await source.press('ControlOrMeta+End');
+  await source.pressSequentially('\n\n- [ ] tâche');
+  await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('- [ ] tâche');
+  await page.getByRole('button', { name: 'Mode source' }).click();
+  await expect(page.locator('.ProseMirror input[type="checkbox"]')).toBeVisible();
 });
 
 // Pro (#61): the text replaced by an edit is kept, and restoring it saves it back.

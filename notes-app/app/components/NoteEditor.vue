@@ -220,7 +220,7 @@ function restoreVersion(content: string) {
 // false: no update event, unlocking must not save the note again.
 watch([() => editorRef.value?.editor, readonly], ([editor, locked]) => editor?.setEditable(!locked, false));
 
-// Pro: the markdown as text, in place of the editor; undefined in the editor. Back in the editor, it starts from that text.
+// The markdown as text, in place of the editor; undefined in the editor. Back in the editor, it starts from that text.
 const source = ref<string>();
 function toggleSource() {
   if (source.value !== undefined) {

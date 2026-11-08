@@ -14,7 +14,7 @@ export const features = {
   wordCount: 'pro',
   contextMenu: 'pro',
   paletteActions: 'pro',
-  sourceMode: 'pro',
+  sourceMode: 'base',
   noteLock: 'base',
   noteHistory: 'pro',
 } as const satisfies Record<string, Level>;
