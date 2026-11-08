@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readfile"
@@ -44,6 +45,8 @@ func Handler(db bun.IDB, store silo.Store) http.HandlerFunc {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		// A file never changes: a new image gets a new id.
 		w.Header().Set("Cache-Control", "private, max-age=31536000, immutable")
+		// A full-size photo on a slow mobile link outlasts the server's 30 s, like its upload.
+		_ = http.NewResponseController(w).SetWriteDeadline(time.Time{})
 		if _, err := io.Copy(w, body); err != nil {
 			// The status is sent: the image breaks off, the browser shows it failed.
 			log.Printf("read file %s: %v", id, err)
