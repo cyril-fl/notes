@@ -47,6 +47,7 @@ type run struct {
 
 type cache struct {
 	result Result
+	paths  map[string]string // read once for the neighbors and the links
 }
 
 func Process(ctx context.Context, db bun.IDB, id string) *run {
@@ -59,6 +60,7 @@ func Process(ctx context.Context, db bun.IDB, id string) *run {
 
 func (p *run) Run() {
 	p.loadNote()
+	p.loadPaths()
 	p.loadNeighbors()
 	p.loadLinks()
 }
@@ -77,6 +79,17 @@ func (p *run) loadNote() {
 	process.Run()
 	p.cache.result.Note = process.GetResult()
 	p.SetErr(process.GetErr())
+}
+
+// loadPaths reads every item's path; the center's already came from readitem.
+func (p *run) loadPaths() {
+	if p.HasErr() {
+		return
+	}
+
+	paths, err := domain.Paths(p.ctx, p.db)
+	p.cache.paths = paths
+	p.SetErr(err)
 }
 
 // loadNeighbors joins the tag links with themselves: same tag, other note. Joining live keeps live notes only.
@@ -100,12 +113,11 @@ func (p *run) loadNeighbors() {
 		return
 	}
 
-	paths, err := domain.Paths(p.ctx, p.db)
-	p.SetErr(err)
 	for i := range p.cache.result.Neighbors {
 		neighbor := &p.cache.result.Neighbors[i]
-		neighbor.Path = paths[neighbor.ID]
+		neighbor.Path = p.cache.paths[neighbor.ID]
 		if !p.HasErr() {
+			var err error
 			neighbor.Tags, err = domain.OpenTags(neighbor.Tags)
 			p.SetErr(err)
 		}
@@ -138,11 +150,9 @@ func (p *run) loadLinks() {
 		}
 	}
 
-	paths, err := domain.Paths(p.ctx, p.db)
-	p.SetErr(err)
 	for _, linked := range [][]Linked{p.cache.result.Links, p.cache.result.Backlinks} {
 		for i := range linked {
-			linked[i].Path = paths[linked[i].ID]
+			linked[i].Path = p.cache.paths[linked[i].ID]
 		}
 		domain.SortFold(linked, func(l Linked) string { return l.Path }, nil)
 	}
