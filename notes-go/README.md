@@ -6,7 +6,6 @@ CLI de prise de notes en Go, avec dossiers, tags et corbeille. Les notes sont en
 
 - Go (version indiquée dans `go.mod`)
 - Docker, avec Colima pour `make up` et `make down`
-- Un checkout de [plum](https://github.com/cyril-fl/plum) : `go.mod` le remplace par un chemin local (directive `replace`), à adapter à ta machine
 
 ## Installation
 
