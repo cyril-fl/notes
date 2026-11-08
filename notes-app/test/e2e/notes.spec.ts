@@ -259,3 +259,19 @@ test('the Pro source mode edits the markdown', async ({ page }) => {
     await box.api.patch('/api/me', { data: { pro: false } });
   }
 });
+
+// Without the Pro mode the editor still reads and writes tables and callouts: editing a note keeps the ones written elsewhere.
+test('without Pro, editing a note keeps its table and callout', async ({ page }) => {
+  const markdown = `# ${box.prefix} blocs\n\n| a | b |\n| --- | --- |\n| 1 | 2 |\n\n> [!note]\n> encadré`;
+  const note = await box.note(markdown);
+  await box.api.patch('/api/me', { data: { pro: false } });
+  await page.goto(`/notes/${note.id}`);
+  await expect(page.locator('.ProseMirror table')).toBeVisible();
+  await page.locator('.ProseMirror h1').click();
+  await page.keyboard.press('End');
+  await page.keyboard.type(' fin');
+  await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('blocs fin');
+  const saved = await box.content(note.id);
+  expect(saved).toContain('> [!note]\n> encadré');
+  expect(saved).toMatch(/\| a +\| b +\|/);
+});
