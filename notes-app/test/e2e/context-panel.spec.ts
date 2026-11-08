@@ -39,10 +39,10 @@ test('the Pro context panel follows the note', async ({ page }) => {
     await expect(panel.getByRole('link', { name: `Panel ${box.prefix}` }).first()).toBeVisible();
 
     const sidebar = page.getByRole('link', { name: 'Graphe', exact: true }).first();
-    await page.keyboard.press('Meta+Period');
+    await page.keyboard.press('ControlOrMeta+Period');
     await expect(sidebar).toBeHidden();
     await expect(panel).toBeHidden();
-    await page.keyboard.press('Meta+Period');
+    await page.keyboard.press('ControlOrMeta+Period');
     await expect(panel).toBeVisible();
 
     await box.api.patch('/api/me', { data: { pro: false } });
