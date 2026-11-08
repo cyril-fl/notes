@@ -5,10 +5,17 @@ const { icons } = useIcons();
 
 type Link = NotesGraph['links'][number];
 
-// mini: in a narrow panel, without the card shown on hover, too wide for it.
+// mini: in a narrow panel, icons instead of titles, and the card of the hovered note in a popover drawn out of the panel.
 const props = defineProps<{ graph: NotesGraph; selected?: string; mini?: boolean }>();
 
 const hovered = ref<string | null>(null);
+const anchor = ref<HTMLElement>();
+const [DefineCard, ReuseCard] = createReusableTemplate();
+
+function hover(id: string, event: Event) {
+  hovered.value = id;
+  anchor.value = event.currentTarget as HTMLElement;
+}
 const active = computed(() => hovered.value ?? props.selected ?? null);
 
 const positions = computed(() => layoutGraph(props.graph.notes, props.graph.links));
@@ -110,6 +117,11 @@ function dotClass(id: string) {
   return isDimmed(id) ? 'bg-(--ui-border-accented)' : 'bg-(--ui-text-dimmed)';
 }
 
+function iconClass(id: string) {
+  if (id === active.value) return 'text-primary';
+  return isDimmed(id) ? 'text-(--ui-border-accented)' : 'text-muted';
+}
+
 function linkClass(link: Link) {
   if (active.value === null) return 'stroke-(--ui-border-accented)';
   return isActiveLink(link) ? 'stroke-(--ui-primary)' : 'stroke-(--ui-border-muted)';
@@ -146,27 +158,32 @@ function linkClass(link: Link) {
         :to="`/notes/${note.id}`"
         draggable="false"
         :style="{ left: `${at(note.id).x}%`, top: `${at(note.id).y}%` }"
-        :class="{ 'z-10': note.id === active }"
-        class="absolute flex max-w-32 -translate-x-1/2 -translate-y-[5px] flex-col items-center gap-1 rounded-md"
-        @mouseenter="hovered = note.id"
+        :class="[{ 'z-10': note.id === active }, mini ? '-translate-y-1/2' : '-translate-y-[5px]']"
+        :aria-label="mini ? displayTitle(note.title, $t('untitled')) : undefined"
+        class="absolute flex max-w-32 -translate-x-1/2 flex-col items-center gap-1 rounded-md"
+        @mouseenter="hover(note.id, $event)"
         @mouseleave="hovered = null"
-        @focus="hovered = note.id"
+        @focus="hover(note.id, $event)"
         @blur="hovered = null"
       >
-        <!-- Solid colors, not opacity: links drawn under the dot must not show through it. -->
-        <span class="size-2.5 shrink-0 rounded-full transition-colors duration-150" :class="dotClass(note.id)" />
-        <span
-          class="max-w-full truncate text-xs transition-opacity duration-150"
-          :class="{ 'font-medium': note.id === active, 'opacity-30': isDimmed(note.id) }"
-          >{{ displayTitle(note.title, $t('untitled')) }}</span
-        >
+        <UIcon
+          v-if="mini"
+          :name="icons.note"
+          class="size-4 shrink-0 transition-colors duration-150"
+          :class="iconClass(note.id)"
+        />
+        <template v-else>
+          <!-- Solid colors, not opacity: links drawn under the dot must not show through it. -->
+          <span class="size-2.5 shrink-0 rounded-full transition-colors duration-150" :class="dotClass(note.id)" />
+          <span
+            class="max-w-full truncate text-xs transition-opacity duration-150"
+            :class="{ 'font-medium': note.id === active, 'opacity-30': isDimmed(note.id) }"
+            >{{ displayTitle(note.title, $t('untitled')) }}</span
+          >
+        </template>
       </NuxtLink>
 
-      <div
-        v-if="hoveredNote && !mini"
-        :style="{ left: `${at(hoveredNote.id).x}%`, top: `${at(hoveredNote.id).y}%` }"
-        class="pointer-events-none absolute z-20 ml-4 flex h-40 w-64 -translate-y-1/2 flex-col gap-1 rounded-md bg-default p-2 text-xs shadow-lg ring ring-default"
-      >
+      <DefineCard v-if="hoveredNote">
         <span class="shrink-0 truncate font-medium">{{ displayTitle(hoveredNote.title, $t('untitled')) }}</span>
         <span class="shrink-0 truncate text-muted">{{ hoveredNote.path }}</span>
         <ul
@@ -181,8 +198,26 @@ function linkClass(link: Link) {
           </li>
         </ul>
         <span v-else class="text-muted">{{ $t('graph.noLink') }}</span>
+      </DefineCard>
+      <div
+        v-if="hoveredNote && !mini"
+        :style="{ left: `${at(hoveredNote.id).x}%`, top: `${at(hoveredNote.id).y}%` }"
+        class="pointer-events-none absolute z-20 ml-4 flex h-40 w-64 -translate-y-1/2 flex-col gap-1 rounded-md bg-default p-2 text-xs shadow-lg ring ring-default"
+      >
+        <ReuseCard />
       </div>
     </div>
+
+    <UPopover
+      v-if="mini"
+      mode="hover"
+      :open="!!hoveredNote"
+      :reference="anchor"
+      :content="{ side: 'left' }"
+      :ui="{ content: 'pointer-events-none flex max-h-40 w-64 flex-col gap-1 p-2 text-xs' }"
+    >
+      <template #content><ReuseCard /></template>
+    </UPopover>
 
     <!-- @pointerdown.stop: a click on a button is not the start of a drag. -->
     <div

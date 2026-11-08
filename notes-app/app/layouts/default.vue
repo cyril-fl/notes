@@ -109,7 +109,7 @@ defineShortcuts({
         body: 'gap-0 p-0',
       }"
     >
-      <aside id="context-panel" class="space-y-6 p-4" :aria-label="$t('features.contextPanel')" />
+      <aside id="context-panel" class="flex flex-1 flex-col gap-6 p-4" :aria-label="$t('features.contextPanel')" />
     </UDashboardSidebar>
 
     <AppSearch />
