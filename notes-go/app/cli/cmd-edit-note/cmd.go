@@ -2,6 +2,7 @@ package cmdeditnote
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	millflagseditnote "github.com/cyril-fl/notes/notes-go/app/cli/cmd-edit-note/services/mill"
@@ -43,12 +44,16 @@ func run(ctx context.Context, id string, flags *pflag.FlagSet) error {
 		if resolver.HasErr() {
 			return resolver.GetErr()
 		}
-		input.Content, input.Tags = &note.Content, &note.Tags
+		version := resolver.Version()
+		input.Content, input.Tags, input.UpdatedAt = &note.Content, &note.Tags, &version
 	}
 
 	process := patchnote.Process(ctx, postgrey.GetDb(), input)
 	process.Run()
 	if process.HasErr() {
+		if errors.Is(process.GetErr(), patchnote.ErrStale) {
+			return fmt.Errorf("%w: nothing saved, run the command again to edit the new text", process.GetErr())
+		}
 		return process.GetErr()
 	}
 

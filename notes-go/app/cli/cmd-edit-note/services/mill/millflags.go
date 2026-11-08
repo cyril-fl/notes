@@ -5,6 +5,7 @@ import (
 	"errors"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/hashtag"
@@ -33,6 +34,7 @@ type cache struct {
 	removeTags  []string
 	tagFromList bool
 	tags        []domain.Tag
+	version     time.Time
 }
 
 type Template struct {
@@ -61,6 +63,11 @@ func (m *mill) Resolve() editnote.Input {
 	return m.cache.input
 }
 
+// Version is the note's updated_at when it was read, so the save is refused if it changed while the form was open.
+func (m *mill) Version() time.Time {
+	return m.cache.version
+}
+
 // Methods
 
 func (m *mill) readFlags() {
@@ -81,6 +88,11 @@ func (m *mill) loadNote() {
 	process.Run()
 	current := process.GetResult()
 	m.cache.input = editnote.Input{ID: current.Item.ID, Content: current.Content, Tags: current.Tags}
+	// A note never edited has no updated_at: its version is created_at, as patchnote compares it.
+	m.cache.version = current.Item.UpdatedAt
+	if m.cache.version.IsZero() {
+		m.cache.version = current.Item.CreatedAt
+	}
 	m.SetErr(process.GetErr())
 }
 

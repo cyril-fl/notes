@@ -2,13 +2,16 @@ package millflagseditnote
 
 import (
 	"context"
+	"errors"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/testaccount"
 	"slices"
 	"testing"
+	"time"
 
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createnote"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createschema"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/patchnote"
 	"github.com/cyril-fl/notes/notes-go/config"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
@@ -62,5 +65,19 @@ func TestResolveFromFlags(t *testing.T) {
 	// Content is kept (editnote writes the tags into it), tags are merged.
 	if input.Content != "old\n\n#test-edit-a #test-edit-b" || !slices.Equal(input.Tags, []string{"test-edit-b", "test-edit-c"}) {
 		t.Errorf("input = %+v", input)
+	}
+	// The version read is the one patchnote checks: a save over it passes, over an older one is stale.
+	// current_timestamp is frozen in the transaction, so a later edit cannot make the version old here.
+	version := resolver.Version()
+	older := version.Add(-time.Second)
+	for _, tc := range []struct {
+		version *time.Time
+		want    error
+	}{{&version, nil}, {&older, patchnote.ErrStale}} {
+		save := patchnote.Process(ctx, tx, patchnote.Input{ID: input.ID, Content: &input.Content, Tags: &input.Tags, UpdatedAt: tc.version})
+		save.Run()
+		if !errors.Is(save.GetErr(), tc.want) {
+			t.Errorf("save over %v: error = %v, want %v", tc.version, save.GetErr(), tc.want)
+		}
 	}
 }
