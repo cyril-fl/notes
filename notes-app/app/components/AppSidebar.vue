@@ -123,6 +123,12 @@ const isOverRoot = useDropFolder(rootLink, () => null);
       <template #trailing> <UKbd value="meta" size="sm" class="ms-auto" /><UKbd value="K" size="sm" /> </template>
     </UButton>
 
+    <!-- Above the scrolling area, so a long folder tree never hides it. -->
+    <NuxtLink to="/graph" class="row -mt-2 font-medium" :class="{ 'row-active': route.path === '/graph' }">
+      <UIcon :name="icons.graph" class="size-4 shrink-0" />
+      {{ $t('common.graph') }}
+    </NuxtLink>
+
     <div class="min-h-0 flex-1 space-y-5 overflow-y-auto">
       <section v-if="favorites.length">
         <h2 class="px-2 pb-1 text-xs font-medium text-muted">{{ $t('sidebar.favorites') }}</h2>
@@ -210,11 +216,6 @@ const isOverRoot = useDropFolder(rootLink, () => null);
         </div>
         <FolderTree />
       </section>
-
-      <NuxtLink to="/graph" class="row font-medium" :class="{ 'row-active': route.path === '/graph' }">
-        <UIcon :name="icons.graph" class="size-4 shrink-0" />
-        {{ $t('common.graph') }}
-      </NuxtLink>
     </div>
 
     <section v-if="tags.length" class="border-t border-default pt-3">
