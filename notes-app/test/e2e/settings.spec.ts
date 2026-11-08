@@ -280,6 +280,26 @@ test('the Pro mode adds the callouts to the editor', async ({ page }) => {
   }
 });
 
+// A right click opens the / commands, the callouts in a submenu, applied to the line clicked.
+test('the Pro mode opens the / commands on a right click', async ({ page }) => {
+  const note = await box.note(`# Clic droit ${box.prefix}\n\nPrudence`);
+  const line = page.locator('.ProseMirror').getByText('Prudence', { exact: true });
+  try {
+    await page.goto(`/notes/${note.id}`);
+    await line.click({ button: 'right' });
+    await expect(page.getByRole('menu')).toHaveCount(0);
+
+    await box.api.patch('/api/me', { data: { pro: true } });
+    await page.reload();
+    await line.click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Encadré' }).hover();
+    await page.getByRole('menuitem', { name: 'Encadré attention' }).click();
+    await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('> [!warning]\n> Prudence');
+  } finally {
+    await box.api.patch('/api/me', { data: { pro: false } });
+  }
+});
+
 // A page per section is the Pro mode's: without it a section's URL shows the whole page, and the switch moves between both.
 test('the settings follow the Pro mode, one page or a page per section', async ({ page }) => {
   try {

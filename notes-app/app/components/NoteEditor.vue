@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { ContextMenuItem, EditorSuggestionMenuItem } from '@nuxt/ui';
+import { createHandlers } from '@nuxt/ui/runtime/utils/editor.js';
 import type { Editor } from '@tiptap/vue-3';
 import type { FetchError } from 'ofetch';
 import type { RouteLocationNormalized } from 'vue-router';
@@ -204,6 +206,37 @@ const modules = [
 ];
 const parts = computed(() => mergeModules(modules, has));
 
+// The / menu again on a right click or a long press, its items of a same group (the callouts) in a submenu.
+const contextMenu = computed(() => {
+  const editor = editorRef.value?.editor;
+  const slash = parts.value.menus.find((menu) => menu.pluginKey === 'slashMenu');
+  if (!editor || !slash || !has('contextMenu')) return [];
+  const handlers = { ...createHandlers(), ...parts.value.handlers };
+  const items: ContextMenuItem[] = [];
+  for (const item of toValue(slash.items) as (EditorSuggestionMenuItem & { kind: string; group?: string })[]) {
+    const entry = {
+      label: item.label,
+      icon: item.icon,
+      onSelect: () => handlers[item.kind]?.execute(editor, item).run(),
+    };
+    if (!item.group) items.push(entry);
+    else {
+      const group = items.find((other) => other.label === item.group && other.children);
+      if (group) (group.children as ContextMenuItem[]).push(entry);
+      else items.push({ label: item.group, icon: item.icon, children: [entry] });
+    }
+  }
+  return items;
+});
+// The menu keeps the browser from moving the cursor on a right click: it goes where the click was, unless inside the selected text.
+function placeCursor(event: MouseEvent) {
+  const editor = editorRef.value?.editor;
+  const pos = editor?.view.posAtCoords({ left: event.clientX, top: event.clientY })?.pos;
+  if (!editor || pos === undefined || !contextMenu.value.length) return;
+  const { from, to } = editor.state.selection;
+  if (pos < from || pos > to) editor.commands.setTextSelection(pos);
+}
+
 // The headings of the note, for the context panel: a click scrolls the text to one, without moving the cursor.
 const panel = useContextPanel();
 const { data: graph } = useLazyAsyncData('graph', () => api<NotesGraph>('/api/graph/notes'));
@@ -263,42 +296,47 @@ const status = computed(() => {
     @pointerdown.capture="touched = true"
     @click="parts.onClick"
   >
-    <UEditor
-      ref="editor"
-      v-slot="{ editor }"
-      :model-value="initialContent"
-      content-type="markdown"
-      :placeholder="$t('note.placeholder')"
-      :autofocus="!noteId"
-      :image="false"
-      :mention="false"
-      :starter-kit="parts.starterKit"
-      :extensions="parts.extensions"
-      :handlers="parts.handlers"
-      class="flex min-h-0 w-full flex-1 flex-col"
-      :ui="{ content: 'min-h-0 overflow-y-auto px-8 pb-8', base: 'sm:px-0 px-0' }"
-      @update:model-value="onContent"
-    >
-      <UEditorToolbar :editor="editor" :items="parts.toolbar" class="mx-7 shrink-0 border-b border-muted py-1" />
-      <UEditorToolbar
-        v-for="bubble in parts.bubbles"
-        :key="bubble.pluginKey"
-        :editor="editor"
-        :items="bubble.items"
-        layout="bubble"
-        :plugin-key="bubble.pluginKey"
-        :options="{ placement: 'top-start' }"
-        :should-show="bubble.shouldShow"
-        class="rounded-md border border-default bg-default p-1 shadow-sm"
-      />
-      <UEditorSuggestionMenu
-        v-for="{ items, ...menu } in parts.menus"
-        :key="menu.pluginKey"
-        :editor="editor"
-        v-bind="menu"
-        :items="toValue(items)"
-      />
-    </UEditor>
+    <!-- A div takes the menu's listeners: UEditor hands its own to TipTap. -->
+    <UContextMenu :items="contextMenu" :disabled="!contextMenu.length">
+      <div class="flex min-h-0 flex-1 flex-col" @contextmenu.capture="placeCursor">
+        <UEditor
+          ref="editor"
+          v-slot="{ editor }"
+          :model-value="initialContent"
+          content-type="markdown"
+          :placeholder="$t('note.placeholder')"
+          :autofocus="!noteId"
+          :image="false"
+          :mention="false"
+          :starter-kit="parts.starterKit"
+          :extensions="parts.extensions"
+          :handlers="parts.handlers"
+          class="flex min-h-0 w-full flex-1 flex-col"
+          :ui="{ content: 'min-h-0 overflow-y-auto px-8 pb-8', base: 'sm:px-0 px-0' }"
+          @update:model-value="onContent"
+        >
+          <UEditorToolbar :editor="editor" :items="parts.toolbar" class="mx-7 shrink-0 border-b border-muted py-1" />
+          <UEditorToolbar
+            v-for="bubble in parts.bubbles"
+            :key="bubble.pluginKey"
+            :editor="editor"
+            :items="bubble.items"
+            layout="bubble"
+            :plugin-key="bubble.pluginKey"
+            :options="{ placement: 'top-start' }"
+            :should-show="bubble.shouldShow"
+            class="rounded-md border border-default bg-default p-1 shadow-sm"
+          />
+          <UEditorSuggestionMenu
+            v-for="{ items, ...menu } in parts.menus"
+            :key="menu.pluginKey"
+            :editor="editor"
+            v-bind="menu"
+            :items="toValue(items)"
+          />
+        </UEditor>
+      </div>
+    </UContextMenu>
 
     <footer class="shrink-0 border-t border-default px-8">
       <RelatedNotes v-if="id && !panel" :key="id" :note-id="id" />

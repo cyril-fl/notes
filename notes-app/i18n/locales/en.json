@@ -134,6 +134,7 @@
     "tableDeleteRow": "Delete the row",
     "tableDeleteColumn": "Delete the column",
     "tableDelete": "Delete the table",
+    "callout": "Callout",
     "callouts": {
       "note": "Note callout",
       "tip": "Tip callout",
@@ -280,6 +281,7 @@
     "tables": "Tables in the notes, inserted with /table",
     "codeHighlight": "Code blocks colored by their language",
     "callouts": "Callouts (note, tip, warning, danger), inserted with /callout",
-    "wordCount": "The word count of the note, below the text"
+    "wordCount": "The word count of the note, below the text",
+    "contextMenu": "Right click (or long press) in a note: the / commands, the callouts in a submenu"
   }
 }

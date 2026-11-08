@@ -134,6 +134,7 @@
     "tableDeleteRow": "Supprimer la ligne",
     "tableDeleteColumn": "Supprimer la colonne",
     "tableDelete": "Supprimer le tableau",
+    "callout": "Encadré",
     "callouts": {
       "note": "Encadré note",
       "tip": "Encadré astuce",
@@ -280,6 +281,7 @@
     "tables": "Les tableaux dans les notes, insérés avec /tableau",
     "codeHighlight": "Les blocs de code colorés selon leur langage",
     "callouts": "Les encadrés (note, astuce, attention, danger), insérés avec /encadré",
-    "wordCount": "Le nombre de mots de la note, sous le texte"
+    "wordCount": "Le nombre de mots de la note, sous le texte",
+    "contextMenu": "Le clic droit (ou l'appui long) dans une note : les commandes /, les encadrés dans un sous-menu"
   }
 }

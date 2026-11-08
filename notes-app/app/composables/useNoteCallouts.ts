@@ -24,6 +24,7 @@ export function useNoteCallouts(): EditorModule {
         items: Object.entries(types).map(([callout, icon]) => ({
           kind: 'callout',
           callout,
+          group: t('note.callout'),
           label: t(`note.callouts.${callout}`),
           icon,
         })),
