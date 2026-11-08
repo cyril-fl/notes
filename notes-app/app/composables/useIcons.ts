@@ -73,6 +73,7 @@ export function useIcons() {
     link: 'i-reicon-link',
     linkMini: 'i-reicon-minimize',
     linkLarge: 'i-reicon-maximize',
+    image: 'i-reicon-gallery-wide-filled',
     linkOpen: 'i-reicon-arrow-up-right-square',
     mail: 'i-reicon-envelope',
     orderedList: 'i-reicon-ordered-list',
