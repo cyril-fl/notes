@@ -101,7 +101,7 @@ func (p *run) saveFile() {
 		return p.store.Put(ctx, p.cache.file.Key(), p.input.Data, p.cache.file.ContentType)
 	})
 	if err != nil && put {
-		_ = p.store.Remove(p.ctx, p.cache.file.Key())
+		_ = p.store.Remove(context.WithoutCancel(p.ctx), p.cache.file.Key()) // Even once the client is gone.
 	}
 	p.SetErr(err)
 }

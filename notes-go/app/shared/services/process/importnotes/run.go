@@ -98,8 +98,10 @@ func (p *run) Run() {
 		})
 	})
 	if err != nil {
+		// A client gone has canceled p.ctx: the cleanup must still reach Silo.
+		cleanup := context.WithoutCancel(p.ctx)
 		for _, file := range p.cache.images {
-			_ = p.store.Remove(p.ctx, file.Key())
+			_ = p.store.Remove(cleanup, file.Key())
 		}
 	}
 	p.SetErr(err)
