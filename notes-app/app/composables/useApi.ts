@@ -1,8 +1,11 @@
+import type { ToastProps } from '@nuxt/ui';
 import type { FetchError, FetchOptions } from 'ofetch';
 
 type ApiOptions = FetchOptions<'json'> & {
   /** What the toast says on a 409, the API's messages being in English: one text, or one per part of the API's message. */
   conflict?: string | Record<string, string>;
+  /** The buttons of the toast on a 409. */
+  conflictActions?: ToastProps['actions'];
   /** What the toast says on a 400, by part of the API's message. */
   invalid?: Record<string, string>;
   /** What the toast says on a 413, the limit of this call; a general text otherwise. */
@@ -34,7 +37,7 @@ export function useApi() {
 
   return async function api<T>(
     path: string,
-    { conflict, invalid, tooLarge, quiet, ...options }: ApiOptions = {},
+    { conflict, conflictActions, invalid, tooLarge, quiet, ...options }: ApiOptions = {},
   ): Promise<T> {
     try {
       // include: in development the API is on another port, and its session cookie must go along.
@@ -43,7 +46,12 @@ export function useApi() {
       if ((error as FetchError).status === 401 && route.path !== '/login') {
         await navigateTo({ path: '/login', query: { redirect: route.fullPath } });
       } else if (!quiet) {
-        toast.add({ title: errorMessage(error as FetchError, t, { conflict, invalid, tooLarge }), color: 'error' });
+        const status = (error as FetchError).status;
+        toast.add({
+          title: errorMessage(error as FetchError, t, { conflict, invalid, tooLarge }),
+          color: 'error',
+          ...(status === 409 && conflictActions && { actions: conflictActions, duration: 0 }),
+        });
       }
       throw error;
     }

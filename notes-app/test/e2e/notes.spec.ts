@@ -119,6 +119,24 @@ test('an email is a link: typed, pasted or given to the link button', async ({ p
     .toContain('[bouton@example.com](mailto:bouton@example.com "mini")');
 });
 
+// Changed on another device (#72): Reload copies the text typed here, then shows the note as the API has it.
+test('after a conflict, reload copies the local text and reads the note again', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const note = await box.note(`# ${box.prefix} conflit\n\nTexte`);
+  await page.goto(`/notes/${note.id}`);
+  const editor = page.locator('.ProseMirror');
+  await expect(editor.getByText('Texte')).toBeVisible();
+  await box.api.patch(`/api/notes/${note.id}`, { data: { content: `# ${box.prefix} conflit\n\nAilleurs` } });
+
+  await editor.getByText('Texte').click();
+  await page.keyboard.press('End');
+  await page.keyboard.type(' ici');
+  await page.getByRole('button', { name: 'Recharger' }).click();
+  await expect(editor.getByText('Ailleurs')).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('Texte ici');
+  expect(await box.content(note.id)).toContain('Ailleurs');
+});
+
 // Past the API's 10 MB, the toast gives the limit in French, not the API's message (#58). The API's answer
 // is faked: pasting 10 MB freezes the editor longer than a test.
 test('a note too long says its limit', async ({ page }) => {

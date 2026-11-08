@@ -91,10 +91,24 @@ async function patchNote(changes: Changes) {
     method: 'PATCH',
     body,
     conflict: t('note.changedElsewhere'),
+    conflictActions: [{ label: t('note.reload'), onClick: reloadStale }],
     tooLarge: t('note.tooLarge'),
   });
   remember(note);
   await readTags(changes, note);
+}
+
+// After a 409 (#72): the text typed here goes to the clipboard, then the page reads the note again from the API.
+// Not copied, nothing reloads: the text stays on screen.
+async function reloadStale() {
+  const text = source.value ?? clean(editorRef.value?.editor?.getMarkdown() ?? '');
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    return void toast.add({ title: t('note.copyFailed'), color: 'error' });
+  }
+  saver.take(); // Refused anyway: closing the page must not send it again.
+  location.reload();
 }
 
 function remember(note: ItemDetail) {
