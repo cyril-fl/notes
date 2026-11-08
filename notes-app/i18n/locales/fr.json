@@ -225,14 +225,10 @@
       "appearanceDescription": "Les couleurs et le mode de l’interface.",
       "editor": "Éditeur",
       "editorDescription": "Ce qui aide à écrire les notes.",
-      "trash": "Corbeille",
-      "trashDescription": "Ce que deviennent les éléments supprimés.",
       "data": "Données",
-      "dataDescription": "Sortir les notes, ou en faire entrer.",
+      "dataDescription": "Exporter, importer, la corbeille, et tout effacer.",
       "pro": "Mode Pro",
-      "proDescription": "Des outils en plus, pour un usage avancé.",
-      "danger": "Zone de danger",
-      "dangerDescription": "Ce qui ne se défait pas."
+      "proDescription": "Des outils en plus, pour un usage avancé."
     }
   },
   "account": {

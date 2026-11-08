@@ -225,14 +225,10 @@
       "appearanceDescription": "The colors and the mode of the interface.",
       "editor": "Editor",
       "editorDescription": "What helps to write the notes.",
-      "trash": "Trash",
-      "trashDescription": "What becomes of deleted items.",
       "data": "Data",
-      "dataDescription": "Take the notes out, or bring some in.",
+      "dataDescription": "Export, import, the trash, and erasing everything.",
       "pro": "Pro mode",
-      "proDescription": "More tools, for advanced use.",
-      "danger": "Danger zone",
-      "dangerDescription": "What cannot be undone."
+      "proDescription": "More tools, for advanced use."
     }
   },
   "account": {

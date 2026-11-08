@@ -47,7 +47,6 @@ export function useIcons() {
     appearance: 'i-reicon-palette',
     data: 'i-reicon-database',
     pro: 'i-reicon-sparkles',
-    danger: 'i-reicon-danger',
     focus: 'i-reicon-maximize',
     unfocus: 'i-reicon-minimize',
 

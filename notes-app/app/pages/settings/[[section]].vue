@@ -261,25 +261,6 @@ async function importZip(event: Event) {
         </ul>
       </section>
 
-      <section v-if="show('trash')">
-        <SettingsHeading id="trash" />
-        <div class="flex items-center gap-4 rounded-lg border border-default px-4 py-3">
-          <div class="min-w-0 flex-1">
-            <p class="text-sm">{{ $t('settings.retention') }}</p>
-            <p class="text-xs text-muted">{{ $t('settings.retentionDescription') }}</p>
-          </div>
-          <USelectMenu
-            :model-value="me?.trash_retention_days"
-            :items="retentions"
-            value-key="value"
-            :search-input="false"
-            :aria-label="$t('settings.retention')"
-            class="w-56"
-            @update:model-value="changeRetention"
-          />
-        </div>
-      </section>
-
       <section v-if="show('data')">
         <SettingsHeading id="data" />
         <ul class="divide-y divide-default rounded-lg border border-default">
@@ -319,7 +300,31 @@ async function importZip(event: Event) {
               @click="input?.click()"
             />
           </li>
+          <li class="flex items-center gap-4 px-4 py-3">
+            <div class="min-w-0 flex-1">
+              <p class="text-sm">{{ $t('settings.retention') }}</p>
+              <p class="text-xs text-muted">{{ $t('settings.retentionDescription') }}</p>
+            </div>
+            <USelectMenu
+              :model-value="me?.trash_retention_days"
+              :items="retentions"
+              value-key="value"
+              :search-input="false"
+              :aria-label="$t('settings.retention')"
+              class="w-56"
+              @update:model-value="changeRetention"
+            />
+          </li>
         </ul>
+        <!-- Each section keeps what cannot be undone at its bottom, apart. -->
+        <h3 class="mt-6 mb-2 text-xs font-medium text-error">{{ $t('settings.danger') }}</h3>
+        <div class="flex items-center gap-4 rounded-lg border border-error/25 bg-error/5 px-4 py-3">
+          <div class="min-w-0 flex-1">
+            <p class="text-sm">{{ $t('settings.deleteData') }}</p>
+            <p class="text-xs text-muted">{{ $t('settings.deleteDataDescription') }}</p>
+          </div>
+          <UButton :label="$t('common.delete')" color="error" variant="ghost" :disabled="!me" @click="deleteData" />
+        </div>
       </section>
 
       <section v-if="show('pro')">
@@ -337,17 +342,6 @@ async function importZip(event: Event) {
             :aria-label="$t('settings.proMode')"
             @update:model-value="changePro"
           />
-        </div>
-      </section>
-
-      <section v-if="show('danger')">
-        <SettingsHeading id="danger" />
-        <div class="flex items-center gap-4 rounded-lg border border-error/25 bg-error/5 px-4 py-3">
-          <div class="min-w-0 flex-1">
-            <p class="text-sm">{{ $t('settings.deleteData') }}</p>
-            <p class="text-xs text-muted">{{ $t('settings.deleteDataDescription') }}</p>
-          </div>
-          <UButton :label="$t('common.delete')" color="error" variant="ghost" :disabled="!me" @click="deleteData" />
         </div>
       </section>
     </div>
