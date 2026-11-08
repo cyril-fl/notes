@@ -93,9 +93,9 @@ func (p *run) GetResult() Result {
 
 // Methods
 
-// importEntry skips hidden entries (.git, .obsidian…), files other than .md and blank notes.
+// importEntry skips hidden entries (.git, .obsidian…, the __MACOSX of a Finder zip), files other than .md and blank notes.
 func (p *run) importEntry(ctx context.Context, tx bun.Tx, name string, entry fs.DirEntry) error {
-	hidden := strings.HasPrefix(entry.Name(), ".")
+	hidden := strings.HasPrefix(entry.Name(), ".") || entry.Name() == "__MACOSX"
 	if entry.IsDir() {
 		if hidden || name == exportnotes.FilesDir {
 			return fs.SkipDir

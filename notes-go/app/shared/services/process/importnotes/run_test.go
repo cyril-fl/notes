@@ -48,14 +48,15 @@ func TestImportNotes(t *testing.T) {
 	parent := create.GetResult().ID
 
 	dir := fstest.MapFS{
-		"Projets/Idées.md":    {Data: []byte("# Idées\n\nvoir [[Plan unique 7f3]] #go")},
-		"Projets/Plan.md":     {Data: []byte("# Plan unique 7f3\n\ntexte")},
-		"Projets/image.png":   {Data: []byte("png")},
-		"Projets/vide.md":     {Data: []byte("  \n")},
-		".obsidian/config.md": {Data: []byte("# Config")},
-		"Vide/.gitkeep":       {Data: []byte("")},
-		"Racine.md":           {Data: []byte("du texte")},
-		"du lait.md":          {Data: []byte("du lait")},
+		"Projets/Idées.md":           {Data: []byte("# Idées\n\nvoir [[Plan unique 7f3]] #go")},
+		"Projets/Plan.md":            {Data: []byte("# Plan unique 7f3\n\ntexte")},
+		"Projets/image.png":          {Data: []byte("png")},
+		"Projets/vide.md":            {Data: []byte("  \n")},
+		".obsidian/config.md":        {Data: []byte("# Config")},
+		"__MACOSX/Projets/._Plan.md": {Data: []byte("# Resource fork")},
+		"Vide/.gitkeep":              {Data: []byte("")},
+		"Racine.md":                  {Data: []byte("du texte")},
+		"du lait.md":                 {Data: []byte("du lait")},
 	}
 	run := Process(ctx, tx, silo.NewMemory(), Input{Dir: dir, ParentID: parent})
 	run.Run()
