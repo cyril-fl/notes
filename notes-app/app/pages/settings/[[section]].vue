@@ -12,9 +12,11 @@ definePageMeta({
       credentials: 'include',
     }).catch(() => undefined);
     const me = cached.value;
+    // A page per section is the Pro mode's: without it, /settings shows them all; with it, /settings opens the first.
     const section = to.params.section as string | undefined;
-    if (section) return settingsSections.some(({ id }) => id === section) ? undefined : navigateTo('/settings');
-    if (me && unlocked(features.settingsNav, me.pro)) return navigateTo('/settings/general', { replace: true });
+    if (me && unlocked(features.settingsNav, me.pro)) {
+      if (!settingsSections.some(({ id }) => id === section)) return navigateTo('/settings/general', { replace: true });
+    } else if (section) return navigateTo('/settings', { replace: true });
   },
 });
 
@@ -62,8 +64,10 @@ async function changeTheme(next: string) {
 
 const { pro } = usePro();
 
+// The settings switch between one page and a page per section: on, the switch stays in view on its own page.
 async function changePro(next: boolean) {
   me.value = await api<User>('/api/me', { method: 'PATCH', body: { pro: next } });
+  await navigateTo(next ? '/settings/pro' : '/settings', { replace: true });
 }
 
 // 0 never purges; a retention set by hand elsewhere stays in the list.

@@ -156,3 +156,26 @@ test('the Pro mode unlocks the focus mode and the context panel', async ({ page 
     await box.api.patch('/api/me', { data: { pro: false } });
   }
 });
+
+// A page per section is the Pro mode's: without it a section's URL shows the whole page, and the switch moves between both.
+test('the settings follow the Pro mode, one page or a page per section', async ({ page }) => {
+  try {
+    await box.api.patch('/api/me', { data: { pro: false } });
+    await page.goto('/settings/pro');
+    await expect(page).toHaveURL(/\/settings$/);
+
+    await page.getByRole('switch', { name: 'Activer le mode Pro' }).click();
+    await expect(page).toHaveURL(/\/settings\/pro$/);
+    await expect(page.getByRole('link', { name: 'Retour aux notes' })).toBeVisible();
+    await page.goto('/settings/nope');
+    await expect(page).toHaveURL(/\/settings\/general$/);
+
+    await page.goto('/settings/pro');
+    await page.getByRole('switch', { name: 'Activer le mode Pro' }).click();
+    await expect(page).toHaveURL(/\/settings$/);
+    await expect(page.getByRole('heading', { name: 'Réglages' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Retour aux notes' })).toHaveCount(0);
+  } finally {
+    await box.api.patch('/api/me', { data: { pro: false } });
+  }
+});
