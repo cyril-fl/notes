@@ -1,6 +1,7 @@
 package editfolder
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
@@ -43,31 +44,43 @@ func Handler(db bun.IDB) http.HandlerFunc {
 			return
 		}
 
-		if changes.Pinned != nil {
-			pin := pinnote.Process(r.Context(), db, domain.FOLDER, id, *changes.Pinned)
-			pin.Run()
-			if pin.HasErr() {
-				respond.Error(w, pin.GetErr())
-				return
-			}
-		}
-		if changes.Title == nil {
-			current := readitem.Process(r.Context(), db, domain.FOLDER, id)
-			current.Run()
-			if current.HasErr() {
-				respond.Error(w, current.GetErr())
-				return
-			}
-			respond.JSON(w, http.StatusOK, current.GetResult().Item)
+		var folder domain.Item
+		// The ctx of the request, not the one RunInTx hands: a bun.Tx's own ctx may act for another account.
+		err := db.RunInTx(r.Context(), nil, func(_ context.Context, tx bun.Tx) error {
+			var err error
+			folder, err = patch(r.Context(), tx, id, changes)
+			return err
+		})
+		if err != nil {
+			respond.Error(w, err)
 			return
 		}
-
-		process := editfolder.Process(r.Context(), db, editfolder.Input{ID: id, Title: *changes.Title})
-		process.Run()
-		if process.HasErr() {
-			respond.Error(w, process.GetErr())
-			return
-		}
-		respond.JSON(w, http.StatusOK, process.GetResult())
+		respond.JSON(w, http.StatusOK, folder)
 	}
+}
+
+// patch pins then renames in tx, so a failed rename leaves the favorite as it was.
+func patch(ctx context.Context, tx bun.IDB, id string, changes Body) (domain.Item, error) {
+	if changes.Pinned != nil {
+		pin := pinnote.Process(ctx, tx, domain.FOLDER, id, *changes.Pinned)
+		pin.Run()
+		if pin.HasErr() {
+			return domain.Item{}, pin.GetErr()
+		}
+	}
+	if changes.Title == nil {
+		current := readitem.Process(ctx, tx, domain.FOLDER, id)
+		current.Run()
+		if current.HasErr() {
+			return domain.Item{}, current.GetErr()
+		}
+		return current.GetResult().Item, nil
+	}
+
+	process := editfolder.Process(ctx, tx, editfolder.Input{ID: id, Title: *changes.Title})
+	process.Run()
+	if process.HasErr() {
+		return domain.Item{}, process.GetErr()
+	}
+	return process.GetResult(), nil
 }

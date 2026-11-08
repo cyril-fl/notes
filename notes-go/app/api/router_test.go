@@ -164,6 +164,11 @@ func TestNotes(t *testing.T) {
 	}
 
 	c.do("PATCH", path, `{"tags":["a b"]}`, http.StatusBadRequest, nil)
+	// A failed edit undoes the pin of the same request (#39).
+	c.do("PATCH", path, `{"pinned":true,"tags":["a b"]}`, http.StatusBadRequest, nil)
+	if strings.Contains(c.raw("/api/pinned"), note.ID) {
+		t.Errorf("a failed PATCH pinned the note: %s", c.raw("/api/pinned"))
+	}
 
 	c.do("PATCH", path, `{"tags":[]}`, http.StatusOK, nil)
 	if !strings.Contains(c.raw(path), `"tags":[]`) || strings.Contains(c.raw(path), "#") {
@@ -234,6 +239,10 @@ func TestFoldersAndMove(t *testing.T) {
 		t.Errorf("the favorite folder is not listed, or lost its title: %s", c.raw("/api/pinned"))
 	}
 	c.do("PATCH", "/api/folders/"+note.ID, `{"pinned":true}`, http.StatusNotFound, nil)
+	c.do("PATCH", path, `{"pinned":false,"title":""}`, http.StatusBadRequest, nil)
+	if !strings.Contains(c.raw("/api/pinned"), folder.ID) {
+		t.Errorf("a failed PATCH removed the favorite: %s", c.raw("/api/pinned"))
+	}
 
 	// A note and a folder are not interchangeable.
 	c.do("GET", "/api/notes/"+folder.ID, "", http.StatusNotFound, nil)

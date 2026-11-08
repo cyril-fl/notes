@@ -1,6 +1,7 @@
 package editnote
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
@@ -23,7 +24,8 @@ type Body struct {
 // Handler changes the fields given: PATCH /api/notes/{id}. The #tags of the content are the tags of the note,
 // its first heading (or first words) its title. Pinning alone leaves the note as it is, updated_at included.
 // It answers the note as GET does, so the app needs no second request after a save.
-// shortcut: reads then writes outside a transaction, a concurrent edit can be lost, fine for one user; use a tx if that changes.
+// One transaction: a failed edit undoes the pin of the same request (#39).
+// shortcut: the read is not locked, a concurrent edit can still be lost, fine for one user; SELECT … FOR UPDATE if that changes.
 // @Summary  Change the fields given
 // @Tags     notes
 // @Accept   json
@@ -48,54 +50,65 @@ func Handler(db bun.IDB) http.HandlerFunc {
 			return
 		}
 
-		current := readitem.Process(r.Context(), db, domain.NOTE, id)
-		current.Run()
-		if current.HasErr() {
-			respond.Error(w, current.GetErr())
+		var note readitem.Result
+		// The ctx of the request, not the one RunInTx hands: a bun.Tx's own ctx may act for another account.
+		err := db.RunInTx(r.Context(), nil, func(_ context.Context, tx bun.Tx) error {
+			var err error
+			note, err = patch(r.Context(), tx, id, changes)
+			return err
+		})
+		if err != nil {
+			respond.Error(w, err)
 			return
 		}
-		note := current.GetResult()
-		if changes.Pinned != nil {
-			pin := pinnote.Process(r.Context(), db, domain.NOTE, id, *changes.Pinned)
-			pin.Run()
-			if pin.HasErr() {
-				respond.Error(w, pin.GetErr())
-				return
-			}
-		}
-		if changes.Content == nil && changes.Tags == nil {
-			if changes.Pinned != nil {
-				note.Pinned = *changes.Pinned
-			}
-			reply(w, note)
-			return
-		}
-
-		input := editnote.Input{ID: id, Content: note.Content, Tags: note.Tags}
-		if changes.Content != nil {
-			input.Content = *changes.Content
-		}
-		// The text decides, unless the tags were asked for: they then rewrite it.
-		input.Tags = hashtag.Parse(input.Content)
-		if changes.Tags != nil {
-			input.Tags = *changes.Tags
-		}
-
-		process := editnote.Process(r.Context(), db, input)
-		process.Run()
-		if process.HasErr() {
-			respond.Error(w, process.GetErr())
-			return
-		}
-		// The saved text is read back: editnote has turned its [[links]] into note ids.
-		saved := readitem.Process(r.Context(), db, domain.NOTE, id)
-		saved.Run()
-		if saved.HasErr() {
-			respond.Error(w, saved.GetErr())
-			return
-		}
-		reply(w, saved.GetResult())
+		reply(w, note)
 	}
+}
+
+// patch pins then edits in tx, so a failed edit leaves the pin as it was.
+func patch(ctx context.Context, tx bun.IDB, id string, changes Body) (readitem.Result, error) {
+	current := readitem.Process(ctx, tx, domain.NOTE, id)
+	current.Run()
+	if current.HasErr() {
+		return readitem.Result{}, current.GetErr()
+	}
+	note := current.GetResult()
+	if changes.Pinned != nil {
+		pin := pinnote.Process(ctx, tx, domain.NOTE, id, *changes.Pinned)
+		pin.Run()
+		if pin.HasErr() {
+			return readitem.Result{}, pin.GetErr()
+		}
+	}
+	if changes.Content == nil && changes.Tags == nil {
+		if changes.Pinned != nil {
+			note.Pinned = *changes.Pinned
+		}
+		return note, nil
+	}
+
+	input := editnote.Input{ID: id, Content: note.Content, Tags: note.Tags}
+	if changes.Content != nil {
+		input.Content = *changes.Content
+	}
+	// The text decides, unless the tags were asked for: they then rewrite it.
+	input.Tags = hashtag.Parse(input.Content)
+	if changes.Tags != nil {
+		input.Tags = *changes.Tags
+	}
+
+	process := editnote.Process(ctx, tx, input)
+	process.Run()
+	if process.HasErr() {
+		return readitem.Result{}, process.GetErr()
+	}
+	// The saved text is read back: editnote has turned its [[links]] into note ids.
+	saved := readitem.Process(ctx, tx, domain.NOTE, id)
+	saved.Run()
+	if saved.HasErr() {
+		return readitem.Result{}, saved.GetErr()
+	}
+	return saved.GetResult(), nil
 }
 
 func reply(w http.ResponseWriter, note readitem.Result) {
