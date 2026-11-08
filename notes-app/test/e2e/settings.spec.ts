@@ -333,6 +333,25 @@ test('the Pro mode colors the code blocks', async ({ page }) => {
   }
 });
 
+// Inline code ending a line is not carried by Enter: it kept ``` from making a code block.
+test('``` after a line ending in inline code makes a colored code block', async ({ page }) => {
+  const note = await box.note(`# Code ${box.prefix}\n\ntexte \`go\``);
+  try {
+    await box.api.patch('/api/me', { data: { pro: true } });
+    await page.goto(`/notes/${note.id}`);
+    const editor = page.locator('.ProseMirror');
+    await cursorAtEnd(editor, 'go');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('```go');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('func main() {}');
+    await expect(editor.locator('pre .hljs-keyword').first()).toHaveText('func');
+    await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('```go\nfunc main() {}\n```');
+  } finally {
+    await box.api.patch('/api/me', { data: { pro: false } });
+  }
+});
+
 // The word count is the Pro mode's, and follows the typing.
 test('the Pro mode counts the words of the note', async ({ page }) => {
   const note = await box.note(`# Mots ${box.prefix}\n\nUn deux trois`);

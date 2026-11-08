@@ -1,3 +1,4 @@
+import { Code } from '@tiptap/extension-code';
 import { TaskItem, TaskList } from '@tiptap/extension-list';
 
 /** The formatting of the note editor: headings, marks and lists, in the toolbar above the text. */
@@ -6,8 +7,9 @@ export function useNoteFormatting(): EditorModule {
   const { t } = useI18n();
 
   return {
-    extensions: [TaskList, TaskItem.configure({ nested: true })],
-    starterKit: { underline: false },
+    // Inline code ends where it ends: kept on, Enter carried it to the next line, where ``` no longer made a code block.
+    extensions: [TaskList, TaskItem.configure({ nested: true }), Code.extend({ inclusive: false })],
+    starterKit: { underline: false, code: false },
     toolbar: [
       [
         { kind: 'heading', level: 1, icon: icons.heading1, tooltip: { text: t('note.heading', { level: 1 }) } },
