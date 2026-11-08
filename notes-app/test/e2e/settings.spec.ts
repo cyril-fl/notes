@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import type { Editor } from '@tiptap/core';
 import { API, APP } from '../../playwright.config';
 import { sandbox } from './helpers';
@@ -7,6 +7,18 @@ let box: Awaited<ReturnType<typeof sandbox>>;
 test.beforeEach(async () => (box = await sandbox()));
 test.afterEach(async () => box.dispose());
 
+// The import is a modal: a destination, then the files dropped or picked.
+async function importFiles(page: Page, files: Parameters<Locator['setInputFiles']>[0], into?: string) {
+  await page.getByRole('button', { name: 'Importer', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  if (into) {
+    await dialog.getByRole('button', { name: 'Importer dans' }).click();
+    await page.getByRole('option', { name: into }).click();
+  }
+  await dialog.locator('input[type=file]:not([webkitdirectory])').setInputFiles(files);
+  await dialog.getByRole('button', { name: 'Importer', exact: true }).click();
+}
+
 // The export goes back in as an import: its folders are all taken, so the import is refused and creates nothing.
 test('the settings export the notes and import a zip', async ({ page }) => {
   await box.note(`# Exportée ${box.prefix}`);
@@ -14,22 +26,34 @@ test('the settings export the notes and import a zip', async ({ page }) => {
 
   const download = page.waitForEvent('download');
   await page.getByRole('link', { name: 'Exporter' }).click();
-  const zip = await (await download).path();
-  expect(zip).toBeTruthy();
+  // Saved under its .zip name: the dialog sends a lone zip as it is, anything else as loose files.
+  const zip = test.info().outputPath('notes.zip');
+  await (await download).saveAs(zip);
 
-  await page.locator('input[type=file]').setInputFiles(zip);
+  await importFiles(page, zip);
   await expect(page.getByText('Un dossier du zip existe déjà').first()).toBeVisible();
 });
 
 test('a zip is imported into the chosen folder', async ({ page }) => {
   await page.goto('/settings');
-  await page.getByRole('button', { name: 'Importer dans' }).click();
-  await page.getByRole('option', { name: `/${box.prefix}` }).click();
-  await page.locator('input[type=file]').setInputFiles('test/e2e/fixtures/notes.zip');
+  await importFiles(page, 'test/e2e/fixtures/notes.zip', `/${box.prefix}`);
   await expect(page.getByText('1 note(s) et 1 dossier(s) importés').first()).toBeVisible();
+  await expect(page.getByRole('dialog')).toBeHidden();
 
   await page.goto(`/folders/${box.folder.id}`);
   await expect(page.getByRole('main').getByText('Importé')).toBeVisible();
+});
+
+// Loose files go as a form; the paths of a picked folder are the API's test (Playwright sets no webkitRelativePath).
+test('loose .md files are imported into the chosen folder', async ({ page }) => {
+  await page.goto('/settings');
+  const md = (name: string) => ({ name, mimeType: 'text/markdown', buffer: Buffer.from(`# ${name}`) });
+  await importFiles(page, [md('Une.md'), md('Deux.md')], `/${box.prefix}`);
+  await expect(page.getByText('2 note(s) et 0 dossier(s) importés').first()).toBeVisible();
+
+  await page.goto(`/folders/${box.folder.id}`);
+  await expect(page.getByRole('main').getByText('Une.md')).toBeVisible();
+  await expect(page.getByRole('main').getByText('Deux.md')).toBeVisible();
 });
 
 // The language is the account's: without the cookie that remembers it, the API gives it back after a reload.

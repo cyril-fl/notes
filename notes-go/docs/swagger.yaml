@@ -904,7 +904,11 @@ paths:
             schema:
               format: binary
               type: string
-        description: zip of .md files and their images
+          multipart/form-data:
+            schema:
+              type: object
+        description: zip of .md files and their images, or a form of files named by
+          their path
         required: true
       responses:
         "200":
@@ -937,7 +941,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/respond.Failure'
           description: Internal Server Error
-      summary: Import markdown files from a zip
+      summary: Import markdown files from a zip or a form of files
       tags:
       - transfer
   /api/items:

@@ -12,6 +12,7 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/resetpassword"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/testaccount"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"slices"
@@ -578,6 +579,47 @@ func TestExportAndImport(t *testing.T) {
 	} else {
 		file.Close()
 	}
+}
+
+// The browser sends loose files or a picked folder as a form, each file named by its path.
+func TestImportForm(t *testing.T) {
+	c := newClient(t)
+	folder := fmt.Sprintf("form-%d", time.Now().UnixNano())
+	form := func(names ...string) (string, string) {
+		var body bytes.Buffer
+		writer := multipart.NewWriter(&body)
+		for _, name := range names {
+			part, _ := writer.CreateFormFile("files", name)
+			part.Write([]byte("# " + name))
+		}
+		writer.Close()
+		return body.String(), writer.FormDataContentType()
+	}
+	send := func(body, kind string, status int, dest any) {
+		t.Helper()
+		r := httptest.NewRequest(http.MethodPost, "/api/import", strings.NewReader(body))
+		r.Host = "localhost:8080"
+		r.Header.Set("Content-Type", kind)
+		w := httptest.NewRecorder()
+		c.handler.ServeHTTP(w, r)
+		if w.Code != status {
+			t.Fatalf("POST /api/import: status = %d, want %d: %s", w.Code, status, w.Body)
+		}
+		if dest != nil {
+			json.Unmarshal(w.Body.Bytes(), dest)
+		}
+	}
+
+	var result struct{ Folders, Notes int }
+	body, kind := form(folder+"/Un.md", folder+"/sous/Deux.md", folder+"-Trois.md")
+	send(body, kind, http.StatusOK, &result)
+	if result.Folders != 2 || result.Notes != 3 {
+		t.Errorf("import = %+v, want 2 folders and 3 notes", result)
+	}
+	body, kind = form("../" + folder + ".md")
+	send(body, kind, http.StatusBadRequest, nil)
+	body, kind = form(folder + "/Coupé.md")
+	send(body[:len(body)-10], kind, http.StatusBadRequest, nil)
 }
 
 func TestRouterGuards(t *testing.T) {

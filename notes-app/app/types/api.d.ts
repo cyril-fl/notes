@@ -573,7 +573,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Import markdown files from a zip */
+        /** Import markdown files from a zip or a form of files */
         post: {
             parameters: {
                 query?: {
@@ -584,11 +584,12 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            /** @description zip of .md files and their images */
+            /** @description zip of .md files and their images, or a form of files named by their path */
             requestBody: {
                 content: {
                     "application/json": number[];
                     "application/zip": string;
+                    "multipart/form-data": Record<string, never>;
                 };
             };
             responses: {

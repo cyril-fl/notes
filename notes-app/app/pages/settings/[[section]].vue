@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ImportResult, Snippet, User } from '~/types/items';
+import type { Snippet, User } from '~/types/items';
 
 // Decided before the page renders, so the Pro mode never shows every section first and then jumps to one.
 definePageMeta({
@@ -32,8 +32,6 @@ const api = useApi();
 const toast = useToast();
 // The API sends the zip as an attachment: a plain link downloads it.
 const exportURL = `${useRuntimeConfig().public.apiBase}/api/export`;
-const input = useTemplateRef('input');
-const importing = ref(false);
 
 const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
 const avatarSrc = computed(
@@ -81,7 +79,7 @@ async function changeRetention(next: number) {
   me.value = await api<User>('/api/me', { method: 'PATCH', body: { trash_retention_days: next } });
 }
 
-const { confirm, snippet: editSnippet } = useDialogs();
+const { confirm, snippet: editSnippet, importNotes } = useDialogs();
 
 // The API takes the whole list: an edit sends it back with the one changed.
 async function saveSnippets(snippets: Snippet[]) {
@@ -123,29 +121,6 @@ async function deleteData() {
   await api('/api/me/data', { method: 'DELETE' });
   toast.add({ title: t('settings.dataDeleted'), color: 'success' });
   await refreshNuxtData();
-}
-
-const parent = ref(ROOT);
-const destinations = useDestinations();
-
-async function importZip(event: Event) {
-  const file = (event.target as HTMLInputElement).files?.[0];
-  if (!file) return;
-  importing.value = true;
-  try {
-    const result = await api<ImportResult>('/api/import', {
-      method: 'POST',
-      query: parent.value === ROOT ? {} : { parent: parent.value },
-      body: file,
-      headers: { 'Content-Type': 'application/zip' },
-      conflict: t('settings.importConflict'),
-    });
-    toast.add({ title: t('settings.imported', { notes: result.notes, folders: result.folders }), color: 'success' });
-    await refreshNuxtData();
-  } finally {
-    importing.value = false;
-    input.value!.value = ''; // The same file can be picked again.
-  }
 }
 </script>
 
@@ -282,26 +257,17 @@ async function importZip(event: Event) {
               download
             />
           </li>
-          <li class="flex flex-wrap items-center gap-4 px-4 py-3">
+          <li class="flex items-center gap-4 px-4 py-3">
             <div class="min-w-0 flex-1">
               <p class="text-sm">{{ $t('settings.import') }}</p>
               <p class="text-xs text-muted">{{ $t('settings.importDescription') }}</p>
             </div>
-            <USelectMenu
-              v-model="parent"
-              :items="destinations"
-              value-key="value"
-              :aria-label="$t('settings.importInto')"
-              class="w-56"
-            />
-            <input ref="input" type="file" accept=".zip,application/zip" class="hidden" @change="importZip" />
             <UButton
               :label="$t('settings.import')"
               :icon="icons.import"
               color="neutral"
               variant="outline"
-              :loading="importing"
-              @click="input?.click()"
+              @click="importNotes()"
             />
           </li>
           <li class="flex items-center gap-4 px-4 py-3">
