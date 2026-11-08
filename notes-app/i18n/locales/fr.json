@@ -128,6 +128,12 @@
     "paragraph": "Texte",
     "codeBlock": "Bloc de code",
     "divider": "Séparateur",
+    "table": "Tableau",
+    "tableAddRow": "Ajouter une ligne",
+    "tableAddColumn": "Ajouter une colonne",
+    "tableDeleteRow": "Supprimer la ligne",
+    "tableDeleteColumn": "Supprimer la colonne",
+    "tableDelete": "Supprimer le tableau",
     "notSaved": "Non enregistré",
     "emptyWillTrash": "Vide : ira à la corbeille en la quittant",
     "saving": "Enregistrement…",
@@ -261,6 +267,7 @@
     "focusMode": "Le mode focus, qui ne laisse que la note à l'écran",
     "contextPanel": "Le panneau de contexte à droite de la note : son plan et ses notes liées",
     "settingsNav": "La barre latérale des réglages, une page par section",
-    "slashCommands": "Les commandes / dans les notes : titres, listes, bloc de code…"
+    "slashCommands": "Les commandes / dans les notes : titres, listes, bloc de code…",
+    "tables": "Les tableaux dans les notes, insérés avec /tableau"
   }
 }

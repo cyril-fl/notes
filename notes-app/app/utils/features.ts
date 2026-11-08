@@ -8,6 +8,7 @@ export const features = {
   contextPanel: 'pro',
   settingsNav: 'pro',
   slashCommands: 'pro',
+  tables: 'pro',
 } as const satisfies Record<string, Level>;
 
 export type Feature = keyof typeof features;

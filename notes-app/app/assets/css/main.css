@@ -262,6 +262,31 @@
     @apply size-8;
   }
 
+  /* Tables are not in the Nuxt UI editor theme either. */
+  .ProseMirror .tableWrapper {
+    @apply my-4 overflow-x-auto;
+  }
+
+  .ProseMirror table {
+    @apply w-full border-collapse;
+  }
+
+  .ProseMirror :is(td, th) {
+    @apply relative min-w-24 border border-default px-2 py-1 text-start align-top;
+  }
+
+  .ProseMirror th {
+    @apply bg-elevated font-semibold;
+  }
+
+  .ProseMirror :is(td, th) > p {
+    @apply my-0!;
+  }
+
+  .ProseMirror .selectedCell {
+    @apply bg-primary/10;
+  }
+
   /* Task lists are not in the Nuxt UI editor theme. */
   .ProseMirror ul[data-type='taskList'] {
     @apply list-none ps-0!;

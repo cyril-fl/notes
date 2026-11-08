@@ -128,6 +128,12 @@
     "paragraph": "Text",
     "codeBlock": "Code block",
     "divider": "Divider",
+    "table": "Table",
+    "tableAddRow": "Add a row",
+    "tableAddColumn": "Add a column",
+    "tableDeleteRow": "Delete the row",
+    "tableDeleteColumn": "Delete the column",
+    "tableDelete": "Delete the table",
     "notSaved": "Not saved",
     "emptyWillTrash": "Empty: goes to the trash when you leave it",
     "saving": "Saving…",
@@ -261,6 +267,7 @@
     "focusMode": "Focus mode, which leaves only the note on screen",
     "contextPanel": "The context panel beside the note: its outline and its related notes",
     "settingsNav": "The settings sidebar, one page per section",
-    "slashCommands": "The / commands in the notes: headings, lists, code block…"
+    "slashCommands": "The / commands in the notes: headings, lists, code block…",
+    "tables": "Tables in the notes, inserted with /table"
   }
 }

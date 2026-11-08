@@ -55,7 +55,7 @@ export function useIcons() {
     zoomOut: 'i-reicon-minus',
     recenter: 'i-reicon-target',
 
-    // Editor (Reicon has no headings, strikethrough, pilcrow nor code block: Lucide's.)
+    // Editor (Reicon has no headings, strikethrough, pilcrow, code block nor tables: Lucide's.)
     heading1: 'i-lucide-heading-1',
     heading2: 'i-lucide-heading-2',
     heading3: 'i-lucide-heading-3',
@@ -74,6 +74,11 @@ export function useIcons() {
     paragraph: 'i-lucide-pilcrow',
     codeBlock: 'i-lucide-square-code',
     divider: 'i-lucide-minus',
+    table: 'i-lucide-table',
+    tableAddRow: 'i-lucide-between-horizontal-end',
+    tableAddColumn: 'i-lucide-between-vertical-end',
+    tableDeleteRow: 'i-lucide-rows-3',
+    tableDeleteColumn: 'i-lucide-columns-3',
   };
 
   return { icons };

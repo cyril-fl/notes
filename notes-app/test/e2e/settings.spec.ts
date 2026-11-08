@@ -182,6 +182,32 @@ test('the Pro mode adds the / commands to the editor', async ({ page }) => {
   }
 });
 
+// A table comes from the / menu, grows from the bar over it, and is saved as a markdown table.
+test('the Pro mode adds the tables to the editor', async ({ page }) => {
+  const note = await box.note(`# Tableau ${box.prefix}\n\nTexte`);
+  const editor = page.locator('.ProseMirror');
+  try {
+    await box.api.patch('/api/me', { data: { pro: true } });
+    await page.goto(`/notes/${note.id}`);
+    await editor.click();
+    await page.keyboard.press('ControlOrMeta+End');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('/tableau');
+    await page.getByRole('option', { name: 'Tableau' }).click();
+    await page.keyboard.type('Nom');
+    await page.keyboard.press('Tab');
+    await page.keyboard.type('Âge');
+    await page.getByRole('button', { name: 'Ajouter une ligne' }).click();
+    await expect(editor.locator('tr')).toHaveCount(4);
+    await expect.poll(() => box.content(note.id), { timeout: 5000 }).toMatch(/\| *Nom *\| *Âge *\|/);
+
+    await page.reload();
+    await expect(editor.getByRole('columnheader', { name: 'Âge' })).toBeVisible();
+  } finally {
+    await box.api.patch('/api/me', { data: { pro: false } });
+  }
+});
+
 // A page per section is the Pro mode's: without it a section's URL shows the whole page, and the switch moves between both.
 test('the settings follow the Pro mode, one page or a page per section', async ({ page }) => {
   try {

@@ -25,6 +25,7 @@
     "@nuxtjs/i18n": "^10.6.0",
     "@tiptap/extension-image": "^3.32.2",
     "@tiptap/extension-list": "^3.32.2",
+    "@tiptap/extension-table": "3.32.2",
     "@tiptap/pm": "^3.32.2",
     "@vueuse/core": "^15.0.0",
     "@vueuse/nuxt": "^15.0.0",
