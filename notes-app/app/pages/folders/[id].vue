@@ -2,6 +2,7 @@
 import type { ItemDetail } from '~/types/items';
 
 const { icons } = useIcons();
+const { t } = useI18n();
 
 const route = useRoute();
 const api = useApi();
@@ -10,6 +11,7 @@ const id = route.params.id as string;
 const { data: folder, error } = useLazyAsyncData(`folder:${id}`, () =>
   api<ItemDetail>(`/api/folders/${id}`, { quiet: true }),
 );
+useHead({ title: () => folder.value && displayTitle(folder.value.item.title, t('untitled')) });
 </script>
 
 <template>

@@ -12,6 +12,7 @@ const value = route.params.value as string;
 const { data: tag, error } = useLazyAsyncData(`tag:${value}`, () =>
   api<TagDetail>(`/api${tagPath(value)}`, { quiet: true }),
 );
+useHead({ title: `#${value}` });
 </script>
 
 <template>

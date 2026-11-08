@@ -25,6 +25,8 @@ const toast = useToast();
 const id = ref(props.noteId);
 const parent = ref(props.parentId);
 const path = ref('');
+const title = ref<string>();
+useHead({ title: () => displayTitle(title.value, t('untitled')) });
 const tags = ref<string[]>([]);
 const initialContent = ref(props.start ?? '');
 const loading = ref(!!props.noteId);
@@ -77,6 +79,7 @@ async function readTags(changes: Changes) {
   showResolvedLinks(changes.content, note.content ?? '');
   const changed = note.tags?.join() !== tags.value.join();
   tags.value = note.tags ?? [];
+  title.value = note.item.title;
   if (changed) await refreshNuxtData();
 }
 
@@ -99,6 +102,7 @@ async function load() {
     const note = await api<ItemDetail>(`/api/notes/${props.noteId}`, { quiet: true });
     initialContent.value = note.content ?? '';
     tags.value = note.tags ?? [];
+    title.value = note.item.title;
     path.value = note.path.slice(0, note.path.lastIndexOf('/')) || '/';
     parent.value = note.item.parent_id ?? undefined;
     isEmpty.value = false;
