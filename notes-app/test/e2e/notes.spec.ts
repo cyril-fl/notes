@@ -230,6 +230,22 @@ test('locking the phone sends the last words at once, and typing on afterwards s
   await expect.poll(() => box.content(note.id)).toContain('caché revenu');
 });
 
+test('a note over 64 KiB still sends its last words when hidden (keepalive limit)', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} longue\n\n${'mot '.repeat(20_000)}fin`);
+  await page.clock.install();
+  await page.goto(`/notes/${note.id}`);
+  const text = page.locator('.ProseMirror');
+  await expect(text).toContainText('fin');
+  await text.click();
+  await text.press('ControlOrMeta+End');
+  await text.pressSequentially(' dernier');
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect.poll(() => box.content(note.id)).toContain('dernier');
+});
+
 // In system mode the OS decides: the sidebar has no theme button. Set back to light, as every run expects.
 test('N opens a new note in the current folder, the theme button switches to dark', async ({ page }) => {
   try {
