@@ -47,6 +47,7 @@ var cmdEditTag = &cobra.Command{
 func init() {
 	plumcliutilsargs.Makeflags(cmdEditNote, cmd.EditNote.Flags)
 	cmdEditNote.MarkFlagsMutuallyExclusive("pin", "unpin")
+	cmdEditNote.MarkFlagsMutuallyExclusive("lock", "unlock")
 	plumcliutilsargs.Makeflags(cmdEditFloder, cmd.EditFolder.Flags)
 
 	cmdEdit.AddCommand(cmdEditNote, cmdEditFloder, cmdEditTag)

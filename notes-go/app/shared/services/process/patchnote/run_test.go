@@ -69,4 +69,15 @@ func TestPatchNote(t *testing.T) {
 	if !read.GetResult().Pinned {
 		t.Errorf("a failed patch unpinned the note: %+v", read.GetResult())
 	}
+
+	// A locked note refuses its content, unless unlocked in the same call (#60).
+	if got := patch(Input{Readonly: &yes}); got.HasErr() || !got.GetResult().Readonly || got.GetResult().Content != "new #b" {
+		t.Errorf("lock only: %+v, %v", got.GetResult(), got.GetErr())
+	}
+	if got := patch(Input{Content: &content, Tags: &[]string{"c"}}); !errors.Is(got.GetErr(), ErrLocked) {
+		t.Errorf("edit locked: err = %v, want %v", got.GetErr(), ErrLocked)
+	}
+	if got := patch(Input{Readonly: &no, Tags: &[]string{"c"}}); got.HasErr() || got.GetResult().Readonly || !slices.Equal(got.GetResult().Tags, []string{"c"}) {
+		t.Errorf("unlock and edit: %+v, %v", got.GetResult(), got.GetErr())
+	}
 }

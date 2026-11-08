@@ -105,8 +105,8 @@ commands:
   edit-note:
     use: "note <uuid|path>"
     short: "Edit an existing note"
-    long: "Edit an existing note. Without content, tag or pin flags, a form opens with the current content. The title follows the first heading of the content, or its first words. --pin alone leaves the text and its last change date as they are."
-    example: "notes edit note /Projects/Go/Ideas --tag go --untag sql\ncat ideas.md | notes edit note <uuid> --content -\nnotes edit note /Projects/Go/Ideas --pin"
+    long: "Edit an existing note. Without content, tag, pin or lock flags, a form opens with the current content. The title follows the first heading of the content, or its first words. --pin or --lock alone leaves the text and its last change date as they are. A locked note refuses content and tag changes until --unlock."
+    example: "notes edit note /Projects/Go/Ideas --tag go --untag sql\ncat ideas.md | notes edit note <uuid> --content -\nnotes edit note /Projects/Go/Ideas --pin\nnotes edit note /Projects/Go/Ideas --lock"
     args:
       - name: "content"
         shorthand: "c"
@@ -137,6 +137,16 @@ commands:
         shorthand: ""
         value: ""
         usage: "Unpin the note"
+        type: "bool"
+      - name: "lock"
+        shorthand: ""
+        value: ""
+        usage: "Lock the note read-only"
+        type: "bool"
+      - name: "unlock"
+        shorthand: ""
+        value: ""
+        usage: "Unlock the note"
         type: "bool"
   edit-folder:
     use: "folder <uuid|path>"

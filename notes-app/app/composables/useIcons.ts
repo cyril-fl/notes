@@ -52,6 +52,8 @@ export function useIcons() {
     source: 'i-reicon-document-code',
     focus: 'i-reicon-maximize',
     unfocus: 'i-reicon-minimize',
+    lock: 'i-reicon-lock-filled',
+    unlock: 'i-reicon-lock-open',
 
     // Graph
     zoomIn: 'i-reicon-plus',

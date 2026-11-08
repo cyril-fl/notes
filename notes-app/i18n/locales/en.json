@@ -158,7 +158,10 @@
     "outline": "Outline",
     "noOutline": "No headings",
     "source": "Source mode",
-    "editor": "Back to the editor"
+    "editor": "Back to the editor",
+    "lock": "Lock read-only",
+    "unlock": "Unlock",
+    "locked": "Locked note: unlock it to edit it"
   },
   "tag": {
     "count": "{n} note | {n} notes",

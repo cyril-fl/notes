@@ -35,6 +35,8 @@ La barre latérale se redimensionne en tirant son bord (sa largeur reste d'une v
 
 Un clic droit sur un dossier le met en favori, un clic droit sur un tag le renomme ou le supprime.
 
+Le cadenas en bas d'une note la verrouille en lecture seule (l'éditeur et le mode source ne font que lire, l'API refuse son texte) jusqu'à ce qu'on le rouvre.
+
 Dans un dossier, ⌘-clic (Ctrl hors macOS) sélectionne plusieurs éléments et ⇧-clic une plage : une barre propose de les déplacer ou de les supprimer, et glisser l'un d'eux emmène toute la sélection. Échap annule la sélection.
 
 Le graphe se déplace en glissant et zoome à la molette, en pinçant le trackpad ou avec ses boutons + et −. « Recentrer » le remet comme au départ.

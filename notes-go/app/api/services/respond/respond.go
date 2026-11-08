@@ -26,6 +26,7 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/emptytrash"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listitems"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/moveitems"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/patchnote"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/pinnote"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readfile"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readitem"
@@ -74,7 +75,7 @@ var statuses = []struct {
 		createfile.ErrNotImage,
 	}},
 	{http.StatusConflict, []error{
-		domain.ErrFolderExists, edittag.ErrAlreadyExists, adduser.ErrNameTaken, moveitems.ErrCycle, restoreitems.ErrParentInTrash,
+		domain.ErrFolderExists, edittag.ErrAlreadyExists, adduser.ErrNameTaken, moveitems.ErrCycle, restoreitems.ErrParentInTrash, patchnote.ErrLocked,
 	}},
 }
 

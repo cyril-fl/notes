@@ -23,16 +23,20 @@ func Interactive(ctx context.Context, id string) error {
 	return run(ctx, id, noFlags())
 }
 
-// run edits the text only when a flag asks for it, or with the form when no flag says anything: --pin
-// alone must not rewrite the note, nor change its last change date. patchnote pins and edits in one transaction.
+// run edits the text only when a flag asks for it, or with the form when no flag says anything: --pin or --lock
+// alone must not rewrite the note, nor change its last change date. patchnote pins, locks and edits in one transaction.
 func run(ctx context.Context, id string, flags *pflag.FlagSet) error {
 	input := patchnote.Input{ID: id}
 	if flags.Changed("pin") || flags.Changed("unpin") {
 		pinned := flags.Changed("pin")
 		input.Pinned = &pinned
 	}
+	if flags.Changed("lock") || flags.Changed("unlock") {
+		readonly := flags.Changed("lock")
+		input.Readonly = &readonly
+	}
 	textChanged := flags.Changed("content") || flags.Changed("tag") || flags.Changed("untag") || flags.Changed("tag-from-list")
-	if input.Pinned == nil || textChanged {
+	if input.Pinned == nil && input.Readonly == nil || textChanged {
 		// The mill applies --tag and --untag over the current note, patchnote then only saves its result.
 		resolver := millflagseditnote.New(millflagseditnote.Template{Ctx: ctx, Db: postgrey.GetDb(), Flags: flags, ID: id})
 		note := resolver.Resolve()
@@ -55,6 +59,11 @@ func run(ctx context.Context, id string, flags *pflag.FlagSet) error {
 		fmt.Printf("Successfully pinned note %s\n", id)
 	} else if input.Pinned != nil {
 		fmt.Printf("Successfully unpinned note %s\n", id)
+	}
+	if input.Readonly != nil && *input.Readonly {
+		fmt.Printf("Successfully locked note %s\n", id)
+	} else if input.Readonly != nil {
+		fmt.Printf("Successfully unlocked note %s\n", id)
 	}
 	return nil
 }

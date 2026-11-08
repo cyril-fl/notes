@@ -29,6 +29,7 @@ type Result struct {
 	Path     string        `json:"path"`
 	Content  string        `json:"content,omitempty" binding:"optional"`
 	Pinned   bool          `json:"pinned,omitempty" binding:"optional"`
+	Readonly bool          `json:"readonly,omitempty" binding:"optional"` // locked: PATCH refuses its content and tags
 	Tags     []string      `json:"tags,omitzero" binding:"optional"`
 	Children []domain.Item `json:"children,omitzero" binding:"optional"`
 }
@@ -104,9 +105,9 @@ func (p *run) loadNote() {
 	var content secret.Text
 	err := p.db.NewSelect().
 		Model((*domain.MetadataNote)(nil)).
-		Column("content", "pinned").
+		Column("content", "pinned", "readonly").
 		Where("item_id = ?", p.cache.id).
-		Scan(p.ctx, &content, &p.cache.result.Pinned)
+		Scan(p.ctx, &content, &p.cache.result.Pinned, &p.cache.result.Readonly)
 	p.cache.result.Content = string(content)
 	if err != nil {
 		p.SetErr(err)

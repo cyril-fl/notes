@@ -155,6 +155,24 @@ test('pinning from the menu lists the note in the sidebar', async ({ page }) => 
   await box.api.patch(`/api/notes/${note.id}`, { data: { pinned: false } });
 });
 
+test('a locked note is read-only, in the editor and for the API, until unlocked', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} verrouillée`);
+  await page.goto(`/notes/${note.id}`);
+  const text = page.locator('.ProseMirror');
+  await page.getByRole('button', { name: 'Verrouiller en lecture seule' }).click();
+  await expect(text).toHaveAttribute('contenteditable', 'false');
+  const refused = await box.api.patch(`/api/notes/${note.id}`, { data: { content: 'autre' } });
+  expect(refused.status()).toBe(409);
+
+  await page.reload();
+  await expect(text).toHaveAttribute('contenteditable', 'false');
+  await page.getByRole('button', { name: 'Verrouiller en lecture seule' }).click();
+  await expect(text).toHaveAttribute('contenteditable', 'true');
+  await text.press('ControlOrMeta+End');
+  await text.pressSequentially(' modifiée');
+  await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('modifiée');
+});
+
 // In system mode the OS decides: the sidebar has no theme button. Set back to light, as every run expects.
 test('N opens a new note in the current folder, the theme button switches to dark', async ({ page }) => {
   try {

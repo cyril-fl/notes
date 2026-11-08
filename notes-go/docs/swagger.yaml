@@ -194,6 +194,8 @@ components:
           type: string
         pinned:
           type: boolean
+        readonly:
+          type: boolean
         tags:
           items:
             type: string
@@ -388,6 +390,9 @@ components:
         path:
           type: string
         pinned:
+          type: boolean
+        readonly:
+          description: 'locked: PATCH refuses its content and tags'
           type: boolean
         tags:
           items:
@@ -1343,6 +1348,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/respond.Failure'
           description: Not Found
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Conflict
         "413":
           content:
             application/json:

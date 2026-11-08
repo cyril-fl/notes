@@ -158,7 +158,10 @@
     "outline": "Plan",
     "noOutline": "Aucun titre",
     "source": "Mode source",
-    "editor": "Retour à l'éditeur"
+    "editor": "Retour à l'éditeur",
+    "lock": "Verrouiller en lecture seule",
+    "unlock": "Déverrouiller",
+    "locked": "Note verrouillée : déverrouillez-la pour la modifier"
   },
   "tag": {
     "count": "{n} note | {n} notes",

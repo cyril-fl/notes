@@ -11,9 +11,10 @@ import (
 
 // Body is patchnote.Input in JSON: a field left out is kept.
 type Body struct {
-	Pinned  *bool     `json:"pinned" binding:"optional"`
-	Content *string   `json:"content" binding:"optional"`
-	Tags    *[]string `json:"tags" binding:"optional"`
+	Pinned   *bool     `json:"pinned" binding:"optional"`
+	Readonly *bool     `json:"readonly" binding:"optional"`
+	Content  *string   `json:"content" binding:"optional"`
+	Tags     *[]string `json:"tags" binding:"optional"`
 }
 
 // Handler changes the fields given: PATCH /api/notes/{id}, through patchnote (shared with `edit note`).
@@ -27,6 +28,7 @@ type Body struct {
 // @Success  200 {object} readitem.Result
 // @Failure  400 {object} respond.Failure
 // @Failure  404 {object} respond.Failure
+// @Failure  409 {object} respond.Failure
 // @Failure  413 {object} respond.Failure
 // @Failure  500 {object} respond.Failure
 // @Router   /api/notes/{id} [patch]
@@ -42,7 +44,7 @@ func Handler(db bun.IDB) http.HandlerFunc {
 			return
 		}
 
-		process := patchnote.Process(r.Context(), db, patchnote.Input{ID: id, Pinned: changes.Pinned, Content: changes.Content, Tags: changes.Tags})
+		process := patchnote.Process(r.Context(), db, patchnote.Input{ID: id, Pinned: changes.Pinned, Readonly: changes.Readonly, Content: changes.Content, Tags: changes.Tags})
 		process.Run()
 		if process.HasErr() {
 			respond.Error(w, process.GetErr())

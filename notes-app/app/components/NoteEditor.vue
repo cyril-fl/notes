@@ -33,6 +33,8 @@ let links = '';
 const initialContent = ref(props.start ?? '');
 const loading = ref(!!props.noteId);
 const notFound = ref(false);
+// Locked read-only: the API refuses its content, the editor and the source mode only read.
+const readonly = ref(false);
 
 const failed = ref(false);
 const saving = ref(false);
@@ -108,6 +110,7 @@ async function load() {
     tags.value = note.tags ?? [];
     links = linkedNotes(initialContent.value);
     title.value = note.item.title;
+    readonly.value = !!note.readonly;
     place(note);
     isEmpty.value = false;
   } catch {
@@ -140,8 +143,20 @@ function save(content: string) {
 }
 
 function onContent(markdown: string) {
-  if (touched.value) save(clean(markdown));
+  if (touched.value && !readonly.value) save(clean(markdown));
 }
+
+// What is typed before goes first: the API refuses it once locked.
+async function toggleLock() {
+  await saver.flush();
+  const note = await api<ItemDetail>(`/api/notes/${id.value}`, {
+    method: 'PATCH',
+    body: { readonly: !readonly.value },
+  });
+  readonly.value = !!note.readonly;
+}
+// false: no update event, unlocking must not save the note again.
+watch([() => editorRef.value?.editor, readonly], ([editor, locked]) => editor?.setEditable(!locked, false));
 
 // Pro: the markdown as text, in place of the editor; undefined in the editor. Back in the editor, it starts from that text.
 const source = ref<string>();
@@ -168,6 +183,7 @@ async function rename() {
     await prompt({ title: t('items.renameNote'), value: displayTitle(title.value, ''), action: t('common.rename') })
   )?.trim();
   if (!next || next === title.value) return;
+  if (readonly.value) return void toast.add({ title: t('note.locked'), color: 'warning' });
   touched.value = true;
   if (source.value !== undefined) return onSource(retitle(source.value, next));
   const editor = editorRef.value?.editor;
@@ -311,7 +327,7 @@ function slashKey(event: KeyboardEvent) {
 }
 useEventListener(window, 'keydown', slashKey);
 // The same menu on a right click or a long press.
-const contextMenu = computed(() => (has('contextMenu') ? slashMenu.value : []));
+const contextMenu = computed(() => (has('contextMenu') && !readonly.value ? slashMenu.value : []));
 // The menu keeps the browser from moving the cursor on a right click: it goes where the click was, unless inside the selected text.
 function placeCursor(event: MouseEvent) {
   const editor = editorRef.value?.editor;
@@ -386,6 +402,7 @@ const status = computed(() => {
       :model-value="source"
       variant="none"
       autofocus
+      :readonly="readonly"
       :aria-label="$t('note.source')"
       class="flex min-h-0 flex-1"
       :ui="{ base: 'h-full resize-none px-8 pb-8 font-mono text-sm' }"
@@ -409,9 +426,15 @@ const status = computed(() => {
           :ui="{ content: 'min-h-0 overflow-y-auto px-8 pb-8', base: 'sm:px-0 px-0' }"
           @update:model-value="onContent"
         >
-          <UEditorToolbar :editor="editor" :items="parts.toolbar" class="mx-7 shrink-0 border-b border-muted py-1" />
+          <!-- Its commands write even in a read-only editor: hidden while locked. -->
           <UEditorToolbar
-            v-for="bubble in parts.bubbles"
+            v-if="!readonly"
+            :editor="editor"
+            :items="parts.toolbar"
+            class="mx-7 shrink-0 border-b border-muted py-1"
+          />
+          <UEditorToolbar
+            v-for="bubble in readonly ? [] : parts.bubbles"
             :key="bubble.pluginKey"
             :editor="editor"
             :items="bubble.items"
@@ -448,6 +471,17 @@ const status = computed(() => {
         <span v-if="has('wordCount') && source === undefined" class="shrink-0 tabular-nums">{{
           $t('note.words', words)
         }}</span>
+        <UTooltip v-if="id" :text="readonly ? $t('note.unlock') : $t('note.lock')">
+          <UButton
+            :icon="readonly ? icons.lock : icons.unlock"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            :aria-label="$t('note.lock')"
+            :aria-pressed="readonly"
+            @click="toggleLock"
+          />
+        </UTooltip>
         <UTooltip v-if="has('sourceMode')" :text="source === undefined ? $t('note.source') : $t('note.editor')">
           <UButton
             :icon="icons.source"

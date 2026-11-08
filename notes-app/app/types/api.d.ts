@@ -1348,6 +1348,15 @@ export interface paths {
                         "application/json": components["schemas"]["respond.Failure"];
                     };
                 };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
                 /** @description Request Entity Too Large */
                 413: {
                     headers: {
@@ -2127,6 +2136,7 @@ export interface components {
         "editnote.Body": {
             content?: string;
             pinned?: boolean;
+            readonly?: boolean;
             tags?: string[];
         };
         "editpassword.Input": {
@@ -2201,6 +2211,8 @@ export interface components {
             item: components["schemas"]["domain.Item"];
             path: string;
             pinned?: boolean;
+            /** @description locked: PATCH refuses its content and tags */
+            readonly?: boolean;
             tags?: string[];
         };
         "readneighbors.Linked": {
