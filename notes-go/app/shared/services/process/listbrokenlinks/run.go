@@ -16,7 +16,7 @@ import (
 
 // The kinds of broken link.
 const (
-	UNRESOLVED = "unresolved" // [[target]] that no other note has as title or path, [[#heading]] that the note lacks
+	UNRESOLVED = "unresolved" // [[target]] that no other note has as title or path, a heading the note lacks
 	AMBIGUOUS  = "ambiguous"  // [[target]] that several other notes have
 	MISSING    = "missing"    // a link to a note trashed or purged since
 )
@@ -119,11 +119,8 @@ func (p *run) check() {
 		for _, target := range wikilink.Parse(content) {
 			name, heading, _ := strings.Cut(target, "#")
 			if name = strings.TrimSpace(name); name == "" {
-				// [[#Heading]]: a heading of the note itself, as the app compares them (any case, no parentheses).
-				plain := strings.NewReplacer("(", "", ")", "")
-				if !slices.ContainsFunc(notetitle.Headings(content), func(h string) bool {
-					return strings.EqualFold(strings.TrimSpace(plain.Replace(h)), strings.TrimSpace(plain.Replace(heading)))
-				}) {
+				// [[#Heading]]: a heading of the note itself.
+				if !hasHeading(content, heading) {
 					add(target, UNRESOLVED)
 				}
 				continue
@@ -143,6 +140,11 @@ func (p *run) check() {
 				add(target, AMBIGUOUS)
 			}
 		}
+		for _, link := range wikilink.HeadingLinks(content) {
+			if live[link.ID] && !hasHeading(p.cache.contents[link.ID], link.Heading) {
+				add(link.Label, UNRESOLVED)
+			}
+		}
 		labels := wikilink.Labels(content)
 		for _, id := range wikilink.IDs(content) {
 			if !live[strings.ToLower(id)] {
@@ -150,4 +152,14 @@ func (p *run) check() {
 			}
 		}
 	}
+}
+
+// Helpers
+
+// hasHeading tells whether content has heading, as the app compares them: any case, no parentheses.
+func hasHeading(content, heading string) bool {
+	plain := strings.NewReplacer("(", "", ")", "")
+	return slices.ContainsFunc(notetitle.Headings(content), func(h string) bool {
+		return strings.EqualFold(strings.TrimSpace(plain.Replace(h)), strings.TrimSpace(plain.Replace(heading)))
+	})
 }

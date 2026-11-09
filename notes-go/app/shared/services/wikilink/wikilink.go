@@ -57,6 +57,23 @@ func Labels(content string) map[string]string {
 	return labels
 }
 
+// HeadingLink is a resolved link to a heading of a note: [Label](note:ID#Heading).
+type HeadingLink struct {
+	ID, Heading, Label string
+}
+
+// HeadingLinks gives the resolved links that point to a heading, in order.
+func HeadingLinks(content string) []HeadingLink {
+	var links []HeadingLink
+	for _, l := range spans(content, byID, 2) {
+		if l.heading != "" {
+			label := strings.TrimSpace(content[l.start+1 : l.start+strings.Index(content[l.start:], "](note:")])
+			links = append(links, HeadingLink{strings.ToLower(l.value), l.heading, label})
+		}
+	}
+	return links
+}
+
 // Resolve writes every [[target]] that resolve finds as a link to the note's id, labelled with its title. The
 // heading after # is kept, not checked: the note's headings change with no link knowing. [[#Heading]] waits.
 func Resolve(content string, resolve func(target string) (id, title string, ok bool)) string {

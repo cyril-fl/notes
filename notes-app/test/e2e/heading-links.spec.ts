@@ -55,3 +55,20 @@ test('[[# offers the headings of the note itself, the link scrolls to it without
   await expect(page).toHaveURL(`/notes/${note.id}`);
   await expect(page.getByRole('heading', { name: 'Bas' })).toBeInViewport();
 });
+
+test('the Links section lists a link to a heading the note lacks, not one it has', async ({ page }) => {
+  await box.note(`# ${box.prefix} visée\n\n## Là`);
+  await box.note(
+    `# ${box.prefix} lien\n\n[[${box.prefix} visée#Là]] [[${box.prefix} visée#Ailleurs]] [[#Ici]] [[#Rien]]\n\n## Ici`,
+  );
+  try {
+    await box.api.patch('/api/me', { data: { plan: 'pro' } });
+    await page.goto('/settings/links');
+    await expect(page.getByText(`${box.prefix} visée#Ailleurs`, { exact: true })).toBeVisible();
+    await expect(page.getByText('#Rien', { exact: true })).toBeVisible();
+    await expect(page.getByText(`${box.prefix} visée#Là`, { exact: true })).toHaveCount(0);
+    await expect(page.getByText('#Ici', { exact: true })).toHaveCount(0);
+  } finally {
+    await box.api.patch('/api/me', { data: { plan: 'base' } });
+  }
+});
