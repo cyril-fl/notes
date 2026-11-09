@@ -73,3 +73,18 @@ test('a [[link]] typed by hand leaves no bracket around it', async ({ page }) =>
   await expect.poll(() => box.content(source.id), { timeout: 5000 }).toContain('Avant [[personne]]');
   expect(await box.content(source.id)).not.toContain('\\[');
 });
+
+test('![[Note#Heading]] shows that section alone, its tables and callouts drawn (#105)', async ({ page }) => {
+  const target = await box.note(
+    `# ${box.prefix} source\n\navant\n\n## Lait\n\n| a | b |\n| --- | --- |\n| 1 | 2 |\n\n> [!tip]\n> astuce\n\n## Pain\n\nbaguette`,
+  );
+  const source = await box.note(`# ${box.prefix} hôte\n\n![[${box.prefix} source#Lait]]`);
+  await page.goto(`/notes/${source.id}`);
+
+  const embed = page.locator('.note-embed');
+  await expect(embed.locator('table td').getByText('2')).toBeVisible();
+  await expect(embed.locator('blockquote[data-callout="tip"]')).toContainText('astuce');
+  await expect(embed.getByText('avant')).toHaveCount(0);
+  await expect(embed.getByText('baguette')).toHaveCount(0);
+  expect(await box.content(source.id)).toContain(`(note:${target.id}#Lait)`);
+});

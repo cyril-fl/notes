@@ -1,6 +1,6 @@
 import type { Component } from 'vue';
 import { mergeAttributes, Node, nodeInputRule, nodePasteRule, VueNodeViewRenderer } from '@tiptap/vue-3';
-import { readWikiLink, writeWikiLink } from './wikiLink';
+import { readWikiLink, sameHeading, writeWikiLink } from './wikiLink';
 
 const EMBED = /!\[\[([^[\]\n]+)\]\]/;
 
@@ -19,6 +19,22 @@ export function writeNoteEmbed(target: string, id: string | null, heading: strin
 /** The text of an embedded note without the title heading it starts with: the link above it already gives it. */
 export function withoutTitle(markdown: string) {
   return markdown.replace(/^\s*#{1,6}[ \t]+\S.*(?:\n|$)/, '').trimStart();
+}
+
+/** The section of ![[Note#Heading]]: its heading down to the next one of its level or above, code blocks left out; the whole text when the heading is gone. */
+export function sectionOf(markdown: string, heading: string) {
+  const lines = markdown.split('\n');
+  let code = false;
+  let start = -1;
+  let level = 0;
+  for (const [i, line] of lines.entries()) {
+    if (/^\s*```/.test(line)) code = !code;
+    const match = !code && /^(#{1,6})\s+(.+?)\s*$/.exec(line);
+    if (!match) continue;
+    if (start >= 0 && match[1]!.length <= level) return lines.slice(start, i).join('\n').trim();
+    if (start < 0 && sameHeading(match[2]!, heading)) [start, level] = [i, match[1]!.length];
+  }
+  return start < 0 ? markdown : lines.slice(start).join('\n').trim();
 }
 
 /**

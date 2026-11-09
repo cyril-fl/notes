@@ -9,20 +9,33 @@ const baseURL = useRuntimeConfig().public.apiBase;
 
 const id = computed<string | null>(() => props.node.attrs.id);
 const target = computed<string>(() => props.node.attrs.target);
+const heading = computed<string | null>(() => props.node.attrs.heading);
+// The tables and callouts every editor reads, without their menus: this one is read only.
+const [tables] = useNoteTables();
+const [callouts] = useNoteCallouts();
 // Its embeds stay links: a note that includes itself, or one that includes it back, stops there.
-const extensions = [WikiLink, noteEmbed(), noteImage(baseURL, async () => null)];
+const extensions = [
+  WikiLink,
+  noteEmbed(),
+  noteImage(baseURL, async () => null),
+  ...tables!.extensions!,
+  ...callouts!.extensions!,
+];
 
-const content = ref<string>();
+const text = ref<string>();
 const missing = ref(false);
+const content = computed(
+  () => text.value && (heading.value ? sectionOf(text.value, heading.value) : withoutTitle(text.value)),
+);
 watch(
   id,
   async (noteId) => {
-    content.value = undefined;
+    text.value = undefined;
     missing.value = false;
     if (!noteId) return;
     const note = await api<ItemDetail>(`/api/notes/${noteId}`, { quiet: true }).catch(() => undefined);
     if (id.value !== noteId) return;
-    content.value = withoutTitle(note?.content ?? '');
+    text.value = note?.content ?? '';
     missing.value = !note;
   },
   { immediate: true },
@@ -66,6 +79,7 @@ onBeforeUnmount(() => props.editor.off('update', place));
       :editable="false"
       :image="false"
       :mention="false"
+      :starter-kit="callouts!.starterKit"
       :extensions="extensions"
       :ui="{ base: 'px-0 sm:px-0' }"
     />
