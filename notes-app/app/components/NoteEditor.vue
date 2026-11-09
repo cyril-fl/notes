@@ -18,7 +18,7 @@ const props = defineProps<{ noteId?: string; parentId?: string; start?: string }
 const emit = defineEmits<{ created: [id: string] }>();
 
 const api = useApi();
-const { confirm, prompt } = useDialogs();
+const { confirm, prompt, resolveConflict } = useDialogs();
 const { removeItem } = useItems();
 const baseURL = useRuntimeConfig().public.apiBase;
 const toast = useToast();
@@ -66,6 +66,7 @@ async function send(changes: Changes): Promise<boolean | undefined> {
   } catch (error) {
     failed.value = true;
     stale = (error as FetchError).status === 409;
+    if (stale && changes.content !== undefined) void mergeConflict(changes.content);
     throw error;
   } finally {
     saving.value = false;
@@ -92,15 +93,38 @@ async function patchNote(changes: Changes) {
   const note = await api<ItemDetail>(`/api/notes/${id.value}`, {
     method: 'PATCH',
     body,
-    conflict: t('note.changedElsewhere'),
-    conflictActions: [{ label: t('note.reload'), onClick: reloadStale }],
+    quiet: [409], // mergeConflict tells
     tooLarge: t('note.tooLarge'),
   });
   remember(note);
   await readTags(changes, note);
 }
 
-// After a 409 (#78): the text typed here is kept as a version marked conflict, then the page reads the note again from the API.
+// After a 409 (#78): the note as the API has it now, merged by lines with the text typed here, from the text both started from.
+// Changes in different places merge on their own; in the same place the conflicts dialog asks, the text typed here kept in the history first.
+// The merged text then replaces the text as if typed. A locked note or a failure: the toast offers to reload.
+async function mergeConflict(mine: string) {
+  try {
+    const note = await api<ItemDetail>(`/api/notes/${id.value}`, { quiet: true });
+    if (note.readonly) throw new Error('locked on another device');
+    const parts = merge(saved, mine, note.content ?? '');
+    let text = mergedText(parts);
+    if (parts.some((part) => !('lines' in part))) {
+      await api(`/api/notes/${id.value}/versions`, { method: 'POST', body: { content: mine }, quiet: true });
+      text = await resolveConflict(parts);
+    } else toast.add({ title: t('note.merged'), color: 'success' });
+    remember(note);
+    saver.take(); // Refused, the merged text replaces it.
+    stale = false;
+    failed.value = false;
+    setText(text);
+  } catch {
+    const actions = [{ label: t('note.reload'), onClick: reloadStale }];
+    toast.add({ title: t('note.changedElsewhere'), color: 'error', duration: 0, actions });
+  }
+}
+
+// When the merge fails (#78): the text typed here is kept as a version marked conflict, then the page reads the note again from the API.
 // Not kept, nothing reloads: the text stays on screen, the toast of useApi says why.
 async function reloadStale() {
   const content = source.value ?? clean(editorRef.value?.editor?.getMarkdown() ?? '');
@@ -221,13 +245,18 @@ async function toggleLock() {
 // What is typed before is saved first: the restore then replaces the text as saved, which the API keeps (#94).
 async function restoreVersion(content: string) {
   await saver.flush();
-  touched.value = true;
   saver.push({ restore: true });
+  setText(content);
+}
+// Replaces the text as if typed.
+function setText(content: string) {
+  touched.value = true;
   if (source.value !== undefined) {
     source.value = content;
     return onSource(content);
   }
   editorRef.value?.editor?.commands.setContent(content, { contentType: 'markdown' });
+  save(content); // The same text gives no update, yet must go: the API has another one after a conflict.
 }
 
 // false: no update event, unlocking must not save the note again.

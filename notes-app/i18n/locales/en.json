@@ -112,6 +112,7 @@
     "unsavedDescription": "Your last changes will be lost.",
     "leaveAnyway": "Leave anyway",
     "changedElsewhere": "This note changed on another device: your text is no longer saved. Reload keeps it in the version history, then reads the note again.",
+    "merged": "This note had changed on another device: both texts are merged.",
     "reload": "Reload",
     "addLink": "Add a link",
     "linkPlaceholder": "https://… or an email address",
@@ -327,6 +328,18 @@
     "noteLock": "Lock a note read-only, from the padlock under the text",
     "noteHistory": "The version history of a note in the context panel (under the text on a phone), to restore one"
   },
+  "conflict": {
+    "title": "Conflicts ({count} to resolve)",
+    "description": "The note changed in the same place here and on another device. Your text is also kept in the history.",
+    "block": "Conflict {number}",
+    "here": "Here",
+    "elsewhere": "Other device",
+    "mine": "Mine",
+    "theirs": "Theirs",
+    "both": "Both",
+    "keepTheirs": "Keep theirs everywhere",
+    "save": "Save"
+  },
   "history": {
     "title": "Version history",
     "emptyTitle": "No earlier version is available yet.",
@@ -335,6 +348,8 @@
     "restore": "Restore this version",
     "all": "Whole history ({count})",
     "panelTitle": "History ({count})",
-    "conflict": "conflict"
+    "conflict": "conflict",
+    "compare": "Compare with the current text",
+    "content": "Text"
   }
 }

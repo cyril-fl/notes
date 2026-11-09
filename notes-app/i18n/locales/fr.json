@@ -112,6 +112,7 @@
     "unsavedDescription": "Tes dernières modifications seront perdues.",
     "leaveAnyway": "Quitter quand même",
     "changedElsewhere": "La note a changé sur un autre appareil : ton texte n'est plus enregistré. Recharger le garde dans l'historique des versions puis relit la note.",
+    "merged": "La note avait changé sur un autre appareil : les deux textes sont fusionnés.",
     "reload": "Recharger",
     "addLink": "Ajouter un lien",
     "linkPlaceholder": "https://… ou une adresse mail",
@@ -327,6 +328,18 @@
     "noteLock": "Verrouiller une note en lecture seule, depuis le cadenas sous le texte",
     "noteHistory": "L'historique des versions d'une note dans le panneau de contexte permet de restaurer"
   },
+  "conflict": {
+    "title": "Conflits ({count} à résoudre)",
+    "description": "La note a changé au même endroit ici et sur un autre appareil. Ton texte est aussi gardé dans l'historique.",
+    "block": "Conflit {number}",
+    "here": "Ici",
+    "elsewhere": "Autre appareil",
+    "mine": "La mienne",
+    "theirs": "L'autre",
+    "both": "Les deux",
+    "keepTheirs": "Garder l'autre partout",
+    "save": "Enregistrer"
+  },
   "history": {
     "title": "Historique des versions",
     "emptyTitle": "Aucune version antérieure n'est encore disponible.",
@@ -335,6 +348,8 @@
     "restore": "Restaurer cette version",
     "all": "Tout l'historique ({count})",
     "panelTitle": "Historique ({count})",
-    "conflict": "conflit"
+    "conflict": "conflit",
+    "compare": "Comparer au texte actuel",
+    "content": "Texte"
   }
 }

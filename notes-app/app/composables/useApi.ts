@@ -10,8 +10,8 @@ type ApiOptions = FetchOptions<'json'> & {
   invalid?: Record<string, string>;
   /** What the toast says on a 413, the limit of this call; a general text otherwise. */
   tooLarge?: string;
-  /** The page shows the error itself. */
-  quiet?: boolean;
+  /** The page shows the error itself: always, or for these statuses. */
+  quiet?: boolean | number[];
 };
 
 function errorMessage(
@@ -43,10 +43,10 @@ export function useApi() {
       // include: in development the API is on another port, and its session cookie must go along.
       return await $fetch<T>(path, { baseURL, credentials: 'include', ...options } as object);
     } catch (error) {
-      if ((error as FetchError).status === 401 && route.path !== '/login') {
+      const status = (error as FetchError).status;
+      if (status === 401 && route.path !== '/login') {
         await navigateTo({ path: '/login', query: { redirect: route.fullPath } });
-      } else if (!quiet) {
-        const status = (error as FetchError).status;
+      } else if (quiet !== true && !(Array.isArray(quiet) && quiet.includes(status ?? 0))) {
         toast.add({
           title: errorMessage(error as FetchError, t, { conflict, invalid, tooLarge }),
           color: 'error',

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { NoteVersion } from '~/types/items';
+import type { ItemDetail, NoteVersion } from '~/types/items';
 
 // Pro (#61): the texts the API kept before the edits of the note, newest first. Restoring hands one to the editor, which saves it as any edit.
 // panel: the last versions listed in the context panel; otherwise a button under the text (no panel on a phone).
@@ -37,6 +37,7 @@ watch(
 
 async function show(version?: NoteVersion) {
   open.value = true;
+  current.value = undefined;
   await load();
   selected.value = versions.value.find((other) => other.id === version?.id) ?? versions.value[0];
 }
@@ -45,6 +46,16 @@ async function show(version?: NoteVersion) {
 const label = (version: NoteVersion) =>
   new Date(version.created_at).toLocaleString(locale.value, { dateStyle: 'medium', timeStyle: 'short' }) +
   (version.conflict ? ` · ${t('history.conflict')}` : '');
+
+// The comparison (#78): the version against the text as saved, read when asked; lines of the version only struck, of the text only underlined.
+const current = ref<string>();
+async function compare() {
+  if (current.value !== undefined) return void (current.value = undefined);
+  current.value = (await api<ItemDetail>(`/api/notes/${props.noteId}`)).content ?? '';
+}
+const changes = computed(() =>
+  selected.value && current.value !== undefined ? lineChanges(selected.value.content, current.value) : undefined,
+);
 
 function restore() {
   if (!selected.value) return;
@@ -114,14 +125,33 @@ function restore() {
             @click="selected = version"
           />
         </nav>
+        <div v-if="changes" class="max-h-[60vh] min-w-0 flex-1 overflow-y-auto text-sm">
+          <component
+            :is="{ same: 'span', removed: 'del', added: 'ins' }[change.kind]"
+            v-for="(change, index) in changes"
+            :key="index"
+            class="block whitespace-pre-wrap"
+            :class="{ same: '', removed: 'bg-error/10 text-error', added: 'bg-success/10 text-success' }[change.kind]"
+            >{{ change.lines.join('\n') }}</component
+          >
+        </div>
         <pre
-          v-if="selected"
+          v-else-if="selected"
           class="max-h-[60vh] min-w-0 flex-1 overflow-y-auto font-sans text-sm whitespace-pre-wrap"
           >{{ selected.content }}</pre>
       </div>
     </template>
     <template #footer>
-      <div class="flex w-full justify-end gap-2">
+      <div class="flex w-full flex-wrap justify-end gap-2">
+        <UButton
+          :label="$t('history.compare')"
+          color="neutral"
+          variant="outline"
+          class="mr-auto"
+          :disabled="!selected"
+          :aria-pressed="current !== undefined"
+          @click="compare"
+        />
         <UButton :label="$t('common.cancel')" color="neutral" variant="ghost" @click="open = false" />
         <UButton :label="$t('history.restore')" :disabled="!selected || readonly" @click="restore" />
       </div>

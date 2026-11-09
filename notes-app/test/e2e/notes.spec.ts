@@ -114,8 +114,27 @@ test('an email is a link: typed, pasted or given to the link button', async ({ p
     .toContain('[bouton@example.com](mailto:bouton@example.com "mini")');
 });
 
-// Changed on another device (#78): Reload keeps the text typed here as a version marked conflict, then shows the note as the API has it.
-test('after a conflict, reload keeps the local text in the history and reads the note again', async ({ page }) => {
+// Changed on another device (#78): changes in different places merge on their own, both kept.
+test('after a conflict, changes in different places merge on their own', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} fusion\n\nTexte\n\nFin`);
+  await page.goto(`/notes/${note.id}`);
+  const editor = page.locator('.ProseMirror');
+  await expect(editor.getByText('Texte')).toBeVisible();
+  await box.api.patch(`/api/notes/${note.id}`, {
+    data: { content: `# ${box.prefix} fusion\n\nTexte\n\nFin ailleurs` },
+  });
+
+  await cursorAtEnd(editor, 'Texte');
+  await page.keyboard.type(' ici');
+  await expect(page.getByText('les deux textes sont fusionnés').last()).toBeVisible();
+  await expect(editor.getByText('Fin ailleurs')).toBeVisible();
+  await expect
+    .poll(() => box.content(note.id), { timeout: 5000 })
+    .toBe(`# ${box.prefix} fusion\n\nTexte ici\n\nFin ailleurs`);
+});
+
+// The same line changed on both sides (#78): the dialog asks, the text typed here kept in the history as a conflict.
+test('after a conflict in the same place, the dialog asks which text to keep', async ({ page }) => {
   const note = await box.note(`# ${box.prefix} conflit\n\nTexte`);
   await page.goto(`/notes/${note.id}`);
   const editor = page.locator('.ProseMirror');
@@ -124,13 +143,18 @@ test('after a conflict, reload keeps the local text in the history and reads the
 
   await cursorAtEnd(editor, 'Texte');
   await page.keyboard.type(' ici');
-  await page.getByRole('button', { name: 'Recharger' }).click();
-  await expect(editor.getByText('Ailleurs')).toBeVisible();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByRole('heading', { name: 'Conflits (1 à résoudre)' })).toBeVisible();
+  await expect(dialog.getByRole('region', { name: 'Conflit 1' })).toContainText('Ailleurs');
+  await dialog.getByRole('button', { name: 'Les deux' }).click();
+  await dialog.getByRole('button', { name: 'Enregistrer' }).click();
+  await expect
+    .poll(() => box.content(note.id), { timeout: 5000 })
+    .toBe(`# ${box.prefix} conflit\n\nTexte ici\n\nAilleurs`);
   const versions: { content: string; conflict: boolean }[] = await (
     await box.api.get(`/api/notes/${note.id}/versions`)
   ).json();
   expect(versions.find((version) => version.conflict)?.content).toContain('Texte ici');
-  expect(await box.content(note.id)).toContain('Ailleurs');
 });
 
 // Past the API's 10 MB, the toast gives the limit in French, not the API's message (#58). The API's answer
@@ -480,6 +504,10 @@ test('the Pro history restores an earlier version', async ({ page }) => {
       .first()
       .click();
     await expect(page.getByRole('dialog')).toContainText('first');
+    // Compared with the text as saved (#78): the version's line struck, the text's underlined.
+    await page.getByRole('button', { name: 'Comparer au texte actuel' }).click();
+    await expect(page.getByRole('dialog').locator('del')).toContainText('first');
+    await expect(page.getByRole('dialog').locator('ins')).toContainText('second');
     await page.getByRole('button', { name: 'Restaurer cette version' }).click();
     await expect(page.locator('.ProseMirror')).toContainText('first');
     await expect.poll(() => box.content(note.id), { timeout: 5000 }).toBe(`# ${box.prefix} history\n\nfirst`);
