@@ -28,7 +28,6 @@
     "@tiptap/extension-code-block-lowlight": "3.32.2",
     "@tiptap/extension-image": "^3.32.2",
     "@tiptap/extension-list": "^3.32.2",
-    "@tiptap/extension-mathematics": "3.32.2",
     "@tiptap/extension-table": "3.32.2",
     "@tiptap/pm": "^3.32.2",
     "@tiptap/suggestion": "3.32.2",
