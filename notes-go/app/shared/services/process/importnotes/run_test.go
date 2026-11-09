@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/testaccount"
+	"slices"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -206,5 +207,79 @@ func TestSizeTitle(t *testing.T) {
 		if got := sizeTitle(width); got != want {
 			t.Errorf("sizeTitle(%q) = %q, want %q", width, got, want)
 		}
+	}
+}
+
+func TestImportExportAttachments(t *testing.T) {
+	ctx := context.Background()
+	env := postgrey.NewEnvironment()
+	env.ReadEnv()
+	db := env.Connect()
+	defer db.Close()
+
+	schema := createschema.Process(ctx, db)
+	schema.Run()
+	if schema.HasErr() {
+		t.Fatalf("create schema: %v", schema.GetErr())
+	}
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
+
+	create := createfolder.Process(ctx, tx, createfolder.Input{Title: fmt.Sprintf("attachments-%d", time.Now().UnixNano())})
+	create.Run()
+	if create.HasErr() {
+		t.Fatal(create.GetErr())
+	}
+	parent := create.GetResult().ID
+
+	// A link to a Word document and a ![[sound]] become attachments; a link to a note, a web link and an ![image]
+	// that is a PDF keep theirs.
+	dir := fstest.MapFS{
+		"A.md":          {Data: []byte("# A\n\n[rapport](rapport.docx) ![[son.mp3]] [B](B.md) [web](https://x.org/a.pdf) ![pdf](doc.pdf)")},
+		"B.md":          {Data: []byte("# B")},
+		"rapport.docx":  {Data: []byte("PK\x03\x04 word")},
+		"Audio/son.mp3": {Data: []byte("ID3 sound")},
+		"doc.pdf":       {Data: []byte("%PDF-1.7")},
+	}
+	store := silo.NewMemory()
+	run := Process(ctx, tx, store, Input{Dir: dir, ParentID: parent})
+	run.Run()
+	if run.HasErr() {
+		t.Fatalf("import: %v", run.GetErr())
+	}
+	if len(store.Objects) != 2 {
+		t.Fatalf("objects = %d, want 2", len(store.Objects))
+	}
+	files := map[string]domain.File{}
+	var rows []domain.File
+	if err := tx.NewSelect().Model(&rows).Where("user_id = ?", domain.UserID(ctx)).Scan(ctx); err != nil {
+		t.Fatal(err)
+	}
+	for _, file := range rows {
+		files[string(file.Name)] = file
+	}
+	docx, mp3 := files["rapport.docx"], files["son.mp3"]
+	if docx.ContentType != "application/zip" || mp3.ContentType != "audio/mpeg" {
+		t.Fatalf("files = %+v", rows)
+	}
+
+	export := exportnotes.Process(ctx, tx, parent)
+	export.Run()
+	if export.HasErr() {
+		t.Fatal(export.GetErr())
+	}
+	var got []string
+	for _, f := range export.GetResult() {
+		got = append(got, f.Path+"="+f.Content)
+	}
+	docxPath, mp3Path := "_files/"+docx.ID+".docx", "_files/"+mp3.ID+".mp3"
+	want := "A.md=# A\n\n[rapport](" + docxPath + ") [son.mp3](" + mp3Path + ") [B](B.md) [web](https://x.org/a.pdf) ![pdf](doc.pdf)"
+	if !slices.Contains(got, want) || !slices.Contains(got, docxPath+"=") || !slices.Contains(got, mp3Path+"=") {
+		t.Errorf("export = %q, want %q and both files", got, want)
 	}
 }

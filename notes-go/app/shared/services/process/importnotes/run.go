@@ -23,9 +23,9 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// imagePattern finds the markdown images ![alt](target "title") and ![alt](<target with spaces>): the target is
-// the second group, or the third.
-var imagePattern = regexp.MustCompile(`(!\[[^\]]*\]\()(?:<([^>]+)>|([^)\s]+))`)
+// imagePattern finds the markdown images ![alt](target "title") and ![alt](<target with spaces>), and the links
+// [text](target) to an attachment: the target is the second group, or the third.
+var imagePattern = regexp.MustCompile(`(!?\[[^\]]*\]\()(?:<([^>]+)>|([^)\s]+))`)
 
 // embedPattern finds Obsidian's ![[image.png]] and ![[image.png|300]] (or |300x200): the name is the first group,
 // the width the second.
@@ -70,7 +70,7 @@ type run struct {
 
 type cache struct {
 	folders map[string]string      // directory path -> folder id
-	images  map[string]domain.File // file path -> the image made of it
+	images  map[string]domain.File // file path -> the image or attachment made of it
 	names   map[string][]string    // file name -> its paths in Dir, read at the first ![[name]]
 	result  Result
 }
@@ -146,8 +146,9 @@ func (p *run) importEntry(ctx context.Context, tx bun.Tx, name string, entry fs.
 	return nil
 }
 
-// importImages makes a file of each image the note at name cites by a relative path or by ![[name]], once per
-// image, and cites it by its address instead. A missing file or one that is not an image keeps its link as written.
+// importImages makes a file of each image or attachment the note at name cites by a relative path or by ![[name]],
+// once per file, and cites it by its address instead: a ![[name]] that is not an image becomes a link to it. A
+// missing file, an ![image] that is not one, or a type createfile refuses (another note) keeps its link as written.
 func (p *run) importImages(ctx context.Context, tx bun.Tx, name, content string) (string, error) {
 	var failed error
 	content = imagePattern.ReplaceAllStringFunc(content, func(link string) string {
@@ -156,7 +157,7 @@ func (p *run) importImages(ctx context.Context, tx bun.Tx, name, content string)
 		if err != nil || failed != nil || strings.Contains(target, ":") || strings.HasPrefix(target, "/") {
 			return link
 		}
-		file, ok, err := p.importImage(ctx, tx, path.Join(path.Dir(name), target))
+		file, ok, err := p.importImage(ctx, tx, path.Join(path.Dir(name), target), strings.HasPrefix(parts[1], "!"))
 		if !ok {
 			failed = err
 			return link
@@ -169,24 +170,27 @@ func (p *run) importImages(ctx context.Context, tx bun.Tx, name, content string)
 		if !ok || failed != nil {
 			return link
 		}
-		file, ok, err := p.importImage(ctx, tx, target)
+		file, ok, err := p.importImage(ctx, tx, target, false)
 		if !ok {
 			failed = err
 			return link
+		}
+		if !strings.HasPrefix(file.ContentType, "image/") {
+			return "[" + path.Base(target) + "](" + domain.FileURL(file.ID) + ")"
 		}
 		return "![](" + domain.FileURL(file.ID) + sizeTitle(embed[2]) + ")"
 	})
 	return content, failed
 }
 
-// importImage makes a file of the image at target, once. ok is false for a missing file or one that is not an
-// image, err is set only when making it failed otherwise.
-func (p *run) importImage(ctx context.Context, tx bun.Tx, target string) (domain.File, bool, error) {
+// importImage makes a file of the file at target, once. ok is false for a missing file, one createfile refuses,
+// or one that is not an image when imageOnly is set; err is set only when making it failed otherwise.
+func (p *run) importImage(ctx context.Context, tx bun.Tx, target string, imageOnly bool) (domain.File, bool, error) {
 	if file, ok := p.cache.images[target]; ok {
-		return file, true, nil
+		return file, !imageOnly || strings.HasPrefix(file.ContentType, "image/"), nil
 	}
 	data, err := fs.ReadFile(p.input.Dir, target)
-	if err != nil || !strings.HasPrefix(http.DetectContentType(data), "image/") {
+	if err != nil || imageOnly && !strings.HasPrefix(http.DetectContentType(data), "image/") {
 		return domain.File{}, false, nil
 	}
 	image := createfile.Process(ctx, tx, p.store, createfile.Input{Name: path.Base(target), Data: data})
