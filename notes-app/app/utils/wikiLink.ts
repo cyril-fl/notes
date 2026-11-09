@@ -127,10 +127,11 @@ export const WikiLink = Node.create({
 
   addInputRules() {
     return [
+      // No group in find: nodeInputRule would put the node in place of the group alone, brackets left around it.
       nodeInputRule({
-        find: new RegExp(`${BY_TITLE.source}$`),
+        find: new RegExp(`${BY_TITLE.source.replace('(', '(?:')}$`),
         type: this.type,
-        getAttributes: (m) => ({ target: m[1]?.trim() }),
+        getAttributes: (m) => ({ target: m[0].slice(2, -2).trim() }),
       }),
     ];
   },
