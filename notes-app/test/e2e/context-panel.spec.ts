@@ -28,6 +28,10 @@ test('the Pro context panel follows the note', async ({ page }) => {
     await cursorAtEnd(page.getByRole('textbox'), `Bottom ${box.prefix}`);
     await page.keyboard.type(` [[Target ${box.prefix}]]`);
     await expect(panel.getByText('Liens', { exact: true })).toBeVisible({ timeout: 10_000 });
+    // The saved line holds the link alone, no escaped brackets left around it (#103).
+    expect(await box.content(note.id)).toMatch(
+      new RegExp(`\\n## Bottom ${box.prefix} \\[Target ${box.prefix}\\]\\(note:${target.id}\\)\\s*$`),
+    );
     const graph = panel.locator('section').filter({ has: page.getByRole('heading', { name: 'Graphe' }) });
     await expect(graph.getByRole('link', { name: `Panel ${box.prefix}`, exact: true })).toBeVisible();
     await expect(graph.getByRole('link', { name: `Target ${box.prefix}`, exact: true })).toBeVisible();
