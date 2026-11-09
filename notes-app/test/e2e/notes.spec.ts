@@ -525,6 +525,23 @@ test('the source mode edits the markdown', async ({ page }) => {
   await expect(page.locator('.ProseMirror input[type="checkbox"]')).toBeVisible();
 });
 
+test('the empty Pro context panel explains the related notes and the history', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} history empty\n\nfirst`);
+  try {
+    await box.api.patch('/api/me', { data: { plan: 'pro' } });
+    await page.goto(`/notes/${note.id}`);
+    await expect(page.getByText("Aucune note liée pour l'instant.")).toBeVisible();
+    const panel = page.getByRole('region', { name: 'Historique des versions' });
+    await expect(panel.getByText("Aucune version antérieure n'est encore disponible.")).toBeVisible();
+    await expect(panel.getByText('Une copie est enregistrée après chaque modification.')).toBeVisible();
+    await expect(
+      panel.getByText('Une nouvelle version après 15 minutes de pause, et au moins une par heure.'),
+    ).toBeVisible();
+  } finally {
+    await box.api.patch('/api/me', { data: { plan: 'base' } });
+  }
+});
+
 // Pro (#61): the text replaced by an edit is kept, and restoring it saves it back.
 test('the Pro history restores an earlier version', async ({ page }) => {
   const note = await box.note(`# ${box.prefix} history\n\nfirst`);

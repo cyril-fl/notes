@@ -111,16 +111,30 @@ async function fork() {
     </template>
     <template #content>
       <div class="pb-4">
-        <p v-if="!versions.length" class="text-xs text-dimmed">{{ $t('history.empty') }}</p>
-        <button
-          v-for="version in versions.slice(0, shown)"
-          :key="version.id"
-          type="button"
-          class="block w-full truncate rounded py-1 text-left text-sm text-muted hover:text-default"
-          @click="show(version)"
+        <UEmpty
+          v-if="!versions.length"
+          :icon="icons.recent"
+          :title="$t('history.emptyTitle')"
+          size="xs"
+          variant="naked"
+          :ui="{ root: 'min-h-0 gap-0 p-2 sm:p-2 lg:p-2', header: 'gap-1', avatar: 'mb-0 size-6 text-sm' }"
         >
-          {{ label(version) }}
-        </button>
+          <template #description>
+            <span class="block">{{ $t('history.emptyAfterChange') }}</span>
+            <span class="block">{{ $t('history.emptySessions') }}</span>
+          </template>
+        </UEmpty>
+        <template v-else>
+          <button
+            v-for="version in versions.slice(0, shown)"
+            :key="version.id"
+            type="button"
+            class="block w-full truncate rounded py-1 text-left text-sm text-muted hover:text-default"
+            @click="show(version)"
+          >
+            {{ label(version) }}
+          </button>
+        </template>
         <button v-if="versions.length > shown" type="button" class="py-1 text-xs text-primary" @click="show()">
           {{ $t('history.all', { count: versions.length }) }}
         </button>
@@ -140,7 +154,12 @@ async function fork() {
 
   <UModal v-model:open="open" :title="$t('history.title')" :ui="{ content: 'max-w-3xl' }">
     <template #body>
-      <p v-if="!versions.length" class="text-sm text-muted">{{ $t('history.empty') }}</p>
+      <UEmpty v-if="!versions.length" :icon="icons.recent" :title="$t('history.emptyTitle')" size="sm" variant="naked">
+        <template #description>
+          <span class="block">{{ $t('history.emptyAfterChange') }}</span>
+          <span class="block">{{ $t('history.emptySessions') }}</span>
+        </template>
+      </UEmpty>
       <div v-else class="flex flex-col gap-4 sm:flex-row">
         <nav class="flex shrink-0 flex-col sm:w-48" :aria-label="$t('history.title')">
           <UButton

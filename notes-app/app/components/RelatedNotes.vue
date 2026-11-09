@@ -4,12 +4,12 @@ import type { Neighbors } from '~/types/items';
 const { icons } = useIcons();
 const { t } = useI18n();
 
-// panel: in the context panel, open, without the graph link: the mini graph below has its own.
+// panel: in the context panel, open, without the graph link: the mini graph below has its own, and shown even empty, like the history below.
 const props = defineProps<{ noteId: string; panel?: boolean }>();
 
 const api = useApi();
 const { has } = usePro();
-const { data } = useLazyAsyncData(`neighbors:${props.noteId}`, () =>
+const { data, status } = useLazyAsyncData(`neighbors:${props.noteId}`, () =>
   api<Neighbors>(`/api/notes/${props.noteId}/neighbors`, { quiet: true }),
 );
 
@@ -25,7 +25,7 @@ const total = computed(() => sections.value.reduce((sum, section) => sum + secti
 </script>
 
 <template>
-  <UCollapsible v-if="sections.length" :default-open="panel">
+  <UCollapsible v-if="sections.length || (panel && status === 'success')" :default-open="panel">
     <template #default="{ open }">
       <div class="flex items-center py-2">
         <UButton
@@ -46,7 +46,17 @@ const total = computed(() => sections.value.reduce((sum, section) => sum + secti
       </div>
     </template>
     <template #content>
-      <div class="max-h-[40vh] space-y-6 overflow-y-auto pb-4">
+      <UEmpty
+        v-if="!sections.length"
+        :icon="icons.link"
+        :title="$t('related.emptyTitle')"
+        :description="$t('related.emptyDescription')"
+        size="xs"
+        variant="naked"
+        :ui="{ root: 'min-h-0 gap-0 p-2 sm:p-2 lg:p-2', header: 'gap-1', avatar: 'mb-0 size-6 text-sm' }"
+        class="mb-4"
+      />
+      <div v-else class="max-h-[40vh] space-y-6 overflow-y-auto pb-4">
         <div v-for="section in sections" :key="section.title">
           <h2 class="mb-2 text-xs font-medium text-muted">{{ section.title }}</h2>
           <NoteList :notes="section.notes" />

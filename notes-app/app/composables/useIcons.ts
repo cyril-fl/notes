@@ -60,9 +60,9 @@ export function useIcons() {
     lock: 'i-reicon-lock-filled',
     unlock: 'i-reicon-lock-open',
     history: 'i-reicon-history',
-    compare: 'i-reicon-arrow-swap-horizontal',
-    fork: 'i-reicon-document-copy',
-    restore: 'i-reicon-undo',
+    compare: 'i-reicon-document-copy',
+    fork: 'i-reicon-sitemap',
+    restore: 'i-reicon-recovery-convert',
 
     // Graph
     zoomIn: 'i-reicon-plus',
