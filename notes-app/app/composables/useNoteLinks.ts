@@ -156,15 +156,22 @@ export function useNoteLinks(id: Ref<string | undefined>): EditorModule {
       },
     },
     handlers: {
-      wikiLink: command((editor, item: { label: string; id: string | null; heading?: string }) =>
-        editor
+      // After ![[ the note is embedded: the ! goes with the typed text.
+      wikiLink: command((editor, item: { label: string; id: string | null; heading?: string }) => {
+        const { from } = editor.state.selection;
+        const embed = !!item.id && editor.state.doc.textBetween(Math.max(from - 1, 0), from) === '!';
+        return editor
           .chain()
           .focus()
+          .deleteRange(embed ? { from: from - 1, to: from } : { from, to: from })
           .insertContent([
-            { type: 'wikiLink', attrs: { target: item.label, id: item.id, heading: item.heading ?? null } },
+            {
+              type: embed ? 'noteEmbed' : 'wikiLink',
+              attrs: { target: item.label, id: item.id, heading: item.heading ?? null },
+            },
             { type: 'text', text: ' ' },
-          ]),
-      ),
+          ]);
+      }),
       link: command(
         (editor) => {
           askLink(editor);
@@ -207,6 +214,8 @@ export function useNoteLinks(id: Ref<string | undefined>): EditorModule {
         filterFields: ['label', 'description'],
         suggestion: {
           allowSpaces: true,
+          // ![[ embeds the note picked.
+          allowedPrefixes: [' ', '!'],
           // The menu filters its items alone: the typed text is read here, for the headings after #.
           allow: ({ state, range }: { state: EditorState; range: Range }) => {
             query.value = state.doc.textBetween(range.from + 2, range.to);
@@ -217,7 +226,8 @@ export function useNoteLinks(id: Ref<string | undefined>): EditorModule {
               });
               if (headings.join('\n') !== ownHeadings.value.join('\n')) ownHeadings.value = headings;
             }
-            return true;
+            // A ] closes the link typed by hand: the menu closes, or it would leave brackets behind ![[Note]].
+            return !query.value.includes(']');
           },
         },
       },

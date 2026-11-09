@@ -22,27 +22,45 @@ watch(
     if (!noteId) return;
     const note = await api<ItemDetail>(`/api/notes/${noteId}`, { quiet: true }).catch(() => undefined);
     if (id.value !== noteId) return;
-    content.value = note?.content ?? '';
+    content.value = withoutTitle(note?.content ?? '');
     missing.value = !note;
   },
   { immediate: true },
 );
+
+// Alone in its paragraph it shows the note; in a sentence, a link like a [[link]].
+const alone = ref(true);
+function place() {
+  const pos = props.getPos();
+  if (pos === undefined) return;
+  const parent = props.editor.state.doc.resolve(pos).parent;
+  alone.value = parent.content.content.filter((child) => !child.isText || child.text?.trim()).length === 1;
+}
+onMounted(() => {
+  place();
+  props.editor.on('update', place);
+});
+onBeforeUnmount(() => props.editor.off('update', place));
 </script>
 
 <template>
-  <NodeViewWrapper as="span" class="note-embed" :class="{ 'ring-2 ring-primary/60': selected }" contenteditable="false">
+  <NodeViewWrapper
+    as="span"
+    :class="{ 'note-embed': alone, 'ring-2 ring-primary/60': selected }"
+    contenteditable="false"
+  >
     <!-- The click handler of the editor opens it, like a [[link]]. -->
     <a
       :data-wikilink="target"
       :data-note="id ?? undefined"
-      class="wikilink flex items-center gap-1.5 text-sm"
-      :class="{ 'wikilink-waiting': !id || missing }"
+      class="wikilink"
+      :class="[alone ? 'flex items-center gap-1.5 text-sm' : 'inline', { 'wikilink-waiting': !id || missing }]"
     >
-      <UIcon :name="missing ? icons.noteNotFound : icons.note" class="size-4 shrink-0" />
+      <UIcon v-if="alone" :name="missing ? icons.noteNotFound : icons.note" class="size-4 shrink-0" />
       <span class="truncate">{{ target }}</span>
     </a>
     <UEditor
-      v-if="content"
+      v-if="alone && content"
       :model-value="content"
       content-type="markdown"
       :editable="false"

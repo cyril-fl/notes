@@ -16,6 +16,11 @@ export function writeNoteEmbed(target: string, id: string | null, heading: strin
   return `!${writeWikiLink(target, id, heading)}`;
 }
 
+/** The text of an embedded note without the title heading it starts with: the link above it already gives it. */
+export function withoutTitle(markdown: string) {
+  return markdown.replace(/^\s*#{1,6}[ \t]+\S.*(?:\n|$)/, '').trimStart();
+}
+
 /**
  * A note shown in another, read only: the API points it to the note's id like a [[link]].
  * view draws the note; without it (inside an embed) it is a link, so A in B in A stops at one level.
@@ -77,10 +82,11 @@ export function noteEmbed(view?: Component) {
 
     addInputRules() {
       return [
+        // No group in find: nodeInputRule would put the node in place of the group alone, brackets left around it.
         nodeInputRule({
-          find: new RegExp(`${EMBED.source}$`),
+          find: new RegExp(`${EMBED.source.replace('(', '(?:')}$`),
           type: this.type,
-          getAttributes: (m) => ({ target: m[1]?.trim() }),
+          getAttributes: (m) => ({ target: m[0].slice(3, -2).trim() }),
         }),
       ];
     },
