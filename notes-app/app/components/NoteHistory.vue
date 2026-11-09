@@ -172,24 +172,36 @@ async function fork() {
     </template>
     <template #footer>
       <div class="flex w-full flex-wrap justify-end gap-2">
-        <UButton
-          :label="$t('history.compare')"
-          color="neutral"
-          variant="outline"
-          class="mr-auto"
-          :disabled="!selected"
-          :aria-pressed="current !== undefined"
-          @click="compare"
-        />
-        <UButton :label="$t('common.cancel')" color="neutral" variant="ghost" @click="open = false" />
-        <UButton
-          :label="$t('history.fork')"
-          color="neutral"
-          variant="outline"
-          :disabled="text === undefined"
-          @click="fork"
-        />
-        <UButton :label="$t('history.restore')" :disabled="text === undefined || readonly" @click="restore" />
+        <UTooltip :text="$t('history.compare')">
+          <UButton
+            :icon="icons.compare"
+            color="neutral"
+            variant="outline"
+            :aria-label="$t('history.compare')"
+            :disabled="!selected"
+            :aria-pressed="current !== undefined"
+            @click="compare"
+          />
+        </UTooltip>
+        <UButton :label="$t('common.cancel')" color="neutral" variant="ghost" class="ml-auto" @click="open = false" />
+        <UTooltip :text="$t('history.fork')">
+          <UButton
+            :icon="icons.fork"
+            color="neutral"
+            variant="outline"
+            :aria-label="$t('history.fork')"
+            :disabled="text === undefined"
+            @click="fork"
+          />
+        </UTooltip>
+        <UTooltip :text="$t('history.restore')">
+          <UButton
+            :icon="icons.restore"
+            :aria-label="$t('history.restore')"
+            :disabled="text === undefined || readonly"
+            @click="restore"
+          />
+        </UTooltip>
       </div>
     </template>
   </UModal>
