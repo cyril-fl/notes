@@ -293,13 +293,12 @@
       "editor": "Editor",
       "editorDescription": "What helps to write the notes.",
       "data": "Data",
-      "dataDescription": "Export, import, the trash, and erasing everything.",
+      "dataDescription": "Export, import, the trash, the space of the files, and erasing everything.",
       "pro": "Advanced mode",
       "proDescription": "More tools, for advanced use.",
       "links": "Links",
       "linksDescription": "The links between notes that lead to no note, or to several, and the cited files the server lacks.",
-      "storage": "Storage",
-      "storageDescription": "The images and attachments kept on the server, and the space they take."
+      "storage": "Storage"
     },
     "linksEmpty": "No broken or ambiguous link, no missing file.",
     "linkKinds": {
@@ -356,7 +355,7 @@
     "noteLock": "Lock a note read-only, from the padlock under the text",
     "noteHistory": "The version history of a note in the context panel (under the text on a phone): compare, restore or make a new note of one",
     "brokenLinks": "The list of broken or ambiguous links and of missing files, in the settings",
-    "storageFiles": "The list of the files kept on the server, in the Storage section of the settings",
+    "storageFiles": "The list of the files kept on the server, in the Data section of the settings",
     "wikiLinks": "[[Note]] links to a note or one of its headings ([[Note#Heading]], [[#Heading]]), offered as you type",
     "noteEmbeds": "Include a note in another with ![[Note]], shown read only",
     "images": "Paste or drop images into a note, small, medium or large",
@@ -370,7 +369,7 @@
     "themes": "Color themes, in light and dark mode",
     "importExport": "Import a zip, .md files or an Obsidian vault; export everything, a folder or a selection",
     "trash": "The trash, to restore a deleted note or folder",
-    "storageUsage": "The space taken on the server, by type of file, in the Storage section of the settings"
+    "storageUsage": "The space taken on the server, by type of file, in the Data section of the settings"
   },
   "conflict": {
     "title": "Conflicts ({count} to resolve)",

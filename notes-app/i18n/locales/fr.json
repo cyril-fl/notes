@@ -293,13 +293,12 @@
       "editor": "Éditeur",
       "editorDescription": "Ce qui aide à écrire les notes.",
       "data": "Données",
-      "dataDescription": "Exporter, importer, la corbeille, et tout effacer.",
+      "dataDescription": "Exporter, importer, la corbeille, la place des fichiers, et tout effacer.",
       "pro": "Mode avancé",
       "proDescription": "Des outils en plus, pour un usage avancé.",
       "links": "Liens",
       "linksDescription": "Les liens entre notes qui ne mènent à aucune note, ou à plusieurs, et les fichiers cités que le serveur n’a pas.",
-      "storage": "Stockage",
-      "storageDescription": "Les images et pièces jointes gardées sur le serveur, et la place qu’elles prennent."
+      "storage": "Stockage"
     },
     "linksEmpty": "Aucun lien cassé ni ambigu, aucun fichier absent.",
     "linkKinds": {
@@ -356,7 +355,7 @@
     "noteLock": "Verrouiller une note en lecture seule, depuis le cadenas sous le texte",
     "noteHistory": "L'historique des versions d'une note dans le panneau de contexte (sous le texte sur un téléphone) : comparer, restaurer ou en faire une nouvelle note",
     "brokenLinks": "La liste des liens cassés ou ambigus et des fichiers manquants, dans les réglages",
-    "storageFiles": "La liste des fichiers gardés sur le serveur, dans la section Stockage des réglages",
+    "storageFiles": "La liste des fichiers gardés sur le serveur, dans la section Données des réglages",
     "wikiLinks": "Les liens [[Note]] vers une note ou l'un de ses titres ([[Note#Titre]], [[#Titre]]), proposés à la frappe",
     "noteEmbeds": "Inclure une note dans une autre avec ![[Note]], affichée en lecture seule",
     "images": "Coller ou glisser des images dans une note, en petit, moyen ou grand",
@@ -370,7 +369,7 @@
     "themes": "Les thèmes de couleurs, en mode clair et sombre",
     "importExport": "Importer un zip, des fichiers .md ou un coffre Obsidian ; exporter tout, un dossier ou une sélection",
     "trash": "La corbeille, pour restaurer une note ou un dossier supprimé",
-    "storageUsage": "L'espace pris sur le serveur, par type de fichier, dans la section Stockage des réglages"
+    "storageUsage": "L'espace pris sur le serveur, par type de fichier, dans la section Données des réglages"
   },
   "conflict": {
     "title": "Conflits ({count} à résoudre)",

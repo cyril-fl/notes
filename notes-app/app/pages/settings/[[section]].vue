@@ -70,7 +70,7 @@ const { data: brokenLinks } = useLazyAsyncData(
   { watch: [showLinks] },
 );
 // Read only where the section shows, like the links.
-const showStorage = computed(() => show('storage'));
+const showStorage = computed(() => show('data'));
 const { data: files } = useLazyAsyncData(
   'files',
   () => (showStorage.value ? api<NoteFile[]>('/api/files') : Promise.resolve(null)),
@@ -286,50 +286,6 @@ async function deleteData() {
         </ul>
       </section>
 
-      <section v-if="showStorage">
-        <SettingsHeading id="storage" />
-        <div class="rounded-lg border border-default">
-          <div v-if="files" class="space-y-3 px-4 py-3" :class="{ 'border-b border-default': pagedFiles.length }">
-            <p class="text-sm">
-              {{ $t('settings.storageUsed', { size: fileSize(used, locale), count: files.length }, files.length) }}
-            </p>
-            <template v-if="kinds.length">
-              <div class="flex h-3 gap-0.5 overflow-hidden rounded-full bg-elevated">
-                <div
-                  v-for="{ kind, size } in kinds"
-                  :key="kind"
-                  :class="kindStyles[kind].color"
-                  :style="{ width: `${(size / used) * 100}%` }"
-                />
-              </div>
-              <ul class="flex flex-wrap gap-x-4 gap-y-1 text-xs">
-                <li v-for="{ kind, size } in kinds" :key="kind" class="flex items-center gap-1.5">
-                  <span class="size-2 rounded-full" :class="kindStyles[kind].color" />
-                  {{ $t(`settings.fileKinds.${kind}`) }}
-                  <span class="text-muted">{{ fileSize(size, locale) }}</span>
-                </li>
-              </ul>
-            </template>
-          </div>
-          <p v-if="files && !files.length" class="px-4 py-3 text-xs text-muted">
-            {{ $t('settings.storageEmpty') }}
-          </p>
-          <ul v-if="pagedFiles.length" class="divide-y divide-default">
-            <li v-for="file in pagedFiles" :key="file.id" class="flex items-center gap-3 px-4 py-2">
-              <UIcon :name="kindStyles[fileKind(file.content_type)].icon" class="size-4 shrink-0 text-muted" />
-              <p class="min-w-0 flex-1 truncate text-sm">{{ file.name || $t('settings.unnamedFile') }}</p>
-              <span class="shrink-0 text-xs text-muted">{{ fileSize(file.size, locale) }}</span>
-            </li>
-          </ul>
-          <div
-            v-if="files && pagedFiles.length && files.length > filesPerPage"
-            class="flex justify-center border-t border-default px-4 py-2"
-          >
-            <UPagination v-model:page="filesPage" :total="files.length" :items-per-page="filesPerPage" size="sm" />
-          </div>
-        </div>
-      </section>
-
       <section v-if="show('data')">
         <SettingsHeading id="data" />
         <ul class="divide-y divide-default rounded-lg border border-default">
@@ -376,6 +332,47 @@ async function deleteData() {
             />
           </li>
         </ul>
+        <h3 class="mt-6 mb-2 text-xs font-medium text-muted">{{ $t('settings.sections.storage') }}</h3>
+        <div class="rounded-lg border border-default">
+          <div v-if="files" class="space-y-3 px-4 py-3" :class="{ 'border-b border-default': pagedFiles.length }">
+            <p class="text-sm">
+              {{ $t('settings.storageUsed', { size: fileSize(used, locale), count: files.length }, files.length) }}
+            </p>
+            <template v-if="kinds.length">
+              <div class="flex h-3 gap-0.5 overflow-hidden rounded-full bg-elevated">
+                <div
+                  v-for="{ kind, size } in kinds"
+                  :key="kind"
+                  :class="kindStyles[kind].color"
+                  :style="{ width: `${(size / used) * 100}%` }"
+                />
+              </div>
+              <ul class="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                <li v-for="{ kind, size } in kinds" :key="kind" class="flex items-center gap-1.5">
+                  <span class="size-2 rounded-full" :class="kindStyles[kind].color" />
+                  {{ $t(`settings.fileKinds.${kind}`) }}
+                  <span class="text-muted">{{ fileSize(size, locale) }}</span>
+                </li>
+              </ul>
+            </template>
+          </div>
+          <p v-if="files && !files.length" class="px-4 py-3 text-xs text-muted">
+            {{ $t('settings.storageEmpty') }}
+          </p>
+          <ul v-if="pagedFiles.length" class="divide-y divide-default">
+            <li v-for="file in pagedFiles" :key="file.id" class="flex items-center gap-3 px-4 py-2">
+              <UIcon :name="kindStyles[fileKind(file.content_type)].icon" class="size-4 shrink-0 text-muted" />
+              <p class="min-w-0 flex-1 truncate text-sm">{{ file.name || $t('settings.unnamedFile') }}</p>
+              <span class="shrink-0 text-xs text-muted">{{ fileSize(file.size, locale) }}</span>
+            </li>
+          </ul>
+          <div
+            v-if="files && pagedFiles.length && files.length > filesPerPage"
+            class="flex justify-center border-t border-default px-4 py-2"
+          >
+            <UPagination v-model:page="filesPage" :total="files.length" :items-per-page="filesPerPage" size="sm" />
+          </div>
+        </div>
         <!-- Each section keeps what cannot be undone at its bottom, apart. -->
         <h3 class="mt-6 mb-2 text-xs font-medium text-error">{{ $t('settings.danger') }}</h3>
         <div class="flex items-center gap-4 rounded-lg border border-error/25 bg-error/5 px-4 py-3">
