@@ -40,7 +40,7 @@ func TestBrokenLinks(t *testing.T) {
 		{"Single", "# Single"},
 		{"Gone", "# Gone"},
 		// Single and Gone resolve on creation, the rest waits.
-		{"Source", "# Source\n\n[[Twin#h]] [[Nowhere]] [[Single]] [[Gone]] [[#Top]] [[Source]] `[[Code]]`"},
+		{"Source", "# Source\n\n[[Twin#h]] [[Nowhere]] [[Single]] [[Gone]] [[#Top]] [[#Gone (old)]] [[Source]] `[[Code]]`\n\n## Top"},
 	} {
 		process := createnote.Process(ctx, tx, createnote.Input{Content: note.content})
 		process.Run()
@@ -69,7 +69,7 @@ func TestBrokenLinks(t *testing.T) {
 		got = append(got, link.Kind+":"+link.Target)
 	}
 	// [[Source]] names only the note itself: it never resolves.
-	want := []string{"ambiguous:Twin#h", "unresolved:Nowhere", "unresolved:Source", "missing:Gone"}
+	want := []string{"ambiguous:Twin#h", "unresolved:Nowhere", "unresolved:#Gone (old)", "unresolved:Source", "missing:Gone"}
 	if !slices.Equal(got, want) {
 		t.Errorf("links = %q, want %q", got, want)
 	}

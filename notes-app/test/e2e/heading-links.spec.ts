@@ -38,3 +38,20 @@ test('a [[Note#Heading]] typed by hand waits, then the API points it to the note
   await expect.poll(() => box.content(source.id), { timeout: 5000 }).toContain(`](note:${target.id}#Lait)`);
   await expect(editor.locator(`a[data-note="${target.id}"][data-heading="Lait"]`)).toBeVisible();
 });
+
+test('[[# offers the headings of the note itself, the link scrolls to it without leaving the note (#100)', async ({
+  page,
+}) => {
+  const note = await box.note(`# ${box.prefix} même\n\nVoir\n\n${'texte\n\n'.repeat(80)}## Bas\n\nla fin`);
+  await page.goto(`/notes/${note.id}`);
+  const editor = page.locator('.ProseMirror');
+  await editor.getByText('Voir').click();
+  await page.keyboard.press('End');
+  await page.keyboard.type(' [[#Ba', { delay: 150 });
+  await page.getByRole('option', { name: '#Bas' }).click();
+
+  await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('Voir [[#Bas]]');
+  await editor.locator('a[data-wikilink="#Bas"]').click();
+  await expect(page).toHaveURL(`/notes/${note.id}`);
+  await expect(page.getByRole('heading', { name: 'Bas' })).toBeInViewport();
+});

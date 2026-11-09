@@ -7,7 +7,7 @@ import LinkCard from '~/components/LinkCard.vue';
 
 const ALLOWED_LINKS = ['http', 'https', 'mailto'];
 
-/** The links of the note editor: web links and their cards, [[links]] to the other notes. id: the note, left out of the [[ menu. */
+/** The links of the note editor: web links and their cards, [[links]] to the other notes and [[#links]] to its own headings. id: the note, left out of the [[ menu. */
 export function useNoteLinks(id: Ref<string | undefined>): EditorModule {
   const { icons } = useIcons();
   const { t } = useI18n();
@@ -84,7 +84,17 @@ export function useNoteLinks(id: Ref<string | undefined>): EditorModule {
       if (headingNote.value?.id === noteId) headings.value = headingsOf(detail?.content ?? '');
     },
   );
+  // [[# offers the headings of the note itself, read from the text being written. A boolean: new items on each key reset the menu.
+  const ownHeadings = ref<string[]>([]);
+  const ownQuery = computed(() => query.value.startsWith('#'));
   const linkItems = computed(() => {
+    if (ownQuery.value)
+      return ownHeadings.value.map((heading) => ({
+        kind: 'wikiLink',
+        label: `#${heading}`,
+        icon: icons.heading1,
+        id: null,
+      }));
     const note = headingNote.value;
     if (!note) return noteItems.value;
     return noteItems.value.concat(
@@ -96,6 +106,18 @@ export function useNoteLinks(id: Ref<string | undefined>): EditorModule {
     const link = (event.target as HTMLElement).closest<HTMLElement>('a[data-wikilink]');
     if (!link) return;
     event.preventDefault();
+    const own = link.dataset.wikilink!.trim();
+    if (own.startsWith('#')) {
+      const heading = [...link.closest('.ProseMirror')!.querySelectorAll('h1, h2, h3, h4, h5, h6')].find((el) =>
+        sameHeading(el.textContent ?? '', own.slice(1)),
+      );
+      if (heading) return heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return toast.add({
+        title: t('note.missingHeading'),
+        description: t('note.missingHeadingDescription', { target: own.slice(1) }),
+        color: 'warning',
+      });
+    }
     const heading = link.dataset.heading ? `#${encodeURIComponent(link.dataset.heading)}` : '';
     if (link.dataset.note) return navigateTo(`/notes/${link.dataset.note}${heading}`);
     // The other notes the API would pick from, by path or by title whatever its case, as linknotes.Resolve.
@@ -133,7 +155,7 @@ export function useNoteLinks(id: Ref<string | undefined>): EditorModule {
       },
     },
     handlers: {
-      wikiLink: command((editor, item: { label: string; id: string; heading?: string }) =>
+      wikiLink: command((editor, item: { label: string; id: string | null; heading?: string }) =>
         editor
           .chain()
           .focus()
@@ -187,6 +209,13 @@ export function useNoteLinks(id: Ref<string | undefined>): EditorModule {
           // The menu filters its items alone: the typed text is read here, for the headings after #.
           allow: ({ state, range }: { state: EditorState; range: Range }) => {
             query.value = state.doc.textBetween(range.from + 2, range.to);
+            if (query.value.startsWith('#')) {
+              const headings: string[] = [];
+              state.doc.forEach((node) => {
+                if (node.type.name === 'heading' && node.textContent) headings.push(node.textContent);
+              });
+              if (headings.join('\n') !== ownHeadings.value.join('\n')) ownHeadings.value = headings;
+            }
             return true;
           },
         },

@@ -43,14 +43,23 @@ func From(content string) string {
 
 // Heading gives the first heading of content, "" without one.
 func Heading(content string) string {
+	if headings := Headings(content); len(headings) > 0 {
+		return headings[0]
+	}
+	return ""
+}
+
+// Headings gives the headings of content, in order, as their words: those of fenced code and empty ones left out.
+func Headings(content string) []string {
+	var headings []string
 	for _, line := range textLines(content) {
 		if match := heading.FindStringSubmatch(line); match != nil {
 			if title := clean(match[1]); title != "" {
-				return title
+				headings = append(headings, title)
 			}
 		}
 	}
-	return ""
+	return headings
 }
 
 // Helpers

@@ -124,6 +124,8 @@
     "pendingLinkDescription": "No note is called “{target}”: it will be linked as soon as one has this title.",
     "ambiguousLink": "Ambiguous link",
     "ambiguousLinkDescription": "Several notes are called “{target}”: {paths}. Write the path of the right one (/Folder/Title).",
+    "missingHeading": "Heading not found",
+    "missingHeadingDescription": "This note has no heading “{target}”.",
     "heading": "Heading {level}",
     "bold": "Bold",
     "italic": "Italic",

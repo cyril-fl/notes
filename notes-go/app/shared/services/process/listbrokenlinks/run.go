@@ -2,9 +2,11 @@ package listbrokenlinks
 
 import (
 	"context"
+	"slices"
 	"strings"
 
 	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/notetitle"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readgraph"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/wikilink"
@@ -14,7 +16,7 @@ import (
 
 // The kinds of broken link.
 const (
-	UNRESOLVED = "unresolved" // [[target]] that no other note has as title or path
+	UNRESOLVED = "unresolved" // [[target]] that no other note has as title or path, [[#heading]] that the note lacks
 	AMBIGUOUS  = "ambiguous"  // [[target]] that several other notes have
 	MISSING    = "missing"    // a link to a note trashed or purged since
 )
@@ -115,9 +117,16 @@ func (p *run) check() {
 			p.cache.result = append(p.cache.result, Link{note.ID, string(note.Title), note.Path, target, kind})
 		}
 		for _, target := range wikilink.Parse(content) {
-			name, _, _ := strings.Cut(target, "#")
+			name, heading, _ := strings.Cut(target, "#")
 			if name = strings.TrimSpace(name); name == "" {
-				continue // [[#Heading]]: a heading of the note itself
+				// [[#Heading]]: a heading of the note itself, as the app compares them (any case, no parentheses).
+				plain := strings.NewReplacer("(", "", ")", "")
+				if !slices.ContainsFunc(notetitle.Headings(content), func(h string) bool {
+					return strings.EqualFold(strings.TrimSpace(plain.Replace(h)), strings.TrimSpace(plain.Replace(heading)))
+				}) {
+					add(target, UNRESOLVED)
+				}
+				continue
 			}
 			if !strings.HasPrefix(name, "/") {
 				name = strings.ToLower(name)

@@ -104,7 +104,8 @@ export const WikiLink = Node.create({
       'data-wikilink': node.attrs.target,
       'data-note': node.attrs.id ?? undefined,
       'data-heading': node.attrs.heading ?? undefined,
-      class: node.attrs.id ? 'wikilink' : 'wikilink wikilink-waiting',
+      // [[#Heading]] points to the note itself: it has no id to wait for.
+      class: node.attrs.id || node.attrs.target.startsWith('#') ? 'wikilink' : 'wikilink wikilink-waiting',
     };
     return ['a', mergeAttributes(HTMLAttributes, attrs), node.attrs.target];
   },

@@ -124,6 +124,8 @@
     "pendingLinkDescription": "Aucune note ne s'appelle « {target} » : il sera relié dès qu'une note portera ce titre.",
     "ambiguousLink": "Lien ambigu",
     "ambiguousLinkDescription": "Plusieurs notes s'appellent « {target} » : {paths}. Écris le chemin de la bonne (/Dossier/Titre).",
+    "missingHeading": "Titre introuvable",
+    "missingHeadingDescription": "Cette note n'a pas de titre « {target} ».",
     "heading": "Titre {level}",
     "bold": "Gras",
     "italic": "Italique",
