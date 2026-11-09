@@ -90,3 +90,15 @@ func TestUnresolve(t *testing.T) {
 		t.Errorf("Unresolve = %q, want %q", got, want)
 	}
 }
+
+// An embed ![[Note]] is a link after a !: resolved to ![Note](note:<id>), given back as ![[Note]] on export.
+func TestEmbed(t *testing.T) {
+	resolve := func(string) (string, string, bool) { return idA, "Courses", true }
+	resolved := Resolve("![[courses]]", resolve)
+	if want := "![Courses](note:" + idA + ")"; resolved != want {
+		t.Errorf("Resolve = %q, want %q", resolved, want)
+	}
+	if got := Unresolve(resolved); got != "![[Courses]]" {
+		t.Errorf("Unresolve = %q, want %q", got, "![[Courses]]")
+	}
+}

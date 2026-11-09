@@ -174,7 +174,10 @@ function showResolvedLinks(sent: string, saved: string) {
   if (!editor || !links.size) return;
   const { tr } = editor.state;
   editor.state.doc.descendants((node, pos) => {
-    const link = node.type.name === 'wikiLink' && !node.attrs.id && links.get(node.attrs.target.toLowerCase());
+    const link =
+      ['wikiLink', 'noteEmbed'].includes(node.type.name) &&
+      !node.attrs.id &&
+      links.get(node.attrs.target.toLowerCase());
     if (link) tr.setNodeMarkup(pos, undefined, link);
   });
   if (tr.docChanged) editor.view.dispatch(tr.setMeta('addToHistory', false));

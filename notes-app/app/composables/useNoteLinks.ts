@@ -4,10 +4,11 @@ import type { Editor } from '@tiptap/vue-3';
 import type { ItemDetail, NotesGraph } from '~/types/items';
 import type { LinkSize } from '~/utils/linkCard';
 import LinkCard from '~/components/LinkCard.vue';
+import NoteEmbed from '~/components/NoteEmbed.vue';
 
 const ALLOWED_LINKS = ['http', 'https', 'mailto'];
 
-/** The links of the note editor: web links and their cards, [[links]] to the other notes and [[#links]] to its own headings. id: the note, left out of the [[ menu. */
+/** The links of the note editor: web links and their cards, [[links]] to the other notes and [[#links]] to its own headings, ![[embeds]] of the other notes. id: the note, left out of the [[ menu. */
 export function useNoteLinks(id: Ref<string | undefined>): EditorModule {
   const { icons } = useIcons();
   const { t } = useI18n();
@@ -143,7 +144,7 @@ export function useNoteLinks(id: Ref<string | undefined>): EditorModule {
   }
 
   return {
-    extensions: [WikiLink, linkCard(LinkCard)],
+    extensions: [WikiLink, noteEmbed(NoteEmbed), linkCard(LinkCard)],
     starterKit: {
       link: {
         openOnClick: false,

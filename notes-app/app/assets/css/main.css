@@ -310,6 +310,15 @@
     @apply size-8;
   }
 
+  /* A note shown in another: on its own line, set apart like a quote. */
+  .ProseMirror .note-embed {
+    @apply my-2 block rounded-md border-l-2 border-primary/40 bg-elevated/30 py-2 pl-4;
+  }
+
+  .ProseMirror p:has(> .note-embed) > :is(img.ProseMirror-separator, br.ProseMirror-trailingBreak) {
+    @apply hidden!;
+  }
+
   /* An image's size, as a share of the note's width: without one it keeps its own width. */
   .ProseMirror img.note-image-large {
     @apply w-full;
