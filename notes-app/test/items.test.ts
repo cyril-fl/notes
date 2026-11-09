@@ -118,11 +118,11 @@ test('a note offers to pin or unpin it, then to delete it', () => {
   assert.deepEqual(labels(useItems().itemMenu(note)), [['items.unpin'], ['common.delete']]);
 });
 
-test('a folder offers what goes in it, favorite, rename, then delete', () => {
+test('a folder offers what goes in it, favorite, rename, export, then delete', () => {
   fake({ pinned: ['f1'] });
   assert.deepEqual(labels(useItems().itemMenu(folder)), [
     ['common.newNote', 'common.newFolder'],
-    ['items.removeFavorite', 'common.rename'],
+    ['items.removeFavorite', 'common.rename', 'settings.export'],
     ['common.delete'],
   ]);
 });
