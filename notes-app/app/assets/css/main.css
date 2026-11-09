@@ -310,9 +310,9 @@
     @apply size-8;
   }
 
-  /* A note shown in another: on its own line, set apart like a quote. */
+  /* A note shown in another: on its own line, on the background of a code block. */
   .ProseMirror .note-embed {
-    @apply my-2 block rounded-md border-l-2 border-primary/40 bg-elevated/30 py-2 pl-4;
+    @apply my-2 block rounded-md border border-muted bg-muted px-4 py-3;
   }
 
   .ProseMirror p:has(> .note-embed) > :is(img.ProseMirror-separator, br.ProseMirror-trailingBreak) {
