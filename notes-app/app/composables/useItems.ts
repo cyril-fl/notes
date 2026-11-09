@@ -138,6 +138,12 @@ export function useItems() {
     return act(() => api(`/api/trash/${id}`, { method: 'DELETE' }));
   }
 
+  /** Downloads the zip of these items with what they hold: the API sends it as an attachment, the page stays. */
+  function exportItems(ids: string[]) {
+    const query = new URLSearchParams(ids.map((id) => ['id', id]));
+    window.location.assign(`${useRuntimeConfig().public.apiBase}/api/export?${query}`);
+  }
+
   /** What right-clicking an item offers. */
   function itemMenu(item: Item): ContextMenuItem[][] {
     const remove = {
@@ -170,6 +176,7 @@ export function useItems() {
           onSelect: () => pinItem(item, !favorite),
         },
         { label: t('common.rename'), icon: icons.rename, onSelect: () => renameFolder(item) },
+        { label: t('settings.export'), icon: icons.export, onSelect: () => exportItems([item.id]) },
       ],
       [remove],
     ];
@@ -185,6 +192,7 @@ export function useItems() {
     pinItem,
     emptyTrash,
     purgeItem,
+    exportItems,
     itemMenu,
     renameTag,
     removeTag,

@@ -573,6 +573,15 @@ openapi: 3.1.0
 paths:
   /api/export:
     get:
+      parameters:
+      - description: items to export with what they hold, every note when left out
+        in: query
+        name: id
+        schema:
+          items:
+            type: string
+          type: array
+        style: form
       responses:
         "200":
           content:
@@ -580,6 +589,18 @@ paths:
               schema:
                 type: file
           description: OK
+        "400":
+          content:
+            application/zip:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "404":
+          content:
+            application/zip:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
         "500":
           content:
             application/zip:

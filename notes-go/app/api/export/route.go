@@ -14,16 +14,23 @@ import (
 )
 
 // Handler gives every live note as a zip of markdown files, one directory per folder, the images in _files:
-// GET /api/export.
+// GET /api/export, or only some items with what they hold: GET /api/export?id=<uuid>&id=<uuid>.
 // @Summary  Export the notes as markdown files
 // @Tags     transfer
 // @Produce  application/zip
+// @Param    id query []string false "items to export with what they hold, every note when left out" collectionFormat(multi)
 // @Success  200 {file} binary
+// @Failure  400 {object} respond.Failure
+// @Failure  404 {object} respond.Failure
 // @Failure  500 {object} respond.Failure
 // @Router   /api/export [get]
 func Handler(db bun.IDB, store silo.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		process := exportnotes.Process(r.Context(), db, "")
+		ids := r.URL.Query()["id"]
+		if !respond.ValidIDs(w, ids...) {
+			return
+		}
+		process := exportnotes.Process(r.Context(), db, "", ids...)
 		process.Run()
 		if process.HasErr() {
 			respond.Error(w, process.GetErr())

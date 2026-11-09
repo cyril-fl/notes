@@ -24,6 +24,7 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/edittag"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/edituser"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/emptytrash"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/exportnotes"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listitems"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/moveitems"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/patchnote"
@@ -69,7 +70,7 @@ var statuses = []struct {
 		createsession.ErrBadCredentials, readsession.ErrNoSession,
 	}},
 	{http.StatusNotFound, []error{
-		editfolder.ErrNotFound, editnote.ErrNotFound, emptytrash.ErrNotFound, edittag.ErrNotFound, pinnote.ErrNotFound, readfile.ErrNotFound, readitem.ErrNotFound, readtag.ErrNotFound,
+		editfolder.ErrNotFound, editnote.ErrNotFound, emptytrash.ErrNotFound, edittag.ErrNotFound, exportnotes.ErrNotFound, pinnote.ErrNotFound, readfile.ErrNotFound, readitem.ErrNotFound, readtag.ErrNotFound,
 	}},
 	{http.StatusUnsupportedMediaType, []error{
 		createfile.ErrNotImage,

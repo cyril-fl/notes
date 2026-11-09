@@ -16,7 +16,10 @@ import (
 	"github.com/uptrace/bun"
 )
 
-var ErrFolderNotFound = errors.New("folder not found")
+var (
+	ErrFolderNotFound = errors.New("folder not found")
+	ErrNotFound       = errors.New("item not found")
+)
 
 // FilesDir holds the images of the export, at its root.
 const FilesDir = "_files"
@@ -46,6 +49,7 @@ type run struct {
 	ctx      context.Context
 	db       bun.IDB // *bun.DB or bun.Tx: tests run inside a rolled-back transaction
 	folderID string
+	ids      []string
 }
 
 type cache struct {
@@ -56,20 +60,23 @@ type cache struct {
 
 // Process exports the live content of a folder ("" = everything) as markdown files: a folder is a
 // directory, a note is <title>.md with its text, links to notes written back as [[Title]], images
-// copied into FilesDir and cited by a relative path.
-func Process(ctx context.Context, db bun.IDB, folderID string) *run {
+// copied into FilesDir and cited by a relative path. Given ids, it exports these items instead, a folder
+// with what it holds.
+func Process(ctx context.Context, db bun.IDB, folderID string, ids ...string) *run {
 	return &run{
 		ctx:      ctx,
 		db:       db,
 		folderID: folderID,
+		ids:      slices.Compact(slices.Sorted(slices.Values(ids))),
 	}
 }
 
 func (p *run) Run() {
 	p.checkFolder()
+	p.checkItems()
 	p.loadTree()
 	p.loadImages()
-	p.makeFiles(p.folderID, "")
+	p.makeFiles("", "")
 	p.addImages()
 }
 
@@ -93,23 +100,43 @@ func (p *run) checkFolder() {
 	p.SetErr(err)
 }
 
+// checkItems wants every id a live item of the account: a missing one is not left out silently.
+func (p *run) checkItems() {
+	if p.HasErr() || len(p.ids) == 0 {
+		return
+	}
+	count, err := p.db.NewSelect().Model((*domain.Item)(nil)).Where("id IN (?) AND user_id = ?", bun.List(p.ids), domain.UserID(p.ctx)).Count(p.ctx)
+	if err == nil && count < int64(len(p.ids)) {
+		err = ErrNotFound
+	}
+	p.SetErr(err)
+}
+
 func (p *run) loadTree() {
 	if p.HasErr() {
 		return
 	}
 
+	start := bun.SafeQuery("parent_id IS NULL")
+	if p.folderID != "" {
+		start = bun.SafeQuery("parent_id = ?", p.folderID)
+	}
+	if len(p.ids) > 0 {
+		start = bun.SafeQuery("id IN (?)", bun.List(p.ids))
+	}
+
 	var items []item
 	err := p.db.NewRaw(`
 		WITH RECURSIVE tree AS (
-			SELECT id FROM items WHERE deleted_at IS NULL AND user_id = ? AND (CASE WHEN ? = '' THEN parent_id IS NULL ELSE parent_id::text = ? END)
-			UNION ALL SELECT child.id FROM items AS child JOIN tree ON child.parent_id = tree.id WHERE child.deleted_at IS NULL
+			SELECT id FROM items WHERE deleted_at IS NULL AND user_id = ? AND ?
+			UNION SELECT child.id FROM items AS child JOIN tree ON child.parent_id = tree.id WHERE child.deleted_at IS NULL
 		)
 		SELECT i.id, coalesce(i.parent_id::text, '') AS parent_id, i.kind, i.title, mn.content
 		FROM tree
 		JOIN items AS i ON i.id = tree.id
 		LEFT JOIN metadata_notes AS mn ON mn.item_id = i.id
 		ORDER BY i.kind, i.created_at`,
-		domain.UserID(p.ctx), p.folderID, p.folderID).
+		domain.UserID(p.ctx), start).
 		Scan(p.ctx, &items)
 	if err != nil {
 		p.SetErr(err)
@@ -118,9 +145,18 @@ func (p *run) loadTree() {
 
 	// Titles are sealed: ordered here, the oldest first among the same title, as uniqueName numbers them.
 	domain.SortFold(items, func(i item) string { return string(i.Title) }, func(a, b item) int { return strings.Compare(string(a.Kind), string(b.Kind)) })
+	// The items whose parent is not exported are the top of the export, under "".
+	loaded := map[string]bool{}
+	for _, it := range items {
+		loaded[it.ID] = true
+	}
 	p.cache.children = map[string][]item{}
 	for _, it := range items {
-		p.cache.children[it.ParentID] = append(p.cache.children[it.ParentID], it)
+		parent := it.ParentID
+		if !loaded[parent] {
+			parent = ""
+		}
+		p.cache.children[parent] = append(p.cache.children[parent], it)
 	}
 }
 

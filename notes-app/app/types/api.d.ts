@@ -14,7 +14,10 @@ export interface paths {
         /** Export the notes as markdown files */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description items to export with what they hold, every note when left out */
+                    id?: string[];
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -28,6 +31,24 @@ export interface paths {
                     };
                     content: {
                         "application/zip": Record<string, never>;
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/zip": components["schemas"]["respond.Failure"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/zip": components["schemas"]["respond.Failure"];
                     };
                 };
                 /** @description Internal Server Error */

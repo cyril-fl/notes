@@ -5,7 +5,7 @@ const { icons } = useIcons();
 
 const props = defineProps<{ folderId?: string; title: string; subtitle?: string; items: Item[] }>();
 
-const { createFolder, moveItem, removeItems } = useItems();
+const { createFolder, moveItem, removeItems, exportItems } = useItems();
 const view = useView();
 
 // ⌘-click (Ctrl elsewhere) adds or takes out an item, ⇧-click selects a range from the last one; a plain click opens it.
@@ -89,6 +89,14 @@ const isOver = useDropFolder(panel, () => props.folderId ?? null);
         class="w-56"
         :aria-label="$t('folder.moveTo')"
         @update:model-value="moveSelection"
+      />
+      <UButton
+        :label="$t('settings.export')"
+        :icon="icons.export"
+        color="neutral"
+        variant="ghost"
+        size="sm"
+        @click="exportItems(selection)"
       />
       <UButton
         :label="$t('common.delete')"

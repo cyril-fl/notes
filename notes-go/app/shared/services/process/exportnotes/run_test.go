@@ -2,6 +2,7 @@ package exportnotes
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/testaccount"
 	"slices"
@@ -42,19 +43,20 @@ func TestExportNotes(t *testing.T) {
 		}
 		return create.GetResult().ID
 	}
-	note := func(content, parent string) {
+	note := func(content, parent string) string {
 		create := createnote.Process(ctx, tx, createnote.Input{Content: content, ParentID: parent})
 		create.Run()
 		if create.HasErr() {
 			t.Fatalf("note %q: %v", content, create.GetErr())
 		}
+		return create.GetResult().ID
 	}
 
 	// Unique per run: the dev database may hold anything at the root.
 	root := folder(fmt.Sprintf("export-%d", time.Now().UnixNano()), "")
 	sub := folder("Sous/dossier", root)
 	note("# Courses\n\ndu pain", root)
-	note("# courses\n\ndu lait", root)
+	milk := note("# courses\n\ndu lait", root)
 	note("voir [[Courses]]", sub)
 
 	export := Process(ctx, tx, root)
@@ -72,6 +74,26 @@ func TestExportNotes(t *testing.T) {
 	}
 	if got := export.GetResult(); !slices.Equal(got, want) {
 		t.Errorf("files = %+v, want %+v", got, want)
+	}
+
+	// A selection: the folders with what they hold, at the top of the export.
+	selection := Process(ctx, tx, "", sub, milk)
+	selection.Run()
+	if selection.HasErr() {
+		t.Fatalf("export the selection: %v", selection.GetErr())
+	}
+	want = []File{
+		{Path: "Sous-dossier", Dir: true},
+		{Path: "Sous-dossier/voir Courses.md", Content: "voir [[Courses]]"},
+		{Path: "courses.md", Content: "# courses\n\ndu lait"},
+	}
+	if got := selection.GetResult(); !slices.Equal(got, want) {
+		t.Errorf("selection = %+v, want %+v", got, want)
+	}
+	unknown := Process(ctx, tx, "", milk, "00000000-0000-0000-0000-000000000000")
+	unknown.Run()
+	if !errors.Is(unknown.GetErr(), ErrNotFound) {
+		t.Errorf("export of a missing item: err = %v, want ErrNotFound", unknown.GetErr())
 	}
 
 	missing := Process(ctx, tx, "00000000-0000-0000-0000-000000000000")

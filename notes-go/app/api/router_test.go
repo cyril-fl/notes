@@ -726,6 +726,34 @@ func TestFiles(t *testing.T) {
 		}
 	}
 
+	// A folder exported alone keeps its subfolders, and the images they cite.
+	var top, sub item
+	c.do(http.MethodPost, "/api/folders", fmt.Sprintf(`{"title":%q}`, unique("haut")), http.StatusCreated, &top)
+	c.do(http.MethodPost, "/api/folders", fmt.Sprintf(`{"title":"bas","parent_id":%q}`, top.ID), http.StatusCreated, &sub)
+	c.do(http.MethodPost, "/api/notes", fmt.Sprintf(`{"content":"# Chat\n\n![chat](/api/files/%s)","parent_id":%q}`, file.ID, sub.ID), http.StatusCreated, nil)
+	exported = c.raw("/api/export?id=" + top.ID)
+	read, err = zip.NewReader(strings.NewReader(exported), int64(len(exported)))
+	if err != nil {
+		t.Fatalf("export of a folder is not a zip: %v", err)
+	}
+	var names []string
+	for _, entry := range read.File {
+		names = append(names, entry.Name)
+	}
+	if want := []string{top.Title + "/", top.Title + "/bas/", top.Title + "/bas/Chat.md", "_files/", "_files/" + file.ID + ".png"}; !slices.Equal(names, want) {
+		t.Errorf("export of a folder = %q, want %q", names, want)
+	}
+	if entry, err := read.Open(top.Title + "/bas/Chat.md"); err == nil {
+		data, _ := io.ReadAll(entry)
+		entry.Close()
+		if want := "](../../_files/" + file.ID + ".png)"; !strings.Contains(string(data), want) {
+			t.Errorf("Chat.md = %q, want %q in it", data, want)
+		}
+	}
+	c.do(http.MethodGet, "/api/export?id=nope", "", http.StatusBadRequest, nil)
+	c.do(http.MethodGet, "/api/export?id="+unknownID, "", http.StatusNotFound, nil)
+	c.other(t).do(http.MethodGet, "/api/export?id="+top.ID, "", http.StatusNotFound, nil)
+
 	// An image gone from Silo cuts the export off rather than ending a broken zip as a finished download.
 	clear(c.store.Objects)
 	defer func() {
