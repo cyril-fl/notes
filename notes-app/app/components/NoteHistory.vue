@@ -21,14 +21,16 @@ async function load() {
   versions.value = await api<NoteVersion[]>(`/api/notes/${props.noteId}/versions`, { quiet: true });
 }
 if (props.panel) load();
-// The API keeps a version at most every 5 minutes, or on a restore: read the full texts again only then, not on each save (#97).
+// The API keeps a version at the first save after a 15 minute pause, at least one an hour, and on a restore:
+// read the list again only then, not on each save (#97, #99).
 let restored = false;
 watch(
   () => props.savedAt,
-  (savedAt) => {
+  (savedAt, previous) => {
     const newest = versions.value[0]?.created_at;
     if (!props.panel || !savedAt) return;
-    if (restored || !newest || Date.parse(savedAt) - Date.parse(newest) >= 5 * 60_000) {
+    const since = (date?: string) => (date ? Date.parse(savedAt) - Date.parse(date) : Infinity);
+    if (restored || since(previous) >= 15 * 60_000 || since(newest) >= 60 * 60_000) {
       restored = false;
       load();
     }
@@ -54,13 +56,22 @@ async function compare() {
   current.value = (await api<ItemDetail>(`/api/notes/${props.noteId}`)).content ?? '';
 }
 const changes = computed(() =>
-  selected.value && current.value !== undefined ? lineChanges(selected.value.content, current.value) : undefined,
+  text.value !== undefined && current.value !== undefined ? lineChanges(text.value, current.value) : undefined,
 );
 
+// The list has no texts (#99): the selected version's is read, the answer of an older click dropped.
+const text = ref<string>();
+watch(selected, async (version) => {
+  text.value = undefined;
+  if (!version) return;
+  const read = await api<NoteVersion>(`/api/notes/${props.noteId}/versions/${version.id}`);
+  if (selected.value === version) text.value = read.content ?? '';
+});
+
 function restore() {
-  if (!selected.value) return;
+  if (text.value === undefined) return;
   restored = true;
-  emit('restore', selected.value.content);
+  emit('restore', text.value);
   open.value = false;
 }
 </script>
@@ -138,7 +149,7 @@ function restore() {
         <pre
           v-else-if="selected"
           class="max-h-[60vh] min-w-0 flex-1 overflow-y-auto font-sans text-sm whitespace-pre-wrap"
-          >{{ selected.content }}</pre>
+          >{{ text }}</pre>
       </div>
     </template>
     <template #footer>
@@ -153,7 +164,7 @@ function restore() {
           @click="compare"
         />
         <UButton :label="$t('common.cancel')" color="neutral" variant="ghost" @click="open = false" />
-        <UButton :label="$t('history.restore')" :disabled="!selected || readonly" @click="restore" />
+        <UButton :label="$t('history.restore')" :disabled="text === undefined || readonly" @click="restore" />
       </div>
     </template>
   </UModal>

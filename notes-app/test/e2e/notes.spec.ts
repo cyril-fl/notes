@@ -151,10 +151,12 @@ test('after a conflict in the same place, the dialog asks which text to keep', a
   await expect
     .poll(() => box.content(note.id), { timeout: 5000 })
     .toBe(`# ${box.prefix} conflit\n\nTexte ici\n\nAilleurs`);
-  const versions: { content: string; conflict: boolean }[] = await (
+  const versions: { id: string; conflict: boolean }[] = await (
     await box.api.get(`/api/notes/${note.id}/versions`)
   ).json();
-  expect(versions.find((version) => version.conflict)?.content).toContain('Texte ici');
+  const kept = versions.find((version) => version.conflict);
+  const version = await (await box.api.get(`/api/notes/${note.id}/versions/${kept?.id}`)).json();
+  expect(version.content).toContain('Texte ici');
 });
 
 // Past the API's 10 MB, the toast gives the limit in French, not the API's message (#58). The API's answer

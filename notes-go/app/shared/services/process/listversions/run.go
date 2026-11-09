@@ -23,6 +23,7 @@ type cache struct {
 }
 
 // Process lists the texts a note had before its edits, newest first, used by GET /api/notes/{id}/versions (#61).
+// The texts are left out, the list has no limit (#99): readversion reads one.
 func Process(ctx context.Context, db bun.IDB, id string) *run {
 	return &run{
 		ctx: ctx,
@@ -59,6 +60,7 @@ func (p *run) loadVersions() {
 
 	p.SetErr(p.db.NewSelect().
 		Model(&p.cache.versions).
+		ExcludeColumn("content").
 		Where("item_id = ?", p.id).
 		OrderExpr("created_at DESC").
 		Scan(p.ctx))

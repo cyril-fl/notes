@@ -6,10 +6,11 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/keepconflict"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listversions"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readversion"
 	"github.com/uptrace/bun"
 )
 
-// Handler lists the older texts of a note: GET /api/notes/{id}/versions.
+// Handler lists the older texts of a note, without the texts: GET /api/notes/{id}/versions.
 // @Summary  List the versions of a note
 // @Tags     notes
 // @Produce  json
@@ -32,6 +33,38 @@ func Handler(db bun.IDB) http.HandlerFunc {
 			return
 		}
 		respond.List(w, http.StatusOK, process.GetResult())
+	}
+}
+
+// Read answers one version of a note with its text: GET /api/notes/{id}/versions/{version} (#99).
+// @Summary  Read a version of a note
+// @Tags     notes
+// @Produce  json
+// @Param    id path string true "uuid"
+// @Param    version path string true "uuid"
+// @Success  200 {object} domain.NoteVersion
+// @Failure  400 {object} respond.Failure
+// @Failure  404 {object} respond.Failure
+// @Failure  500 {object} respond.Failure
+// @Router   /api/notes/{id}/versions/{version} [get]
+func Read(db bun.IDB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, ok := respond.ID(w, r)
+		if !ok {
+			return
+		}
+		version := r.PathValue("version")
+		if !respond.ValidIDs(w, version) {
+			return
+		}
+
+		process := readversion.Process(r.Context(), db, id, version)
+		process.Run()
+		if process.HasErr() {
+			respond.Error(w, process.GetErr())
+			return
+		}
+		respond.JSON(w, http.StatusOK, process.GetResult())
 	}
 }
 

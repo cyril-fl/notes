@@ -60,7 +60,7 @@ func TestPatchNote(t *testing.T) {
 		t.Errorf("content only: %+v, %v", got.GetResult(), got.GetErr())
 	}
 
-	// The text replaced is kept, once every 5 minutes: the other edits of this transaction add none (#61).
+	// The text replaced is kept at the first save of a session: the other edits of this transaction add none (#61, #99).
 	versions := func() (got []domain.NoteVersion) {
 		if err := tx.NewSelect().Model(&got).Where("item_id = ?", id).OrderExpr("created_at DESC").Scan(ctx); err != nil {
 			t.Fatal(err)
@@ -105,10 +105,10 @@ func TestPatchNote(t *testing.T) {
 	}
 
 	if got := versions(); len(got) != 1 {
-		t.Errorf("versions within 5 minutes: %d, want 1", len(got))
+		t.Errorf("versions within a session: %d, want 1", len(got))
 	}
 
-	// A restored version keeps the text it replaces, even within 5 minutes (#94).
+	// A restored version keeps the text it replaces, even within a session (#94).
 	restored := "restored"
 	if got := patch(Input{Content: &restored, Restore: true}); got.HasErr() {
 		t.Fatalf("restore: %v", got.GetErr())
@@ -121,19 +121,43 @@ func TestPatchNote(t *testing.T) {
 		t.Fatalf("back to content: %v", got.GetErr())
 	}
 
-	// Past 5 minutes the text is kept again, and only the versionsKept last stay.
-	if _, err := tx.NewRaw("UPDATE note_versions SET created_at = created_at - interval '1 day' WHERE item_id = ?", id).Exec(ctx); err != nil {
-		t.Fatal(err)
+	// A save without a change keeps updated_at and adds no version (#99).
+	shift := func(query string) {
+		if _, err := tx.NewRaw(query, id).Exec(ctx); err != nil {
+			t.Fatal(err)
+		}
 	}
-	if _, err := tx.NewRaw("INSERT INTO note_versions (item_id, content, created_at) SELECT item_id, content, created_at - g * interval '1 hour' FROM note_versions, generate_series(1, ?) AS g WHERE item_id = ?", versionsKept, id).Exec(ctx); err != nil {
-		t.Fatal(err)
+	shift("UPDATE items SET updated_at = updated_at - interval '20 minutes' WHERE id = ?")
+	read.Run()
+	paused := read.GetResult().Item.UpdatedAt
+	if got := patch(Input{Content: &content}); got.HasErr() || !got.GetResult().Item.UpdatedAt.Equal(paused) {
+		t.Errorf("save without a change: updated_at %v, want %v, %v", got.GetResult().Item.UpdatedAt, paused, got.GetErr())
 	}
+	if got := versions(); len(got) != 2 {
+		t.Errorf("versions after a save without a change: %d, want 2", len(got))
+	}
+
+	// Past a 15 minute pause, a new session keeps the text it starts from.
 	again := "again"
 	if got := patch(Input{Content: &again}); got.HasErr() {
-		t.Fatalf("edit past 5 minutes: %v", got.GetErr())
+		t.Fatalf("edit after a pause: %v", got.GetErr())
 	}
-	if got := versions(); len(got) != versionsKept || string(got[0].Content) != content {
-		t.Errorf("versions past 5 minutes: %d, newest %q", len(got), got[0].Content)
+	if got := versions(); len(got) != 3 {
+		t.Errorf("versions after a pause: %d, want 3", len(got))
+	}
+
+	// In a session without a pause, a version an hour; none drops off however many there are.
+	shift("INSERT INTO note_versions (item_id, content, created_at) SELECT item_id, content, current_timestamp - g * interval '1 hour' FROM (SELECT * FROM note_versions WHERE item_id = ? LIMIT 1) AS nv, generate_series(2, 60) AS g")
+	shift("UPDATE note_versions SET created_at = created_at - interval '1 hour' WHERE item_id = ? AND created_at = current_timestamp")
+	hourly := "hourly"
+	if got := patch(Input{Content: &hourly}); got.HasErr() {
+		t.Fatalf("edit an hour on: %v", got.GetErr())
+	}
+	if got := versions(); len(got) != 63 || string(got[0].Content) != again {
+		t.Errorf("versions an hour on: %d, newest %q, want 63 and %q", len(got), got[0].Content, again)
+	}
+	if got := patch(Input{Content: &content}); got.HasErr() || len(versions()) != 63 {
+		t.Errorf("versions within the hour: %d, want 63, %v", len(versions()), got.GetErr())
 	}
 
 	// A note never edited: its version is created_at.

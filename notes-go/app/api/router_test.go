@@ -160,17 +160,28 @@ func TestNotes(t *testing.T) {
 	if read.Content != "changed #go" || read.Item.Title != "changed" || strings.Join(read.Tags, ",") != "go" || read.Path != "/changed" {
 		t.Errorf("after content patch: %+v", read)
 	}
-	// The text replaced is kept as a version, the next edits within 5 minutes are not (#61).
+	// The text replaced is kept as a version, the next edits of the session are not (#61, #99).
 	c.do("PATCH", path, `{"content":"changed again #go"}`, http.StatusOK, nil)
 	c.do("PATCH", path, `{"content":"changed #go"}`, http.StatusOK, nil)
 	var versions []struct {
+		ID      string `json:"id"`
 		Content string `json:"content"`
 	}
 	c.do("GET", path+"/versions", "", http.StatusOK, &versions)
-	if len(versions) != 1 || versions[0].Content != "# "+title+"\n\nhello\n\n#go #sql" {
-		t.Errorf("versions = %+v", versions)
+	if len(versions) != 1 || versions[0].Content != "" {
+		t.Errorf("versions = %+v, want 1 without its text", versions)
 	}
 	c.do("GET", "/api/notes/"+unknownID+"/versions", "", http.StatusNotFound, nil)
+	// The text of a version is read one at a time.
+	var version struct {
+		Content string `json:"content"`
+	}
+	c.do("GET", path+"/versions/"+versions[0].ID, "", http.StatusOK, &version)
+	if version.Content != "# "+title+"\n\nhello\n\n#go #sql" {
+		t.Errorf("version = %+v", version)
+	}
+	c.do("GET", path+"/versions/"+unknownID, "", http.StatusNotFound, nil)
+	c.do("GET", path+"/versions/nope", "", http.StatusBadRequest, nil)
 	// A text refused by a 409 is kept as a version marked conflict (#78); the note's own text keeps nothing.
 	var kept struct {
 		Content  string `json:"content"`
@@ -737,6 +748,10 @@ func TestAccountsAreApart(t *testing.T) {
 	bob.do("GET", "/api/folders/"+folder.ID, "", http.StatusNotFound, nil)
 	bob.do("PATCH", "/api/notes/"+note.ID, `{"content":"# volé"}`, http.StatusNotFound, nil)
 	bob.do("GET", "/api/notes/"+note.ID+"/versions", "", http.StatusNotFound, nil)
+	alice.do("PATCH", "/api/notes/"+note.ID, `{"content":"# Secret #privé v2"}`, http.StatusOK, nil)
+	var versions []item
+	alice.do("GET", "/api/notes/"+note.ID+"/versions", "", http.StatusOK, &versions)
+	bob.do("GET", "/api/notes/"+note.ID+"/versions/"+versions[0].ID, "", http.StatusNotFound, nil)
 	bob.do("DELETE", "/api/notes/"+note.ID, "", http.StatusNotFound, nil)
 	bob.do("POST", "/api/notes", fmt.Sprintf(`{"content":"# Intrus","parent_id":%q}`, folder.ID), http.StatusBadRequest, nil)
 	for _, path := range []string{"/api/items", "/api/search?q=Secret", "/api/graph", "/api/graph/notes", "/api/recent", "/api/folders", "/api/tags"} {

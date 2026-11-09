@@ -121,6 +121,7 @@ components:
           description: a text refused by a 409, kept so it is not lost (#78)
           type: boolean
         content:
+          description: left out of a list
           type: string
         created_at:
           type: string
@@ -128,7 +129,6 @@ components:
           type: string
       required:
       - conflict
-      - content
       - created_at
       - id
       type: object
@@ -1525,6 +1525,49 @@ paths:
                 $ref: '#/components/schemas/respond.Failure'
           description: Internal Server Error
       summary: Keep a text refused by a conflict as a version
+      tags:
+      - notes
+  /api/notes/{id}/versions/{version}:
+    get:
+      parameters:
+      - description: uuid
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      - description: uuid
+        in: path
+        name: version
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/domain.NoteVersion'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Read a version of a note
       tags:
       - notes
   /api/pinned:

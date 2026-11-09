@@ -346,7 +346,7 @@
     "title": "Version history",
     "emptyTitle": "No earlier version is available yet.",
     "emptyAfterChange": "A copy is saved after each change.",
-    "emptyEveryFiveMinutes": "Saves are at least five minutes apart.",
+    "emptySessions": "A new version after a 15 minute pause, and at least one an hour.",
     "restore": "Restore this version",
     "all": "Whole history ({count})",
     "panelTitle": "History ({count})",

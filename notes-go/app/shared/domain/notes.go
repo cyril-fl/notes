@@ -72,9 +72,9 @@ type NoteVersion struct {
 
 	ID        string      `bun:",pk,type:uuid,default:gen_random_uuid()" json:"id"`
 	ItemID    string      `bun:",type:uuid,notnull" json:"-"`
-	Content   secret.Text `bun:",type:text,notnull" json:"content" swaggertype:"string"`
-	FileIDs   []string    `bun:"file_ids,array,type:uuid[]" json:"-"`    // the images Content cites, in clear: purgefiles keeps them
-	Conflict  bool        `bun:",notnull,default:false" json:"conflict"` // a text refused by a 409, kept so it is not lost (#78)
+	Content   secret.Text `bun:",type:text,notnull" json:"content,omitempty" swaggertype:"string" binding:"optional"` // left out of a list
+	FileIDs   []string    `bun:"file_ids,array,type:uuid[]" json:"-"`                                                 // the images Content cites, in clear: purgefiles keeps them
+	Conflict  bool        `bun:",notnull,default:false" json:"conflict"`                                              // a text refused by a 409, kept so it is not lost (#78)
 	CreatedAt time.Time   `bun:",notnull,default:current_timestamp" json:"created_at"`
 }
 

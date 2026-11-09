@@ -19,10 +19,11 @@ var (
 	ErrStale  = errors.New("note changed elsewhere since it was read")
 )
 
-// A text replaced is kept at most once every versionEvery per note, the versionsKept last ones (#61).
+// A text replaced is kept at the first save of a writing session, which ends after sessionPause without a save,
+// and at least once every versionEvery within a long one (#99). Every version stays, until its note is deleted.
 const (
-	versionEvery = "5 minutes"
-	versionsKept = 50
+	sessionPause = "15 minutes"
+	versionEvery = "1 hour"
 )
 
 // Input has pointers to tell a field left out from an empty one: editnote replaces everything,
@@ -35,7 +36,7 @@ type Input struct {
 	Tags     *[]string
 	// UpdatedAt is the version the text was written over: content and tags are refused once the note changed since.
 	UpdatedAt *time.Time
-	// Restore is a version restored: the text it replaces is kept even within versionEvery, it may be nowhere else.
+	// Restore is a version restored: the text it replaces is kept even within a session, it may be nowhere else.
 	Restore bool
 }
 
@@ -148,6 +149,10 @@ func (p *run) editNote(tx bun.Tx) error {
 	if p.input.Content != nil {
 		input.Content = *p.input.Content
 	}
+	// A save without a change neither moves updated_at nor starts a session (#99).
+	if p.input.Tags == nil && input.Content == p.cache.note.Content {
+		return nil
+	}
 	input.Tags = hashtag.Parse(input.Content)
 	if p.input.Tags != nil {
 		input.Tags = *p.input.Tags
@@ -166,8 +171,8 @@ func (p *run) editNote(tx bun.Tx) error {
 	return p.readNote(tx)
 }
 
-// keepVersion copies the text about to be replaced into note_versions, unless a version is younger than versionEvery
-// (a restore keeps it anyway), then drops the versions past the versionsKept last.
+// keepVersion copies the text about to be replaced into note_versions at the first save of a session (the note
+// unsaved for sessionPause), when no version is younger than versionEvery, or on a restore.
 func (p *run) keepVersion(tx bun.Tx) error {
 	old := p.cache.note.Content
 	if p.input.Content == nil || *p.input.Content == old || old == "" {
@@ -175,12 +180,15 @@ func (p *run) keepVersion(tx bun.Tx) error {
 	}
 
 	id := p.cache.note.Item.ID
-	recent, err := tx.NewSelect().
-		Model((*domain.NoteVersion)(nil)).
-		Where("item_id = ? AND created_at > current_timestamp - ?::interval", id, versionEvery).
-		Exists(p.ctx)
-	if err != nil || recent && !p.input.Restore {
-		return err
+	if !p.input.Restore {
+		// updated_at is the last save, created_at for a note never edited.
+		var keep bool
+		err := tx.NewRaw(`SELECT coalesce(i.updated_at, i.created_at) < current_timestamp - ?::interval
+			OR NOT EXISTS (SELECT 1 FROM note_versions WHERE item_id = i.id AND created_at > current_timestamp - ?::interval)
+			FROM items AS i WHERE i.id = ?`, sessionPause, versionEvery, id).Scan(p.ctx, &keep)
+		if err != nil || !keep {
+			return err
+		}
 	}
 
 	version, err := domain.NewNoteVersion(p.ctx, id, old)
@@ -188,13 +196,5 @@ func (p *run) keepVersion(tx bun.Tx) error {
 		return err
 	}
 	_, err = tx.NewInsert().Model(&version).Exec(p.ctx)
-	if err != nil {
-		return err
-	}
-	_, err = tx.NewDelete().
-		Model((*domain.NoteVersion)(nil)).
-		Where("item_id = ?", id).
-		Where("id NOT IN (SELECT id FROM note_versions WHERE item_id = ? ORDER BY created_at DESC LIMIT ?)", id, versionsKept).
-		Exec(p.ctx)
 	return err
 }

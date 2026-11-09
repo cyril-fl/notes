@@ -346,7 +346,7 @@
     "title": "Historique des versions",
     "emptyTitle": "Aucune version antérieure n'est encore disponible.",
     "emptyAfterChange": "Une copie est enregistrée après chaque modification.",
-    "emptyEveryFiveMinutes": "Les enregistrements sont espacés d'au moins cinq minutes.",
+    "emptySessions": "Une nouvelle version après 15 minutes de pause, et au moins une par heure.",
     "restore": "Restaurer cette version",
     "all": "Tout l'historique ({count})",
     "panelTitle": "Historique ({count})",
