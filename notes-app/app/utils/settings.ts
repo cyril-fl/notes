@@ -3,6 +3,7 @@ export const settingsSections = [
   { id: 'general', icon: 'settings' },
   { id: 'appearance', icon: 'appearance' },
   { id: 'editor', icon: 'snippet' },
+  { id: 'storage', icon: 'storage' },
   { id: 'data', icon: 'data' },
   { id: 'links', icon: 'linkBroken', feature: 'brokenLinks' },
   { id: 'pro', icon: 'pro' },

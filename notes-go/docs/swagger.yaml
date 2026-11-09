@@ -636,6 +636,25 @@ paths:
       tags:
       - transfer
   /api/files:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/domain.File'
+                type: array
+          description: OK
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: List the files kept on the server
+      tags:
+      - files
     post:
       parameters:
       - description: file name

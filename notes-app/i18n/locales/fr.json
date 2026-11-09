@@ -295,13 +295,24 @@
       "pro": "Mode avancé",
       "proDescription": "Des outils en plus, pour un usage avancé.",
       "links": "Liens",
-      "linksDescription": "Les liens entre notes qui ne mènent à aucune note, ou à plusieurs."
+      "linksDescription": "Les liens entre notes qui ne mènent à aucune note, ou à plusieurs.",
+      "storage": "Stockage",
+      "storageDescription": "Les images et pièces jointes gardées sur le serveur, et la place qu’elles prennent."
     },
     "linksEmpty": "Aucun lien cassé ni ambigu.",
     "linkKinds": {
       "unresolved": "Aucune note",
       "ambiguous": "Plusieurs notes",
       "missing": "Note supprimée"
+    },
+    "storageUsed": "{size} utilisés · {count} fichier | {size} utilisés · {count} fichiers",
+    "storageEmpty": "Aucun fichier gardé.",
+    "unnamedFile": "Image sans nom",
+    "fileKinds": {
+      "images": "Images",
+      "documents": "Documents",
+      "audio": "Sons",
+      "video": "Vidéos"
     }
   },
   "account": {
@@ -341,7 +352,8 @@
     "sourceMode": "Le mode source : le markdown de la note en texte brut, depuis le bouton sous le texte",
     "noteLock": "Verrouiller une note en lecture seule, depuis le cadenas sous le texte",
     "noteHistory": "L'historique des versions d'une note dans le panneau de contexte permet de restaurer",
-    "brokenLinks": "La liste des liens cassés ou ambigus, dans les réglages"
+    "brokenLinks": "La liste des liens cassés ou ambigus, dans les réglages",
+    "storageKinds": "La place prise par type de fichier (images, documents, sons, vidéos), dans les réglages"
   },
   "conflict": {
     "title": "Conflits ({count} à résoudre)",

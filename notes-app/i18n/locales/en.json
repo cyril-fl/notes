@@ -295,13 +295,24 @@
       "pro": "Advanced mode",
       "proDescription": "More tools, for advanced use.",
       "links": "Links",
-      "linksDescription": "The links between notes that lead to no note, or to several."
+      "linksDescription": "The links between notes that lead to no note, or to several.",
+      "storage": "Storage",
+      "storageDescription": "The images and attachments kept on the server, and the space they take."
     },
     "linksEmpty": "No broken or ambiguous link.",
     "linkKinds": {
       "unresolved": "No note",
       "ambiguous": "Several notes",
       "missing": "Deleted note"
+    },
+    "storageUsed": "{size} used · {count} file | {size} used · {count} files",
+    "storageEmpty": "No file kept.",
+    "unnamedFile": "Unnamed image",
+    "fileKinds": {
+      "images": "Images",
+      "documents": "Documents",
+      "audio": "Sounds",
+      "video": "Videos"
     }
   },
   "account": {
@@ -341,7 +352,8 @@
     "sourceMode": "Source mode: the note's markdown as plain text, from the button under the text",
     "noteLock": "Lock a note read-only, from the padlock under the text",
     "noteHistory": "The version history of a note in the context panel (under the text on a phone), to restore one",
-    "brokenLinks": "The list of broken or ambiguous links, in the settings"
+    "brokenLinks": "The list of broken or ambiguous links, in the settings",
+    "storageKinds": "The space taken by file type (images, documents, sounds, videos), in the settings"
   },
   "conflict": {
     "title": "Conflicts ({count} to resolve)",

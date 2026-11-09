@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BrokenLink, Snippet, User } from '~/types/items';
+import type { BrokenLink, NoteFile, Snippet, User } from '~/types/items';
 
 // Decided before the page renders, so the Pro mode never shows every section first and then jumps to one.
 definePageMeta({
@@ -69,7 +69,33 @@ const { data: brokenLinks } = useLazyAsyncData(
   () => (showLinks.value ? api<BrokenLink[]>('/api/links/broken') : Promise.resolve(null)),
   { watch: [showLinks] },
 );
-const linkColors = { unresolved: 'warning', ambiguous: 'info', missing: 'error' } as const;
+// Read only where the section shows, like the links.
+const showStorage = computed(() => show('storage'));
+const { data: files } = useLazyAsyncData(
+  'files',
+  () => (showStorage.value ? api<NoteFile[]>('/api/files') : Promise.resolve(null)),
+  { watch: [showStorage] },
+);
+const used = computed(() => (files.value ?? []).reduce((sum, file) => sum + file.size, 0));
+// The kinds the account has, each with its share of the bar, as Apple's storage splits it.
+const kinds = computed(() =>
+  fileKinds
+    .map((kind) => ({
+      kind,
+      size: (files.value ?? [])
+        .filter((file) => fileKind(file.content_type) === kind)
+        .reduce((sum, file) => sum + file.size, 0),
+    }))
+    .filter(({ size }) => size),
+);
+const kindStyles = {
+  images: { color: 'bg-primary', icon: icons.image },
+  documents: { color: 'bg-info', icon: icons.fileDocument },
+  audio: { color: 'bg-warning', icon: icons.fileAudio },
+  video: { color: 'bg-success', icon: icons.fileVideo },
+} as const;
+
+const linkColors = { unresolved: 'warning', ambiguous: 'info', missing: 'error', file: 'error' } as const;
 const planItems = computed(() =>
   plans.map((value) => ({ label: t(`settings.plans.${value}`), value, disabled: !me.value })),
 );
@@ -250,6 +276,48 @@ async function deleteData() {
             {{ $t('settings.snippetsEmpty') }}
           </li>
         </ul>
+      </section>
+
+      <section v-if="showStorage">
+        <SettingsHeading id="storage" />
+        <div class="rounded-lg border border-default">
+          <div v-if="files" class="space-y-3 px-4 py-3" :class="{ 'border-b border-default': files.length }">
+            <p class="text-sm">
+              {{ $t('settings.storageUsed', { size: fileSize(used, locale), count: files.length }, files.length) }}
+            </p>
+            <template v-if="has('storageKinds') && kinds.length">
+              <div class="flex h-3 gap-0.5 overflow-hidden rounded-full bg-elevated">
+                <div
+                  v-for="{ kind, size } in kinds"
+                  :key="kind"
+                  :class="kindStyles[kind].color"
+                  :style="{ width: `${(size / used) * 100}%` }"
+                />
+              </div>
+              <ul class="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                <li v-for="{ kind, size } in kinds" :key="kind" class="flex items-center gap-1.5">
+                  <span class="size-2 rounded-full" :class="kindStyles[kind].color" />
+                  {{ $t(`settings.fileKinds.${kind}`) }}
+                  <span class="text-muted">{{ fileSize(size, locale) }}</span>
+                </li>
+              </ul>
+            </template>
+          </div>
+          <ul class="divide-y divide-default">
+            <li v-for="file in files" :key="file.id" class="flex items-center gap-3 px-4 py-2">
+              <UIcon
+                v-if="has('storageKinds')"
+                :name="kindStyles[fileKind(file.content_type)].icon"
+                class="size-4 shrink-0 text-muted"
+              />
+              <p class="min-w-0 flex-1 truncate text-sm">{{ file.name || $t('settings.unnamedFile') }}</p>
+              <span class="shrink-0 text-xs text-muted">{{ fileSize(file.size, locale) }}</span>
+            </li>
+            <li v-if="files && !files.length" class="px-4 py-3 text-xs text-muted">
+              {{ $t('settings.storageEmpty') }}
+            </li>
+          </ul>
+        </div>
       </section>
 
       <section v-if="show('data')">

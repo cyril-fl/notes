@@ -21,6 +21,7 @@ import (
 	apimove "github.com/cyril-fl/notes/notes-go/app/api/move"
 	apireadbrokenlinks "github.com/cyril-fl/notes/notes-go/app/api/read-broken-links"
 	apireadfile "github.com/cyril-fl/notes/notes-go/app/api/read-file"
+	apireadfiles "github.com/cyril-fl/notes/notes-go/app/api/read-files"
 	apireadfinder "github.com/cyril-fl/notes/notes-go/app/api/read-finder"
 	apireadfolder "github.com/cyril-fl/notes/notes-go/app/api/read-folder"
 	apireadgraph "github.com/cyril-fl/notes/notes-go/app/api/read-graph"
@@ -91,6 +92,7 @@ func New(db bun.IDB, store silo.Store, origin string) http.Handler {
 	mux.Handle("POST /api/import", apiimport.Handler(db, store))
 
 	mux.Handle("POST /api/files", apicreatefile.Handler(db, store))
+	mux.Handle("GET /api/files", apireadfiles.Handler(db))
 	mux.Handle("GET /api/files/{id}", apireadfile.Handler(db, store))
 
 	return guard.New(origin, auth.New(db, mux))
