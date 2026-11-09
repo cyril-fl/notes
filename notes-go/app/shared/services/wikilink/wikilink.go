@@ -1,6 +1,7 @@
 // Package wikilink reads the links of a note's markdown to other notes. A link is written [[Title]] (or
 // [[/Folder/Title]]) by hand; once it names exactly one note it becomes [Title](note:<id>): the id keeps
-// it on its note whatever the titles do, the label keeps it readable outside the app.
+// it on its note whatever the titles do, the label keeps it readable outside the app. [[Title#Heading]]
+// points to a heading of the note: [Title#Heading](note:<id>#Heading).
 package wikilink
 
 import (
@@ -11,15 +12,16 @@ import (
 
 var (
 	byTitle = regexp.MustCompile(`\[\[([^\[\]\n]+)\]\]`)
-	byID    = regexp.MustCompile(`\[([^\[\]\n]*)\]\(note:([0-9a-fA-F-]{36})\)`)
+	byID    = regexp.MustCompile(`\[([^\[\]\n]*)\]\(note:([0-9a-fA-F-]{36})(?:#([^()\n]*))?\)`)
 	// skipped is what can hold a link without being one: fenced and inline code.
 	skipped = regexp.MustCompile("(?ms)^[ \\t]*```.*?(?:^[ \\t]*```[^\\n]*$|\\z)|`[^`\\n]*`")
 )
 
-// span is one link of a text, [start, end[ with its brackets: value is the target of a [[link]], the id of a note: link.
+// span is one link of a text, [start, end[ with its brackets: value is the target of a [[link]], the id of a note: link,
+// heading the heading a note: link points to.
 type span struct {
-	start, end int
-	value      string
+	start, end     int
+	value, heading string
 }
 
 // Parse gives the targets of the [[links]] not resolved yet, in order, each one once whatever its case.
@@ -44,13 +46,18 @@ func IDs(content string) []string {
 	return ids
 }
 
-// Resolve writes every [[target]] that resolve finds as a link to the note's id, labelled with its title.
+// Resolve writes every [[target]] that resolve finds as a link to the note's id, labelled with its title. The
+// heading after # is kept, not checked: the note's headings change with no link knowing. [[#Heading]] waits.
 func Resolve(content string, resolve func(target string) (id, title string, ok bool)) string {
 	links := spans(content, byTitle, 1)
 	slices.Reverse(links)
 	for _, l := range links {
-		if id, title, ok := resolve(l.value); ok {
-			content = content[:l.start] + Link(id, title) + content[l.end:]
+		target, heading, _ := strings.Cut(l.value, "#")
+		if target = strings.TrimSpace(target); target == "" {
+			continue
+		}
+		if id, title, ok := resolve(target); ok {
+			content = content[:l.start] + Link(id, title, strings.TrimSpace(heading)) + content[l.end:]
 		}
 	}
 	return content
@@ -62,7 +69,7 @@ func Relabel(content, id, title string) string {
 	slices.Reverse(links)
 	for _, l := range links {
 		if strings.EqualFold(l.value, id) {
-			content = content[:l.start] + Link(id, title) + content[l.end:]
+			content = content[:l.start] + Link(id, title, l.heading) + content[l.end:]
 		}
 	}
 	return content
@@ -82,10 +89,15 @@ func Unresolve(content string) string {
 	return content
 }
 
-// Link is the markdown of a resolved link; brackets would end the label early, they are dropped.
-func Link(id, title string) string {
+// Link is the markdown of a resolved link, to a heading of the note unless heading is ""; brackets would end
+// the label early, parentheses the link, they are dropped.
+func Link(id, title, heading string) string {
 	label := strings.NewReplacer("[", "", "]", "", "\n", " ").Replace(title)
-	return "[" + label + "](note:" + id + ")"
+	if heading == "" {
+		return "[" + label + "](note:" + id + ")"
+	}
+	heading = strings.NewReplacer("[", "", "]", "", "(", "", ")", "", "\n", " ").Replace(heading)
+	return "[" + label + "#" + heading + "](note:" + id + "#" + heading + ")"
 }
 
 // Helpers
@@ -95,8 +107,12 @@ func spans(content string, pattern *regexp.Regexp, group int) []span {
 	var result []span
 	for _, match := range pattern.FindAllStringSubmatchIndex(content, -1) {
 		value := strings.TrimSpace(content[match[2*group]:match[2*group+1]])
+		heading := ""
+		if len(match) > 6 && match[6] >= 0 {
+			heading = strings.TrimSpace(content[match[6]:match[7]])
+		}
 		if value != "" && !inside(hidden, match[0]) {
-			result = append(result, span{match[0], match[1], value})
+			result = append(result, span{match[0], match[1], value, heading})
 		}
 	}
 	return result

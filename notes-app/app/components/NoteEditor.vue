@@ -482,12 +482,17 @@ watch(
     editor.on('update', () => readText(editor));
   },
 );
-function scrollTo(pos: number) {
-  (editorRef.value?.editor?.view.nodeDOM(pos) as HTMLElement | null)?.scrollIntoView({
-    behavior: 'smooth',
-    block: 'start',
-  });
+function scrollTo(pos: number, behavior: ScrollBehavior = 'smooth') {
+  (editorRef.value?.editor?.view.nodeDOM(pos) as HTMLElement | null)?.scrollIntoView({ behavior, block: 'start' });
 }
+// A [[Note#Heading]] link opens /notes/<id>#<heading>: the text scrolls to it once read, a frame later, once in the page.
+const route = useRoute();
+const stopHeading = watch(outline, (headings) => {
+  const target = decodeURIComponent(route.hash.slice(1));
+  const heading = headings.find((other) => sameHeading(other.text, target));
+  if (!target || heading) stopHeading();
+  if (heading) requestAnimationFrame(() => scrollTo(heading.pos, 'instant'));
+});
 
 const status = computed(() => {
   if (failed.value) return t('note.notSaved');

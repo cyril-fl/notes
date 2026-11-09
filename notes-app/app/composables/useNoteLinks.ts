@@ -1,5 +1,7 @@
+import type { Range } from '@tiptap/core';
+import type { EditorState } from '@tiptap/pm/state';
 import type { Editor } from '@tiptap/vue-3';
-import type { NotesGraph } from '~/types/items';
+import type { ItemDetail, NotesGraph } from '~/types/items';
 import type { LinkSize } from '~/utils/linkCard';
 import LinkCard from '~/components/LinkCard.vue';
 
@@ -65,11 +67,37 @@ export function useNoteLinks(id: Ref<string | undefined>): EditorModule {
       .map((note) => ({ kind: 'wikiLink', label: note.title, description: note.path, icon: icons.note, id: note.id })),
   );
 
+  // [[Note# offers the headings of that note, read as soon as the text names it: the menu reads its items on a key only.
+  const query = ref('');
+  const headingNote = computed(() => {
+    const name = query.value.split('#')[0]!.trim().toLowerCase();
+    return noteItems.value.find((note) => note.label.toLowerCase() === name);
+  });
+  const headings = ref<string[]>([]);
+  // By id: a save refreshes the graph, the same note comes back as a new item.
+  watch(
+    () => headingNote.value?.id,
+    async (noteId) => {
+      headings.value = [];
+      if (!noteId) return;
+      const detail = await api<ItemDetail>(`/api/notes/${noteId}`, { quiet: true }).catch(() => undefined);
+      if (headingNote.value?.id === noteId) headings.value = headingsOf(detail?.content ?? '');
+    },
+  );
+  const linkItems = computed(() => {
+    const note = headingNote.value;
+    if (!note) return noteItems.value;
+    return noteItems.value.concat(
+      headings.value.map((heading) => ({ ...note, label: `${note.label}#${heading}`, icon: icons.heading1, heading })),
+    );
+  });
+
   function openLink(event: MouseEvent) {
     const link = (event.target as HTMLElement).closest<HTMLElement>('a[data-wikilink]');
     if (!link) return;
     event.preventDefault();
-    if (link.dataset.note) return navigateTo(`/notes/${link.dataset.note}`);
+    const heading = link.dataset.heading ? `#${encodeURIComponent(link.dataset.heading)}` : '';
+    if (link.dataset.note) return navigateTo(`/notes/${link.dataset.note}${heading}`);
     toast.add({
       title: t('note.pendingLink'),
       description: t('note.pendingLinkDescription', { target: link.dataset.wikilink }),
@@ -90,12 +118,12 @@ export function useNoteLinks(id: Ref<string | undefined>): EditorModule {
       },
     },
     handlers: {
-      wikiLink: command((editor, item: { label: string; id: string }) =>
+      wikiLink: command((editor, item: { label: string; id: string; heading?: string }) =>
         editor
           .chain()
           .focus()
           .insertContent([
-            { type: 'wikiLink', attrs: { target: item.label, id: item.id } },
+            { type: 'wikiLink', attrs: { target: item.label, id: item.id, heading: item.heading ?? null } },
             { type: 'text', text: ' ' },
           ]),
       ),
@@ -137,9 +165,16 @@ export function useNoteLinks(id: Ref<string | undefined>): EditorModule {
       {
         char: '[[',
         pluginKey: 'wikiLinkMenu',
-        items: noteItems,
+        items: linkItems,
         filterFields: ['label', 'description'],
-        suggestion: { allowSpaces: true },
+        suggestion: {
+          allowSpaces: true,
+          // The menu filters its items alone: the typed text is read here, for the headings after #.
+          allow: ({ state, range }: { state: EditorState; range: Range }) => {
+            query.value = state.doc.textBetween(range.from + 2, range.to);
+            return true;
+          },
+        },
       },
     ],
     onClick: openLink,

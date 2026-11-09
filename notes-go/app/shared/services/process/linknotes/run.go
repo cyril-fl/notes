@@ -160,14 +160,14 @@ func (p *run) relabelBacklinks() {
 	}
 }
 
-// resolveWaiting resolves only the notes whose text holds [[title or [[/…/title: resolving every note would
-// be one query per link. Its old title too: shared before, it may now name one note only.
+// resolveWaiting resolves only the notes whose text holds title]] or title# ([[/…/title, [[title#heading]]):
+// resolving every note would be one query per link. Its old title too: shared before, it may now name one note only.
 // TODO: decrypts every note of the account on each title change, 40 ms per note created at 5,000 notes (#23).
 func (p *run) resolveWaiting() {
 	titles := []string{}
 	for _, title := range []string{p.input.Title, p.input.OldTitle} {
 		if title != "" {
-			titles = append(titles, strings.ToLower(title)+"]]")
+			titles = append(titles, strings.ToLower(title)+"]]", strings.ToLower(title)+"#")
 		}
 	}
 	if p.HasErr() || len(titles) == 0 {

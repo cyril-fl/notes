@@ -117,6 +117,8 @@ Les tags d'une note sont les `#mots` de son texte, code et liens exclus : `#idé
 
 Écris `[[Titre]]` dans une note pour la relier à la note de ce titre, majuscules ou non, hors code. À l'enregistrement, un `[[Titre]]` qui désigne une seule note devient `[Titre](note:<uuid>)` : le lien suit désormais cette note par son id, même si une autre prend son titre, et le texte entre crochets se met à jour quand elle change de titre. Si aucune note, ou plusieurs, ont ce titre, `[[Titre]]` attend : il sera relié dès qu'une seule note portera ce titre. Pour départager, écris son chemin, `[[/Projets/Idées]]`.
 
+`[[Titre#Section]]` vise un titre de la note : il devient `[Titre#Section](note:<uuid>#Section)`, garde la section quand la note change de titre, et redevient `[[Titre#Section]]` à l'export. Dans l'app, taper `#` après le nom d'une note propose ses titres, et un clic ouvre la note à ce titre.
+
 `GET /api/notes/{id}/neighbors` donne ses liens (`links`) et ses rétroliens (`backlinks`), et le graphe relie aussi les notes liées. Dans l'app, taper `[[` propose les notes, et un clic sur un lien l'ouvre.
 
 ### Corbeille

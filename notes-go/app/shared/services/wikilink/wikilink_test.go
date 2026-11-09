@@ -25,6 +25,7 @@ func TestParse(t *testing.T) {
 		"fenced code":        {"```\n[[a]]\n```\n[[b]]", []string{"b"}},
 		"nested brackets":    {"[[[a]]]", []string{"a"}},
 		"resolved":           {"[a](note:" + idA + ")", nil},
+		"heading":            {"[a#b](note:" + idA + "#b)", nil},
 	}
 	for name, c := range cases {
 		if got := Parse(c.content); !slices.Equal(got, c.want) {
@@ -45,6 +46,7 @@ func TestIDs(t *testing.T) {
 		"web link":    {"[A](https://a.b)", nil},
 		"not an id":   {"[A](note:nope)", nil},
 		"by title":    {"[[A]]", nil},
+		"heading":     {"[A#b](note:" + idA + "#b c)", []string{idA}},
 	}
 	for name, c := range cases {
 		if got := IDs(c.content); !slices.Equal(got, c.want) {
@@ -59,23 +61,23 @@ func TestResolve(t *testing.T) {
 		note, ok := notes[strings.ToLower(target)]
 		return note[0], note[1], ok
 	}
-	got := Resolve("[[courses]], [[/a/b]], [[inconnue]] et `[[courses]]`", resolve)
-	want := "[Courses](note:" + idA + "), [B](note:" + idB + "), [[inconnue]] et `[[courses]]`"
+	got := Resolve("[[courses]], [[/a/b]], [[inconnue]] et `[[courses]]`, [[courses # Lait (bio)]] [[#Haut]]", resolve)
+	want := "[Courses](note:" + idA + "), [B](note:" + idB + "), [[inconnue]] et `[[courses]]`, [Courses#Lait bio](note:" + idA + "#Lait bio) [[#Haut]]"
 	if got != want {
 		t.Errorf("Resolve = %q, want %q", got, want)
 	}
 }
 
 func TestRelabel(t *testing.T) {
-	got := Relabel("[Cour](note:"+idA+") [B](note:"+idB+")", idA, "Courses [x]")
-	if want := "[Courses x](note:" + idA + ") [B](note:" + idB + ")"; got != want {
+	got := Relabel("[Cour](note:"+idA+") [B](note:"+idB+") [Cour#Lait](note:"+idA+"#Lait)", idA, "Courses [x]")
+	if want := "[Courses x](note:" + idA + ") [B](note:" + idB + ") [Courses x#Lait](note:" + idA + "#Lait)"; got != want {
 		t.Errorf("Relabel = %q, want %q", got, want)
 	}
 }
 
 func TestUnresolve(t *testing.T) {
-	got := Unresolve("[Courses](note:" + idA + ") [](note:" + idB + ") `[A](note:" + idA + ")` [[B]]")
-	if want := "[[Courses]] [](note:" + idB + ") `[A](note:" + idA + ")` [[B]]"; got != want {
+	got := Unresolve("[Courses](note:" + idA + ") [](note:" + idB + ") `[A](note:" + idA + ")` [[B]] [Courses#Lait](note:" + idA + "#Lait)")
+	if want := "[[Courses]] [](note:" + idB + ") `[A](note:" + idA + ")` [[B]] [[Courses#Lait]]"; got != want {
 		t.Errorf("Unresolve = %q, want %q", got, want)
 	}
 }

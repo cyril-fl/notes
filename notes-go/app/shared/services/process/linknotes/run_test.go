@@ -49,15 +49,15 @@ func TestLinks(t *testing.T) {
 		t.Fatalf("folder: %v", folder.GetErr())
 	}
 
-	// a names b before b exists, itself, nothing, then c before a second c, by title and by path.
-	a := create(t, ctx, tx, "", fmt.Sprintf("# %[1]s-a\n\n[[%[1]s-B]] [[%[1]s-b]] [[%[1]s-a]] [[%[1]s-none]] [[%[1]s-c]] [[/%[1]s-folder/%[1]s-c]]", u))
+	// a names b before b exists, itself, nothing, then c before a second c, by title and by path, then a heading of b.
+	a := create(t, ctx, tx, "", fmt.Sprintf("# %[1]s-a\n\n[[%[1]s-B]] [[%[1]s-b]] [[%[1]s-a]] [[%[1]s-none]] [[%[1]s-c]] [[/%[1]s-folder/%[1]s-c]] [[%[1]s-b#Intro]]", u))
 	b := create(t, ctx, tx, "", "# "+u+"-b")
 	c := create(t, ctx, tx, "", "# "+u+"-c")
 	inFolder := create(t, ctx, tx, folder.GetResult().ID, "# "+u+"-c")
 
 	// Each [[link]] became a link to the id of the note it named when it was resolved: the second c
 	// does not take the first one's link, its path reaches it.
-	want := fmt.Sprintf("[%[1]s-b](note:%[2]s) [%[1]s-b](note:%[2]s) [[%[1]s-a]] [[%[1]s-none]] [%[1]s-c](note:%[3]s) [%[1]s-c](note:%[4]s)", u, b, c, inFolder)
+	want := fmt.Sprintf("[%[1]s-b](note:%[2]s) [%[1]s-b](note:%[2]s) [[%[1]s-a]] [[%[1]s-none]] [%[1]s-c](note:%[3]s) [%[1]s-c](note:%[4]s) [%[1]s-b#Intro](note:%[2]s#Intro)", u, b, c, inFolder)
 	if got := content(t, ctx, tx, a); !strings.Contains(got, want) {
 		t.Errorf("content of a = %q, want it to hold %q", got, want)
 	}
@@ -81,9 +81,13 @@ func TestLinks(t *testing.T) {
 	if edit.HasErr() {
 		t.Fatalf("rename: %v", edit.GetErr())
 	}
-	want = fmt.Sprintf("[%[1]s-renamed](note:%[2]s) [%[1]s-renamed](note:%[2]s)", u, b)
-	if got := content(t, ctx, tx, a); !strings.Contains(got, want) {
-		t.Errorf("content of a = %q, want it to hold %q", got, want)
+	for _, want := range []string{
+		fmt.Sprintf("[%[1]s-renamed](note:%[2]s) [%[1]s-renamed](note:%[2]s)", u, b),
+		fmt.Sprintf("[%[1]s-renamed#Intro](note:%[2]s#Intro)", u, b),
+	} {
+		if got := content(t, ctx, tx, a); !strings.Contains(got, want) {
+			t.Errorf("content of a = %q, want it to hold %q", got, want)
+		}
 	}
 	if got := neighbors(t, ctx, tx, a); !slices.Contains(ids(got.Links), b) {
 		t.Errorf("links of a after the rename = %+v, want b still", got.Links)
