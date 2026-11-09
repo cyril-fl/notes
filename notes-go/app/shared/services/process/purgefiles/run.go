@@ -24,8 +24,9 @@ type cache struct {
 	purged  int
 }
 
-// cited is true of a file some note of its account cites, trashed notes included, or that is its avatar.
+// cited is true of a file some note of its account cites, trashed notes and their versions included, or that is its avatar.
 const cited = `(EXISTS (SELECT 1 FROM notes_on_files AS nf WHERE nf.file_id = f.id)
+	OR EXISTS (SELECT 1 FROM note_versions AS nv WHERE f.id = ANY(nv.file_ids))
 	OR EXISTS (SELECT 1 FROM users AS au WHERE au.avatar = f.id))`
 
 // Process deletes the files no note cites any more. Those of a note deleted for good go at once (createschema's

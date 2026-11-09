@@ -188,7 +188,11 @@ func (p *run) keepVersion(tx bun.Tx) error {
 	if err != nil {
 		return err
 	}
-	_, err = tx.NewInsert().Model(&domain.NoteVersion{ItemID: id, Content: content}).Exec(p.ctx)
+	version := domain.NoteVersion{ItemID: id, Content: content}
+	for _, match := range domain.FilePattern.FindAllStringSubmatch(old, -1) {
+		version.FileIDs = append(version.FileIDs, match[1])
+	}
+	_, err = tx.NewInsert().Model(&version).Exec(p.ctx)
 	if err != nil {
 		return err
 	}

@@ -162,13 +162,13 @@ func getIndexes(tx bun.Tx) []*bun.CreateIndexQuery {
 }
 
 // triggers: an item deleted for good (purge, emptied trash, or a child of either by cascade) hands its images to
-// purgefiles at once with orphaned_at = -infinity. BEFORE: the note's notes_on_files are still there; the cascade removes them after.
+// purgefiles at once with orphaned_at = -infinity. BEFORE: the note's notes_on_files and versions are still there; the cascade removes them after.
 var triggers = []string{
 	`CREATE OR REPLACE FUNCTION orphan_files_of_item() RETURNS trigger AS $$
 	BEGIN
-		UPDATE files AS f SET orphaned_at = '-infinity'
-		FROM notes_on_files AS nf
-		WHERE nf.note_id = OLD.id AND f.id = nf.file_id;
+		UPDATE files SET orphaned_at = '-infinity'
+		WHERE id IN (SELECT file_id FROM notes_on_files WHERE note_id = OLD.id
+			UNION SELECT unnest(file_ids) FROM note_versions WHERE item_id = OLD.id);
 		RETURN OLD;
 	END $$ LANGUAGE plpgsql`,
 	`CREATE OR REPLACE TRIGGER items_orphan_files BEFORE DELETE ON items FOR EACH ROW EXECUTE FUNCTION orphan_files_of_item()`,

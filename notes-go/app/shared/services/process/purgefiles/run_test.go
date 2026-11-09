@@ -16,6 +16,7 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createschema"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deleteitems"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/emptytrash"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/patchnote"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/silo"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/testaccount"
 )
@@ -41,8 +42,9 @@ func TestPurgeFiles(t *testing.T) {
 	ctx, tx = testaccount.New(t, ctx, tx)
 	store := silo.NewMemory()
 
-	// cited by a live note, by a trashed one, by none for long, by none since just now, cited again, the avatar.
-	names := []string{"live", "trashed", "orphan", "removed", "back", "avatar"}
+	// cited by a live note, by a trashed one, by none for long, by none since just now, cited again, the avatar,
+	// by a version only.
+	names := []string{"live", "trashed", "orphan", "removed", "back", "avatar", "versioned"}
 	files := map[string]domain.File{}
 	for _, name := range names {
 		create := createfile.Process(ctx, tx, store, createfile.Input{Name: name, Data: []byte("\x89PNG\r\n\x1a\n")})
@@ -53,7 +55,7 @@ func TestPurgeFiles(t *testing.T) {
 		files[name] = create.GetResult()
 	}
 	var notes []string
-	for _, name := range []string{"live", "trashed", "back"} {
+	for _, name := range []string{"live", "trashed", "back", "versioned"} {
 		note := createnote.Process(ctx, tx, createnote.Input{Content: "# " + name + "\n\n![](" + domain.FileURL(files[name].ID) + ")"})
 		note.Run()
 		if note.HasErr() {
@@ -66,9 +68,16 @@ func TestPurgeFiles(t *testing.T) {
 	if trash.HasErr() {
 		t.Fatal(trash.GetErr())
 	}
-	// The account keeps its trash 30 days: orphan, back and avatar were left uncited 40 days ago.
+	// The image of versioned leaves its text: only the version kept by the edit cites it.
+	text := "# versioned"
+	edit := patchnote.Process(ctx, tx, patchnote.Input{ID: notes[3], Content: &text})
+	edit.Run()
+	if edit.HasErr() {
+		t.Fatal(edit.GetErr())
+	}
+	// The account keeps its trash 30 days: orphan, back, avatar and versioned were left uncited 40 days ago.
 	_, err = tx.NewUpdate().Model((*domain.File)(nil)).Set("orphaned_at = current_timestamp - interval '40 days'").
-		Where("id IN (?, ?, ?)", files["orphan"].ID, files["back"].ID, files["avatar"].ID).Exec(ctx)
+		Where("id IN (?, ?, ?, ?)", files["orphan"].ID, files["back"].ID, files["avatar"].ID, files["versioned"].ID).Exec(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,11 +100,12 @@ func TestPurgeFiles(t *testing.T) {
 		got = append(got, fmt.Sprintf("%s:%t", file.Name, file.OrphanedAt.IsZero()))
 	}
 	slices.Sort(got) // names are sealed: sorted here
-	// removed waits, its clock started; back is cited again and avatar is the account's, their clocks stopped.
-	if want := "avatar:true back:true live:true removed:false trashed:true"; strings.Join(got, " ") != want {
+	// removed waits, its clock started; back is cited again, avatar is the account's and versioned a version's,
+	// their clocks stopped.
+	if want := "avatar:true back:true live:true removed:false trashed:true versioned:true"; strings.Join(got, " ") != want {
 		t.Errorf("left = %v, want %s", got, want)
 	}
-	if _, ok := store.Objects[files["orphan"].Key()]; ok || len(store.Objects) != 5 {
+	if _, ok := store.Objects[files["orphan"].Key()]; ok || len(store.Objects) != 6 {
 		t.Errorf("objects = %v, want the orphan removed", store.Objects)
 	}
 
