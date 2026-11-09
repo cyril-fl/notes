@@ -39,6 +39,8 @@ Quand la note a changé sur un autre appareil pendant qu'on l'écrit, l'app fusi
 
 Le bouton de mode source, en bas d'une note, montre son markdown en texte brut, enregistré à la frappe comme dans l'éditeur, qui repart de ce texte au retour ; le plan et le nombre de mots (mode avancé) n'y sont pas affichés.
 
+Un bloc de code ` ```mermaid ` s'affiche en diagramme (thème sombre en mode sombre), son code visible tant que le curseur y est ; un clic sur le diagramme y met le curseur. Les formules LaTeX `$…$` (dans le texte) et `$$…$$` (en bloc) s'affichent avec KaTeX, et un clic ouvre leur source à modifier ; `$5 et $10` reste du texte (pas d'espace juste à l'intérieur des dollars, pas de chiffre après). Mermaid et KaTeX ne sont chargés qu'à la première note qui en contient, et le markdown reste celui écrit.
+
 Le cadenas en bas d'une note la verrouille en lecture seule (l'éditeur et le mode source ne font que lire, l'API refuse son texte) jusqu'à ce qu'on le rouvre.
 
 Dans un dossier, ⌘-clic (Ctrl hors macOS) sélectionne plusieurs éléments et ⇧-clic une plage : une barre propose de les déplacer ou de les supprimer, et glisser l'un d'eux emmène toute la sélection. Échap annule la sélection.
