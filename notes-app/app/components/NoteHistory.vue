@@ -21,11 +21,18 @@ async function load() {
   versions.value = await api<NoteVersion[]>(`/api/notes/${props.noteId}/versions`, { quiet: true });
 }
 if (props.panel) load();
-// A version is kept at most every 5 minutes: no need to read again on each save.
-watchThrottled(
+// The API keeps a version at most every 5 minutes, or on a restore: read the full texts again only then, not on each save (#97).
+let restored = false;
+watch(
   () => props.savedAt,
-  () => props.panel && load(),
-  { throttle: 30_000 },
+  (savedAt) => {
+    const newest = versions.value[0]?.created_at;
+    if (!props.panel || !savedAt) return;
+    if (restored || !newest || Date.parse(savedAt) - Date.parse(newest) >= 5 * 60_000) {
+      restored = false;
+      load();
+    }
+  },
 );
 
 async function show(version?: NoteVersion) {
@@ -39,6 +46,7 @@ const date = (version: NoteVersion) =>
 
 function restore() {
   if (!selected.value) return;
+  restored = true;
   emit('restore', selected.value.content);
   open.value = false;
 }
