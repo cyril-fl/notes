@@ -280,7 +280,8 @@
     "featureGroups": {
       "display": "Display",
       "editing": "Editing",
-      "navigation": "Navigation"
+      "navigation": "Navigation",
+      "data": "Data"
     },
     "proDescription": "More tools, for advanced use:",
     "sections": {
@@ -352,9 +353,23 @@
     "paletteActions": "In the Cmd K palette: move the open note or folder, rename it, change the theme",
     "sourceMode": "Source mode: the note's markdown as plain text, from the button under the text",
     "noteLock": "Lock a note read-only, from the padlock under the text",
-    "noteHistory": "The version history of a note in the context panel (under the text on a phone), to restore one",
-    "brokenLinks": "The list of broken or ambiguous links, in the settings",
-    "storageFiles": "The list of the files kept on the server, in the Storage section of the settings"
+    "noteHistory": "The version history of a note in the context panel (under the text on a phone): compare, restore or make a new note of one",
+    "brokenLinks": "The list of broken or ambiguous links and of missing files, in the settings",
+    "storageFiles": "The list of the files kept on the server, in the Storage section of the settings",
+    "wikiLinks": "[[Note]] links to a note or one of its headings ([[Note#Heading]], [[#Heading]]), offered as you type",
+    "noteEmbeds": "Include a note in another with ![[Note]], shown read only",
+    "images": "Paste or drop images into a note, small, medium or large",
+    "attachments": "Attach a PDF, a zip, a sound or a video to a note, as a link that downloads it",
+    "linkCards": "A web or mail link as a plain link, a mini card or a large card",
+    "tagSuggestions": "Typing # in a note offers the existing tags",
+    "snippets": "Snippets inserted with ;; and templates for a new note, set in the settings",
+    "search": "Search and the Cmd K palette",
+    "favorites": "Pin a note or a folder as a favorite in the sidebar",
+    "backlinks": "The related notes under the text, with the line holding the link",
+    "themes": "Color themes, in light and dark mode",
+    "importExport": "Import a zip, .md files or an Obsidian vault; export everything, a folder or a selection",
+    "trash": "The trash, to restore a deleted note or folder",
+    "storageUsage": "The space taken on the server, by type of file, in the Storage section of the settings"
   },
   "conflict": {
     "title": "Conflicts ({count} to resolve)",

@@ -280,7 +280,8 @@
     "featureGroups": {
       "display": "Affichage",
       "editing": "Édition",
-      "navigation": "Navigation"
+      "navigation": "Navigation",
+      "data": "Données"
     },
     "proDescription": "Des outils en plus, pour un usage avancé :",
     "sections": {
@@ -344,17 +345,31 @@
     "contextPanel": "Le panneau de contexte à droite de la note : son plan, ses notes liées et son historique",
     "settingsNav": "La barre latérale des réglages, une page par section",
     "slashCommands": "Le menu \" / \" dans les notes : titres, listes, bloc de code…, rangés en sous-menus",
-    "tables": "Insérer et éditer un tableau depuis le menu \" / \"",
+    "tables": "Insérer un tableau depuis le menu \" / \" et changer ses lignes et colonnes (ceux qui existent s'affichent pour tous)",
     "codeHighlight": "Les blocs de code colorés selon leur langage",
-    "callouts": "Encadré note, astuce, attention, danger depuis le menu \" / \" ",
+    "callouts": "Insérer un encadré (note, astuce, attention, danger) depuis le menu \" / \" (ceux qui existent s'affichent pour tous)",
     "wordCount": "Le nombre de mots de la note, sous le texte",
     "contextMenu": "Le clic droit (ou l'appui long) dans une note : le même menu que \" / \"",
     "paletteActions": "Dans la palette Cmd K : déplacer la note ou le dossier ouvert, le renommer, changer de thème",
     "sourceMode": "Le mode source : le markdown de la note en texte brut, depuis le bouton sous le texte",
     "noteLock": "Verrouiller une note en lecture seule, depuis le cadenas sous le texte",
-    "noteHistory": "L'historique des versions d'une note dans le panneau de contexte permet de restaurer",
-    "brokenLinks": "La liste des liens cassés ou ambigus, dans les réglages",
-    "storageFiles": "La liste des fichiers gardés sur le serveur, dans la section Stockage des réglages"
+    "noteHistory": "L'historique des versions d'une note dans le panneau de contexte (sous le texte sur un téléphone) : comparer, restaurer ou en faire une nouvelle note",
+    "brokenLinks": "La liste des liens cassés ou ambigus et des fichiers manquants, dans les réglages",
+    "storageFiles": "La liste des fichiers gardés sur le serveur, dans la section Stockage des réglages",
+    "wikiLinks": "Les liens [[Note]] vers une note ou l'un de ses titres ([[Note#Titre]], [[#Titre]]), proposés à la frappe",
+    "noteEmbeds": "Inclure une note dans une autre avec ![[Note]], affichée en lecture seule",
+    "images": "Coller ou glisser des images dans une note, en petit, moyen ou grand",
+    "attachments": "Joindre un PDF, un zip, un son ou une vidéo à une note, en lien qui le télécharge",
+    "linkCards": "Un lien web ou mail en lien simple, en mini carte ou en grande carte",
+    "tagSuggestions": "Taper # dans une note propose les tags existants",
+    "snippets": "Les snippets insérés avec ;; et les modèles de nouvelle note, définis dans les réglages",
+    "search": "La recherche et la palette Cmd K",
+    "favorites": "Épingler une note ou un dossier en favori dans la barre latérale",
+    "backlinks": "Les notes liées sous le texte, avec la ligne qui contient le lien",
+    "themes": "Les thèmes de couleurs, en mode clair et sombre",
+    "importExport": "Importer un zip, des fichiers .md ou un coffre Obsidian ; exporter tout, un dossier ou une sélection",
+    "trash": "La corbeille, pour restaurer une note ou un dossier supprimé",
+    "storageUsage": "L'espace pris sur le serveur, par type de fichier, dans la section Stockage des réglages"
   },
   "conflict": {
     "title": "Conflits ({count} à résoudre)",

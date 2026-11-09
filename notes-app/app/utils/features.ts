@@ -27,12 +27,26 @@ export const features = {
   noteHistory: 'pro',
   brokenLinks: 'pro',
   storageFiles: 'pro',
+  wikiLinks: 'base',
+  noteEmbeds: 'base',
+  images: 'base',
+  attachments: 'base',
+  linkCards: 'base',
+  tagSuggestions: 'base',
+  snippets: 'base',
+  search: 'base',
+  favorites: 'base',
+  backlinks: 'base',
+  themes: 'base',
+  importExport: 'base',
+  trash: 'base',
+  storageUsage: 'base',
 } as const satisfies Record<string, Level>;
 
 export type Feature = keyof typeof features;
 
 /** The subsection of each feature in the settings' comparison: a Record, so a new feature cannot be left out. */
-const groups: Record<Feature, 'display' | 'editing' | 'navigation'> = {
+const groups: Record<Feature, 'display' | 'editing' | 'navigation' | 'data'> = {
   graph: 'navigation',
   focusMode: 'display',
   contextPanel: 'display',
@@ -48,11 +62,25 @@ const groups: Record<Feature, 'display' | 'editing' | 'navigation'> = {
   noteLock: 'editing',
   noteHistory: 'editing',
   brokenLinks: 'navigation',
-  storageFiles: 'display',
+  storageFiles: 'data',
+  wikiLinks: 'editing',
+  noteEmbeds: 'editing',
+  images: 'editing',
+  attachments: 'editing',
+  linkCards: 'editing',
+  tagSuggestions: 'editing',
+  snippets: 'editing',
+  search: 'navigation',
+  favorites: 'navigation',
+  backlinks: 'navigation',
+  themes: 'display',
+  importExport: 'data',
+  trash: 'data',
+  storageUsage: 'data',
 };
 
 /** The features the settings compare between the standard and the Pro mode, by subsection. */
-export const listedFeatures = (['display', 'editing', 'navigation'] as const).map((group) => ({
+export const listedFeatures = (['display', 'editing', 'navigation', 'data'] as const).map((group) => ({
   group,
   features: (Object.keys(features) as Feature[]).filter(
     (feature) => groups[feature] === group && (features[feature] as Level) !== 'off',
