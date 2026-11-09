@@ -463,6 +463,23 @@ test('the settings follow the Pro mode, one page or a page per section', async (
   }
 });
 
+// Each section's page reads its data when reached from another one, not only on a reload.
+test('the Pro storage and broken links load when reached from another section', async ({ page }) => {
+  try {
+    await box.api.patch('/api/me', { data: { plan: 'pro' } });
+    await page.goto('/settings/general');
+    const files = page.waitForResponse((response) => response.url().endsWith('/api/files'));
+    await page.getByRole('link', { name: 'Données' }).first().click();
+    await files;
+    await page.goto('/settings/general');
+    const links = page.waitForResponse((response) => response.url().endsWith('/api/links/broken'));
+    await page.getByRole('link', { name: 'Liens' }).first().click();
+    await links;
+  } finally {
+    await box.api.patch('/api/me', { data: { plan: 'base' } });
+  }
+});
+
 // A $$ block is edited on several lines, and the Pro / menu inserts a formula and a diagram.
 test('a block formula keeps its lines; the / menu inserts a formula and a diagram (#107)', async ({ page }) => {
   const note = await box.note(`# Formules ${box.prefix}\n\n$$\na\n$$`);

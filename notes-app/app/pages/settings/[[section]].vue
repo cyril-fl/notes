@@ -64,17 +64,16 @@ const { plan, has } = usePro();
 
 // Read only where the section shows: it opens every note of the account.
 const showLinks = computed(() => show('links') && has('brokenLinks'));
+// A key per state: another section's page, still mounted during the navigation, would hand over its null.
 const { data: brokenLinks } = useLazyAsyncData(
-  'broken-links',
+  () => (showLinks.value ? 'broken-links' : 'broken-links-hidden'),
   () => (showLinks.value ? api<BrokenLink[]>('/api/links/broken') : Promise.resolve(null)),
-  { watch: [showLinks] },
 );
 // Read only where the section shows, like the links.
 const showStorage = computed(() => show('data'));
 const { data: files } = useLazyAsyncData(
-  'files',
+  () => (showStorage.value ? 'files' : 'files-hidden'),
   () => (showStorage.value ? api<NoteFile[]>('/api/files') : Promise.resolve(null)),
-  { watch: [showStorage] },
 );
 const used = computed(() => (files.value ?? []).reduce((sum, file) => sum + file.size, 0));
 // The kinds the account has, each with its share of the bar, as Apple's storage splits it.
