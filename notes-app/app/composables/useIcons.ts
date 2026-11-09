@@ -74,6 +74,7 @@ export function useIcons() {
     strike: 'i-lucide-strikethrough',
     code: 'i-reicon-code',
     link: 'i-reicon-link',
+    linkBroken: 'i-reicon-link-broken',
     linkMini: 'i-reicon-minimize',
     linkLarge: 'i-reicon-maximize',
     image: 'i-reicon-gallery-wide-filled',
