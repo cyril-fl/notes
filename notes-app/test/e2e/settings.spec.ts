@@ -340,6 +340,26 @@ test('a mermaid block is drawn as a diagram (#104)', async ({ page }) => {
     .toContain('```mermaid\ngraph TD\n  A --> B\n  B --> C\n```');
 });
 
+// $…$ and $$…$$ are drawn by KaTeX, a click edits them, the markdown keeps them as written.
+test('LaTeX formulas are drawn and edited by a click (#104)', async ({ page }) => {
+  const note = await box.note(`# Formules ${box.prefix}\n\nSoit $a_1 * b$ ici.\n\n$$\nE = mc^2\n$$`);
+  await page.goto(`/notes/${note.id}`);
+  const editor = page.locator('.ProseMirror');
+  await expect(editor.locator('span[data-math] .katex')).toBeVisible();
+  await expect(editor.locator('div[data-math] .katex-display')).toBeVisible();
+
+  await editor.locator('span[data-math] .katex-html').click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('textbox').fill('a_2 * b');
+  await dialog.getByRole('button', { name: 'Valider' }).click();
+  await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('Soit $a_2 * b$ ici.\n\n$$\nE = mc^2\n$$');
+
+  await cursorAtEnd(editor, 'ici.');
+  await page.keyboard.type(' Et $x^2$');
+  await expect(editor.locator('span[data-math]')).toHaveCount(2);
+  await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('ici. Et $x^2$');
+});
+
 // Inline code ending a line is not carried by Enter: it kept ``` from making a code block.
 test('``` after a line ending in inline code makes a colored code block', async ({ page }) => {
   const note = await box.note(`# Code ${box.prefix}\n\ntexte \`go\``);

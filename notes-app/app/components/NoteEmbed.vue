@@ -20,6 +20,8 @@ const extensions = [
   noteImage(baseURL, async () => null),
   ...tables!.extensions!,
   ...callouts!.extensions!,
+  InlineMath,
+  BlockMath,
 ];
 
 const text = ref<string>();

@@ -156,6 +156,7 @@
     "tableDeleteColumn": "Supprimer la colonne",
     "tableDelete": "Supprimer le tableau",
     "callout": "Encadrés",
+    "formula": "Formule LaTeX",
     "callouts": {
       "note": "Note",
       "tip": "Astuce",

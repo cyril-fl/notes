@@ -156,6 +156,7 @@
     "tableDeleteColumn": "Delete the column",
     "tableDelete": "Delete the table",
     "callout": "Callouts",
+    "formula": "LaTeX formula",
     "callouts": {
       "note": "Note",
       "tip": "Tip",

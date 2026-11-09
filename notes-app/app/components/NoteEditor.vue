@@ -422,6 +422,7 @@ const modules = [
   useNoteSlash(),
   ...useNoteTables(),
   useNoteCode(),
+  useNoteMath(),
   ...useNoteCallouts(),
   useNoteImages(baseURL, upload),
   { extensions: [slashTrigger(openSlash)] },
