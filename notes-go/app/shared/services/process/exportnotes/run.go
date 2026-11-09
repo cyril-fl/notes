@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"maps"
 	"path"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -240,10 +241,18 @@ func (p *run) addImages() {
 
 // Helpers
 
-// imagePath names an image by its id: two pasted images are both "image.png".
+// imagePath names a file by its id: two pasted images are both "image.png". A zip keeps the extension of its
+// name, a Word or Excel document being one.
 func imagePath(file domain.File) string {
-	return FilesDir + "/" + file.ID + domain.FileTypes[file.ContentType]
+	ext := domain.FileTypes[file.ContentType]
+	if named := strings.ToLower(path.Ext(string(file.Name))); ext == ".zip" && extPattern.MatchString(named) {
+		ext = named
+	}
+	return FilesDir + "/" + file.ID + ext
 }
+
+// extPattern is an extension that cannot make a path of the zip: letters and digits only.
+var extPattern = regexp.MustCompile(`^\.[a-z0-9]{1,8}$`)
 
 // fileName keeps a title as it is, but for what a file name cannot hold.
 func fileName(title string) string {
