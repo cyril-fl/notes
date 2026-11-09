@@ -354,7 +354,7 @@
     "noteLock": "Lock a note read-only, from the padlock under the text",
     "noteHistory": "The version history of a note in the context panel (under the text on a phone), to restore one",
     "brokenLinks": "The list of broken or ambiguous links, in the settings",
-    "storageKinds": "The space taken by file type (images, documents, sounds, videos), in the settings"
+    "storageFiles": "The list of the files kept on the server, in the Storage section of the settings"
   },
   "conflict": {
     "title": "Conflicts ({count} to resolve)",

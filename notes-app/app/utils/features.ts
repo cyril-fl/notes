@@ -26,7 +26,7 @@ export const features = {
   noteLock: 'base',
   noteHistory: 'pro',
   brokenLinks: 'pro',
-  storageKinds: 'pro',
+  storageFiles: 'pro',
 } as const satisfies Record<string, Level>;
 
 export type Feature = keyof typeof features;
@@ -48,7 +48,7 @@ const groups: Record<Feature, 'display' | 'editing' | 'navigation'> = {
   noteLock: 'editing',
   noteHistory: 'editing',
   brokenLinks: 'navigation',
-  storageKinds: 'display',
+  storageFiles: 'display',
 };
 
 /** The features the settings compare between the standard and the Pro mode, by subsection. */

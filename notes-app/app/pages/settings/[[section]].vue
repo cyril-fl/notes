@@ -94,6 +94,14 @@ const kindStyles = {
   audio: { color: 'bg-warning', icon: icons.fileAudio },
   video: { color: 'bg-success', icon: icons.fileVideo },
 } as const;
+// The list, the Pro mode's, a page at a time: an account of photos keeps hundreds.
+const filesPerPage = 20;
+const filesPage = ref(1);
+const pagedFiles = computed(() =>
+  has('storageFiles')
+    ? (files.value ?? []).slice((filesPage.value - 1) * filesPerPage, filesPage.value * filesPerPage)
+    : [],
+);
 
 const linkColors = { unresolved: 'warning', ambiguous: 'info', missing: 'error', file: 'error' } as const;
 const planItems = computed(() =>
@@ -281,11 +289,11 @@ async function deleteData() {
       <section v-if="showStorage">
         <SettingsHeading id="storage" />
         <div class="rounded-lg border border-default">
-          <div v-if="files" class="space-y-3 px-4 py-3" :class="{ 'border-b border-default': files.length }">
+          <div v-if="files" class="space-y-3 px-4 py-3" :class="{ 'border-b border-default': pagedFiles.length }">
             <p class="text-sm">
               {{ $t('settings.storageUsed', { size: fileSize(used, locale), count: files.length }, files.length) }}
             </p>
-            <template v-if="has('storageKinds') && kinds.length">
+            <template v-if="kinds.length">
               <div class="flex h-3 gap-0.5 overflow-hidden rounded-full bg-elevated">
                 <div
                   v-for="{ kind, size } in kinds"
@@ -303,20 +311,22 @@ async function deleteData() {
               </ul>
             </template>
           </div>
-          <ul class="divide-y divide-default">
-            <li v-for="file in files" :key="file.id" class="flex items-center gap-3 px-4 py-2">
-              <UIcon
-                v-if="has('storageKinds')"
-                :name="kindStyles[fileKind(file.content_type)].icon"
-                class="size-4 shrink-0 text-muted"
-              />
+          <p v-if="files && !files.length" class="px-4 py-3 text-xs text-muted">
+            {{ $t('settings.storageEmpty') }}
+          </p>
+          <ul v-if="pagedFiles.length" class="divide-y divide-default">
+            <li v-for="file in pagedFiles" :key="file.id" class="flex items-center gap-3 px-4 py-2">
+              <UIcon :name="kindStyles[fileKind(file.content_type)].icon" class="size-4 shrink-0 text-muted" />
               <p class="min-w-0 flex-1 truncate text-sm">{{ file.name || $t('settings.unnamedFile') }}</p>
               <span class="shrink-0 text-xs text-muted">{{ fileSize(file.size, locale) }}</span>
             </li>
-            <li v-if="files && !files.length" class="px-4 py-3 text-xs text-muted">
-              {{ $t('settings.storageEmpty') }}
-            </li>
           </ul>
+          <div
+            v-if="files && pagedFiles.length && files.length > filesPerPage"
+            class="flex justify-center border-t border-default px-4 py-2"
+          >
+            <UPagination v-model:page="filesPage" :total="files.length" :items-per-page="filesPerPage" size="sm" />
+          </div>
         </div>
       </section>
 

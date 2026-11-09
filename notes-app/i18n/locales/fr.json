@@ -354,7 +354,7 @@
     "noteLock": "Verrouiller une note en lecture seule, depuis le cadenas sous le texte",
     "noteHistory": "L'historique des versions d'une note dans le panneau de contexte permet de restaurer",
     "brokenLinks": "La liste des liens cassés ou ambigus, dans les réglages",
-    "storageKinds": "La place prise par type de fichier (images, documents, sons, vidéos), dans les réglages"
+    "storageFiles": "La liste des fichiers gardés sur le serveur, dans la section Stockage des réglages"
   },
   "conflict": {
     "title": "Conflits ({count} à résoudre)",
