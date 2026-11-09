@@ -73,6 +73,17 @@ type NoteVersion struct {
 	ID        string      `bun:",pk,type:uuid,default:gen_random_uuid()" json:"id"`
 	ItemID    string      `bun:",type:uuid,notnull" json:"-"`
 	Content   secret.Text `bun:",type:text,notnull" json:"content" swaggertype:"string"`
-	FileIDs   []string    `bun:"file_ids,array,type:uuid[]" json:"-"` // the images Content cites, in clear: purgefiles keeps them
+	FileIDs   []string    `bun:"file_ids,array,type:uuid[]" json:"-"`    // the images Content cites, in clear: purgefiles keeps them
+	Conflict  bool        `bun:",notnull,default:false" json:"conflict"` // a text refused by a 409, kept so it is not lost (#78)
 	CreatedAt time.Time   `bun:",notnull,default:current_timestamp" json:"created_at"`
+}
+
+// NewNoteVersion seals text for the account of ctx and notes the images it cites.
+func NewNoteVersion(ctx context.Context, itemID, text string) (NoteVersion, error) {
+	content, err := secret.Seal(UserID(ctx), text)
+	version := NoteVersion{ItemID: itemID, Content: content}
+	for _, match := range FilePattern.FindAllStringSubmatch(text, -1) {
+		version.FileIDs = append(version.FileIDs, match[1])
+	}
+	return version, err
 }

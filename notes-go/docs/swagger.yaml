@@ -117,6 +117,9 @@ components:
       - NOTE
     domain.NoteVersion:
       properties:
+        conflict:
+          description: a text refused by a 409, kept so it is not lost (#78)
+          type: boolean
         content:
           type: string
         created_at:
@@ -124,6 +127,7 @@ components:
         id:
           type: string
       required:
+      - conflict
       - content
       - created_at
       - id
@@ -516,6 +520,13 @@ components:
       required:
       - notes
       - tag
+      type: object
+    readversions.Body:
+      properties:
+        content:
+          type: string
+      required:
+      - content
       type: object
     respond.Failure:
       properties:
@@ -1461,6 +1472,59 @@ paths:
                 $ref: '#/components/schemas/respond.Failure'
           description: Internal Server Error
       summary: List the versions of a note
+      tags:
+      - notes
+    post:
+      parameters:
+      - description: uuid
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/readversions.Body'
+              description: body
+              summary: body
+        description: body
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/domain.NoteVersion'
+          description: Created
+        "204":
+          description: No Content
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+        "413":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Request Entity Too Large
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Keep a text refused by a conflict as a version
       tags:
       - notes
   /api/pinned:

@@ -1486,7 +1486,78 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        /** Keep a text refused by a conflict as a version */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description uuid */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            /** @description body */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["readversions.Body"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["domain.NoteVersion"];
+                    };
+                };
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+                /** @description Request Entity Too Large */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -2160,6 +2231,8 @@ export interface components {
         /** @enum {string} */
         "domain.Kind": "folder" | "note";
         "domain.NoteVersion": {
+            /** @description a text refused by a 409, kept so it is not lost (#78) */
+            conflict: boolean;
             content: string;
             created_at: string;
             id: string;
@@ -2311,6 +2384,9 @@ export interface components {
         "readtag.Result": {
             notes: components["schemas"]["readtag.Note"][];
             tag: components["schemas"]["domain.Tag"];
+        };
+        "readversions.Body": {
+            content: string;
         };
         "respond.Failure": {
             error: string;

@@ -8,7 +8,7 @@ const props = defineProps<{ noteId: string; readonly?: boolean; panel?: boolean;
 const emit = defineEmits<{ restore: [content: string] }>();
 
 const { icons } = useIcons();
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 const api = useApi();
 
 const open = ref(false);
@@ -41,8 +41,10 @@ async function show(version?: NoteVersion) {
   selected.value = versions.value.find((other) => other.id === version?.id) ?? versions.value[0];
 }
 
-const date = (version: NoteVersion) =>
-  new Date(version.created_at).toLocaleString(locale.value, { dateStyle: 'medium', timeStyle: 'short' });
+// A text refused by a 409 says so (#78).
+const label = (version: NoteVersion) =>
+  new Date(version.created_at).toLocaleString(locale.value, { dateStyle: 'medium', timeStyle: 'short' }) +
+  (version.conflict ? ` · ${t('history.conflict')}` : '');
 
 function restore() {
   if (!selected.value) return;
@@ -77,7 +79,7 @@ function restore() {
           class="block w-full truncate rounded py-1 text-left text-sm text-muted hover:text-default"
           @click="show(version)"
         >
-          {{ date(version) }}
+          {{ label(version) }}
         </button>
         <button v-if="versions.length > shown" type="button" class="py-1 text-xs text-primary" @click="show()">
           {{ $t('history.all', { count: versions.length }) }}
@@ -104,7 +106,7 @@ function restore() {
           <UButton
             v-for="version in versions"
             :key="version.id"
-            :label="date(version)"
+            :label="label(version)"
             color="neutral"
             :variant="version === selected ? 'soft' : 'ghost'"
             size="sm"

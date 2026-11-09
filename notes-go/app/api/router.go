@@ -58,6 +58,7 @@ func New(db bun.IDB, store silo.Store, origin string) http.Handler {
 	mux.Handle("DELETE /api/notes/{id}", apideletenote.Handler(db))
 	mux.Handle("GET /api/notes/{id}/neighbors", apireadgraph.Neighbors(db))
 	mux.Handle("GET /api/notes/{id}/versions", apireadversions.Handler(db))
+	mux.Handle("POST /api/notes/{id}/versions", apireadversions.Keep(db))
 
 	mux.Handle("GET /api/folders", apireadfolder.List(db))
 	mux.Handle("POST /api/folders", apicreatefolder.Handler(db))

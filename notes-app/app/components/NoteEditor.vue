@@ -100,14 +100,14 @@ async function patchNote(changes: Changes) {
   await readTags(changes, note);
 }
 
-// After a 409 (#72): the text typed here goes to the clipboard, then the page reads the note again from the API.
-// Not copied, nothing reloads: the text stays on screen.
+// After a 409 (#78): the text typed here is kept as a version marked conflict, then the page reads the note again from the API.
+// Not kept, nothing reloads: the text stays on screen, the toast of useApi says why.
 async function reloadStale() {
-  const text = source.value ?? clean(editorRef.value?.editor?.getMarkdown() ?? '');
+  const content = source.value ?? clean(editorRef.value?.editor?.getMarkdown() ?? '');
   try {
-    await navigator.clipboard.writeText(text);
+    await api(`/api/notes/${id.value}/versions`, { method: 'POST', body: { content }, tooLarge: t('note.tooLarge') });
   } catch {
-    return void toast.add({ title: t('note.copyFailed'), color: 'error' });
+    return;
   }
   saver.take(); // Refused anyway: closing the page must not send it again.
   location.reload();

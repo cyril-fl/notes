@@ -171,6 +171,17 @@ func TestNotes(t *testing.T) {
 		t.Errorf("versions = %+v", versions)
 	}
 	c.do("GET", "/api/notes/"+unknownID+"/versions", "", http.StatusNotFound, nil)
+	// A text refused by a 409 is kept as a version marked conflict (#78); the note's own text keeps nothing.
+	var kept struct {
+		Content  string `json:"content"`
+		Conflict bool   `json:"conflict"`
+	}
+	c.do("POST", path+"/versions", `{"content":"mine"}`, http.StatusCreated, &kept)
+	if kept.Content != "mine" || !kept.Conflict {
+		t.Errorf("conflict kept = %+v", kept)
+	}
+	c.do("POST", path+"/versions", `{"content":"changed #go"}`, http.StatusNoContent, nil)
+	c.do("POST", "/api/notes/"+unknownID+"/versions", `{"content":"mine"}`, http.StatusNotFound, nil)
 
 	c.do("PATCH", path, `{"tags":["go","sql"]}`, http.StatusOK, &read)
 	if read.Content != "changed #go\n\n#sql" || strings.Join(read.Tags, ",") != "go,sql" {

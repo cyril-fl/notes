@@ -109,9 +109,8 @@
     "unsaved": "La note n'est pas enregistrée",
     "unsavedDescription": "Tes dernières modifications seront perdues.",
     "leaveAnyway": "Quitter quand même",
-    "changedElsewhere": "La note a changé sur un autre appareil : ton texte n'est plus enregistré. Recharger le copie dans le presse-papier puis relit la note.",
+    "changedElsewhere": "La note a changé sur un autre appareil : ton texte n'est plus enregistré. Recharger le garde dans l'historique des versions puis relit la note.",
     "reload": "Recharger",
-    "copyFailed": "Impossible de copier le texte : copie-le à la main avant de recharger la page.",
     "addLink": "Ajouter un lien",
     "linkPlaceholder": "https://… ou une adresse mail",
     "tooLarge": "La note est trop longue (10 Mo au plus) : elle n'est plus enregistrée.",
@@ -331,6 +330,7 @@
     "empty": "Pas encore d'ancienne version. Quand le texte change, l'ancien est gardé, au plus une fois toutes les 5 minutes.",
     "restore": "Restaurer cette version",
     "all": "Tout l'historique ({count})",
-    "panelTitle": "Historique ({count})"
+    "panelTitle": "Historique ({count})",
+    "conflict": "conflit"
   }
 }

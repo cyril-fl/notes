@@ -10,7 +10,6 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/editnote"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/pinnote"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readitem"
-	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 )
@@ -184,13 +183,9 @@ func (p *run) keepVersion(tx bun.Tx) error {
 		return err
 	}
 
-	content, err := secret.Seal(domain.UserID(p.ctx), old)
+	version, err := domain.NewNoteVersion(p.ctx, id, old)
 	if err != nil {
 		return err
-	}
-	version := domain.NoteVersion{ItemID: id, Content: content}
-	for _, match := range domain.FilePattern.FindAllStringSubmatch(old, -1) {
-		version.FileIDs = append(version.FileIDs, match[1])
 	}
 	_, err = tx.NewInsert().Model(&version).Exec(p.ctx)
 	if err != nil {

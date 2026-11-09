@@ -109,9 +109,8 @@
     "unsaved": "The note is not saved",
     "unsavedDescription": "Your last changes will be lost.",
     "leaveAnyway": "Leave anyway",
-    "changedElsewhere": "This note changed on another device: your text is no longer saved. Reload copies it to the clipboard, then reads the note again.",
+    "changedElsewhere": "This note changed on another device: your text is no longer saved. Reload keeps it in the version history, then reads the note again.",
     "reload": "Reload",
-    "copyFailed": "Could not copy the text: copy it by hand before reloading the page.",
     "addLink": "Add a link",
     "linkPlaceholder": "https://… or an email address",
     "tooLarge": "This note is too long (10 MB at most): it is no longer saved.",
@@ -331,6 +330,7 @@
     "empty": "No earlier version yet. When the text changes, the old one is kept, at most once every 5 minutes.",
     "restore": "Restore this version",
     "all": "Whole history ({count})",
-    "panelTitle": "History ({count})"
+    "panelTitle": "History ({count})",
+    "conflict": "conflict"
   }
 }

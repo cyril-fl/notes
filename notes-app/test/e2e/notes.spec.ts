@@ -114,9 +114,8 @@ test('an email is a link: typed, pasted or given to the link button', async ({ p
     .toContain('[bouton@example.com](mailto:bouton@example.com "mini")');
 });
 
-// Changed on another device (#72): Reload copies the text typed here, then shows the note as the API has it.
-test('after a conflict, reload copies the local text and reads the note again', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+// Changed on another device (#78): Reload keeps the text typed here as a version marked conflict, then shows the note as the API has it.
+test('after a conflict, reload keeps the local text in the history and reads the note again', async ({ page }) => {
   const note = await box.note(`# ${box.prefix} conflit\n\nTexte`);
   await page.goto(`/notes/${note.id}`);
   const editor = page.locator('.ProseMirror');
@@ -127,7 +126,10 @@ test('after a conflict, reload copies the local text and reads the note again', 
   await page.keyboard.type(' ici');
   await page.getByRole('button', { name: 'Recharger' }).click();
   await expect(editor.getByText('Ailleurs')).toBeVisible();
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('Texte ici');
+  const versions: { content: string; conflict: boolean }[] = await (
+    await box.api.get(`/api/notes/${note.id}/versions`)
+  ).json();
+  expect(versions.find((version) => version.conflict)?.content).toContain('Texte ici');
   expect(await box.content(note.id)).toContain('Ailleurs');
 });
 
