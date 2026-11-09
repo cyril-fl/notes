@@ -121,7 +121,9 @@
     "imageType": "{name} is not a PNG, JPEG, GIF or WebP image",
     "imageFailed": "{name} could not be sent",
     "pendingLink": "Pending link",
-    "pendingLinkDescription": "It will be linked as soon as a single note is called “{target}”. Write its path (/Folder/Title) if several have this title.",
+    "pendingLinkDescription": "No note is called “{target}”: it will be linked as soon as one has this title.",
+    "ambiguousLink": "Ambiguous link",
+    "ambiguousLinkDescription": "Several notes are called “{target}”: {paths}. Write the path of the right one (/Folder/Title).",
     "heading": "Heading {level}",
     "bold": "Bold",
     "italic": "Italic",
@@ -289,7 +291,15 @@
       "data": "Data",
       "dataDescription": "Export, import, the trash, and erasing everything.",
       "pro": "Advanced mode",
-      "proDescription": "More tools, for advanced use."
+      "proDescription": "More tools, for advanced use.",
+      "links": "Links",
+      "linksDescription": "The links between notes that lead to no note, or to several."
+    },
+    "linksEmpty": "No broken or ambiguous link.",
+    "linkKinds": {
+      "unresolved": "No note",
+      "ambiguous": "Several notes",
+      "missing": "Deleted note"
     }
   },
   "account": {
@@ -328,7 +338,8 @@
     "paletteActions": "In the Cmd K palette: move the open note or folder, rename it, change the theme",
     "sourceMode": "Source mode: the note's markdown as plain text, from the button under the text",
     "noteLock": "Lock a note read-only, from the padlock under the text",
-    "noteHistory": "The version history of a note in the context panel (under the text on a phone), to restore one"
+    "noteHistory": "The version history of a note in the context panel (under the text on a phone), to restore one",
+    "brokenLinks": "The list of broken or ambiguous links, in the settings"
   },
   "conflict": {
     "title": "Conflicts ({count} to resolve)",

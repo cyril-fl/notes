@@ -1,6 +1,7 @@
 package wikilink
 
 import (
+	"maps"
 	"slices"
 	"strings"
 	"testing"
@@ -52,6 +53,14 @@ func TestIDs(t *testing.T) {
 		if got := IDs(c.content); !slices.Equal(got, c.want) {
 			t.Errorf("%s: IDs(%q) = %q, want %q", name, c.content, got, c.want)
 		}
+	}
+}
+
+func TestLabels(t *testing.T) {
+	got := Labels("[A](note:" + idA + ") [a](note:" + strings.ToUpper(idA) + ") [B#h](note:" + idB + "#h) `[C](note:" + idB + ")` [[D]]")
+	want := map[string]string{idA: "A", idB: "B#h"}
+	if !maps.Equal(got, want) {
+		t.Errorf("Labels = %q, want %q", got, want)
 	}
 }
 

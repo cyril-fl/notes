@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Snippet, User } from '~/types/items';
+import type { BrokenLink, Snippet, User } from '~/types/items';
 
 // Decided before the page renders, so the Pro mode never shows every section first and then jumps to one.
 definePageMeta({
@@ -60,7 +60,16 @@ async function changeTheme(next: string) {
   me.value = await api<User>('/api/me', { method: 'PATCH', body: { theme: next } });
 }
 
-const { plan } = usePro();
+const { plan, has } = usePro();
+
+// Read only where the section shows: it opens every note of the account.
+const showLinks = computed(() => show('links') && has('brokenLinks'));
+const { data: brokenLinks } = useLazyAsyncData(
+  'broken-links',
+  () => (showLinks.value ? api<BrokenLink[]>('/api/links/broken') : Promise.resolve(null)),
+  { watch: [showLinks] },
+);
+const linkColors = { unresolved: 'warning', ambiguous: 'info', missing: 'error' } as const;
 const planItems = computed(() =>
   plans.map((value) => ({ label: t(`settings.plans.${value}`), value, disabled: !me.value })),
 );
@@ -298,6 +307,25 @@ async function deleteData() {
           </div>
           <UButton :label="$t('common.delete')" color="error" variant="ghost" :disabled="!me" @click="deleteData" />
         </div>
+      </section>
+
+      <section v-if="showLinks">
+        <SettingsHeading id="links" />
+        <ul class="divide-y divide-default rounded-lg border border-default">
+          <li v-for="(link, index) in brokenLinks" :key="index">
+            <NuxtLink :to="`/notes/${link.note_id}`" class="flex items-center gap-3 px-4 py-2 hover:bg-elevated/50">
+              <UIcon :name="icons.note" class="size-4 shrink-0 text-muted" />
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm">{{ link.target }}</p>
+                <p class="truncate text-xs text-muted">{{ link.note_path }}</p>
+              </div>
+              <UBadge :label="$t(`settings.linkKinds.${link.kind}`)" :color="linkColors[link.kind]" variant="subtle" />
+            </NuxtLink>
+          </li>
+          <li v-if="brokenLinks && !brokenLinks.length" class="px-4 py-3 text-xs text-muted">
+            {{ $t('settings.linksEmpty') }}
+          </li>
+        </ul>
       </section>
 
       <section v-if="show('pro')">

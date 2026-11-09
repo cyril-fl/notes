@@ -98,11 +98,26 @@ export function useNoteLinks(id: Ref<string | undefined>): EditorModule {
     event.preventDefault();
     const heading = link.dataset.heading ? `#${encodeURIComponent(link.dataset.heading)}` : '';
     if (link.dataset.note) return navigateTo(`/notes/${link.dataset.note}${heading}`);
-    toast.add({
-      title: t('note.pendingLink'),
-      description: t('note.pendingLinkDescription', { target: link.dataset.wikilink }),
-      color: 'warning',
-    });
+    // The other notes the API would pick from, by path or by title whatever its case, as linknotes.Resolve.
+    const target = link.dataset.wikilink!.split('#')[0]!.trim();
+    const paths = noteItems.value
+      .filter((note) =>
+        target.startsWith('/') ? note.description === target : note.label.toLowerCase() === target.toLowerCase(),
+      )
+      .map((note) => note.description);
+    toast.add(
+      paths.length > 1
+        ? {
+            title: t('note.ambiguousLink'),
+            description: t('note.ambiguousLinkDescription', { target, paths: paths.join(', ') }),
+            color: 'info',
+          }
+        : {
+            title: t('note.pendingLink'),
+            description: t('note.pendingLinkDescription', { target }),
+            color: 'warning',
+          },
+    );
   }
 
   return {

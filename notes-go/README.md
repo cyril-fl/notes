@@ -119,7 +119,7 @@ Les tags d'une note sont les `#mots` de son texte, code et liens exclus : `#idé
 
 `[[Titre#Section]]` vise un titre de la note : il devient `[Titre#Section](note:<uuid>#Section)`, garde la section quand la note change de titre, et redevient `[[Titre#Section]]` à l'export. Dans l'app, taper `#` après le nom d'une note propose ses titres, et un clic ouvre la note à ce titre.
 
-`GET /api/notes/{id}/neighbors` donne ses liens (`links`) et ses rétroliens (`backlinks`), et le graphe relie aussi les notes liées. Dans l'app, taper `[[` propose les notes, et un clic sur un lien l'ouvre.
+`GET /api/notes/{id}/neighbors` donne ses liens (`links`) et ses rétroliens (`backlinks`), et le graphe relie aussi les notes liées. Dans l'app, taper `[[` propose les notes, et un clic sur un lien l'ouvre. `GET /api/links/broken` liste les liens des notes vivantes qui ne mènent nulle part : `unresolved` (aucune autre note de ce titre ou chemin), `ambiguous` (plusieurs) ou `missing` (lien vers une note mise à la corbeille ou purgée).
 
 ### Corbeille
 

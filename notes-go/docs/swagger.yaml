@@ -283,6 +283,29 @@ components:
       - folders
       - notes
       type: object
+    listbrokenlinks.Link:
+      properties:
+        kind:
+          enum:
+          - unresolved
+          - ambiguous
+          - missing
+          type: string
+        note_id:
+          type: string
+        note_path:
+          type: string
+        note_title:
+          type: string
+        target:
+          type: string
+      required:
+      - kind
+      - note_id
+      - note_path
+      - note_title
+      - target
+      type: object
     listfolders.Folder:
       properties:
         id:
@@ -1043,6 +1066,26 @@ paths:
       summary: List the direct children of a folder, or of the root
       tags:
       - items
+  /api/links/broken:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/listbrokenlinks.Link'
+                type: array
+          description: OK
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: List the broken and ambiguous links
+      tags:
+      - graph
   /api/login:
     post:
       requestBody:

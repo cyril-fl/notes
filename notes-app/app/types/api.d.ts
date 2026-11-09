@@ -724,6 +724,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/links/broken": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the broken and ambiguous links */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["listbrokenlinks.Link"][];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/login": {
         parameters: {
             query?: never;
@@ -2393,6 +2438,14 @@ export interface components {
         "importnotes.Result": {
             folders: number;
             notes: number;
+        };
+        "listbrokenlinks.Link": {
+            /** @enum {string} */
+            kind: "unresolved" | "ambiguous" | "missing";
+            note_id: string;
+            note_path: string;
+            note_title: string;
+            target: string;
         };
         "listfolders.Folder": {
             id: string;

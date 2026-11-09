@@ -46,6 +46,17 @@ func IDs(content string) []string {
 	return ids
 }
 
+// Labels gives the label of the resolved links, by the id of their note in lowercase: the first one when several.
+func Labels(content string) map[string]string {
+	labels := map[string]string{}
+	for _, l := range spans(content, byID, 2) {
+		if id := strings.ToLower(l.value); labels[id] == "" {
+			labels[id] = strings.TrimSpace(content[l.start+1 : l.start+strings.Index(content[l.start:], "](note:")])
+		}
+	}
+	return labels
+}
+
 // Resolve writes every [[target]] that resolve finds as a link to the note's id, labelled with its title. The
 // heading after # is kept, not checked: the note's headings change with no link knowing. [[#Heading]] waits.
 func Resolve(content string, resolve func(target string) (id, title string, ok bool)) string {

@@ -121,7 +121,9 @@
     "imageType": "{name} n'est pas une image PNG, JPEG, GIF ou WebP",
     "imageFailed": "{name} n'a pas pu être envoyée",
     "pendingLink": "Lien en attente",
-    "pendingLinkDescription": "Il sera relié dès qu'une seule note s'appellera « {target} ». Écris son chemin (/Dossier/Titre) si plusieurs portent ce titre.",
+    "pendingLinkDescription": "Aucune note ne s'appelle « {target} » : il sera relié dès qu'une note portera ce titre.",
+    "ambiguousLink": "Lien ambigu",
+    "ambiguousLinkDescription": "Plusieurs notes s'appellent « {target} » : {paths}. Écris le chemin de la bonne (/Dossier/Titre).",
     "heading": "Titre {level}",
     "bold": "Gras",
     "italic": "Italique",
@@ -289,7 +291,15 @@
       "data": "Données",
       "dataDescription": "Exporter, importer, la corbeille, et tout effacer.",
       "pro": "Mode avancé",
-      "proDescription": "Des outils en plus, pour un usage avancé."
+      "proDescription": "Des outils en plus, pour un usage avancé.",
+      "links": "Liens",
+      "linksDescription": "Les liens entre notes qui ne mènent à aucune note, ou à plusieurs."
+    },
+    "linksEmpty": "Aucun lien cassé ni ambigu.",
+    "linkKinds": {
+      "unresolved": "Aucune note",
+      "ambiguous": "Plusieurs notes",
+      "missing": "Note supprimée"
     }
   },
   "account": {
@@ -328,7 +338,8 @@
     "paletteActions": "Dans la palette Cmd K : déplacer la note ou le dossier ouvert, le renommer, changer de thème",
     "sourceMode": "Le mode source : le markdown de la note en texte brut, depuis le bouton sous le texte",
     "noteLock": "Verrouiller une note en lecture seule, depuis le cadenas sous le texte",
-    "noteHistory": "L'historique des versions d'une note dans le panneau de contexte permet de restaurer"
+    "noteHistory": "L'historique des versions d'une note dans le panneau de contexte permet de restaurer",
+    "brokenLinks": "La liste des liens cassés ou ambigus, dans les réglages"
   },
   "conflict": {
     "title": "Conflits ({count} à résoudre)",

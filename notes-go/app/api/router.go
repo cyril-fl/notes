@@ -19,6 +19,7 @@ import (
 	apiimport "github.com/cyril-fl/notes/notes-go/app/api/import"
 	apilogin "github.com/cyril-fl/notes/notes-go/app/api/login"
 	apimove "github.com/cyril-fl/notes/notes-go/app/api/move"
+	apireadbrokenlinks "github.com/cyril-fl/notes/notes-go/app/api/read-broken-links"
 	apireadfile "github.com/cyril-fl/notes/notes-go/app/api/read-file"
 	apireadfinder "github.com/cyril-fl/notes/notes-go/app/api/read-finder"
 	apireadfolder "github.com/cyril-fl/notes/notes-go/app/api/read-folder"
@@ -78,6 +79,7 @@ func New(db bun.IDB, store silo.Store, origin string) http.Handler {
 
 	mux.Handle("GET /api/graph", apireadgraph.Handler(db))
 	mux.Handle("GET /api/graph/notes", apireadgraph.Notes(db))
+	mux.Handle("GET /api/links/broken", apireadbrokenlinks.Handler(db))
 	mux.Handle("GET /api/search", apisearch.Handler(db))
 	mux.Handle("GET /api/recent", apireadrecent.Handler(db))
 	mux.Handle("GET /api/pinned", apireadpinned.Handler(db))

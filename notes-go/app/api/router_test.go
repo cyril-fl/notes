@@ -782,7 +782,7 @@ func TestAccountsAreApart(t *testing.T) {
 	bob.do("GET", "/api/notes/"+note.ID+"/versions/"+versions[0].ID, "", http.StatusNotFound, nil)
 	bob.do("DELETE", "/api/notes/"+note.ID, "", http.StatusNotFound, nil)
 	bob.do("POST", "/api/notes", fmt.Sprintf(`{"content":"# Intrus","parent_id":%q}`, folder.ID), http.StatusBadRequest, nil)
-	for _, path := range []string{"/api/items", "/api/search?q=Secret", "/api/graph", "/api/graph/notes", "/api/recent", "/api/folders", "/api/tags"} {
+	for _, path := range []string{"/api/items", "/api/search?q=Secret", "/api/graph", "/api/graph/notes", "/api/links/broken", "/api/recent", "/api/folders", "/api/tags"} {
 		if got := bob.raw(path); strings.Contains(got, note.ID) || strings.Contains(got, folder.ID) || strings.Contains(got, "privé") {
 			t.Errorf("%s shows alice's data to bob: %s", path, got)
 		}

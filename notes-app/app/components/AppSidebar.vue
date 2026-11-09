@@ -18,11 +18,13 @@ const settingsNav = computed(
 );
 const settingsLinks = computed(() => [
   { label: t('sidebar.account'), icon: icons.account, to: '/account' },
-  ...settingsSections.map((section) => ({
-    label: t(`settings.sections.${section.id}`),
-    icon: icons[section.icon],
-    to: `/settings/${section.id}`,
-  })),
+  ...settingsSections
+    .filter((section) => !('feature' in section) || has(section.feature))
+    .map((section) => ({
+      label: t(`settings.sections.${section.id}`),
+      icon: icons[section.icon],
+      to: `/settings/${section.id}`,
+    })),
 ]);
 
 const { data: pinned } = usePinned();
