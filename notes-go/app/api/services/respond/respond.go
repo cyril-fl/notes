@@ -73,7 +73,7 @@ var statuses = []struct {
 		editfolder.ErrNotFound, editnote.ErrNotFound, emptytrash.ErrNotFound, edittag.ErrNotFound, exportnotes.ErrNotFound, pinnote.ErrNotFound, readfile.ErrNotFound, readitem.ErrNotFound, readtag.ErrNotFound,
 	}},
 	{http.StatusUnsupportedMediaType, []error{
-		createfile.ErrNotImage,
+		createfile.ErrFileType,
 	}},
 	{http.StatusConflict, []error{
 		domain.ErrFolderExists, edittag.ErrAlreadyExists, adduser.ErrNameTaken, moveitems.ErrCycle, restoreitems.ErrParentInTrash, patchnote.ErrLocked, patchnote.ErrStale,

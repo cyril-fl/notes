@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"net/http"
 	"net/url"
 	"path"
 	"regexp"
@@ -185,13 +186,13 @@ func (p *run) importImage(ctx context.Context, tx bun.Tx, target string) (domain
 		return file, true, nil
 	}
 	data, err := fs.ReadFile(p.input.Dir, target)
-	if err != nil {
+	if err != nil || !strings.HasPrefix(http.DetectContentType(data), "image/") {
 		return domain.File{}, false, nil
 	}
 	image := createfile.Process(ctx, tx, p.store, createfile.Input{Name: path.Base(target), Data: data})
 	image.Run()
 	if image.HasErr() {
-		if errors.Is(image.GetErr(), createfile.ErrNotImage) {
+		if errors.Is(image.GetErr(), createfile.ErrFileType) {
 			return domain.File{}, false, nil
 		}
 		return domain.File{}, false, fmt.Errorf("%s: %w", target, image.GetErr())

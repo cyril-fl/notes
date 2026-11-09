@@ -123,7 +123,7 @@ func TestEditUser(t *testing.T) {
 		t.Errorf("rename: result = %+v, err = %v; want the name trimmed", got, process.GetErr())
 	}
 
-	// An avatar is an image of the account: not a stranger's id, not a non-uuid.
+	// An avatar is an image of the account: not a stranger's id, not a non-uuid, not a PDF.
 	for _, bad := range []string{"not-a-uuid", "00000000-0000-0000-0000-000000000000"} {
 		process = Process(ctx, tx, Input{Avatar: &bad})
 		process.Run()
@@ -135,6 +135,17 @@ func TestEditUser(t *testing.T) {
 	file.Run()
 	if file.HasErr() {
 		t.Fatal(file.GetErr())
+	}
+	pdf := createfile.Process(ctx, tx, silo.NewMemory(), createfile.Input{Name: "me.pdf", Data: []byte("%PDF-1.7")})
+	pdf.Run()
+	if pdf.HasErr() {
+		t.Fatal(pdf.GetErr())
+	}
+	pdfID := pdf.GetResult().ID
+	process = Process(ctx, tx, Input{Avatar: &pdfID})
+	process.Run()
+	if !errors.Is(process.GetErr(), ErrInvalidAvatar) {
+		t.Errorf("pdf avatar: err = %v, want ErrInvalidAvatar", process.GetErr())
 	}
 	avatar, none := file.GetResult().ID, ""
 	process = Process(ctx, tx, Input{Avatar: &avatar})

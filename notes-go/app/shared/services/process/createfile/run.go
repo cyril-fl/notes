@@ -17,7 +17,7 @@ import (
 
 var (
 	ErrNoData   = errors.New("no file given")
-	ErrNotImage = errors.New("not a PNG, JPEG, GIF or WebP image")
+	ErrFileType = errors.New("not an image (PNG, JPEG, GIF, WebP), a PDF, a zip, an audio or a video file")
 )
 
 // Input is a file as sent: its type is read from its bytes, not from what the sender claims.
@@ -40,7 +40,7 @@ type cache struct {
 	file domain.File
 }
 
-// Process stores an image of the account: its row in Postgres, its bytes in Silo.
+// Process stores a file of the account: its row in Postgres, its bytes in Silo.
 func Process(ctx context.Context, db bun.IDB, store silo.Store, input Input) *run {
 	return &run{
 		ctx:   ctx,
@@ -72,13 +72,16 @@ func (p *run) makeFile() {
 
 	contentType := http.DetectContentType(p.input.Data)
 	if _, ok := domain.FileTypes[contentType]; !ok {
-		p.SetErr(fmt.Errorf("%w: %s", ErrNotImage, contentType))
+		p.SetErr(fmt.Errorf("%w: %s", ErrFileType, contentType))
 		return
 	}
 
 	name := strings.TrimSpace(path.Base(strings.ReplaceAll(p.input.Name, "\\", "/")))
 	if name == "" || name == "." || name == "/" {
-		name = "image" + domain.FileTypes[contentType]
+		name = "file" + domain.FileTypes[contentType]
+		if strings.HasPrefix(contentType, "image/") {
+			name = "image" + domain.FileTypes[contentType]
+		}
 	}
 	sealed, err := secret.Seal(domain.UserID(p.ctx), name)
 	p.cache.file = domain.File{UserID: domain.UserID(p.ctx), Name: sealed, ContentType: contentType, Size: int64(len(p.input.Data))}

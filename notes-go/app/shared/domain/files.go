@@ -8,7 +8,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// File is an image of a note: its bytes are in Silo under Key(), the notes cite it as FileURL(ID).
+// File is an image or an attachment of a note: its bytes are in Silo under Key(), the notes cite it as FileURL(ID).
 type File struct {
 	bun.BaseModel `bun:"table:files,alias:f" json:"-"`
 
@@ -34,10 +34,18 @@ func (f File) Key() string {
 	return f.UserID + "/" + f.ID
 }
 
-// FileTypes are the images accepted, with the extension of their export. Not SVG: it can hold scripts.
+// FileTypes are the files accepted, as http.DetectContentType names them, with the extension of their export.
+// Not SVG nor HTML: they can hold scripts. A zip also holds the Office documents.
 var FileTypes = map[string]string{
-	"image/png":  ".png",
-	"image/jpeg": ".jpg",
-	"image/gif":  ".gif",
-	"image/webp": ".webp",
+	"image/png":       ".png",
+	"image/jpeg":      ".jpg",
+	"image/gif":       ".gif",
+	"image/webp":      ".webp",
+	"application/pdf": ".pdf",
+	"application/zip": ".zip",
+	"application/ogg": ".ogg",
+	"audio/mpeg":      ".mp3",
+	"audio/wave":      ".wav",
+	"video/mp4":       ".mp4",
+	"video/webm":      ".webm",
 }

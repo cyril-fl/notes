@@ -79,7 +79,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Upload an image */
+        /** Upload an image or an attachment */
         post: {
             parameters: {
                 query?: {
@@ -90,14 +90,21 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            /** @description image */
+            /** @description file */
             requestBody: {
                 content: {
                     "application/json": number[];
+                    "application/ogg": string;
+                    "application/pdf": string;
+                    "application/zip": string;
+                    "audio/mpeg": string;
+                    "audio/wave": string;
                     "image/gif": string;
                     "image/jpeg": string;
                     "image/png": string;
                     "image/webp": string;
+                    "video/mp4": string;
+                    "video/webm": string;
                 };
             };
             responses: {
@@ -180,10 +187,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
+                        "application/ogg": Record<string, never>;
+                        "application/pdf": Record<string, never>;
+                        "application/zip": Record<string, never>;
+                        "audio/mpeg": Record<string, never>;
+                        "audio/wave": Record<string, never>;
                         "image/gif": Record<string, never>;
                         "image/jpeg": Record<string, never>;
                         "image/png": Record<string, never>;
                         "image/webp": Record<string, never>;
+                        "video/mp4": Record<string, never>;
+                        "video/webm": Record<string, never>;
                     };
                 };
                 /** @description Not Found */
@@ -192,10 +206,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
+                        "application/ogg": components["schemas"]["respond.Failure"];
+                        "application/pdf": components["schemas"]["respond.Failure"];
+                        "application/zip": components["schemas"]["respond.Failure"];
+                        "audio/mpeg": components["schemas"]["respond.Failure"];
+                        "audio/wave": components["schemas"]["respond.Failure"];
                         "image/gif": components["schemas"]["respond.Failure"];
                         "image/jpeg": components["schemas"]["respond.Failure"];
                         "image/png": components["schemas"]["respond.Failure"];
                         "image/webp": components["schemas"]["respond.Failure"];
+                        "video/mp4": components["schemas"]["respond.Failure"];
+                        "video/webm": components["schemas"]["respond.Failure"];
                     };
                 };
                 /** @description Internal Server Error */
@@ -204,10 +225,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
+                        "application/ogg": components["schemas"]["respond.Failure"];
+                        "application/pdf": components["schemas"]["respond.Failure"];
+                        "application/zip": components["schemas"]["respond.Failure"];
+                        "audio/mpeg": components["schemas"]["respond.Failure"];
+                        "audio/wave": components["schemas"]["respond.Failure"];
                         "image/gif": components["schemas"]["respond.Failure"];
                         "image/jpeg": components["schemas"]["respond.Failure"];
                         "image/png": components["schemas"]["respond.Failure"];
                         "image/webp": components["schemas"]["respond.Failure"];
+                        "video/mp4": components["schemas"]["respond.Failure"];
+                        "video/webm": components["schemas"]["respond.Failure"];
                     };
                 };
             };

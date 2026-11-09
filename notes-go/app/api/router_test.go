@@ -702,6 +702,17 @@ func TestFiles(t *testing.T) {
 		t.Errorf("GET = %q, want the image back", got)
 	}
 	c.do(http.MethodPost, "/api/files", "<svg/>", http.StatusUnsupportedMediaType, nil)
+
+	// An attachment downloads under its name.
+	var pdf struct{ ID string }
+	c.do(http.MethodPost, "/api/files?name=rapport.pdf", "%PDF-1.7 ...", http.StatusCreated, &pdf)
+	r := httptest.NewRequest(http.MethodGet, "/api/files/"+pdf.ID, nil)
+	r.Host = "localhost:8080"
+	w := httptest.NewRecorder()
+	c.handler.ServeHTTP(w, r)
+	if got := w.Header().Get("Content-Disposition"); got != "attachment; filename=rapport.pdf" {
+		t.Errorf("Content-Disposition = %q", got)
+	}
 	c.do(http.MethodPost, "/api/files", "", http.StatusBadRequest, nil)
 	c.do(http.MethodGet, "/api/files/"+unknownID, "", http.StatusNotFound, nil)
 	c.other(t).do(http.MethodGet, "/api/files/"+file.ID, "", http.StatusNotFound, nil)

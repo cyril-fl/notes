@@ -22,13 +22,14 @@ export function citedSrc(src: string, baseURL: string) {
   return src.startsWith(baseURL + FILES) ? src.slice(baseURL.length) : src;
 }
 
-function images(files?: FileList | null) {
-  return [...(files ?? [])].filter((file) => file.type.startsWith('image/'));
+/** An attachment of a note, a PDF or a recording: a link to /api/files/<id>, which the API sends as a download. */
+export function isFileLink(href?: string | null) {
+  return !!href?.startsWith(FILES);
 }
 
 /**
  * The images of a note: pasting or dropping one sends it to the API with upload, which gives what the
- * markdown cites, or null when it failed (and said so).
+ * markdown cites, or null when it failed (and said so). Any other file goes the same way and becomes a link to it.
  */
 export function noteImage(baseURL: string, upload: (file: File) => Promise<string | null>) {
   return Image.extend({
@@ -71,7 +72,9 @@ export function noteImage(baseURL: string, upload: (file: File) => Promise<strin
         for (const file of files) {
           const src = await upload(file);
           if (!src) continue;
-          const content = { type: name, attrs: { src, alt: file.name } };
+          const content = file.type.startsWith('image/')
+            ? { type: name, attrs: { src, alt: file.name } }
+            : { type: 'text', text: file.name, marks: [{ type: 'link', attrs: { href: src } }] };
           if (pos === undefined) editor.chain().focus().insertContent(content).run();
           else editor.chain().focus().insertContentAt(pos, content).run();
           pos = undefined;
@@ -82,16 +85,23 @@ export function noteImage(baseURL: string, upload: (file: File) => Promise<strin
         new Plugin({
           props: {
             handlePaste(_view, event) {
-              const files = images(event.clipboardData?.files);
+              const files = [...(event.clipboardData?.files ?? [])];
               if (!files.length) return false;
               insert(files);
               return true;
             },
             handleDrop(view, event) {
-              const files = images(event.dataTransfer?.files);
+              const files = [...(event.dataTransfer?.files ?? [])];
               if (!files.length) return false;
               event.preventDefault();
               insert(files, view.posAtCoords({ left: event.clientX, top: event.clientY })?.pos);
+              return true;
+            },
+            // The API answers it as a download: the note stays open.
+            handleClick(_view, _pos, event) {
+              const href = (event.target as HTMLElement).closest('a')?.getAttribute('href');
+              if (!isFileLink(href)) return false;
+              window.location.href = imageSrc(href!, baseURL);
               return true;
             },
           },

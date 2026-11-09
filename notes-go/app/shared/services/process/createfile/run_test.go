@@ -60,13 +60,21 @@ func TestCreateFile(t *testing.T) {
 		t.Errorf("unnamed = %+v, %v", unnamed.GetResult(), unnamed.GetErr())
 	}
 
+	// An attachment: a PDF, named "file" when sent without a name.
+	pdf := Process(ctx, tx, store, Input{Data: []byte("%PDF-1.7 ...")})
+	pdf.Run()
+	if pdf.HasErr() || pdf.GetResult().Name != "file.pdf" || pdf.GetResult().ContentType != "application/pdf" {
+		t.Errorf("pdf = %+v, %v", pdf.GetResult(), pdf.GetErr())
+	}
+
 	for _, test := range []struct {
 		data string
 		err  error
 	}{
 		{"", ErrNoData},
-		{"<svg xmlns='http://www.w3.org/2000/svg'><script/></svg>", ErrNotImage},
-		{"# just text", ErrNotImage},
+		{"<svg xmlns='http://www.w3.org/2000/svg'><script/></svg>", ErrFileType},
+		{"# just text", ErrFileType},
+		{"<html><script>alert(1)</script></html>", ErrFileType},
 	} {
 		refused := Process(ctx, tx, store, Input{Name: "x", Data: []byte(test.data)})
 		refused.Run()
@@ -74,8 +82,8 @@ func TestCreateFile(t *testing.T) {
 			t.Errorf("%q: err = %v, want %v", test.data, refused.GetErr(), test.err)
 		}
 	}
-	if len(store.Objects) != 2 {
-		t.Errorf("objects = %d, want 2", len(store.Objects))
+	if len(store.Objects) != 3 {
+		t.Errorf("objects = %d, want 3", len(store.Objects))
 	}
 
 	// Through Sealed, as silo.New gives it: Silo keeps the bytes encrypted, Get gives them back.

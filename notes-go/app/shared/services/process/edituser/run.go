@@ -111,7 +111,7 @@ func (p *run) checkAvatar() {
 
 	// id::text: a value that is not a uuid is not found, rather than a failed query.
 	found, err := p.db.NewSelect().Model((*domain.File)(nil)).
-		Where("id::text = ? AND user_id = ?", *p.input.Avatar, domain.UserID(p.ctx)).
+		Where("id::text = ? AND user_id = ? AND content_type LIKE 'image/%'", *p.input.Avatar, domain.UserID(p.ctx)).
 		Exists(p.ctx)
 	if err == nil && !found {
 		err = fmt.Errorf("%w: %q", ErrInvalidAvatar, *p.input.Avatar)

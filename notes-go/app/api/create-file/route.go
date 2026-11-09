@@ -12,16 +12,16 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// maxFile is far beyond a photo of a phone.
+// maxFile is far beyond a photo of a phone, enough for a PDF or a voice memo.
 const maxFile = 20 << 20
 
-// Handler stores an image, the body, under its name: POST /api/files?name=. The note cites it as /api/files/{id}.
-// @Summary  Upload an image
+// Handler stores an image or an attachment (domain.FileTypes), the body, under its name: POST /api/files?name=. The note cites it as /api/files/{id}.
+// @Summary  Upload an image or an attachment
 // @Tags     files
-// @Accept   image/png,image/jpeg,image/gif,image/webp
+// @Accept   image/png,image/jpeg,image/gif,image/webp,application/pdf,application/zip,application/ogg,audio/mpeg,audio/wave,video/mp4,video/webm
 // @Produce  json
 // @Param    name query string false "file name"
-// @Param    body body []byte true "image"
+// @Param    body body []byte true "file"
 // @Success  201 {object} domain.File
 // @Failure  400 {object} respond.Failure
 // @Failure  413 {object} respond.Failure
