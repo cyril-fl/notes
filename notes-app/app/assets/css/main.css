@@ -416,6 +416,19 @@
     @apply text-error;
   }
 
+  /* A ```mermaid block drawn: its code shown only while the cursor is in it. */
+  .ProseMirror pre.mermaid-hidden {
+    @apply hidden;
+  }
+
+  .ProseMirror .mermaid-diagram {
+    @apply my-4 flex cursor-pointer justify-center overflow-x-auto;
+  }
+
+  .ProseMirror .mermaid-error {
+    @apply text-error text-sm;
+  }
+
   /* Task lists are not in the Nuxt UI editor theme. */
   .ProseMirror ul[data-type='taskList'] {
     @apply list-none ps-0!;

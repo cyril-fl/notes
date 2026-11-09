@@ -323,6 +323,23 @@ test('the code blocks are colored by their language', async ({ page }) => {
   await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('```go\nfunc main() {} // ok\n```');
 });
 
+// A ```mermaid block is drawn, its code shown while the cursor is in it, its markdown the same.
+test('a mermaid block is drawn as a diagram (#104)', async ({ page }) => {
+  const note = await box.note(`# Diagramme ${box.prefix}\n\n\`\`\`mermaid\ngraph TD\n  A --> B\n\`\`\``);
+  await page.goto(`/notes/${note.id}`);
+  const editor = page.locator('.ProseMirror');
+  await expect(editor.locator('.mermaid-diagram svg')).toBeVisible({ timeout: 15000 });
+  await expect(editor.locator('pre')).toBeHidden();
+
+  await editor.locator('.mermaid-diagram').click();
+  await expect(editor.locator('pre')).toBeVisible();
+  await page.keyboard.type('\n  B --> C');
+  await expect(editor.locator('.mermaid-diagram svg')).toContainText('C');
+  await expect
+    .poll(() => box.content(note.id), { timeout: 5000 })
+    .toContain('```mermaid\ngraph TD\n  A --> B\n  B --> C\n```');
+});
+
 // Inline code ending a line is not carried by Enter: it kept ``` from making a code block.
 test('``` after a line ending in inline code makes a colored code block', async ({ page }) => {
   const note = await box.note(`# Code ${box.prefix}\n\ntexte \`go\``);
