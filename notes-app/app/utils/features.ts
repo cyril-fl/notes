@@ -1,5 +1,12 @@
-/** base: for everyone; pro: with the Pro mode of the account; off: for no one (unfinished, withdrawn). */
-export type Level = 'base' | 'pro' | 'off';
+/** The plans, each one including those before it: a new plan is added at the end, its features unlocked by `unlocked`. */
+export const plans = ['base', 'pro'] as const;
+export type Plan = (typeof plans)[number];
+
+/** A plan, from which the feature is available; off: for no one (unfinished, withdrawn). */
+export type Level = Plan | 'off';
+
+/** The plan of the account. TODO: derived from the pro boolean of users, a plan column once a third plan exists. */
+export const planOf = (user: { pro: boolean }): Plan => (user.pro ? 'pro' : 'base');
 
 /** What each feature of the app needs: the one place to move a feature in or out of the Pro mode. */
 export const features = {
@@ -47,6 +54,6 @@ export const listedFeatures = (['display', 'editing', 'navigation'] as const).ma
   ),
 }));
 
-export function unlocked(level: Level, pro: boolean) {
-  return level === 'base' || (level === 'pro' && pro);
+export function unlocked(level: Level, plan: Plan) {
+  return level !== 'off' && plans.indexOf(level) <= plans.indexOf(plan);
 }

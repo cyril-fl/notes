@@ -5,5 +5,5 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const feature = to.meta.feature as Feature | undefined;
   if (!feature || features[feature] === 'base') return;
   const me = useNuxtData<User>('me').data.value ?? (await useApi()<User>('/api/me'));
-  if (!unlocked(features[feature], me.pro)) return navigateTo('/');
+  if (!unlocked(features[feature], planOf(me))) return navigateTo('/');
 });

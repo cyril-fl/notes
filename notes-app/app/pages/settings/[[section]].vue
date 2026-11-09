@@ -14,7 +14,7 @@ definePageMeta({
     const me = cached.value;
     // A page per section is the Pro mode's: without it, /settings shows them all; with it, /settings opens the first.
     const section = to.params.section as string | undefined;
-    if (me && unlocked(features.settingsNav, me.pro)) {
+    if (me && unlocked(features.settingsNav, planOf(me))) {
       if (!settingsSections.some(({ id }) => id === section)) return navigateTo('/settings/general', { replace: true });
     } else if (section) return navigateTo('/settings', { replace: true });
   },

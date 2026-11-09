@@ -1,9 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { unlocked } from '../app/utils/features.ts';
+import { planOf, unlocked } from '../app/utils/features.ts';
 
-test('a base feature is for everyone, a pro one with the Pro mode, an off one for no one', () => {
-  assert.deepEqual([unlocked('base', false), unlocked('base', true)], [true, true]);
-  assert.deepEqual([unlocked('pro', false), unlocked('pro', true)], [false, true]);
-  assert.deepEqual([unlocked('off', false), unlocked('off', true)], [false, false]);
+test('a feature is for its plan and the plans after it, an off one for no one', () => {
+  assert.deepEqual([unlocked('base', 'base'), unlocked('base', 'pro')], [true, true]);
+  assert.deepEqual([unlocked('pro', 'base'), unlocked('pro', 'pro')], [false, true]);
+  assert.deepEqual([unlocked('off', 'base'), unlocked('off', 'pro')], [false, false]);
+});
+
+test('the plan of an account comes from its pro boolean', () => {
+  assert.deepEqual([planOf({ pro: false }), planOf({ pro: true })], ['base', 'pro']);
 });
