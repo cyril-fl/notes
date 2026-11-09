@@ -2504,6 +2504,7 @@ export interface components {
         "readneighbors.Linked": {
             id: string;
             path: string;
+            snippet?: string;
             title: string;
         };
         "readneighbors.Neighbor": {

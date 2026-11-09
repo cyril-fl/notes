@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/testaccount"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -16,6 +17,23 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deleteitems"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readitem"
 )
+
+func TestSnippet(t *testing.T) {
+	id, other := "0a6e3f1c-2b4d-4e5f-8a9b-0c1d2e3f4a5b", "11111111-2222-4333-8444-555555555555"
+	long := strings.Repeat("a", 80) + " [Center](note:" + id + ") " + strings.Repeat("b", 80)
+	tests := map[string]struct{ content, want string }{
+		"its line":         {"# Source\n\nsee [Center](note:" + strings.ToUpper(id) + ") here", "see [[Center]] here"},
+		"other links read": {"[Other](note:" + other + ") then [Center#Part](note:" + id + "#Part)", "[[Other]] then [[Center#Part]]"},
+		"cut around":       {long, "…" + strings.Repeat("a", 19) + " [[Center]] " + strings.Repeat("b", 29) + "…"},
+		"no link":          {"# Source\n\nnothing", ""},
+	}
+
+	for name, test := range tests {
+		if got := snippet(test.content, id); got != test.want {
+			t.Errorf("%s: snippet() = %q, want %q", name, got, test.want)
+		}
+	}
+}
 
 func TestNeighbors(t *testing.T) {
 	ctx := context.Background()
@@ -75,6 +93,18 @@ func TestNeighbors(t *testing.T) {
 	}
 	if one := got.Neighbors[1]; one.ID != ids["One"] || one.Shared != 1 {
 		t.Errorf("second neighbor = %+v, want One sharing 1", one)
+	}
+
+	// A note citing Center is a backlink with the line of the link, shown with its label.
+	source := createnote.Process(ctx, tx, createnote.Input{Content: "# Source\n\nsee [[Center]] here"})
+	source.Run()
+	if source.HasErr() {
+		t.Fatalf("source: %v", source.GetErr())
+	}
+	process = Process(ctx, tx, ids["Center"])
+	process.Run()
+	if back := process.GetResult().Backlinks; process.HasErr() || len(back) != 1 || back[0].Snippet != "see [[Center]] here" {
+		t.Errorf("backlinks = %+v, %v; want Source with its line", back, process.GetErr())
 	}
 
 	missing := Process(ctx, tx, "00000000-0000-0000-0000-000000000000")

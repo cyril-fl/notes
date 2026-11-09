@@ -145,7 +145,11 @@ func snippet(content, text string) string {
 			break
 		}
 	}
+	return Cut(line, at)
+}
 
+// Cut is a content line cut to snippetWidth around the byte at, with … where cut.
+func Cut(line string, at int) string {
 	runes := []rune(line)
 	if len(runes) <= snippetWidth {
 		return strings.TrimSpace(line)

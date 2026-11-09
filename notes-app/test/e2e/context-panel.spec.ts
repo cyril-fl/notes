@@ -32,10 +32,11 @@ test('the Pro context panel follows the note', async ({ page }) => {
     await expect(graph.getByRole('link', { name: `Panel ${box.prefix}`, exact: true })).toBeVisible();
     await expect(graph.getByRole('link', { name: `Target ${box.prefix}`, exact: true })).toBeVisible();
 
-    // The other end shows the backlink.
+    // The other end shows the backlink, with the line holding the link.
     await page.goto(`/notes/${target.id}`);
     await expect(panel.getByText('Rétroliens', { exact: true })).toBeVisible();
     await expect(panel.getByRole('link', { name: `Panel ${box.prefix}` }).first()).toBeVisible();
+    await expect(panel.getByText(`[[Target ${box.prefix}]]`)).toBeVisible();
 
     const sidebar = page.getByRole('link', { name: 'Graphe', exact: true }).first();
     await page.keyboard.press('ControlOrMeta+Period');

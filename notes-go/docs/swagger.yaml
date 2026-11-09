@@ -464,6 +464,8 @@ components:
           type: string
         path:
           type: string
+        snippet:
+          type: string
         title:
           type: string
       required:

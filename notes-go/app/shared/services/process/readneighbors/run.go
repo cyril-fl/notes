@@ -2,11 +2,14 @@ package readneighbors
 
 import (
 	"context"
+	"strings"
 
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 
 	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readitem"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/searchnotes"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/wikilink"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 )
@@ -20,11 +23,13 @@ type Neighbor struct {
 	Shared int         `json:"shared"`
 }
 
-// Linked is a note at the other end of a [[link]].
+// Linked is a note at the other end of a [[link]]; a backlink has the line of its content holding the link.
 type Linked struct {
-	ID    string      `json:"id"`
-	Title secret.Text `json:"title" swaggertype:"string"`
-	Path  string      `json:"path"`
+	ID      string      `json:"id"`
+	Title   secret.Text `json:"title" swaggertype:"string"`
+	Path    string      `json:"path"`
+	Snippet string      `json:"snippet,omitempty" binding:"optional"`
+	Content secret.Text `json:"-"`
 }
 
 // Result is the center note (path, content, tags), its neighbors (most shared tags first),
@@ -134,13 +139,14 @@ func (p *run) loadLinks() {
 	id := p.cache.result.Note.Item.ID
 	p.cache.result.Links, p.cache.result.Backlinks = []Linked{}, []Linked{}
 	for _, side := range []struct {
-		from, to string
-		dest     *[]Linked
-	}{{"source_id", "target_id", &p.cache.result.Links}, {"target_id", "source_id", &p.cache.result.Backlinks}} {
+		from, to, content string
+		dest              *[]Linked
+	}{{"source_id", "target_id", "", &p.cache.result.Links}, {"target_id", "source_id", ", mn.content", &p.cache.result.Backlinks}} {
 		err := p.db.NewRaw(domain.LiveCTE+`
-			SELECT i.id, i.title
+			SELECT i.id, i.title`+side.content+`
 			FROM notes_on_links AS nl
 			JOIN items AS i ON i.id = nl.`+side.to+`
+			JOIN metadata_notes AS mn ON mn.item_id = i.id
 			JOIN live ON live.id = i.id
 			WHERE nl.`+side.from+` = ?`, domain.UserID(p.ctx), id).
 			Scan(p.ctx, side.dest)
@@ -150,10 +156,27 @@ func (p *run) loadLinks() {
 		}
 	}
 
+	for i := range p.cache.result.Backlinks {
+		p.cache.result.Backlinks[i].Snippet = snippet(string(p.cache.result.Backlinks[i].Content), id)
+	}
 	for _, linked := range [][]Linked{p.cache.result.Links, p.cache.result.Backlinks} {
 		for i := range linked {
 			linked[i].Path = p.cache.paths[linked[i].ID]
 		}
 		domain.SortFold(linked, func(l Linked) string { return l.Path }, nil)
 	}
+}
+
+// snippet is the first line of content linking to the note id, its links written back as [[Label]], cut around that one.
+func snippet(content, id string) string {
+	for _, line := range strings.Split(content, "\n") {
+		at := strings.Index(strings.ToLower(line), "](note:"+strings.ToLower(id))
+		if at < 0 {
+			continue
+		}
+		start := max(0, strings.LastIndex(line[:at], "["))
+		before := wikilink.Unresolve(line[:start])
+		return searchnotes.Cut(before+wikilink.Unresolve(line[start:]), len(before))
+	}
+	return ""
 }
