@@ -61,7 +61,9 @@ async function changeTheme(next: string) {
 }
 
 const { plan } = usePro();
-const planItems = computed(() => plans.map((value) => ({ label: t(`settings.plans.${value}`), value })));
+const planItems = computed(() =>
+  plans.map((value) => ({ label: t(`settings.plans.${value}`), value, disabled: !me.value })),
+);
 
 // The settings switch between one page and a page per section: with the nav, the choice stays in view on its own page.
 async function changePlan(next: Plan) {
@@ -303,15 +305,14 @@ async function deleteData() {
         <div class="overflow-hidden rounded-lg border border-default">
           <div class="flex items-center gap-4 border-b border-default px-4 py-3">
             <p class="min-w-0 flex-1 text-sm">{{ $t('settings.plan') }}</p>
-            <USelectMenu
+            <UTabs
               :model-value="plan"
               :items="planItems"
-              value-key="value"
-              :search-input="false"
-              :disabled="!me"
+              :content="false"
+              size="sm"
               :aria-label="$t('settings.plan')"
               class="w-56"
-              @update:model-value="changePlan"
+              @update:model-value="changePlan($event as Plan)"
             />
           </div>
           <table class="w-full text-sm">

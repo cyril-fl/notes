@@ -208,8 +208,7 @@ test('the Pro mode unlocks the focus mode and the context panel', async ({ page 
     await expect(page.getByRole('navigation', { name: 'Plan' })).toHaveCount(0);
 
     await page.goto('/settings');
-    await page.getByRole('button', { name: 'Formule' }).click();
-    await page.getByRole('option', { name: 'Avancé' }).click();
+    await page.getByRole('tab', { name: 'Avancé' }).click();
     await expect.poll(async () => (await (await box.api.get('/api/me')).json()).plan).toBe('pro');
     // The sidebar becomes the settings nav, one page per section.
     await page.goto('/settings');
@@ -421,16 +420,14 @@ test('the settings follow the Pro mode, one page or a page per section', async (
     await page.goto('/settings/pro');
     await expect(page).toHaveURL(/\/settings$/);
 
-    await page.getByRole('button', { name: 'Formule' }).click();
-    await page.getByRole('option', { name: 'Avancé' }).click();
+    await page.getByRole('tab', { name: 'Avancé' }).click();
     await expect(page).toHaveURL(/\/settings\/pro$/);
     await expect(page.getByRole('link', { name: 'Retour aux notes' })).toBeVisible();
     await page.goto('/settings/nope');
     await expect(page).toHaveURL(/\/settings\/general$/);
 
     await page.goto('/settings/pro');
-    await page.getByRole('button', { name: 'Formule' }).click();
-    await page.getByRole('option', { name: 'Standard' }).click();
+    await page.getByRole('tab', { name: 'Standard' }).click();
     await expect(page).toHaveURL(/\/settings$/);
     await expect(page.getByRole('heading', { name: 'Réglages' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Retour aux notes' })).toHaveCount(0);
