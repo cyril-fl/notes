@@ -103,7 +103,9 @@
     "backlinks": "Backlinks",
     "sameTags": "Same tags",
     "title": "Related notes ({total})",
-    "showGraph": "Show the graph"
+    "showGraph": "Show the graph",
+    "emptyTitle": "No related note yet.",
+    "emptyDescription": "The [[…]] links, the backlinks and the notes with the same tags show up here."
   },
   "note": {
     "unsaved": "The note is not saved",
@@ -327,7 +329,9 @@
   },
   "history": {
     "title": "Version history",
-    "empty": "No earlier version yet. When the text changes, the old one is kept, at most once every 5 minutes.",
+    "emptyTitle": "No earlier version is available yet.",
+    "emptyAfterChange": "A copy is saved after each change.",
+    "emptyEveryFiveMinutes": "Saves are at least five minutes apart.",
     "restore": "Restore this version",
     "all": "Whole history ({count})",
     "panelTitle": "History ({count})",

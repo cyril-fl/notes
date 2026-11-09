@@ -103,7 +103,9 @@
     "backlinks": "Rétroliens",
     "sameTags": "Mêmes tags",
     "title": "Notes liées ({total})",
-    "showGraph": "Voir le graphe"
+    "showGraph": "Voir le graphe",
+    "emptyTitle": "Aucune note liée pour l'instant.",
+    "emptyDescription": "Les liens [[…]], les rétroliens et les notes aux mêmes tags apparaissent ici."
   },
   "note": {
     "unsaved": "La note n'est pas enregistrée",
@@ -314,20 +316,22 @@
     "focusMode": "Le mode focus, qui ne laisse que la note à l'écran",
     "contextPanel": "Le panneau de contexte à droite de la note : son plan, ses notes liées et son historique",
     "settingsNav": "La barre latérale des réglages, une page par section",
-    "slashCommands": "Le menu / dans les notes : titres, listes, bloc de code…, rangés en sous-menus",
-    "tables": "Insérer un tableau depuis le menu / et en changer les lignes et colonnes (ceux déjà écrits s'affichent pour tous)",
+    "slashCommands": "Le menu \" / \" dans les notes : titres, listes, bloc de code…, rangés en sous-menus",
+    "tables": "Insérer et éditer un tableau depuis le menu \" / \"",
     "codeHighlight": "Les blocs de code colorés selon leur langage",
-    "callouts": "Insérer un encadré (note, astuce, attention, danger) depuis le menu / (ceux déjà écrits s'affichent pour tous)",
+    "callouts": "Encadré note, astuce, attention, danger depuis le menu \" / \" ",
     "wordCount": "Le nombre de mots de la note, sous le texte",
-    "contextMenu": "Le clic droit (ou l'appui long) dans une note : le même menu que /",
+    "contextMenu": "Le clic droit (ou l'appui long) dans une note : le même menu que \" / \"",
     "paletteActions": "Dans la palette Cmd K : déplacer la note ou le dossier ouvert, le renommer, changer de thème",
     "sourceMode": "Le mode source : le markdown de la note en texte brut, depuis le bouton sous le texte",
     "noteLock": "Verrouiller une note en lecture seule, depuis le cadenas sous le texte",
-    "noteHistory": "L'historique des versions d'une note dans le panneau de contexte (sous le texte sur téléphone), pour en restaurer une"
+    "noteHistory": "L'historique des versions d'une note dans le panneau de contexte permet de restaurer"
   },
   "history": {
     "title": "Historique des versions",
-    "empty": "Pas encore d'ancienne version. Quand le texte change, l'ancien est gardé, au plus une fois toutes les 5 minutes.",
+    "emptyTitle": "Aucune version antérieure n'est encore disponible.",
+    "emptyAfterChange": "Une copie est enregistrée après chaque modification.",
+    "emptyEveryFiveMinutes": "Les enregistrements sont espacés d'au moins cinq minutes.",
     "restore": "Restaurer cette version",
     "all": "Tout l'historique ({count})",
     "panelTitle": "Historique ({count})",
