@@ -268,17 +268,41 @@ test('a locked note is read-only, in the editor and for the API, until unlocked'
 });
 
 test('a note left open does not overwrite the text written since on another device (#62)', async ({ page }) => {
-  const note = await box.note(`# ${box.prefix} deux appareils`);
+  const note = await box.note(`# ${box.prefix} deux appareils\n\nTexte`);
   await page.goto(`/notes/${note.id}`);
   const text = page.locator('.ProseMirror');
   await expect(text).toContainText('deux appareils');
-  await box.api.patch(`/api/notes/${note.id}`, { data: { content: `# ${box.prefix} deux appareils\n\ntéléphone` } });
+  await box.api.patch(`/api/notes/${note.id}`, {
+    data: { content: `# ${box.prefix} deux appareils\n\nTexte\n\ntéléphone` },
+  });
+
+  await cursorAtEnd(text, 'deux appareils'); // The title, a line away from the phone's paragraph: no conflict.
+  await text.pressSequentially(' tablette');
+  const toasts = page.getByRole('region', { name: /Notifications/ });
+  await expect(toasts.getByText('les deux textes sont fusionnés', { exact: false })).toBeVisible();
+  await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('tablette');
+  expect(await box.content(note.id)).toContain('téléphone');
+});
+
+// Locked on the other device, nothing merges: the toast offers to reload, the note keeps the other device's text.
+test('a note locked since on another device is not overwritten, the toast offers to reload', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} verrouillée ailleurs`);
+  await page.goto(`/notes/${note.id}`);
+  const text = page.locator('.ProseMirror');
+  await expect(text).toContainText('verrouillée ailleurs');
+  await box.api.patch(`/api/notes/${note.id}`, {
+    data: { content: `# ${box.prefix} verrouillée ailleurs\n\ntéléphone` },
+  });
+  await box.api.patch(`/api/notes/${note.id}`, { data: { readonly: true } });
 
   await cursorAtEnd(text);
   await text.pressSequentially(' tablette');
   const toasts = page.getByRole('region', { name: /Notifications/ });
   await expect(toasts.getByText('La note a changé sur un autre appareil', { exact: false })).toBeVisible();
-  expect(await box.content(note.id)).toContain('téléphone');
+  await expect(toasts.getByRole('button', { name: 'Recharger' })).toBeVisible();
+  const content = await box.content(note.id);
+  expect(content).toContain('téléphone');
+  expect(content).not.toContain('tablette');
 });
 
 test('locking the phone sends the last words at once, and typing on afterwards still saves (#65)', async ({ page }) => {
