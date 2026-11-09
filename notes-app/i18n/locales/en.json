@@ -264,10 +264,12 @@
     "snippetHelp": "Markdown; a #tag adds that tag to the note.",
     "save": "Save",
     "pro": "Advanced mode",
-    "proMode": "Turn on advanced mode",
+    "plan": "Plan",
     "feature": "Feature",
-    "standard": "Standard",
-    "advanced": "Advanced",
+    "plans": {
+      "base": "Standard",
+      "pro": "Advanced"
+    },
     "currentPlan": "Current",
     "included": "Included",
     "notIncluded": "Not included",

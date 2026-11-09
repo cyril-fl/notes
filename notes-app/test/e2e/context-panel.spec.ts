@@ -13,7 +13,7 @@ test('the Pro context panel follows the note', async ({ page }) => {
   const target = await box.note(`# Target ${box.prefix}`);
   const panel = page.getByRole('complementary', { name: /panneau de contexte/ });
   try {
-    await box.api.patch('/api/me', { data: { pro: true } });
+    await box.api.patch('/api/me', { data: { plan: 'pro' } });
     await page.goto(`/notes/${note.id}`);
 
     const outline = panel.getByRole('navigation', { name: 'Plan' });
@@ -44,11 +44,11 @@ test('the Pro context panel follows the note', async ({ page }) => {
     await page.keyboard.press('ControlOrMeta+Period');
     await expect(panel).toBeVisible();
 
-    await box.api.patch('/api/me', { data: { pro: false } });
+    await box.api.patch('/api/me', { data: { plan: 'base' } });
     await page.reload();
     await expect(page.getByRole('textbox')).toBeVisible();
     await expect(panel.getByRole('navigation', { name: 'Plan' })).toHaveCount(0);
   } finally {
-    await box.api.patch('/api/me', { data: { pro: false } });
+    await box.api.patch('/api/me', { data: { plan: 'base' } });
   }
 });

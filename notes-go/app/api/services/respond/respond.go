@@ -54,7 +54,7 @@ var statuses = []struct {
 		deletetag.ErrNoValue,
 		editfolder.ErrNoValue, editfolder.ErrNoTitle,
 		editnote.ErrNoValue, editnote.ErrNoContent,
-		edituser.ErrInvalidLocale, edituser.ErrInvalidTheme, edituser.ErrInvalidColorMode, edituser.ErrInvalidView, edituser.ErrInvalidRetention, edituser.ErrInvalidAvatar, edituser.ErrInvalidSnippet,
+		edituser.ErrInvalidLocale, edituser.ErrInvalidTheme, edituser.ErrInvalidColorMode, edituser.ErrInvalidView, edituser.ErrInvalidPlan, edituser.ErrInvalidRetention, edituser.ErrInvalidAvatar, edituser.ErrInvalidSnippet,
 		adduser.ErrNoName, adduser.ErrShortPassword, editpassword.ErrWrongPassword,
 		edittag.ErrNoValue,
 		hashtag.ErrInvalid,

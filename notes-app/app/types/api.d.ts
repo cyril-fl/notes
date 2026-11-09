@@ -2256,8 +2256,8 @@ export interface components {
             locale: string;
             /** @description unique case-insensitive, see createschema */
             name: string;
-            /** @description the web app's Pro mode, see notes-app/app/composables/usePro.ts */
-            pro: boolean;
+            /** @description the features of the web app, one of Plans */
+            plan: string;
             snippets: components["schemas"]["domain.Snippet"][];
             /** @description the colors of the web app, one of Themes */
             theme: string;
@@ -2293,7 +2293,7 @@ export interface components {
             color_mode?: string;
             locale?: string;
             name?: string;
-            pro?: boolean;
+            plan?: string;
             /** @description the whole list, it replaces the saved one */
             snippets?: components["schemas"]["domain.Snippet"][];
             theme?: string;

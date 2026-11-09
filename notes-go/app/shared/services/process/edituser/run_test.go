@@ -29,6 +29,7 @@ func TestInvalidInput(t *testing.T) {
 		{Input{Theme: text("dark")}, ErrInvalidTheme},
 		{Input{ColorMode: text("dim")}, ErrInvalidColorMode},
 		{Input{View: text("table")}, ErrInvalidView},
+		{Input{Plan: text("max")}, ErrInvalidPlan},
 		{Input{TrashRetentionDays: days(-1)}, ErrInvalidRetention},
 		{Input{TrashRetentionDays: days(MaxRetentionDays + 1)}, ErrInvalidRetention},
 		{Input{Name: text(" ")}, adduser.ErrNoName},
@@ -66,23 +67,23 @@ func TestEditUser(t *testing.T) {
 	defer tx.Rollback()
 	ctx, tx = testaccount.New(t, ctx, tx)
 
-	locale, view, never, pro := "en", "grid", 0, true
+	locale, view, never, plan := "en", "grid", 0, "pro"
 	process := Process(ctx, tx, Input{Locale: &locale})
 	process.Run()
 	if process.HasErr() {
 		t.Fatalf("edit: %v", process.GetErr())
 	}
-	if got := process.GetResult(); got.Locale != "en" || got.ID == "" || got.Theme != "notes" || got.ColorMode != "system" || got.TrashRetentionDays != 30 || got.Pro {
+	if got := process.GetResult(); got.Locale != "en" || got.ID == "" || got.Theme != "notes" || got.ColorMode != "system" || got.TrashRetentionDays != 30 || got.Plan != "base" {
 		t.Errorf("result = %+v, want locale en with ID and the default settings", got)
 	}
 
-	process = Process(ctx, tx, Input{View: &view, TrashRetentionDays: &never, Pro: &pro})
+	process = Process(ctx, tx, Input{View: &view, TrashRetentionDays: &never, Plan: &plan})
 	process.Run()
 	if process.HasErr() {
 		t.Fatalf("edit: %v", process.GetErr())
 	}
-	if got := process.GetResult(); got.Locale != "en" || got.View != "grid" || got.TrashRetentionDays != 0 || !got.Pro {
-		t.Errorf("result = %+v, want locale kept, view grid, retention 0, pro", got)
+	if got := process.GetResult(); got.Locale != "en" || got.View != "grid" || got.TrashRetentionDays != 0 || got.Plan != "pro" {
+		t.Errorf("result = %+v, want locale kept, view grid, retention 0, plan pro", got)
 	}
 
 	if got := process.GetResult(); len(got.Snippets) != 0 {

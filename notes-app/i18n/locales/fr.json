@@ -264,10 +264,12 @@
     "snippetHelp": "Du markdown ; un #tag ajoute ce tag à la note.",
     "save": "Enregistrer",
     "pro": "Mode avancé",
-    "proMode": "Activer le mode avancé",
+    "plan": "Formule",
     "feature": "Fonctionnalité",
-    "standard": "Standard",
-    "advanced": "Avancé",
+    "plans": {
+      "base": "Standard",
+      "pro": "Avancé"
+    },
     "currentPlan": "Actuel",
     "included": "Inclus",
     "notIncluded": "Non inclus",

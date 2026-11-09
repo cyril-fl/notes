@@ -428,7 +428,7 @@ test('the Pro palette moves the open note', async ({ page }) => {
   const note = await box.note(`# ${box.prefix} moved`);
   const sub = await (await box.api.post('/api/folders', { data: { title: 'sub', parent_id: box.folder.id } })).json();
   try {
-    await box.api.patch('/api/me', { data: { pro: true } });
+    await box.api.patch('/api/me', { data: { plan: 'pro' } });
     await page.goto(`/notes/${note.id}`);
     await expect(page.locator('.ProseMirror')).toContainText('moved');
     await page.keyboard.press('ControlOrMeta+k');
@@ -441,7 +441,7 @@ test('the Pro palette moves the open note', async ({ page }) => {
     const moved = await (await box.api.get(`/api/notes/${note.id}`)).json();
     expect(moved.item.parent_id).toBe(sub.id);
   } finally {
-    await box.api.patch('/api/me', { data: { pro: false } });
+    await box.api.patch('/api/me', { data: { plan: 'base' } });
   }
 });
 
@@ -455,7 +455,7 @@ test('the Pro palette renames the open note', async ({ page }) => {
     await page.getByRole('dialog').getByRole('button', { name: 'Renommer' }).click();
   };
   try {
-    await box.api.patch('/api/me', { data: { pro: true } });
+    await box.api.patch('/api/me', { data: { plan: 'pro' } });
     await page.goto(`/notes/${note.id}`);
     await expect(page.locator('.ProseMirror')).toContainText('old');
     await rename(`${box.prefix} new`);
@@ -471,7 +471,7 @@ test('the Pro palette renames the open note', async ({ page }) => {
     );
     await expect(page).toHaveTitle(new RegExp(`${box.prefix} source`));
   } finally {
-    await box.api.patch('/api/me', { data: { pro: false } });
+    await box.api.patch('/api/me', { data: { plan: 'base' } });
   }
 });
 
@@ -494,7 +494,7 @@ test('the Pro history restores an earlier version', async ({ page }) => {
   const note = await box.note(`# ${box.prefix} history\n\nfirst`);
   await box.api.patch(`/api/notes/${note.id}`, { data: { content: `# ${box.prefix} history\n\nsecond` } });
   try {
-    await box.api.patch('/api/me', { data: { pro: true } });
+    await box.api.patch('/api/me', { data: { plan: 'pro' } });
     await page.goto(`/notes/${note.id}`);
     await expect(page.locator('.ProseMirror')).toContainText('second');
     // The context panel lists the versions on a wide screen: a click shows one.
@@ -512,7 +512,7 @@ test('the Pro history restores an earlier version', async ({ page }) => {
     await expect(page.locator('.ProseMirror')).toContainText('first');
     await expect.poll(() => box.content(note.id), { timeout: 5000 }).toBe(`# ${box.prefix} history\n\nfirst`);
   } finally {
-    await box.api.patch('/api/me', { data: { pro: false } });
+    await box.api.patch('/api/me', { data: { plan: 'base' } });
   }
 });
 
@@ -520,7 +520,7 @@ test('the Pro history restores an earlier version', async ({ page }) => {
 test('without Pro, editing a note keeps its table and callout', async ({ page }) => {
   const markdown = `# ${box.prefix} blocs\n\n| a | b |\n| --- | --- |\n| 1 | 2 |\n\n> [!note]\n> encadré`;
   const note = await box.note(markdown);
-  await box.api.patch('/api/me', { data: { pro: false } });
+  await box.api.patch('/api/me', { data: { plan: 'base' } });
   await page.goto(`/notes/${note.id}`);
   await expect(page.locator('.ProseMirror table')).toBeVisible();
   await cursorAtEnd(page.locator('.ProseMirror'), `${box.prefix} blocs`);

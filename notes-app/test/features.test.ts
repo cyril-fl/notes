@@ -8,6 +8,9 @@ test('a feature is for its plan and the plans after it, an off one for no one', 
   assert.deepEqual([unlocked('off', 'base'), unlocked('off', 'pro')], [false, false]);
 });
 
-test('the plan of an account comes from its pro boolean', () => {
-  assert.deepEqual([planOf({ pro: false }), planOf({ pro: true })], ['base', 'pro']);
+test('the plan of an account is one of plans, the base one when unknown', () => {
+  assert.deepEqual(
+    [planOf({ plan: 'base' }), planOf({ plan: 'pro' }), planOf({ plan: 'max' })],
+    ['base', 'pro', 'base'],
+  );
 });

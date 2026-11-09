@@ -208,8 +208,9 @@ test('the Pro mode unlocks the focus mode and the context panel', async ({ page 
     await expect(page.getByRole('navigation', { name: 'Plan' })).toHaveCount(0);
 
     await page.goto('/settings');
-    await page.getByRole('switch', { name: 'Activer le mode avancé' }).click();
-    await expect.poll(async () => (await (await box.api.get('/api/me')).json()).pro).toBe(true);
+    await page.getByRole('button', { name: 'Formule' }).click();
+    await page.getByRole('option', { name: 'Avancé' }).click();
+    await expect.poll(async () => (await (await box.api.get('/api/me')).json()).plan).toBe('pro');
     // The sidebar becomes the settings nav, one page per section.
     await page.goto('/settings');
     await expect(page).toHaveURL(/\/settings\/general$/);
@@ -242,7 +243,7 @@ test('the Pro mode unlocks the focus mode and the context panel', async ({ page 
     await page.getByRole('button', { name: 'Quitter le mode focus' }).click();
     await expect(sidebar).toBeVisible();
   } finally {
-    await box.api.patch('/api/me', { data: { pro: false } });
+    await box.api.patch('/api/me', { data: { plan: 'base' } });
   }
 });
 
@@ -256,7 +257,7 @@ test('the Pro mode adds the / commands to the editor', async ({ page }) => {
     await page.keyboard.type(' /');
     await expect(page.getByRole('menuitem', { name: 'Bloc de code' })).toHaveCount(0);
 
-    await box.api.patch('/api/me', { data: { pro: true } });
+    await box.api.patch('/api/me', { data: { plan: 'pro' } });
     await page.reload();
     await cursorAtEnd(editor, 'Texte');
     // Only a / just typed opens the menu, not the cursor put back after one.
@@ -284,7 +285,7 @@ test('the Pro mode adds the / commands to the editor', async ({ page }) => {
     await page.keyboard.type('Sous-titre');
     await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('## Sous-titre');
   } finally {
-    await box.api.patch('/api/me', { data: { pro: false } });
+    await box.api.patch('/api/me', { data: { plan: 'base' } });
   }
 });
 
@@ -293,7 +294,7 @@ test('the Pro mode adds the tables to the editor', async ({ page }) => {
   const note = await box.note(`# Tableau ${box.prefix}\n\nTexte`);
   const editor = page.locator('.ProseMirror');
   try {
-    await box.api.patch('/api/me', { data: { pro: true } });
+    await box.api.patch('/api/me', { data: { plan: 'pro' } });
     await page.goto(`/notes/${note.id}`);
     await cursorAtEnd(editor);
     await page.keyboard.press('Enter');
@@ -309,7 +310,7 @@ test('the Pro mode adds the tables to the editor', async ({ page }) => {
     await page.reload();
     await expect(editor.getByRole('columnheader', { name: 'Âge' })).toBeVisible();
   } finally {
-    await box.api.patch('/api/me', { data: { pro: false } });
+    await box.api.patch('/api/me', { data: { plan: 'base' } });
   }
 });
 
@@ -322,14 +323,14 @@ test('the Pro mode colors the code blocks', async ({ page }) => {
     await expect(page.locator('.ProseMirror pre')).toContainText('func main');
     await expect(keyword).toHaveCount(0);
 
-    await box.api.patch('/api/me', { data: { pro: true } });
+    await box.api.patch('/api/me', { data: { plan: 'pro' } });
     await page.reload();
     await expect(keyword.first()).toHaveText('func');
     await cursorAtEnd(page.locator('.ProseMirror'), 'func main');
     await page.keyboard.type(' // ok');
     await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('```go\nfunc main() {} // ok\n```');
   } finally {
-    await box.api.patch('/api/me', { data: { pro: false } });
+    await box.api.patch('/api/me', { data: { plan: 'base' } });
   }
 });
 
@@ -337,7 +338,7 @@ test('the Pro mode colors the code blocks', async ({ page }) => {
 test('``` after a line ending in inline code makes a colored code block', async ({ page }) => {
   const note = await box.note(`# Code ${box.prefix}\n\ntexte \`go\``);
   try {
-    await box.api.patch('/api/me', { data: { pro: true } });
+    await box.api.patch('/api/me', { data: { plan: 'pro' } });
     await page.goto(`/notes/${note.id}`);
     const editor = page.locator('.ProseMirror');
     await cursorAtEnd(editor, 'go');
@@ -348,7 +349,7 @@ test('``` after a line ending in inline code makes a colored code block', async 
     await expect(editor.locator('pre .hljs-keyword').first()).toHaveText('func');
     await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('```go\nfunc main() {}\n```');
   } finally {
-    await box.api.patch('/api/me', { data: { pro: false } });
+    await box.api.patch('/api/me', { data: { plan: 'base' } });
   }
 });
 
@@ -361,14 +362,14 @@ test('the Pro mode counts the words of the note', async ({ page }) => {
     await expect(page.locator('.ProseMirror')).toContainText('Un deux trois');
     await expect(count).toHaveCount(0);
 
-    await box.api.patch('/api/me', { data: { pro: true } });
+    await box.api.patch('/api/me', { data: { plan: 'pro' } });
     await page.reload();
     const before = parseInt((await count.textContent()) ?? '');
     await cursorAtEnd(page.locator('.ProseMirror'), 'Un deux trois');
     await page.keyboard.type(' quatre, cinq !');
     await expect(count).toHaveText(`${before + 2} mots`);
   } finally {
-    await box.api.patch('/api/me', { data: { pro: false } });
+    await box.api.patch('/api/me', { data: { plan: 'base' } });
   }
 });
 
@@ -377,7 +378,7 @@ test('the Pro mode adds the callouts to the editor', async ({ page }) => {
   const note = await box.note(`# Encadré ${box.prefix}\n\n> [!tip] Astuce\n> Lire la suite\n\nTexte`);
   const editor = page.locator('.ProseMirror');
   try {
-    await box.api.patch('/api/me', { data: { pro: true } });
+    await box.api.patch('/api/me', { data: { plan: 'pro' } });
     await page.goto(`/notes/${note.id}`);
     await expect(editor.locator('blockquote[data-callout=tip]')).toContainText('Lire la suite');
     await cursorAtEnd(editor, 'Texte');
@@ -389,7 +390,7 @@ test('the Pro mode adds the callouts to the editor', async ({ page }) => {
     await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('> [!warning]\n> Prudence');
     expect(await box.content(note.id)).toContain('> [!tip] Astuce\n> Lire la suite');
   } finally {
-    await box.api.patch('/api/me', { data: { pro: false } });
+    await box.api.patch('/api/me', { data: { plan: 'base' } });
   }
 });
 
@@ -402,36 +403,38 @@ test('the Pro mode opens the / commands on a right click', async ({ page }) => {
     await line.click({ button: 'right' });
     await expect(page.getByRole('menu')).toHaveCount(0);
 
-    await box.api.patch('/api/me', { data: { pro: true } });
+    await box.api.patch('/api/me', { data: { plan: 'pro' } });
     await page.reload();
     await line.click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Encadrés' }).hover();
     await page.getByRole('menuitem', { name: 'Attention' }).click();
     await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('> [!warning]\n> Prudence');
   } finally {
-    await box.api.patch('/api/me', { data: { pro: false } });
+    await box.api.patch('/api/me', { data: { plan: 'base' } });
   }
 });
 
-// A page per section is the Pro mode's: without it a section's URL shows the whole page, and the switch moves between both.
+// A page per section is the Pro mode's: without it a section's URL shows the whole page, and the plan's choice moves between both.
 test('the settings follow the Pro mode, one page or a page per section', async ({ page }) => {
   try {
-    await box.api.patch('/api/me', { data: { pro: false } });
+    await box.api.patch('/api/me', { data: { plan: 'base' } });
     await page.goto('/settings/pro');
     await expect(page).toHaveURL(/\/settings$/);
 
-    await page.getByRole('switch', { name: 'Activer le mode avancé' }).click();
+    await page.getByRole('button', { name: 'Formule' }).click();
+    await page.getByRole('option', { name: 'Avancé' }).click();
     await expect(page).toHaveURL(/\/settings\/pro$/);
     await expect(page.getByRole('link', { name: 'Retour aux notes' })).toBeVisible();
     await page.goto('/settings/nope');
     await expect(page).toHaveURL(/\/settings\/general$/);
 
     await page.goto('/settings/pro');
-    await page.getByRole('switch', { name: 'Activer le mode avancé' }).click();
+    await page.getByRole('button', { name: 'Formule' }).click();
+    await page.getByRole('option', { name: 'Standard' }).click();
     await expect(page).toHaveURL(/\/settings$/);
     await expect(page.getByRole('heading', { name: 'Réglages' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Retour aux notes' })).toHaveCount(0);
   } finally {
-    await box.api.patch('/api/me', { data: { pro: false } });
+    await box.api.patch('/api/me', { data: { plan: 'base' } });
   }
 });

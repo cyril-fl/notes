@@ -60,12 +60,13 @@ async function changeTheme(next: string) {
   me.value = await api<User>('/api/me', { method: 'PATCH', body: { theme: next } });
 }
 
-const { pro } = usePro();
+const { plan } = usePro();
+const planItems = computed(() => plans.map((value) => ({ label: t(`settings.plans.${value}`), value })));
 
-// The settings switch between one page and a page per section: on, the switch stays in view on its own page.
-async function changePro(next: boolean) {
-  me.value = await api<User>('/api/me', { method: 'PATCH', body: { pro: next } });
-  await navigateTo(next ? '/settings/pro' : '/settings', { replace: true });
+// The settings switch between one page and a page per section: with the nav, the choice stays in view on its own page.
+async function changePlan(next: Plan) {
+  me.value = await api<User>('/api/me', { method: 'PATCH', body: { plan: next } });
+  await navigateTo(unlocked(features.settingsNav, next) ? '/settings/pro' : '/settings', { replace: true });
 }
 
 // 0 never purges; a retention set by hand elsewhere stays in the list.
@@ -301,45 +302,58 @@ async function deleteData() {
         <SettingsHeading id="pro" />
         <div class="overflow-hidden rounded-lg border border-default">
           <div class="flex items-center gap-4 border-b border-default px-4 py-3">
-            <p class="min-w-0 flex-1 text-sm">{{ $t('settings.proMode') }}</p>
-            <USwitch
-              :model-value="pro"
+            <p class="min-w-0 flex-1 text-sm">{{ $t('settings.plan') }}</p>
+            <USelectMenu
+              :model-value="plan"
+              :items="planItems"
+              value-key="value"
+              :search-input="false"
               :disabled="!me"
-              :aria-label="$t('settings.proMode')"
-              @update:model-value="changePro"
+              :aria-label="$t('settings.plan')"
+              class="w-56"
+              @update:model-value="changePlan"
             />
           </div>
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-default">
                 <th class="px-4 py-2 text-left text-xs font-normal text-muted">{{ $t('settings.feature') }}</th>
-                <th class="w-24 px-2 py-2 font-medium">
-                  <div class="flex flex-col items-center gap-1">
-                    {{ $t('settings.standard') }}
-                    <UBadge v-if="me && !pro" :label="$t('settings.currentPlan')" size="sm" variant="subtle" />
-                  </div>
-                </th>
-                <th class="w-24 bg-primary/5 px-2 py-2 font-medium text-primary">
+                <th
+                  v-for="column in plans"
+                  :key="column"
+                  class="w-24 px-2 py-2 font-medium"
+                  :class="{ 'bg-primary/5 text-primary': column !== 'base' }"
+                >
                   <div class="flex flex-col items-center gap-1">
                     <span class="inline-flex items-center gap-1"
-                      ><UIcon :name="icons.pro" />{{ $t('settings.advanced') }}</span
+                      ><UIcon v-if="column !== 'base'" :name="icons.pro" />{{ $t(`settings.plans.${column}`) }}</span
                     >
-                    <UBadge v-if="pro" :label="$t('settings.currentPlan')" size="sm" variant="subtle" />
+                    <UBadge
+                      v-if="me && plan === column"
+                      :label="$t('settings.currentPlan')"
+                      size="sm"
+                      variant="subtle"
+                    />
                   </div>
                 </th>
               </tr>
             </thead>
             <tbody v-for="{ group, features: listed } in listedFeatures" :key="group">
               <tr class="border-b border-default bg-elevated/50">
-                <th colspan="3" class="px-4 py-1.5 text-left text-xs font-medium text-muted">
+                <th :colspan="plans.length + 1" class="px-4 py-1.5 text-left text-xs font-medium text-muted">
                   {{ $t(`settings.featureGroups.${group}`) }}
                 </th>
               </tr>
               <tr v-for="feature in listed" :key="feature" class="border-b border-default last:border-b-0">
                 <td class="px-4 py-2 text-xs">{{ $t(`features.${feature}`) }}</td>
-                <td class="px-2 text-center">
+                <td
+                  v-for="column in plans"
+                  :key="column"
+                  class="px-2 text-center"
+                  :class="{ 'bg-primary/5': column !== 'base' }"
+                >
                   <UIcon
-                    v-if="features[feature] === 'base'"
+                    v-if="unlocked(features[feature], column)"
                     :name="icons.current"
                     :aria-label="$t('settings.included')"
                     class="size-4 text-primary"
@@ -350,9 +364,6 @@ async function deleteData() {
                     :aria-label="$t('settings.notIncluded')"
                     class="size-4 text-dimmed"
                   />
-                </td>
-                <td class="bg-primary/5 px-2 text-center">
-                  <UIcon :name="icons.current" :aria-label="$t('settings.included')" class="size-4 text-primary" />
                 </td>
               </tr>
             </tbody>

@@ -22,7 +22,7 @@ type User struct {
 	Theme        string `bun:",notnull,default:'notes'" json:"theme"`       // the colors of the web app, one of Themes
 	ColorMode    string `bun:",notnull,default:'system'" json:"color_mode"` // light or dark, one of ColorModes
 	View         string `bun:",notnull,default:'list'" json:"view"`         // how the web app lists items, one of Views
-	Pro          bool   `bun:",notnull,default:false" json:"pro"`           // the web app's Pro mode, see notes-app/app/composables/usePro.ts
+	Plan         string `bun:",notnull,default:'base'" json:"plan"`         // the features of the web app, one of Plans
 	// Days before the trash is purged, 0 to never purge. An insert of 0 gets the default: only an update sets it.
 	TrashRetentionDays int       `bun:",notnull,default:30" json:"trash_retention_days"`
 	Avatar             string    `bun:",type:uuid,nullzero" json:"avatar,omitempty"` // the id of a File of the account, purgefiles keeps it
@@ -79,12 +79,13 @@ func (s *Snippets) Scan(src any) error {
 // Locales are the languages of the web app, the first one by default.
 var Locales = []string{"fr", "en"}
 
-// Themes, ColorModes and Views are the other settings of the web app, the first one by default.
-// Themes repeats the ids of notes-app/app/utils/themes.ts, users_test.go checks they match.
+// Themes, ColorModes, Views and Plans are the other settings of the web app, the first one by default.
+// Themes repeats the ids of notes-app/app/utils/themes.ts and Plans the plans of notes-app/app/utils/features.ts, users_test.go checks they match.
 var (
 	Themes     = []string{"notes", "dracula", "catppuccin", "nord", "gruvbox", "everforest", "tokyo", "vue"}
 	ColorModes = []string{"system", "light", "dark"}
 	Views      = []string{"list", "grid"}
+	Plans      = []string{"base", "pro"}
 )
 
 // Session is a login of a device: the client keeps the token, the base only its hash.

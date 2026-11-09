@@ -1,12 +1,13 @@
-/** The plans, each one including those before it: a new plan is added at the end, its features unlocked by `unlocked`. */
+/** The plans, each one including those before it: a new plan is added at the end. Repeated by domain.Plans of notes-go. */
 export const plans = ['base', 'pro'] as const;
 export type Plan = (typeof plans)[number];
 
 /** A plan, from which the feature is available; off: for no one (unfinished, withdrawn). */
 export type Level = Plan | 'off';
 
-/** The plan of the account. TODO: derived from the pro boolean of users, a plan column once a third plan exists. */
-export const planOf = (user: { pro: boolean }): Plan => (user.pro ? 'pro' : 'base');
+/** The plan of the account: one the app does not know (an older app after a new plan) gets the base features. */
+export const planOf = (user: { plan: string }): Plan =>
+  plans.includes(user.plan as Plan) ? (user.plan as Plan) : 'base';
 
 /** What each feature of the app needs: the one place to move a feature in or out of the Pro mode. */
 export const features = {
