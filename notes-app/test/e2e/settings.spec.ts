@@ -313,24 +313,14 @@ test('the Pro mode adds the tables to the editor', async ({ page }) => {
   }
 });
 
-// A code block is colored by its language in the Pro mode only, and its markdown stays the same.
-test('the Pro mode colors the code blocks', async ({ page }) => {
+// A code block is colored by its language for everyone, and its markdown stays the same.
+test('the code blocks are colored by their language', async ({ page }) => {
   const note = await box.note(`# Code ${box.prefix}\n\n\`\`\`go\nfunc main() {}\n\`\`\``);
-  const keyword = page.locator('.ProseMirror pre .hljs-keyword');
-  try {
-    await page.goto(`/notes/${note.id}`);
-    await expect(page.locator('.ProseMirror pre')).toContainText('func main');
-    await expect(keyword).toHaveCount(0);
-
-    await box.api.patch('/api/me', { data: { plan: 'pro' } });
-    await page.reload();
-    await expect(keyword.first()).toHaveText('func');
-    await cursorAtEnd(page.locator('.ProseMirror'), 'func main');
-    await page.keyboard.type(' // ok');
-    await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('```go\nfunc main() {} // ok\n```');
-  } finally {
-    await box.api.patch('/api/me', { data: { plan: 'base' } });
-  }
+  await page.goto(`/notes/${note.id}`);
+  await expect(page.locator('.ProseMirror pre .hljs-keyword').first()).toHaveText('func');
+  await cursorAtEnd(page.locator('.ProseMirror'), 'func main');
+  await page.keyboard.type(' // ok');
+  await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('```go\nfunc main() {} // ok\n```');
 });
 
 // Inline code ending a line is not carried by Enter: it kept ``` from making a code block.

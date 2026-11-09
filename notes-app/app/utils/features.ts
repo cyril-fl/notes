@@ -17,7 +17,7 @@ export const features = {
   settingsNav: 'pro',
   slashCommands: 'pro',
   tables: 'pro',
-  codeHighlight: 'pro',
+  codeHighlight: 'base',
   callouts: 'pro',
   wordCount: 'pro',
   contextMenu: 'pro',
