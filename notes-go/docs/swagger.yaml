@@ -290,6 +290,7 @@ components:
           - unresolved
           - ambiguous
           - missing
+          - file
           type: string
         note_id:
           type: string
@@ -1190,7 +1191,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/respond.Failure'
           description: Internal Server Error
-      summary: List the broken and ambiguous links
+      summary: List the broken and ambiguous links, and the missing files
       tags:
       - graph
   /api/login:

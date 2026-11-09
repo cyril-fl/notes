@@ -19,15 +19,16 @@ const (
 	UNRESOLVED = "unresolved" // [[target]] that no other note has as title or path, a heading the note lacks
 	AMBIGUOUS  = "ambiguous"  // [[target]] that several other notes have
 	MISSING    = "missing"    // a link to a note trashed or purged since
+	FILE       = "file"       // an image or attachment /api/files/<id> the account does not keep: imported from another, purged
 )
 
-// Link is a broken link of a live note: its target as written, or the label of a link to a missing note.
+// Link is a broken link of a live note: its target as written, the label of a link to a missing note, or the address of a missing file.
 type Link struct {
 	NoteID    string `json:"note_id"`
 	NoteTitle string `json:"note_title"`
 	NotePath  string `json:"note_path"`
 	Target    string `json:"target"`
-	Kind      string `json:"kind" enums:"unresolved,ambiguous,missing"`
+	Kind      string `json:"kind" enums:"unresolved,ambiguous,missing,file"`
 }
 
 type run struct {
@@ -41,10 +42,11 @@ type run struct {
 type cache struct {
 	notes    []readgraph.Note
 	contents map[string]string
+	files    map[string]bool
 	result   []Link
 }
 
-// Process lists the links of the live notes that point to no note, or wait for a title several notes have.
+// Process lists the links of the live notes that point to no note, or wait for a title several notes have, and the files they cite that the account lacks.
 func Process(ctx context.Context, db bun.IDB) *run {
 	return &run{
 		ctx: ctx,
@@ -55,6 +57,7 @@ func Process(ctx context.Context, db bun.IDB) *run {
 func (p *run) Run() {
 	p.loadNotes()
 	p.loadContents()
+	p.loadFiles()
 	p.check()
 }
 
@@ -93,6 +96,21 @@ func (p *run) loadContents() {
 	p.cache.contents = make(map[string]string, len(rows))
 	for _, row := range rows {
 		p.cache.contents[row.ID] = string(row.Content)
+	}
+}
+
+// loadFiles reads the ids of the files the account keeps.
+func (p *run) loadFiles() {
+	if p.HasErr() {
+		return
+	}
+
+	var ids []string
+	p.SetErr(p.db.NewSelect().Model((*domain.File)(nil)).Column("id").
+		Where("user_id = ?", domain.UserID(p.ctx)).Scan(p.ctx, &ids))
+	p.cache.files = make(map[string]bool, len(ids))
+	for _, id := range ids {
+		p.cache.files[id] = true
 	}
 }
 
@@ -149,6 +167,11 @@ func (p *run) check() {
 		for _, id := range wikilink.IDs(content) {
 			if !live[strings.ToLower(id)] {
 				add(labels[strings.ToLower(id)], MISSING)
+			}
+		}
+		for _, match := range domain.FilePattern.FindAllStringSubmatch(content, -1) {
+			if !p.cache.files[match[1]] {
+				add(match[0], FILE)
 			}
 		}
 	}

@@ -121,7 +121,7 @@ Les tags d'une note sont les `#mots` de son texte, code et liens exclus : `#idé
 
 `![[Titre]]`, comme dans Obsidian, inclut la note : il devient `![Titre](note:<uuid>)` comme un lien, et redevient `![[Titre]]` à l'export. Dans l'app, la note incluse s'affiche en lecture sous un lien qui l'ouvre ; ses propres inclusions restent des liens, pour qu'une note qui s'inclut elle-même, ou qui inclut une note qui l'inclut, s'arrête là.
 
-`GET /api/notes/{id}/neighbors` donne ses liens (`links`) et ses rétroliens (`backlinks`), et le graphe relie aussi les notes liées. Dans l'app, taper `[[` propose les notes, et un clic sur un lien l'ouvre. `GET /api/links/broken` liste les liens des notes vivantes qui ne mènent nulle part : `unresolved` (aucune autre note de ce titre ou chemin, ou un lien `#Section` vers un titre que la note n'a pas), `ambiguous` (plusieurs) ou `missing` (lien vers une note mise à la corbeille ou purgée).
+`GET /api/notes/{id}/neighbors` donne ses liens (`links`) et ses rétroliens (`backlinks`), et le graphe relie aussi les notes liées. Dans l'app, taper `[[` propose les notes, et un clic sur un lien l'ouvre. `GET /api/links/broken` liste les liens des notes vivantes qui ne mènent nulle part : `unresolved` (aucune autre note de ce titre ou chemin, ou un lien `#Section` vers un titre que la note n'a pas), `ambiguous` (plusieurs) `missing` (lien vers une note mise à la corbeille ou purgée) ou `file` (image ou pièce jointe `/api/files/<id>` que le compte n'a pas : importée d'un autre compte, purgée).
 
 ### Corbeille
 

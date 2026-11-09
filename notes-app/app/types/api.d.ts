@@ -788,7 +788,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List the broken and ambiguous links */
+        /** List the broken and ambiguous links, and the missing files */
         get: {
             parameters: {
                 query?: never;
@@ -2498,7 +2498,7 @@ export interface components {
         };
         "listbrokenlinks.Link": {
             /** @enum {string} */
-            kind: "unresolved" | "ambiguous" | "missing";
+            kind: "unresolved" | "ambiguous" | "missing" | "file";
             note_id: string;
             note_path: string;
             note_title: string;

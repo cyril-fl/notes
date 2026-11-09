@@ -295,15 +295,16 @@
       "pro": "Mode avancé",
       "proDescription": "Des outils en plus, pour un usage avancé.",
       "links": "Liens",
-      "linksDescription": "Les liens entre notes qui ne mènent à aucune note, ou à plusieurs.",
+      "linksDescription": "Les liens entre notes qui ne mènent à aucune note, ou à plusieurs, et les fichiers cités que le serveur n’a pas.",
       "storage": "Stockage",
       "storageDescription": "Les images et pièces jointes gardées sur le serveur, et la place qu’elles prennent."
     },
-    "linksEmpty": "Aucun lien cassé ni ambigu.",
+    "linksEmpty": "Aucun lien cassé ni ambigu, aucun fichier absent.",
     "linkKinds": {
       "unresolved": "Aucune note",
       "ambiguous": "Plusieurs notes",
-      "missing": "Note supprimée"
+      "missing": "Note supprimée",
+      "file": "Fichier absent"
     },
     "storageUsed": "{size} utilisés · {count} fichier | {size} utilisés · {count} fichiers",
     "storageEmpty": "Aucun fichier gardé.",

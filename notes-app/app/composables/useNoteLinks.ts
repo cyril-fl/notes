@@ -1,5 +1,6 @@
-import type { Range } from '@tiptap/core';
-import type { EditorState } from '@tiptap/pm/state';
+import { Extension, type Range } from '@tiptap/core';
+import { Plugin, PluginKey, type EditorState } from '@tiptap/pm/state';
+import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import type { Editor } from '@tiptap/vue-3';
 import type { ItemDetail, NotesGraph } from '~/types/items';
 import type { LinkSize } from '~/utils/linkCard';
@@ -103,6 +104,41 @@ export function useNoteLinks(id: Ref<string | undefined>): EditorModule {
     );
   });
 
+  // The other notes the API would pick from, by path or by title whatever its case, as linknotes.Resolve.
+  function candidates(target: string) {
+    return noteItems.value.filter((note) =>
+      target.startsWith('/') ? note.description === target : note.label.toLowerCase() === target.toLowerCase(),
+    );
+  }
+
+  // A waiting [[link]] that several notes answer gets wikilink-ambiguous, redrawn when the notes change.
+  const ambiguousKey = new PluginKey('ambiguousLinks');
+  const AmbiguousLinks = Extension.create({
+    name: 'ambiguousLinks',
+    addProseMirrorPlugins() {
+      return [
+        new Plugin({
+          key: ambiguousKey,
+          view: (view) => ({
+            destroy: watch(noteItems, () => view.dispatch(view.state.tr.setMeta(ambiguousKey, true))),
+          }),
+          props: {
+            decorations: (state) => {
+              const decorations: Decoration[] = [];
+              state.doc.descendants((node, pos) => {
+                const target =
+                  node.type.name === 'wikiLink' && !node.attrs.id && node.attrs.target.split('#')[0].trim();
+                if (target && candidates(target).length > 1)
+                  decorations.push(Decoration.node(pos, pos + node.nodeSize, { class: 'wikilink-ambiguous' }));
+              });
+              return DecorationSet.create(state.doc, decorations);
+            },
+          },
+        }),
+      ];
+    },
+  });
+
   function openLink(event: MouseEvent) {
     const link = (event.target as HTMLElement).closest<HTMLElement>('a[data-wikilink]');
     if (!link) return;
@@ -121,13 +157,8 @@ export function useNoteLinks(id: Ref<string | undefined>): EditorModule {
     }
     const heading = link.dataset.heading ? `#${encodeURIComponent(link.dataset.heading)}` : '';
     if (link.dataset.note) return navigateTo(`/notes/${link.dataset.note}${heading}`);
-    // The other notes the API would pick from, by path or by title whatever its case, as linknotes.Resolve.
     const target = link.dataset.wikilink!.split('#')[0]!.trim();
-    const paths = noteItems.value
-      .filter((note) =>
-        target.startsWith('/') ? note.description === target : note.label.toLowerCase() === target.toLowerCase(),
-      )
-      .map((note) => note.description);
+    const paths = candidates(target).map((note) => note.description);
     toast.add(
       paths.length > 1
         ? {
@@ -144,7 +175,7 @@ export function useNoteLinks(id: Ref<string | undefined>): EditorModule {
   }
 
   return {
-    extensions: [WikiLink, noteEmbed(NoteEmbed), linkCard(LinkCard)],
+    extensions: [WikiLink, AmbiguousLinks, noteEmbed(NoteEmbed), linkCard(LinkCard)],
     starterKit: {
       link: {
         openOnClick: false,

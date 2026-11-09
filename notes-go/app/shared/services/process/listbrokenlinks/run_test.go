@@ -7,9 +7,11 @@ import (
 
 	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createfile"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createnote"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createschema"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deleteitems"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/silo"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/testaccount"
 )
 
@@ -33,6 +35,14 @@ func TestBrokenLinks(t *testing.T) {
 	defer tx.Rollback()
 	ctx, tx = testaccount.New(t, ctx, tx)
 
+	file := createfile.Process(ctx, tx, silo.NewMemory(), createfile.Input{Name: "kept.png", Data: []byte("\x89PNG\r\n\x1a\n")})
+	file.Run()
+	if file.HasErr() {
+		t.Fatalf("file: %v", file.GetErr())
+	}
+	kept := domain.FileURL(file.GetResult().ID)
+	gone := domain.FileURL("00000000-0000-4000-8000-000000000000")
+
 	ids := map[string]string{}
 	for _, note := range []struct{ key, content string }{
 		{"Twin1", "# Twin"},
@@ -40,7 +50,7 @@ func TestBrokenLinks(t *testing.T) {
 		{"Single", "# Single\n\n## Here"},
 		{"Gone", "# Gone"},
 		// Single and Gone resolve on creation, the rest waits.
-		{"Source", "# Source\n\n[[Twin#h]] [[Nowhere]] [[Single]] [[Single#Here]] [[Single#Away]] [[Gone]] [[#Top]] [[#Gone (old)]] [[Source]] `[[Code]]`\n\n## Top"},
+		{"Source", "# Source\n\n[[Twin#h]] [[Nowhere]] [[Single]] [[Single#Here]] [[Single#Away]] [[Gone]] [[#Top]] [[#Gone (old)]] [[Source]] `[[Code]]`\n\n## Top\n\n![](" + kept + ") ![](" + gone + ")"},
 	} {
 		process := createnote.Process(ctx, tx, createnote.Input{Content: note.content})
 		process.Run()
@@ -69,7 +79,7 @@ func TestBrokenLinks(t *testing.T) {
 		got = append(got, link.Kind+":"+link.Target)
 	}
 	// [[Source]] names only the note itself: it never resolves.
-	want := []string{"ambiguous:Twin#h", "unresolved:Nowhere", "unresolved:#Gone (old)", "unresolved:Source", "unresolved:Single#Away", "missing:Gone"}
+	want := []string{"ambiguous:Twin#h", "unresolved:Nowhere", "unresolved:#Gone (old)", "unresolved:Source", "unresolved:Single#Away", "missing:Gone", "file:" + gone}
 	if !slices.Equal(got, want) {
 		t.Errorf("links = %q, want %q", got, want)
 	}

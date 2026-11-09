@@ -54,6 +54,16 @@ test('a [[link]] typed by hand waits, then the API points it to its note', async
   await expect.poll(() => box.content(source.id), { timeout: 5000 }).toContain(`](note:${target.id})`);
 });
 
+test('a [[link]] several notes answer looks ambiguous, a link to none only waits', async ({ page }) => {
+  await box.note(`# ${box.prefix} twin`);
+  await box.note(`# ${box.prefix} twin`);
+  const source = await box.note(`# ${box.prefix} ambigu\n\n[[${box.prefix} twin]] [[${box.prefix} nowhere]]`);
+  await page.goto(`/notes/${source.id}`);
+  const editor = page.locator('.ProseMirror');
+  await expect(editor.locator('a.wikilink-ambiguous')).toHaveText(`${box.prefix} twin`);
+  await expect(editor.locator('a.wikilink-waiting:not(.wikilink-ambiguous)')).toHaveText(`${box.prefix} nowhere`);
+});
+
 test('a web link turns into a large card, then a mini one, kept in the markdown', async ({ page }) => {
   const note = await box.note(`# ${box.prefix} carte\n\nVoir [Exemple](https://example.com) ici`);
   await page.goto(`/notes/${note.id}`);

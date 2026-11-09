@@ -284,6 +284,11 @@
     @apply text-muted decoration-dashed decoration-current/50;
   }
 
+  /* Several notes have its title: the colour of the ambiguous badge of the settings. */
+  .ProseMirror a.wikilink-ambiguous {
+    @apply text-info decoration-dotted decoration-info/60;
+  }
+
   /* A web link shown as a card: mini in the line, large on its own line. */
   .ProseMirror a.link-card {
     @apply cursor-pointer gap-2 rounded-md border border-default bg-elevated/50 no-underline align-middle hover:bg-elevated;

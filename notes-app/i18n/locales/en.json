@@ -295,15 +295,16 @@
       "pro": "Advanced mode",
       "proDescription": "More tools, for advanced use.",
       "links": "Links",
-      "linksDescription": "The links between notes that lead to no note, or to several.",
+      "linksDescription": "The links between notes that lead to no note, or to several, and the cited files the server lacks.",
       "storage": "Storage",
       "storageDescription": "The images and attachments kept on the server, and the space they take."
     },
-    "linksEmpty": "No broken or ambiguous link.",
+    "linksEmpty": "No broken or ambiguous link, no missing file.",
     "linkKinds": {
       "unresolved": "No note",
       "ambiguous": "Several notes",
-      "missing": "Deleted note"
+      "missing": "Deleted note",
+      "file": "Missing file"
     },
     "storageUsed": "{size} used · {count} file | {size} used · {count} files",
     "storageEmpty": "No file kept.",

@@ -8,8 +8,8 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// Handler lists the links of the live notes that point to no note, or to a title several notes have: GET /api/links/broken.
-// @Summary  List the broken and ambiguous links
+// Handler lists the links of the live notes that point to no note, or to a title several notes have, and the files they cite that the account lacks: GET /api/links/broken.
+// @Summary  List the broken and ambiguous links, and the missing files
 // @Tags     graph
 // @Produce  json
 // @Success  200 {array} listbrokenlinks.Link
