@@ -10,9 +10,11 @@ const baseURL = useRuntimeConfig().public.apiBase;
 const id = computed<string | null>(() => props.node.attrs.id);
 const target = computed<string>(() => props.node.attrs.target);
 const heading = computed<string | null>(() => props.node.attrs.heading);
-// The tables and callouts every editor reads, without their menus: this one is read only.
+// The tables, callouts and diagrams every editor reads, without their menus: this one is read only.
 const [tables] = useNoteTables();
 const [callouts] = useNoteCallouts();
+const code = useNoteCode();
+const starterKit = { ...callouts!.starterKit, ...code.starterKit };
 // Its embeds stay links: a note that includes itself, or one that includes it back, stops there.
 const extensions = [
   WikiLink,
@@ -20,6 +22,7 @@ const extensions = [
   noteImage(baseURL, async () => null),
   ...tables!.extensions!,
   ...callouts!.extensions!,
+  ...code.extensions!,
   InlineMath,
   BlockMath,
 ];
@@ -81,7 +84,7 @@ onBeforeUnmount(() => props.editor.off('update', place));
       :editable="false"
       :image="false"
       :mention="false"
-      :starter-kit="callouts!.starterKit"
+      :starter-kit="starterKit"
       :extensions="extensions"
       :ui="{ base: 'px-0 sm:px-0' }"
     />

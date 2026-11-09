@@ -462,3 +462,37 @@ test('the settings follow the Pro mode, one page or a page per section', async (
     await box.api.patch('/api/me', { data: { plan: 'base' } });
   }
 });
+
+// A $$ block is edited on several lines, and the Pro / menu inserts a formula and a diagram.
+test('a block formula keeps its lines; the / menu inserts a formula and a diagram (#107)', async ({ page }) => {
+  const note = await box.note(`# Formules ${box.prefix}\n\n$$\na\n$$`);
+  const editor = page.locator('.ProseMirror');
+  try {
+    await page.goto(`/notes/${note.id}`);
+    await editor.locator('div[data-math] .katex-html').click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('textbox').fill('a \\\\\nb');
+    await page.keyboard.press('ControlOrMeta+Enter');
+    await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('$$\na \\\\\nb\n$$');
+
+    await box.api.patch('/api/me', { data: { plan: 'pro' } });
+    await page.reload();
+    await cursorAtEnd(editor, `Formules ${box.prefix}`);
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('/');
+    await page.getByRole('menuitem', { name: 'Formule LaTeX' }).click();
+    await dialog.getByRole('textbox').fill('x^2');
+    await dialog.getByRole('button', { name: 'Valider' }).click();
+    await expect(editor.locator('div[data-math] .katex-display')).toHaveCount(2);
+
+    await cursorAtEnd(editor, `Formules ${box.prefix}`);
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('/');
+    await page.getByRole('menuitem', { name: 'Diagramme Mermaid' }).click();
+    await page.keyboard.type('graph TD\nA --> B');
+    await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('```mermaid\ngraph TD\nA --> B\n```');
+    expect(await box.content(note.id)).toContain('$$\nx^2\n$$');
+  } finally {
+    await box.api.patch('/api/me', { data: { plan: 'base' } });
+  }
+});

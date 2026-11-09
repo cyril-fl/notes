@@ -91,6 +91,8 @@ export function useIcons() {
     paragraph: 'i-lucide-pilcrow',
     codeBlock: 'i-lucide-square-code',
     divider: 'i-lucide-minus',
+    formula: 'i-lucide-sigma',
+    diagram: 'i-lucide-workflow',
     table: 'i-lucide-table',
     tableAddRow: 'i-lucide-between-horizontal-end',
     tableAddColumn: 'i-lucide-between-vertical-end',

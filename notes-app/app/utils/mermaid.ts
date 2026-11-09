@@ -14,14 +14,14 @@ async function draw(code: string, dark: boolean) {
   return (await mermaid.render(`mermaid-${renders++}`, code)).svg;
 }
 
-function decorate(state: EditorState, dark: boolean) {
+function decorate(state: EditorState, dark: boolean, editable: boolean) {
   const { from, to } = state.selection;
   const decorations: Decoration[] = [];
   state.doc.descendants((node, pos) => {
     if (node.type.name !== 'codeBlock' || node.attrs.language !== 'mermaid') return;
     const end = pos + node.nodeSize;
-    // The code is shown while the cursor is in it, the diagram below it.
-    if (from < pos || to > end) decorations.push(Decoration.node(pos, end, { class: 'mermaid-hidden' }));
+    // The code is shown while the cursor is in it, the diagram below it; read only, never.
+    if (!editable || from < pos || to > end) decorations.push(Decoration.node(pos, end, { class: 'mermaid-hidden' }));
     const code = node.textContent;
     decorations.push(
       Decoration.widget(
@@ -61,10 +61,11 @@ export const Mermaid = Extension.create<{ dark: () => boolean }>({
   addOptions: () => ({ dark: () => false }),
   addProseMirrorPlugins() {
     const { dark } = this.options;
+    const editor = this.editor;
     return [
       new Plugin({
         key,
-        props: { decorations: (state) => decorate(state, dark()) },
+        props: { decorations: (state) => decorate(state, dark(), editor.isEditable) },
         // A change of mode draws them again.
         view: (view) => ({ destroy: watch(dark, () => view.dispatch(view.state.tr.setMeta(key, true))) }),
       }),

@@ -157,6 +157,7 @@
     "tableDelete": "Supprimer le tableau",
     "callout": "Encadrés",
     "formula": "Formule LaTeX",
+    "diagram": "Diagramme Mermaid",
     "callouts": {
       "note": "Note",
       "tip": "Astuce",

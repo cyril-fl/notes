@@ -157,6 +157,7 @@
     "tableDelete": "Delete the table",
     "callout": "Callouts",
     "formula": "LaTeX formula",
+    "diagram": "Mermaid diagram",
     "callouts": {
       "note": "Note",
       "tip": "Tip",

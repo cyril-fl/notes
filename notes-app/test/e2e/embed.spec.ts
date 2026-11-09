@@ -88,3 +88,13 @@ test('![[Note#Heading]] shows that section alone, its tables and callouts drawn 
   await expect(embed.getByText('baguette')).toHaveCount(0);
   expect(await box.content(source.id)).toContain(`(note:${target.id}#Lait)`);
 });
+
+test('![[Note]] draws the mermaid diagrams of the note, its code hidden (#107)', async ({ page }) => {
+  await box.note(`# ${box.prefix} schéma\n\n\`\`\`mermaid\ngraph TD\n  A --> B\n\`\`\``);
+  const source = await box.note(`# ${box.prefix} hôte\n\n![[${box.prefix} schéma]]`);
+  await page.goto(`/notes/${source.id}`);
+
+  const embed = page.locator('.note-embed');
+  await expect(embed.locator('.mermaid-diagram svg')).toBeVisible({ timeout: 15000 });
+  await expect(embed.locator('pre')).toBeHidden();
+});
