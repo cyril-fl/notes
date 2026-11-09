@@ -542,6 +542,29 @@ test('the Pro history restores an earlier version', async ({ page }) => {
   }
 });
 
+// A fork: the version becomes a new note in the same folder, the note itself left as it is.
+test('the Pro history forks an earlier version into a new note', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} fork\n\nfirst`);
+  await box.api.patch(`/api/notes/${note.id}`, { data: { content: `# ${box.prefix} fork\n\nsecond` } });
+  try {
+    await box.api.patch('/api/me', { data: { plan: 'pro' } });
+    await page.goto(`/notes/${note.id}`);
+    await page
+      .getByRole('region', { name: 'Historique des versions' })
+      .getByRole('button', { name: /\d{2}:\d{2}/ })
+      .first()
+      .click();
+    await expect(page.getByRole('dialog')).toContainText('first');
+    await page.getByRole('button', { name: 'Nouvelle note depuis cette version' }).click();
+    await expect(page).not.toHaveURL(new RegExp(note.id));
+    await expect(page.locator('.ProseMirror')).toContainText(`${box.prefix} fork (version du`);
+    await expect(page.locator('.ProseMirror')).toContainText('first');
+    expect(await box.content(note.id)).toBe(`# ${box.prefix} fork\n\nsecond`);
+  } finally {
+    await box.api.patch('/api/me', { data: { plan: 'base' } });
+  }
+});
+
 // Without the Pro mode the editor still reads and writes tables and callouts: editing a note keeps the ones written elsewhere.
 test('without Pro, editing a note keeps its table and callout', async ({ page }) => {
   const markdown = `# ${box.prefix} blocs\n\n| a | b |\n| --- | --- |\n| 1 | 2 |\n\n> [!note]\n> encadré`;

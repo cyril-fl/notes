@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ItemDetail, NoteVersion } from '~/types/items';
+import type { Item, ItemDetail, NoteVersion } from '~/types/items';
 
 // Pro (#61): the texts the API kept before the edits of the note, newest first. Restoring hands one to the editor, which saves it as any edit.
 // panel: the last versions listed in the context panel; otherwise a button under the text (no panel on a phone).
@@ -73,6 +73,24 @@ function restore() {
   restored = true;
   emit('restore', text.value);
   open.value = false;
+}
+
+// A fork: the selected version as a new note beside this one, with its tags, titled after its date so its links stay apart.
+async function fork() {
+  if (text.value === undefined || !selected.value) return;
+  const note = await api<ItemDetail>(`/api/notes/${props.noteId}`);
+  const date = new Date(selected.value.created_at).toLocaleString(locale.value, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+  const title = t('history.forkTitle', { title: displayTitle(note.item.title, t('untitled')), date });
+  const item = await api<Item>('/api/notes', {
+    method: 'POST',
+    body: { content: retitle(text.value, title), parent_id: note.item.parent_id, tags: note.tags },
+    invalid: { [NO_PARENT]: t('items.parentInTrash') },
+  });
+  open.value = false;
+  await navigateTo(`/notes/${item.id}`);
 }
 </script>
 
@@ -164,6 +182,13 @@ function restore() {
           @click="compare"
         />
         <UButton :label="$t('common.cancel')" color="neutral" variant="ghost" @click="open = false" />
+        <UButton
+          :label="$t('history.fork')"
+          color="neutral"
+          variant="outline"
+          :disabled="text === undefined"
+          @click="fork"
+        />
         <UButton :label="$t('history.restore')" :disabled="text === undefined || readonly" @click="restore" />
       </div>
     </template>

@@ -360,6 +360,8 @@
     "emptySessions": "Une nouvelle version après 15 minutes de pause, et au moins une par heure.",
     "restore": "Restaurer cette version",
     "all": "Tout l'historique ({count})",
+    "fork": "Nouvelle note depuis cette version",
+    "forkTitle": "{title} (version du {date})",
     "panelTitle": "Historique ({count})",
     "conflict": "conflit",
     "compare": "Comparer au texte actuel",
