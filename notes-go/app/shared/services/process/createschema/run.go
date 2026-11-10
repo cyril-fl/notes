@@ -44,8 +44,32 @@ func (p *run) registerModels() {
 // createTables and createIndexes only queue their work: runInTx executes it in one transaction.
 func (p *run) createTables() {
 	p.cache.steps = append(p.cache.steps, func(tx bun.Tx) {
-		p.execQueries(getTables(tx))
+		tables := getTables(tx)
+		p.execQueries(tables)
+		p.addColumns(tx, tables)
 	})
+}
+
+// addColumns gives an existing table the columns added to its model since: CREATE TABLE IF NOT EXISTS skips it whole.
+// A new NOT NULL column without a default fails on a table with rows: fill it by hand first.
+func (p *run) addColumns(tx bun.Tx, tables []*bun.CreateTableQuery) {
+	for _, table := range tables {
+		for _, field := range table.GetModel().(bun.TableModel).Table().Fields {
+			if p.HasErr() {
+				return
+			}
+
+			column := "? " + field.CreateTableSQLType
+			if field.NotNull {
+				column += " NOT NULL"
+			}
+			if field.SQLDefault != "" {
+				column += " DEFAULT " + field.SQLDefault
+			}
+			_, err := tx.NewAddColumn().Model(table.GetModel()).ColumnExpr(column, bun.Ident(field.Name)).IfNotExists().Exec(p.ctx)
+			p.SetErr(err)
+		}
+	}
 }
 
 func (p *run) createIndexes() {

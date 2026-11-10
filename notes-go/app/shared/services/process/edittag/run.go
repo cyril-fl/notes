@@ -103,7 +103,7 @@ func (p *run) updateTag(ctx context.Context, tx bun.Tx) error {
 		Model((*domain.Tag)(nil)).
 		Set("value = ?, value_hash = ?", to.Value, to.ValueHash).
 		Where("user_id = ? AND value_hash = ?", domain.UserID(p.ctx), from).
-		Returning("*").
+		Returning("?Columns").
 		Scan(ctx, &p.cache.result)
 
 	return toDomainErr(err, p.cache.from, p.cache.to)

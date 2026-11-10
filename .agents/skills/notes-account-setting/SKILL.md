@@ -1,6 +1,6 @@
 ---
 name: notes-account-setting
-description: Add or change a setting stored on the account (users table) end to end - domain column, the manual ALTER on the dev and test bases, edituser validation, PATCH /api/me, OpenAPI and app types, the settings page, the layout sync, i18n and tests. Also use for any new column on an existing table.
+description: Add or change a setting stored on the account (users table) end to end - domain column (createschema adds it to existing bases), edituser validation, PATCH /api/me, OpenAPI and app types, the settings page, the layout sync, i18n and tests. Also use for any new column on an existing table.
 ---
 
 # Setting of the account
@@ -20,19 +20,14 @@ References: `locale`, `theme`, `color_mode`, `view`, `trash_retention_days`.
 Pitfall: bun inserts DEFAULT for a zero value when the tag has `default:`. A setting where 0 or "" is meaningful (retention 0 = never) is only set by an update: say so in a comment.
 bun maps `int` to `bigint`: cast in SQL where Postgres wants an `int` (`make_interval(days => x::int)`).
 
-## 2. Existing bases: no migrations
+## 2. Existing bases: added columns only
 
-`createschema` only creates missing tables (IF NOT EXISTS): a new column never reaches a base that exists. Since d58646b there are no migrations, so:
+`createschema` adds a column of the model missing from an existing table (`ADD COLUMN IF NOT EXISTS`, with its type, NOT NULL and default) every time the API or the CLI starts, the server included: a new column with a default needs nothing by hand. Still by hand, after `make backup`, with `make pgsql QUERY="..."` (dev) on every base, the server's too:
 
-```sh
-cd notes-go && make backup
-set -a && . ./.env && set +a
-for d in "$POSTGRES_DB" "${POSTGRES_DB}_test"; do
-  docker compose exec -T postgres psql -U "$POSTGRES_USER" -d "$d" -c "ALTER TABLE users ADD COLUMN IF NOT EXISTS x varchar NOT NULL DEFAULT 'a'"
-done
-```
+- a NOT NULL column without a default on a table with rows (fill it first),
+- a renamed or retyped column, a dropped NOT NULL, the `UPDATE`s that change the meaning of a column: one `BEGIN; … COMMIT;`, kept in the commit message.
 
-Both bases: `make test` runs in `<POSTGRES_DB>_test`, and it fails until the column exists there. Changing the meaning of a column: do it in one `BEGIN; … COMMIT;` with the `UPDATE`s, and keep the SQL in the commit message or the plan.
+A column left in the base but gone from the model is harmless: queries read the model's columns (`Returning("?Columns")`, never `*`).
 
 ## 3. API surface
 

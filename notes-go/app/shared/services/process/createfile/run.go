@@ -97,7 +97,7 @@ func (p *run) saveFile() {
 
 	put := false
 	err := p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
-		if err := tx.NewInsert().Model(&p.cache.file).Returning("*").Scan(ctx); err != nil {
+		if err := tx.NewInsert().Model(&p.cache.file).Returning("?Columns").Scan(ctx); err != nil {
 			return err
 		}
 		put = true

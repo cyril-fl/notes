@@ -14,7 +14,7 @@ Go module `github.com/cyril-fl/notes/notes-go` (`go install …/notes-go@latest`
 
 - Processes follow the `plum-process` skill: guarded steps, `HasErr()` then `GetErr()`, `bun.IDB` so tests pass a transaction.
 - Every query filters by account: `domain.UserID(ctx)`. A `bun.Tx` hands its `RunInTx` functions the ctx it began with, so begin transactions with a ctx that has the account; tests use `ctx, tx = testaccount.New(t, ctx, tx)`.
-- **No migrations.** `createschema` creates missing tables and indexes only. A new column or index on an existing table needs a hand-written `ALTER` on the dev base and on `_test` (see the `notes-account-setting` skill).
+- **No migrations.** `createschema` creates missing tables, indexes and the columns a model gained (at every start, the server too). A rename, a type change or a NOT NULL column without a default needs a hand-written `ALTER` on every base (`make pgsql QUERY=...`, see the `notes-account-setting` skill). `RETURNING` lists the model's columns (`?Columns`), never `*`: an old column left in a base must not break a scan.
 - Sentinel errors are exported and wrapped with `%w`; the API maps them to statuses in `app/api/services/respond/respond.go`.
 - Periodic cleanups go into the `every` loop of `notes serve` (`app/cli/cmd-serve/cmd.go`, with `purgeitems` and `purgefiles`); the CLI only purges at startup (`cmd/root.go`).
 - Images: a row in `files`, the bytes in Silo (S3, `compose.yaml`) through `services/silo.Store`, cited by notes as `/api/files/<id>`. Processes take the store as a parameter, tests pass `silo.NewMemory()`. `purgefiles` deletes what no note cites.

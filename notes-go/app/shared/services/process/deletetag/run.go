@@ -128,6 +128,6 @@ func (p *run) deleteTags(ctx context.Context, tx bun.Tx) error {
 	return tx.NewDelete().
 		Model((*domain.Tag)(nil)).
 		Where("user_id = ? AND value_hash IN (?)", domain.UserID(p.ctx), bun.In(p.cache.hashes)).
-		Returning("*").
+		Returning("?Columns").
 		Scan(ctx, &p.cache.result)
 }

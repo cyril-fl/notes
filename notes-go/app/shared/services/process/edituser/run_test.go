@@ -102,6 +102,16 @@ func TestEditUser(t *testing.T) {
 		t.Errorf("empty edit: result = %+v, err = %v; want the account unchanged", got, process.GetErr())
 	}
 
+	// A column the model does not know, like one left by an old version, is not read back.
+	if _, err := tx.ExecContext(ctx, "ALTER TABLE users ADD COLUMN legacy boolean NOT NULL DEFAULT false"); err != nil {
+		t.Fatal(err)
+	}
+	process = Process(ctx, tx, Input{View: &view})
+	process.Run()
+	if process.HasErr() {
+		t.Errorf("edit with an unknown column: %v", process.GetErr())
+	}
+
 	// The name of another account is taken, whatever its case; the savepoint keeps tx usable.
 	var other domain.User
 	if err := tx.NewSelect().Model(&other).Where("id <> ?", domain.UserID(ctx)).Limit(1).Scan(ctx); err != nil {

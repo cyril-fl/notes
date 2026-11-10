@@ -131,7 +131,7 @@ func (p *run) updateUser() {
 			Model(&p.cache.result).
 			Set("id = id").
 			Where("id = ?", domain.UserID(p.ctx)).
-			Returning("*")
+			Returning("?Columns")
 		if p.input.Locale != nil {
 			query.Set("locale = ?", *p.input.Locale)
 		}

@@ -82,6 +82,6 @@ func (p *run) insertTags() {
 	p.SetErr(p.db.NewInsert().
 		Model(&p.cache.tags).
 		On("CONFLICT (user_id, value_hash) DO NOTHING").
-		Returning("*").
+		Returning("?Columns").
 		Scan(p.ctx, &p.cache.result))
 }
