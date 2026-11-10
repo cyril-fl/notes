@@ -27,3 +27,24 @@ test('a pasted PDF is sent to the API, cited as a link, and downloads under its 
   expect((await download).suggestedFilename()).toBe('rapport.pdf');
   await expect(page).toHaveURL(`/notes/${note.id}`);
 });
+
+// A 1x1 PNG: the API reads the bytes, not the name.
+const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
+test('the import button of the toolbar sends the picked image and writes it in the note', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} import\n\ntexte`);
+  await page.goto(`/notes/${note.id}`);
+  await cursorAtEnd(page.locator('.ProseMirror'));
+
+  const chooser = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: 'Importer une image ou un fichier' }).click();
+  await (await chooser).setFiles({ name: 'photo.png', mimeType: 'image/png', buffer: Buffer.from(PNG, 'base64') });
+
+  await expect
+    .poll(() => box.content(note.id), { timeout: 5000 })
+    .toMatch(/!\[photo\.png\]\(\/api\/files\/[0-9a-f-]{36}\)/);
+
+  // Read back from the markdown, the image is shown from the API.
+  await page.reload();
+  await expect(page.locator('.ProseMirror img')).toHaveAttribute('src', /\/api\/files\/[0-9a-f-]{36}$/);
+});
