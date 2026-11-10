@@ -323,6 +323,32 @@ test('the code blocks are colored by their language', async ({ page }) => {
   await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('```go\nfunc main() {} // ok\n```');
 });
 
+// An empty block turned into a formula asks for it: an empty formula would be invisible.
+test('a code block from the toolbar takes a language, or becomes a formula', async ({ page }) => {
+  const note = await box.note(`# Code ${box.prefix}`);
+  const editor = page.locator('.ProseMirror');
+  await page.goto(`/notes/${note.id}`);
+  await cursorAtEnd(editor);
+  await page.keyboard.press('Enter');
+  await page.getByRole('button', { name: 'Bloc de code' }).click();
+  await page.getByRole('button', { name: 'Détecté' }).click();
+  await page.getByRole('menuitem', { name: 'Python' }).click();
+  await expect(editor).toBeFocused();
+  await page.keyboard.type('x = 1');
+  await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('```python\nx = 1\n```');
+
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+  await page.getByRole('button', { name: 'Bloc de code' }).click();
+  await page.getByRole('button', { name: 'Détecté' }).click();
+  await page.getByRole('menuitem', { name: 'Formule LaTeX' }).click();
+  await page.getByRole('dialog').getByRole('textbox').fill('x^2');
+  await page.getByRole('dialog').getByRole('button', { name: 'Valider' }).click();
+  await expect(editor.locator('div[data-math] .katex-display')).toHaveCount(1);
+  await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('$$\nx^2\n$$');
+});
+
 // A ```mermaid block is drawn, its code shown while the cursor is in it, its markdown the same.
 test('a mermaid block is drawn as a diagram (#104)', async ({ page }) => {
   const note = await box.note(`# Diagramme ${box.prefix}\n\n\`\`\`mermaid\ngraph TD\n  A --> B\n\`\`\``);

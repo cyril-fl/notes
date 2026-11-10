@@ -22,6 +22,7 @@ export function useNoteCode(): EditorModule {
   const colorMode = useColorMode();
   const { icons } = useIcons();
   const { t } = useI18n();
+  const { prompt } = useDialogs();
   return {
     feature: 'codeHighlight',
     // Replaces the starter kit's code block: same node and markdown, plus the colors.
@@ -35,20 +36,26 @@ export function useNoteCode(): EditorModule {
         (editor, item) => editor.chain().focus().updateAttributes('codeBlock', { language: item.language }),
         (editor, item) => (editor.getAttributes('codeBlock').language ?? null) === item.language,
       ),
-      // A formula is $$…$$ in Obsidian too, not ```latex: the block becomes one, its code as the formula.
-      codeToFormula: command((editor) =>
-        editor
-          .chain()
-          .focus()
-          .command(({ state, tr }) => {
-            const { $from } = state.selection;
-            const block = $from.node();
-            if (block.type.name !== 'codeBlock') return false;
-            const latex = block.textContent;
-            tr.replaceWith($from.before(), $from.after(), state.schema.nodes.blockMath!.create({ latex }));
-            return true;
-          }),
-      ),
+      // A formula is $$…$$ in Obsidian too, not ```latex: the block becomes one, its code as the formula. Asked
+      // first, the code filled in: an empty one would be an invisible node.
+      codeToFormula: command((editor) => {
+        const pos = editor.state.selection.$from.before();
+        prompt({ title: t('note.formula'), value: editor.state.doc.nodeAt(pos)?.textContent, multiline: true }).then(
+          (latex) =>
+            latex &&
+            editor
+              .chain()
+              .focus()
+              .command(({ state, tr }) => {
+                const block = state.doc.nodeAt(pos);
+                if (block?.type.name !== 'codeBlock') return false;
+                tr.replaceWith(pos, pos + block.nodeSize, state.schema.nodes.blockMath!.create({ latex }));
+                return true;
+              })
+              .run(),
+        );
+        return editor.chain();
+      }),
     },
     bubbles: [
       {
