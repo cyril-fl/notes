@@ -64,6 +64,24 @@ services:
       - silo-data:/data
     restart: unless-stopped
 
+  # The dashboard of the base, as in dev: connect it to note-postgres:5432 with the POSTGRES_ user. Published on
+  # 127.0.0.1 like Notes: reach it through the proxy or an SSH tunnel, never open to the network.
+  libredb:
+    image: libredb/libredb-studio:latest
+    container_name: note-libredb
+    environment:
+      ADMIN_EMAIL: ${LIBREDB_ADMIN_EMAIL:-admin@libredb.org}
+      ADMIN_PASSWORD: ${LIBREDB_ADMIN_PASSWORD:?set LIBREDB_ADMIN_PASSWORD in .env}
+      JWT_SECRET: ${LIBREDB_JWT_SECRET:?set LIBREDB_JWT_SECRET in .env}
+      NEXT_PUBLIC_AUTH_PROVIDER: local
+      STORAGE_PROVIDER: local
+    ports:
+      - "${LIBREDB_LISTEN:-127.0.0.1:3001}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   postgres-data:
   silo-data:
