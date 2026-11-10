@@ -479,7 +479,9 @@ function slashKey(event: KeyboardEvent) {
 }
 useEventListener(window, 'keydown', slashKey);
 // The same menu on a right click or a long press.
-const contextMenu = computed(() => (has('contextMenu') && !readonly.value ? slashMenu.value : []));
+// Not on a touch screen: a long press sends contextmenu, the menu would take the place of the native copy and paste one.
+const touch = useMediaQuery('(pointer: coarse)');
+const contextMenu = computed(() => (has('contextMenu') && !readonly.value && !touch.value ? slashMenu.value : []));
 // The menu keeps the browser from moving the cursor on a right click: it goes where the click was, unless inside the selected text.
 function placeCursor(event: MouseEvent) {
   const editor = editorRef.value?.editor;
