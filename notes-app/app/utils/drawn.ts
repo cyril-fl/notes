@@ -31,8 +31,9 @@ function decorate(state: EditorState, dark: boolean, editable: boolean) {
     // An empty one stays a code block to write in: nothing to draw, it would vanish.
     if (!draw || !code.trim()) return;
     const end = pos + node.nodeSize;
-    // The code is shown while the cursor is in it, the drawing below it; read only, never.
-    if (!editable || from < pos || to > end) decorations.push(Decoration.node(pos, end, { class: 'mermaid-hidden' }));
+    // The code is shown while the cursor is in it, the drawing below it in the same box; read only, never.
+    const open = editable && from >= pos && to <= end;
+    decorations.push(Decoration.node(pos, end, { class: open ? 'mermaid-open' : 'mermaid-hidden' }));
     decorations.push(
       Decoration.widget(
         end,

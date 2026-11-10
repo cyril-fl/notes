@@ -429,6 +429,15 @@
     @apply hidden;
   }
 
+  /* While written, its code and its drawing are one box: the code on top, the drawing under a line. */
+  .ProseMirror pre.mermaid-open {
+    @apply mb-0! rounded-b-none! border border-b-0 border-muted;
+  }
+
+  .ProseMirror pre.mermaid-open + .mermaid-diagram {
+    @apply mt-0! rounded-t-none! border-t-default;
+  }
+
   .ProseMirror .mermaid-diagram {
     @apply my-4 flex cursor-pointer justify-center overflow-x-auto rounded-md border border-muted bg-muted p-4;
   }
