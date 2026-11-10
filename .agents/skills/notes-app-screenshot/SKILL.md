@@ -13,6 +13,7 @@ node scripts/screenshot.mjs "$SCRATCH/nord-dark.png" /settings '{"theme":"nord",
 
 Then read the PNG with the Read tool. Write the PNGs to the session scratchpad, never into the repo.
 
+- `E2E_WIDTH=390` shoots at phone width (1100 by default).
 - Needs the stack (`make up` at the root: API on :8080, app on :3000) and `test-results/.session.json`, written by the login of `bun run e2e` (run it once if the script says 401).
 - The browser's color scheme does not matter: the account's `color_mode` wins. Pass `color_mode` to see light and dark.
 - The script puts back only the keys it changed. Do not run it while `bun run e2e` runs: both use the e2e account.

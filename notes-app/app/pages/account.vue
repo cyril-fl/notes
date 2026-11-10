@@ -111,9 +111,9 @@ async function changePassword() {
     <section class="mb-8">
       <h2 class="mb-1 text-sm font-semibold">{{ $t('account.profile') }}</h2>
       <ul>
-        <li class="flex items-center gap-4 border-b border-muted py-3">
+        <li class="flex flex-wrap items-center gap-4 border-b border-muted py-3">
           <UAvatar :src="avatarSrc || undefined" :alt="me?.name" size="3xl" />
-          <div class="min-w-0 flex-1">
+          <div class="flex-1 basis-48">
             <p class="text-sm">{{ $t('account.avatar') }}</p>
             <p class="text-xs text-muted">{{ $t('account.avatarDescription') }}</p>
           </div>
@@ -141,8 +141,8 @@ async function changePassword() {
           />
         </li>
         <li class="py-3">
-          <form class="flex items-center gap-4" @submit.prevent="rename">
-            <div class="min-w-0 flex-1">
+          <form class="flex flex-wrap items-center gap-4" @submit.prevent="rename">
+            <div class="flex-1 basis-48">
               <p class="text-sm">{{ $t('account.name') }}</p>
               <p class="text-xs text-muted">{{ $t('account.nameDescription') }}</p>
             </div>
@@ -181,7 +181,7 @@ async function changePassword() {
 
     <section>
       <h2 class="mb-1 text-sm font-semibold">{{ $t('account.session') }}</h2>
-      <div class="flex items-center gap-4 py-3">
+      <div class="flex flex-wrap items-center gap-4 py-3">
         <p class="min-w-0 flex-1 truncate text-sm">
           {{ $t('settings.loggedInAs') }} <span class="font-medium">{{ me?.name }}</span>
         </p>

@@ -28,7 +28,7 @@ try {
   const page = await browser.newPage({
     storageState: SESSION,
     locale: 'fr-FR',
-    viewport: { width: 1100, height: 800 },
+    viewport: { width: Number(process.env.E2E_WIDTH ?? 1100), height: 800 },
   });
   await page.goto(APP + path);
   await page.waitForLoadState('networkidle');

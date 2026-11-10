@@ -180,7 +180,7 @@ async function deleteData() {
       <section v-if="show('general')">
         <SettingsHeading id="general" />
         <ul class="divide-y divide-default rounded-lg border border-default">
-          <li class="flex items-center gap-4 px-4 py-3">
+          <li class="flex flex-wrap items-center gap-4 px-4 py-3">
             <UAvatar :src="avatarSrc || undefined" :alt="me?.name" />
             <p class="min-w-0 flex-1 truncate text-sm">
               {{ $t('settings.loggedInAs') }} <span class="font-medium">{{ me?.name }}</span>
@@ -193,8 +193,8 @@ async function deleteData() {
               variant="outline"
             />
           </li>
-          <li class="flex items-center gap-4 px-4 py-3">
-            <div class="min-w-0 flex-1">
+          <li class="flex flex-wrap items-center gap-4 px-4 py-3">
+            <div class="flex-1 basis-48">
               <p class="text-sm">{{ $t('settings.language') }}</p>
               <p class="text-xs text-muted">{{ $t('settings.languageDescription') }}</p>
             </div>
@@ -227,8 +227,8 @@ async function deleteData() {
               />
             </div>
           </li>
-          <li class="flex items-center gap-4 px-4 py-3">
-            <div class="min-w-0 flex-1">
+          <li class="flex flex-wrap items-center gap-4 px-4 py-3">
+            <div class="flex-1 basis-48">
               <p class="text-sm">{{ $t('settings.mode') }}</p>
               <p class="text-xs text-muted">{{ $t('settings.modeDescription') }}</p>
             </div>
@@ -247,8 +247,8 @@ async function deleteData() {
       <section v-if="show('editor')">
         <SettingsHeading id="editor" />
         <ul class="divide-y divide-default rounded-lg border border-default">
-          <li class="flex items-center gap-4 px-4 py-3">
-            <div class="min-w-0 flex-1">
+          <li class="flex flex-wrap items-center gap-4 px-4 py-3">
+            <div class="flex-1 basis-48">
               <p class="text-sm">{{ $t('settings.snippets') }}</p>
               <p class="text-xs text-muted">{{ $t('settings.snippetsDescription') }}</p>
             </div>
@@ -288,8 +288,8 @@ async function deleteData() {
       <section v-if="show('data')">
         <SettingsHeading id="data" />
         <ul class="divide-y divide-default rounded-lg border border-default">
-          <li class="flex items-center gap-4 px-4 py-3">
-            <div class="min-w-0 flex-1">
+          <li class="flex flex-wrap items-center gap-4 px-4 py-3">
+            <div class="flex-1 basis-48">
               <p class="text-sm">{{ $t('settings.export') }}</p>
               <p class="text-xs text-muted">{{ $t('settings.exportDescription') }}</p>
             </div>
@@ -302,8 +302,8 @@ async function deleteData() {
               download
             />
           </li>
-          <li class="flex items-center gap-4 px-4 py-3">
-            <div class="min-w-0 flex-1">
+          <li class="flex flex-wrap items-center gap-4 px-4 py-3">
+            <div class="flex-1 basis-48">
               <p class="text-sm">{{ $t('settings.import') }}</p>
               <p class="text-xs text-muted">{{ $t('settings.importDescription') }}</p>
             </div>
@@ -315,8 +315,8 @@ async function deleteData() {
               @click="importNotes()"
             />
           </li>
-          <li class="flex items-center gap-4 px-4 py-3">
-            <div class="min-w-0 flex-1">
+          <li class="flex flex-wrap items-center gap-4 px-4 py-3">
+            <div class="flex-1 basis-48">
               <p class="text-sm">{{ $t('settings.retention') }}</p>
               <p class="text-xs text-muted">{{ $t('settings.retentionDescription') }}</p>
             </div>
@@ -374,8 +374,8 @@ async function deleteData() {
         </div>
         <!-- Each section keeps what cannot be undone at its bottom, apart. -->
         <h3 class="mt-6 mb-2 text-xs font-medium text-error">{{ $t('settings.danger') }}</h3>
-        <div class="flex items-center gap-4 rounded-lg border border-error/25 bg-error/5 px-4 py-3">
-          <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-center gap-4 rounded-lg border border-error/25 bg-error/5 px-4 py-3">
+          <div class="flex-1 basis-48">
             <p class="text-sm">{{ $t('settings.deleteData') }}</p>
             <p class="text-xs text-muted">{{ $t('settings.deleteDataDescription') }}</p>
           </div>
@@ -405,7 +405,7 @@ async function deleteData() {
       <section v-if="show('pro')">
         <SettingsHeading id="pro" />
         <div class="overflow-hidden rounded-lg border border-default">
-          <div class="flex items-center gap-4 border-b border-default px-4 py-3">
+          <div class="flex flex-wrap items-center gap-4 border-b border-default px-4 py-3">
             <p class="min-w-0 flex-1 text-sm">{{ $t('settings.plan') }}</p>
             <UTabs
               :model-value="plan"
