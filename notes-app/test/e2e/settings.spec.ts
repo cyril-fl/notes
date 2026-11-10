@@ -323,8 +323,8 @@ test('the code blocks are colored by their language', async ({ page }) => {
   await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('```go\nfunc main() {} // ok\n```');
 });
 
-// An empty block turned into a formula asks for it: an empty formula would be invisible.
-test('a code block from the toolbar takes a language, or becomes a formula', async ({ page }) => {
+// A formula is a code block like the others: written in it, drawn below it, $$ in the markdown.
+test('a code block from the toolbar takes a language, LaTeX drawn as a formula', async ({ page }) => {
   const note = await box.note(`# Code ${box.prefix}`);
   const editor = page.locator('.ProseMirror');
   await page.goto(`/notes/${note.id}`);
@@ -342,11 +342,11 @@ test('a code block from the toolbar takes a language, or becomes a formula', asy
   await page.keyboard.press('Enter');
   await page.getByRole('button', { name: 'Bloc de code' }).click();
   await page.getByRole('button', { name: 'Détecté' }).click();
-  await page.getByRole('menuitem', { name: 'Formule LaTeX' }).click();
-  await page.getByRole('dialog').getByRole('textbox').fill('x^2');
-  await page.getByRole('dialog').getByRole('button', { name: 'Valider' }).click();
-  await expect(editor.locator('div[data-math] .katex-display')).toHaveCount(1);
+  await page.getByRole('menuitem', { name: 'LaTeX' }).click();
+  await expect(editor).toBeFocused();
+  await page.keyboard.type('x^2');
   await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('$$\nx^2\n$$');
+  await expect(editor.locator('.mermaid-diagram .katex-display')).toBeVisible();
 });
 
 // A ```mermaid block is drawn, its code shown while the cursor is in it, its markdown the same.
@@ -372,7 +372,7 @@ test('LaTeX formulas are drawn and edited by a click (#104)', async ({ page }) =
   await page.goto(`/notes/${note.id}`);
   const editor = page.locator('.ProseMirror');
   await expect(editor.locator('span[data-math] .katex')).toBeVisible();
-  await expect(editor.locator('div[data-math] .katex-display')).toBeVisible();
+  await expect(editor.locator('.mermaid-diagram .katex-display')).toBeVisible();
 
   await editor.locator('span[data-math] .katex-html').click();
   const dialog = page.getByRole('dialog');
@@ -512,10 +512,9 @@ test('a block formula keeps its lines; the / menu inserts a formula and a diagra
   const editor = page.locator('.ProseMirror');
   try {
     await page.goto(`/notes/${note.id}`);
-    await editor.locator('div[data-math] .katex-html').click();
-    const dialog = page.getByRole('dialog');
-    await dialog.getByRole('textbox').fill('a \\\\\nb');
-    await page.keyboard.press('ControlOrMeta+Enter');
+    // A click on the formula puts the cursor at the end of its code.
+    await editor.locator('.mermaid-diagram .katex-html').click();
+    await page.keyboard.type(' \\\\\nb');
     await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('$$\na \\\\\nb\n$$');
 
     await box.api.patch('/api/me', { data: { plan: 'pro' } });
@@ -524,9 +523,7 @@ test('a block formula keeps its lines; the / menu inserts a formula and a diagra
     await page.keyboard.press('Enter');
     await page.keyboard.type('/');
     await page.getByRole('menuitem', { name: 'Formule LaTeX' }).click();
-    await dialog.getByRole('textbox').fill('x^2');
-    await dialog.getByRole('button', { name: 'Valider' }).click();
-    await expect(editor.locator('div[data-math] .katex-display')).toHaveCount(2);
+    await page.keyboard.type('x^2');
 
     await cursorAtEnd(editor, `Formules ${box.prefix}`);
     await page.keyboard.press('Enter');

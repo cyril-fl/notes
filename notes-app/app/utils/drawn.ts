@@ -3,26 +3,36 @@ import { Plugin, PluginKey, TextSelection, type EditorState } from '@tiptap/pm/s
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { watch } from 'vue';
 
-const key = new PluginKey('mermaid');
+const key = new PluginKey('drawn');
 let renders = 0;
 
-/** The svg of a diagram, or its error; mermaid (~1 MB) is loaded with the first diagram. */
-async function draw(code: string, dark: boolean) {
-  const { default: mermaid } = await import('mermaid');
-  // The svg comes from the text of the note: strict keeps its scripts and clicks out.
-  mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: dark ? 'dark' : 'default' });
-  return (await mermaid.render(`mermaid-${renders++}`, code)).svg;
-}
+/** The html of a block's code by its language, or its error; each library loaded with its first block. */
+const drawers: Record<string, (code: string, dark: boolean) => Promise<string>> = {
+  // mermaid is ~1 MB.
+  async mermaid(code, dark) {
+    const { default: mermaid } = await import('mermaid');
+    // The svg comes from the text of the note: strict keeps its scripts and clicks out.
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: dark ? 'dark' : 'default' });
+    return (await mermaid.render(`mermaid-${renders++}`, code)).svg;
+  },
+  // KaTeX is ~300 KB and its CSS.
+  async latex(code) {
+    const [{ default: katex }] = await Promise.all([import('katex'), import('katex/dist/katex.min.css')]);
+    return katex.renderToString(code, { displayMode: true });
+  },
+};
 
 function decorate(state: EditorState, dark: boolean, editable: boolean) {
   const { from, to } = state.selection;
   const decorations: Decoration[] = [];
   state.doc.descendants((node, pos) => {
-    if (node.type.name !== 'codeBlock' || node.attrs.language !== 'mermaid') return;
-    const end = pos + node.nodeSize;
-    // The code is shown while the cursor is in it, the diagram below it; read only, never.
-    if (!editable || from < pos || to > end) decorations.push(Decoration.node(pos, end, { class: 'mermaid-hidden' }));
+    const draw = node.type.name === 'codeBlock' && drawers[node.attrs.language];
     const code = node.textContent;
+    // An empty one stays a code block to write in: nothing to draw, it would vanish.
+    if (!draw || !code.trim()) return;
+    const end = pos + node.nodeSize;
+    // The code is shown while the cursor is in it, the drawing below it; read only, never.
+    if (!editable || from < pos || to > end) decorations.push(Decoration.node(pos, end, { class: 'mermaid-hidden' }));
     decorations.push(
       Decoration.widget(
         end,
@@ -55,9 +65,9 @@ function decorate(state: EditorState, dark: boolean, editable: boolean) {
   return DecorationSet.create(state.doc, decorations);
 }
 
-/** The ```mermaid code blocks drawn as diagrams, in the dark theme when dark says so. */
-export const Mermaid = Extension.create<{ dark: () => boolean }>({
-  name: 'mermaid',
+/** The ```mermaid code blocks drawn as diagrams, in the dark theme when dark says so, the ```latex ones as formulas. */
+export const Drawn = Extension.create<{ dark: () => boolean }>({
+  name: 'drawn',
   addOptions: () => ({ dark: () => false }),
   addProseMirrorPlugins() {
     const { dark } = this.options;

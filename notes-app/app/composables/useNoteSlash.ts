@@ -2,18 +2,11 @@
 export function useNoteSlash(): EditorModule {
   const { icons } = useIcons();
   const { t } = useI18n();
-  const { prompt } = useDialogs();
 
   return {
     feature: 'slashCommands',
     handlers: {
-      // The formula is asked first: an empty one would be an invisible node.
-      formula: command((editor) => {
-        prompt({ title: t('note.formula'), multiline: true }).then(
-          (latex) => latex && editor.chain().focus().insertContent({ type: 'blockMath', attrs: { latex } }).run(),
-        );
-        return editor.chain();
-      }),
+      formula: command((editor) => editor.chain().focus().setCodeBlock({ language: 'latex' })),
       diagram: command((editor) => editor.chain().focus().setCodeBlock({ language: 'mermaid' })),
     },
     menus: [

@@ -1,10 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { CodeBlock } from '@tiptap/extension-code-block';
 import { MarkdownManager } from '@tiptap/markdown';
 import StarterKit from '@tiptap/starter-kit';
-import { BlockMath, InlineMath, readBlockMath, readInlineMath } from '../app/utils/math.ts';
+import { BlockMath, InlineMath, readBlockMath, readInlineMath, withBlockMath } from '../app/utils/math.ts';
 
-const markdown = new MarkdownManager({ extensions: [StarterKit, InlineMath, BlockMath] });
+const markdown = new MarkdownManager({
+  extensions: [StarterKit.configure({ codeBlock: false }), withBlockMath(CodeBlock), InlineMath, BlockMath],
+});
 const roundTrip = (source: string) => markdown.serialize(markdown.parse(source)).trim();
 
 test('reads an inline formula at the start only', () => {
@@ -39,8 +42,13 @@ test('writes the formulas back as they were written', () => {
     '$$\n\\sum_{i=1}^n x_i\n$$',
     'Il coûte $5 et $10.',
     'Avant\n\n$$\nE = mc^2\n$$\n\nAprès',
+    '$$\n\n$$',
+    '```go\nx := 1\n```',
   ]) {
     assert.equal(roundTrip(source), source);
   }
   assert.equal(markdown.parse('Soit $a_1 * b_2$').content![0]!.content![1]!.type, 'inlineMath');
+  // A block formula is a code block in the editor, written and drawn like a diagram.
+  const block = markdown.parse('$$\nx^2\n$$').content![0]!;
+  assert.deepEqual([block.type, block.attrs?.language, block.content![0]!.text], ['codeBlock', 'latex', 'x^2']);
 });
