@@ -617,6 +617,17 @@ test.describe('on a touch screen', () => {
     await expect.poll(() => page.evaluate(() => getSelection()?.toString())).toMatch(/tout[\s\S]*un[\s\S]*deux/);
   });
 
+  test('toolbar buttons undo and redo the typing', async ({ page }) => {
+    const note = await box.note(`# ${box.prefix} annuler`);
+    await page.goto(`/notes/${note.id}`);
+    await cursorAtEnd(page.locator('.ProseMirror'), `${box.prefix} annuler`);
+    await page.keyboard.type(' faute');
+    await page.getByRole('button', { name: 'Annuler' }).click();
+    await expect(page.locator('.ProseMirror')).not.toContainText('faute');
+    await page.getByRole('button', { name: 'Rétablir' }).click();
+    await expect(page.locator('.ProseMirror')).toContainText('faute');
+  });
+
   test('a toolbar button empties the note once confirmed', async ({ page }) => {
     const note = await box.note(`# ${box.prefix} vider\n\ntexte`);
     await page.goto(`/notes/${note.id}`);

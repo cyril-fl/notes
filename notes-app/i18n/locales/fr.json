@@ -181,6 +181,8 @@
     "clear": "Vider la note",
     "clearDescription": "Tout le texte de la note est effacé.",
     "selectAll": "Tout sélectionner",
+    "undo": "Annuler",
+    "redo": "Rétablir",
     "editor": "Retour à l'éditeur",
     "lock": "Verrouiller en lecture seule",
     "unlock": "Déverrouiller",

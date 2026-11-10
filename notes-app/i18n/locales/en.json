@@ -181,6 +181,8 @@
     "clear": "Clear the note",
     "clearDescription": "All the text of the note is erased.",
     "selectAll": "Select all",
+    "undo": "Undo",
+    "redo": "Redo",
     "editor": "Back to the editor",
     "lock": "Lock read-only",
     "unlock": "Unlock",

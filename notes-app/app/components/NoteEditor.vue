@@ -490,7 +490,7 @@ function placeCursor(event: MouseEvent) {
   const { from, to } = editor.state.selection;
   if (pos < from || pos > to) editor.commands.setTextSelection(pos);
 }
-// No Ctrl+A on a touch screen: buttons select the whole note, or empty it like the AC of a calculator.
+// No Ctrl+A nor Ctrl+Z on a touch screen: buttons undo and redo, select the whole note, or empty it like the AC of a calculator.
 async function clearNote() {
   if (await confirm({ title: t('note.clear'), description: t('note.clearDescription'), action: t('note.clear') }))
     editorRef.value?.editor?.chain().focus().clearContent(true).run();
@@ -498,6 +498,10 @@ async function clearNote() {
 const toolbar = computed(() =>
   touch.value
     ? [
+        [
+          { kind: 'undo', icon: icons.undo, tooltip: { text: t('note.undo') }, 'aria-label': t('note.undo') },
+          { kind: 'redo', icon: icons.redo, tooltip: { text: t('note.redo') }, 'aria-label': t('note.redo') },
+        ],
         ...parts.value.toolbar,
         [
           {

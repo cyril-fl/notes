@@ -57,6 +57,8 @@ export function useIcons() {
     source: 'i-reicon-document-code',
     selectAll: 'i-reicon-text-select',
     clear: 'i-reicon-eraser',
+    undo: 'i-reicon-undo',
+    redo: 'i-reicon-redo',
     focus: 'i-reicon-maximize',
     unfocus: 'i-reicon-minimize',
     lock: 'i-reicon-lock-filled',
