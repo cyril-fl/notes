@@ -51,9 +51,9 @@ async function changeLanguage(next: string) {
 // The layout applies the theme of me, and saves the mode to the account whenever it changes.
 const colorMode = useColorMode();
 const modes = computed(() => [
-  { label: t('settings.modeSystem'), value: 'system' },
-  { label: t('settings.modeLight'), value: 'light' },
-  { label: t('settings.modeDark'), value: 'dark' },
+  { label: t('settings.modeSystem'), value: 'system', icon: icons.systemMode },
+  { label: t('settings.modeLight'), value: 'light', icon: icons.lightMode },
+  { label: t('settings.modeDark'), value: 'dark', icon: icons.darkMode },
 ]);
 
 async function changeTheme(next: string) {
@@ -233,13 +233,12 @@ async function deleteData() {
               <p class="text-sm">{{ $t('settings.mode') }}</p>
               <p class="text-xs text-muted">{{ $t('settings.modeDescription') }}</p>
             </div>
-            <USelectMenu
+            <UTabs
               v-model="colorMode.preference"
               :items="modes"
-              value-key="value"
-              :search-input="false"
+              :content="false"
+              size="sm"
               :aria-label="$t('settings.mode')"
-              class="w-56"
             />
           </li>
         </ul>

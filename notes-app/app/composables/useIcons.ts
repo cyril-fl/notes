@@ -43,6 +43,7 @@ export function useIcons() {
     grid: 'i-reicon-grid',
     lightMode: 'i-reicon-sun',
     darkMode: 'i-reicon-moon',
+    systemMode: 'i-reicon-laptop4',
     export: 'i-reicon-download',
     import: 'i-reicon-upload',
     snippet: 'i-reicon-text-block',
