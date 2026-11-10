@@ -18,6 +18,18 @@ const LANGUAGES = {
   markdown: 'Markdown',
 };
 
+/** lowlight, whose guess colors a block only when sure: a word like `dd` was guessed bash, a sentence kotlin. */
+function sureLowlight() {
+  const lowlight = createLowlight(common);
+  const guess = lowlight.highlightAuto;
+  lowlight.highlightAuto = (value, options) => {
+    const tree = guess(value, options);
+    // Real code of a few lines scores 5 and more, a guess on a few words 1 to 3.
+    return (tree.data?.relevance ?? 0) >= 5 ? tree : { type: 'root', children: [{ type: 'text', value }] };
+  };
+  return lowlight;
+}
+
 /** The code blocks of the note editor colored by their language (```go), guessed when the block has none; ```mermaid and $$ (```latex) drawn. */
 export function useNoteCode(): EditorModule {
   const colorMode = useColorMode();
@@ -28,7 +40,7 @@ export function useNoteCode(): EditorModule {
     // Replaces the starter kit's code block: same node and markdown, plus the colors.
     starterKit: { codeBlock: false },
     extensions: [
-      withBlockMath(CodeBlockLowlight).configure({ lowlight: createLowlight(common) }),
+      withBlockMath(CodeBlockLowlight).configure({ lowlight: sureLowlight() }),
       Drawn.configure({ dark: () => colorMode.value === 'dark' }),
     ],
     handlers: {
