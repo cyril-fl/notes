@@ -509,7 +509,7 @@ const formatting = computed((): EditorToolbarItem[][] =>
           },
         ];
       })
-    : formatting.value,
+    : parts.value.toolbar,
 );
 const toolbar = computed(() =>
   touch.value
