@@ -134,6 +134,8 @@ jobs:
           S3_SECRET_KEY=silo-password-of-the-ci
           NOTES_SECRET=dGVzdCBrZXkgb2YgdGhlIENJLCBub3QgYSBzZWNyZXQ=
           WEB_ORIGIN=http://localhost:8080
+          LIBREDB_ADMIN_PASSWORD=libredb-password-of-the-ci
+          LIBREDB_JWT_SECRET=libredb-jwt-secret-of-the-ci-not-a-secret
           ENV
           docker compose -f compose.prod.yaml up -d --wait
       # 401 on /api/me: the API answers, not the web app's fallback page.
