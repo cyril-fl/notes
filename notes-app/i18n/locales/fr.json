@@ -148,6 +148,8 @@
     "lists": "Listes",
     "paragraph": "Texte",
     "codeBlock": "Bloc de code",
+    "codeLanguage": "Langage",
+    "codeAuto": "Détecté",
     "divider": "Séparateur",
     "table": "Tableau",
     "tableAddRow": "Ajouter une ligne",

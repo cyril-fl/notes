@@ -148,6 +148,8 @@
     "lists": "Lists",
     "paragraph": "Text",
     "codeBlock": "Code block",
+    "codeLanguage": "Language",
+    "codeAuto": "Detected",
     "divider": "Divider",
     "table": "Table",
     "tableAddRow": "Add a row",
