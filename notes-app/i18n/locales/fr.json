@@ -178,6 +178,7 @@
     "outline": "Plan",
     "noOutline": "Aucun titre",
     "source": "Mode source",
+    "selectAll": "Tout sélectionner",
     "editor": "Retour à l'éditeur",
     "lock": "Verrouiller en lecture seule",
     "unlock": "Déverrouiller",

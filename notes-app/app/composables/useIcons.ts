@@ -55,6 +55,7 @@ export function useIcons() {
     fileVideo: 'i-reicon-video',
     pro: 'i-reicon-sparkles',
     source: 'i-reicon-document-code',
+    selectAll: 'i-reicon-text-select',
     focus: 'i-reicon-maximize',
     unfocus: 'i-reicon-minimize',
     lock: 'i-reicon-lock-filled',

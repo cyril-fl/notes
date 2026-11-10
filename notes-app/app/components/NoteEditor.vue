@@ -490,6 +490,22 @@ function placeCursor(event: MouseEvent) {
   const { from, to } = editor.state.selection;
   if (pos < from || pos > to) editor.commands.setTextSelection(pos);
 }
+// No Ctrl+A on a touch screen: a button selects the whole note instead.
+const toolbar = computed(() =>
+  touch.value
+    ? [
+        ...parts.value.toolbar,
+        [
+          {
+            icon: icons.selectAll,
+            tooltip: { text: t('note.selectAll') },
+            'aria-label': t('note.selectAll'),
+            onClick: () => editorRef.value?.editor?.chain().focus().selectAll().run(),
+          },
+        ],
+      ]
+    : parts.value.toolbar,
+);
 
 // The headings of the note, for the context panel: a click scrolls the text to one, without moving the cursor.
 const panel = useContextPanel();
@@ -589,7 +605,7 @@ const status = computed(() => {
           <UEditorToolbar
             v-if="!readonly"
             :editor="editor"
-            :items="parts.toolbar"
+            :items="toolbar"
             class="mx-7 shrink-0 overflow-x-auto border-b border-muted py-1"
           />
           <UEditorToolbar

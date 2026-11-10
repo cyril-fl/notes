@@ -178,6 +178,7 @@
     "outline": "Outline",
     "noOutline": "No headings",
     "source": "Source mode",
+    "selectAll": "Select all",
     "editor": "Back to the editor",
     "lock": "Lock read-only",
     "unlock": "Unlock",

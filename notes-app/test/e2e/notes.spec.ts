@@ -606,3 +606,14 @@ test('without Pro, editing a note keeps its table and callout', async ({ page })
   expect(saved).toContain('> [!note]\n> encadré');
   expect(saved).toMatch(/\| a +\| b +\|/);
 });
+
+test.describe('on a touch screen', () => {
+  test.use({ hasTouch: true });
+
+  test('a toolbar button selects the whole note', async ({ page }) => {
+    const note = await box.note(`# ${box.prefix} tout\n\nun\n\ndeux`);
+    await page.goto(`/notes/${note.id}`);
+    await page.getByRole('button', { name: 'Tout sélectionner' }).click();
+    await expect.poll(() => page.evaluate(() => getSelection()?.toString())).toMatch(/tout[\s\S]*un[\s\S]*deux/);
+  });
+});
