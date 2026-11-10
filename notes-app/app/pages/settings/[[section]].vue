@@ -238,6 +238,7 @@ async function deleteData() {
               :items="modes"
               :content="false"
               size="sm"
+              :ui="{ label: 'max-sm:sr-only' }"
               :aria-label="$t('settings.mode')"
             />
           </li>
