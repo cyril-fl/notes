@@ -1,4 +1,4 @@
-.PHONY: setup test backup purge api openapi
+.PHONY: setup test backup purge api openapi pgsql
 
 # Not `go tool lefthook install`: the hook would call a build cache path that expires, then skip its checks without failing.
 setup:
@@ -39,6 +39,15 @@ purge:
 	docker compose exec -T postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$$POSTGRES_USER" "$$POSTGRES_DB" -c "TRUNCATE items, tags, files CASCADE" -c "UPDATE users SET avatar = NULL"' && \
 	docker compose exec -T silo sh -c 'mcli alias set local http://127.0.0.1:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" >/dev/null \
 		&& mcli rm --recursive --force --quiet local/'"$$S3_BUCKET"
+
+# psql on the base: `make pgsql` opens it, `make pgsql QUERY="ALTER TABLE ..."` runs one statement and stops at an error.
+pgsql:
+	@set -a && . ./.env && set +a && \
+	if [ -n "$$QUERY" ]; then \
+		docker compose exec -T -e QUERY postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$$POSTGRES_USER" "$$POSTGRES_DB" -c "$$QUERY"'; \
+	else \
+		docker compose exec postgres sh -c 'psql -U "$$POSTGRES_USER" "$$POSTGRES_DB"'; \
+	fi
 
 api:
 	@docker compose up -d --build api
