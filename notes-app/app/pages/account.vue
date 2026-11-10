@@ -127,12 +127,15 @@ async function changePassword() {
           <UButton
             v-if="me?.avatar"
             :label="$t('account.removeAvatar')"
+            :icon="icons.delete"
+            :ui="{ label: 'max-sm:sr-only' }"
             color="neutral"
             variant="ghost"
             @click="removeAvatar"
           />
           <UButton
             :label="$t('account.chooseAvatar')"
+            :ui="{ label: 'max-sm:sr-only' }"
             :icon="icons.avatar"
             color="neutral"
             variant="outline"
@@ -150,6 +153,8 @@ async function changePassword() {
             <UButton
               type="submit"
               :label="$t('account.save')"
+              :icon="icons.save"
+              :ui="{ label: 'max-sm:sr-only' }"
               color="neutral"
               variant="outline"
               :disabled="!name.trim() || name.trim() === me?.name"
@@ -187,6 +192,7 @@ async function changePassword() {
         </p>
         <UButton
           :label="$t('settings.logout')"
+          :ui="{ label: 'max-sm:sr-only' }"
           :icon="icons.logout"
           color="neutral"
           variant="outline"

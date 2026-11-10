@@ -187,6 +187,7 @@ async function deleteData() {
             </p>
             <UButton
               :label="$t('settings.manageAccount')"
+              :ui="{ label: 'max-sm:sr-only' }"
               :icon="icons.account"
               to="/account"
               color="neutral"
@@ -254,6 +255,7 @@ async function deleteData() {
             </div>
             <UButton
               :label="$t('settings.addSnippet')"
+              :ui="{ label: 'max-sm:sr-only' }"
               :icon="icons.noteAdd"
               color="neutral"
               variant="outline"
@@ -295,6 +297,7 @@ async function deleteData() {
             </div>
             <UButton
               :label="$t('settings.export')"
+              :ui="{ label: 'max-sm:sr-only' }"
               :icon="icons.export"
               color="neutral"
               variant="outline"
@@ -309,6 +312,7 @@ async function deleteData() {
             </div>
             <UButton
               :label="$t('settings.import')"
+              :ui="{ label: 'max-sm:sr-only' }"
               :icon="icons.import"
               color="neutral"
               variant="outline"

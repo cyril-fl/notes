@@ -48,6 +48,7 @@ export function useIcons() {
     snippet: 'i-reicon-text-block',
     appearance: 'i-reicon-palette',
     current: 'i-reicon-check',
+    save: 'i-reicon-floppy',
     data: 'i-reicon-database',
     storage: 'i-reicon-hard-drive',
     fileDocument: 'i-reicon-document-text',
