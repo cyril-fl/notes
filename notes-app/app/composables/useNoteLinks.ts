@@ -63,9 +63,21 @@ export function useNoteLinks(id: Ref<string | undefined>): EditorModule {
 
   // The notes offered after [[: picked, the link points to the note's id right away.
   const { data: graph } = useLazyAsyncData('graph', () => api<NotesGraph>('/api/graph/notes'));
+  const { has } = usePro();
+  // Pro: the notes sharing the most tags with this one first, as saved; the menu's filter keeps this order between equal matches.
+  const sharedTags = computed(() => {
+    const counts = new Map<string, number>();
+    if (!has('linkSuggestions')) return counts;
+    for (const link of graph.value?.links ?? []) {
+      if (link.source === id.value) counts.set(link.target, link.tags.length);
+      else if (link.target === id.value) counts.set(link.source, link.tags.length);
+    }
+    return counts;
+  });
   const noteItems = computed(() =>
     (graph.value?.notes ?? [])
       .filter((note) => note.id !== id.value && note.title)
+      .sort((a, b) => (sharedTags.value.get(b.id) ?? 0) - (sharedTags.value.get(a.id) ?? 0))
       .map((note) => ({ kind: 'wikiLink', label: note.title, description: note.path, icon: icons.note, id: note.id })),
   );
 

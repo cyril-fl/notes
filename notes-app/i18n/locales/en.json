@@ -365,6 +365,7 @@
     "brokenLinks": "The list of broken or ambiguous links and of missing files, in the settings",
     "storageFiles": "The list of the files kept on the server, in the Data section of the settings",
     "wikiLinks": "[[Note]] links to a note or one of its headings ([[Note#Heading]], [[#Heading]]), offered as you type",
+    "linkSuggestions": "In the [[ menu, the notes sharing the most tags with the open note come first",
     "noteEmbeds": "Include a note in another with ![[Note]], shown read only",
     "images": "Paste or drop images into a note, small, medium or large",
     "attachments": "Attach a PDF, a zip, a sound or a video to a note, as a link that downloads it",
