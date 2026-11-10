@@ -29,6 +29,7 @@ export function useNoteFormatting(): EditorModule {
         { kind: 'orderedList', icon: icons.orderedList, tooltip: { text: t('note.orderedList') } },
         { kind: 'taskList', icon: icons.taskList, tooltip: { text: t('note.taskList') } },
         { kind: 'blockquote', icon: icons.quote, tooltip: { text: t('note.quote') } },
+        { kind: 'codeBlock', icon: icons.codeBlock, tooltip: { text: t('note.codeBlock') } },
       ],
     ],
   };
