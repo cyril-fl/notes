@@ -678,6 +678,7 @@ const status = computed(() => {
             size="xs"
             :aria-label="focus ? $t('note.unfocus') : $t('note.focus')"
             :aria-pressed="focus"
+            class="hidden lg:inline-flex"
             @click="focus = !focus"
           />
         </UTooltip>

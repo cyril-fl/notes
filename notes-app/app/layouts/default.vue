@@ -9,10 +9,11 @@ const searchOpen = useState('search-open', () => false);
 const searchSnippets = useState('search-snippets', () => false);
 const collapsed = ref(false);
 
-// The focus mode leaves only the note: it ends with the page, or with the Pro mode.
+// The focus mode leaves only the note: it ends with the page, or with the Pro mode. Wide screens only: below, the sidebar is already a closed drawer.
 const { has } = usePro();
 const focus = useState('focus', () => false);
-const focused = computed(() => focus.value && has('focusMode'));
+const wide = useMediaQuery('(min-width: 1024px)');
+const focused = computed(() => focus.value && has('focusMode') && wide.value);
 watch(
   () => route.path,
   () => (focus.value = false),
