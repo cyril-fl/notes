@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DropdownMenuItem, EditorSuggestionMenuItem } from '@nuxt/ui';
+import type { DropdownMenuItem, EditorSuggestionMenuItem, EditorToolbarItem } from '@nuxt/ui';
 import { createHandlers } from '@nuxt/ui/runtime/utils/editor.js';
 import type { Range } from '@tiptap/core';
 import type { Editor } from '@tiptap/vue-3';
@@ -495,6 +495,22 @@ async function clearNote() {
   if (await confirm({ title: t('note.clear'), description: t('note.clearDescription'), action: t('note.clear') }))
     editorRef.value?.editor?.chain().focus().clearContent(true).run();
 }
+// On a phone each group of formatting buttons (headings, marks, blocks) folds into one menu, showing the active one's icon.
+const phone = useMediaQuery('(max-width: 639px)');
+const formatting = computed((): EditorToolbarItem[][] =>
+  phone.value
+    ? parts.value.toolbar.map((group) => {
+        const label = group.map((item) => item.tooltip?.text).join(', ');
+        return [
+          {
+            icon: group[0]?.icon,
+            tooltip: { text: label },
+            items: group.map((item) => ({ ...item, label: item.tooltip?.text })),
+          },
+        ];
+      })
+    : formatting.value,
+);
 const toolbar = computed(() =>
   touch.value
     ? [
@@ -502,7 +518,7 @@ const toolbar = computed(() =>
           { kind: 'undo', icon: icons.undo, tooltip: { text: t('note.undo') }, 'aria-label': t('note.undo') },
           { kind: 'redo', icon: icons.redo, tooltip: { text: t('note.redo') }, 'aria-label': t('note.redo') },
         ],
-        ...parts.value.toolbar,
+        ...formatting.value,
         [
           {
             icon: icons.selectAll,
@@ -513,7 +529,7 @@ const toolbar = computed(() =>
           { icon: icons.clear, tooltip: { text: t('note.clear') }, 'aria-label': t('note.clear'), onClick: clearNote },
         ],
       ]
-    : parts.value.toolbar,
+    : formatting.value,
 );
 
 // The headings of the note, for the context panel: a click scrolls the text to one, without moving the cursor.
