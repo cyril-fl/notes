@@ -56,6 +56,7 @@ export function useIcons() {
     pro: 'i-reicon-sparkles',
     source: 'i-reicon-document-code',
     selectAll: 'i-reicon-text-select',
+    clear: 'i-reicon-eraser',
     focus: 'i-reicon-maximize',
     unfocus: 'i-reicon-minimize',
     lock: 'i-reicon-lock-filled',

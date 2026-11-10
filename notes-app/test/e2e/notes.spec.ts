@@ -616,4 +616,15 @@ test.describe('on a touch screen', () => {
     await page.getByRole('button', { name: 'Tout sélectionner' }).click();
     await expect.poll(() => page.evaluate(() => getSelection()?.toString())).toMatch(/tout[\s\S]*un[\s\S]*deux/);
   });
+
+  test('a toolbar button empties the note once confirmed', async ({ page }) => {
+    const note = await box.note(`# ${box.prefix} vider\n\ntexte`);
+    await page.goto(`/notes/${note.id}`);
+    await page.getByRole('button', { name: 'Vider la note' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Vider la note' }).click();
+    await expect(page.locator('.ProseMirror')).not.toContainText('texte');
+    // An empty note is not saved: what is typed next replaces the text.
+    await page.keyboard.type('neuf');
+    await expect.poll(() => box.content(note.id), { timeout: 5000 }).toBe('neuf');
+  });
 });

@@ -490,7 +490,11 @@ function placeCursor(event: MouseEvent) {
   const { from, to } = editor.state.selection;
   if (pos < from || pos > to) editor.commands.setTextSelection(pos);
 }
-// No Ctrl+A on a touch screen: a button selects the whole note instead.
+// No Ctrl+A on a touch screen: buttons select the whole note, or empty it like the AC of a calculator.
+async function clearNote() {
+  if (await confirm({ title: t('note.clear'), description: t('note.clearDescription'), action: t('note.clear') }))
+    editorRef.value?.editor?.chain().focus().clearContent(true).run();
+}
 const toolbar = computed(() =>
   touch.value
     ? [
@@ -502,6 +506,7 @@ const toolbar = computed(() =>
             'aria-label': t('note.selectAll'),
             onClick: () => editorRef.value?.editor?.chain().focus().selectAll().run(),
           },
+          { icon: icons.clear, tooltip: { text: t('note.clear') }, 'aria-label': t('note.clear'), onClick: clearNote },
         ],
       ]
     : parts.value.toolbar,

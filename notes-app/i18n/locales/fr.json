@@ -178,6 +178,8 @@
     "outline": "Plan",
     "noOutline": "Aucun titre",
     "source": "Mode source",
+    "clear": "Vider la note",
+    "clearDescription": "Tout le texte de la note est effacé.",
     "selectAll": "Tout sélectionner",
     "editor": "Retour à l'éditeur",
     "lock": "Verrouiller en lecture seule",
