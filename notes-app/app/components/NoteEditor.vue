@@ -500,6 +500,8 @@ const phone = useMediaQuery('(max-width: 639px)');
 const formatting = computed((): EditorToolbarItem[][] =>
   phone.value
     ? parts.value.toolbar.map((group) => {
+        // A group of one (the import button) is already a button: a menu holding it alone would need two taps.
+        if (group.length < 2) return group;
         const label = group.map((item) => item.tooltip?.text).join(', ');
         return [
           {

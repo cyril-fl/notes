@@ -1,6 +1,6 @@
-import type { ImageSize } from '~/utils/noteImage';
+import { insertFiles, type ImageSize } from '~/utils/noteImage';
 
-/** The images of the note editor, pasted or dropped, and their size picked over the selected one. */
+/** The images and files of the note editor, pasted, dropped or taken from the import button, and their size picked over the selected one. */
 export function useNoteImages(baseURL: string, upload: (file: File) => Promise<string | null>): EditorModule {
   const { icons } = useIcons();
   const { t } = useI18n();
@@ -15,11 +15,23 @@ export function useNoteImages(baseURL: string, upload: (file: File) => Promise<s
   return {
     extensions: [noteImage(baseURL, upload)],
     handlers: {
+      // No accept list: the API alone says what it takes, and an unrestricted picker is the one a phone offers the camera in.
+      imageFile: command((editor) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.multiple = true;
+        input.onchange = () => insertFiles(editor, upload, [...(input.files ?? [])]);
+        input.click();
+        return editor.chain();
+      }),
       imageNormal: sizeHandler(null),
       imageSmall: sizeHandler('small'),
       imageMedium: sizeHandler('medium'),
       imageLarge: sizeHandler('large'),
     },
+    toolbar: [
+      [{ kind: 'imageFile', icon: icons.attach, tooltip: { text: t('note.attach') }, 'aria-label': t('note.attach') }],
+    ],
     // Fixed sizes rather than handles: they work with a finger too. One icon, drawn at the size it gives, after
     // the image's own size.
     bubbles: [

@@ -87,6 +87,7 @@ export function useIcons() {
     linkBroken: 'i-reicon-link-broken',
     linkMini: 'i-reicon-minimize',
     linkLarge: 'i-reicon-maximize',
+    attach: 'i-reicon-paperclip',
     image: 'i-reicon-gallery-wide-filled',
     imageNormal: 'i-reicon-gallery-wide',
     linkOpen: 'i-reicon-arrow-up-right-square',

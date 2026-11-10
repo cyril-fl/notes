@@ -1,5 +1,6 @@
 import Image from '@tiptap/extension-image';
 import { Plugin } from '@tiptap/pm/state';
+import type { Editor } from '@tiptap/core';
 import { mergeAttributes, type JSONContent } from '@tiptap/vue-3';
 
 const FILES = '/api/files/';
@@ -25,6 +26,28 @@ export function citedSrc(src: string, baseURL: string) {
 /** An attachment of a note, a PDF or a recording: a link to /api/files/<id>, which the API sends as a download. */
 export function isFileLink(href?: string | null) {
   return !!href?.startsWith(FILES);
+}
+
+/**
+ * Sends the files to the API with upload and writes each in the note, an image or a link to the file. One after the
+ * other, in order: a drop puts the first where it fell, the others after it.
+ */
+export async function insertFiles(
+  editor: Editor,
+  upload: (file: File) => Promise<string | null>,
+  files: File[],
+  pos?: number,
+) {
+  for (const file of files) {
+    const src = await upload(file);
+    if (!src) continue;
+    const content = file.type.startsWith('image/')
+      ? { type: 'image', attrs: { src, alt: file.name } }
+      : { type: 'text', text: file.name, marks: [{ type: 'link', attrs: { href: src } }] };
+    if (pos === undefined) editor.chain().focus().insertContent(content).run();
+    else editor.chain().focus().insertContentAt(pos, content).run();
+    pos = undefined;
+  }
 }
 
 /**
@@ -66,20 +89,8 @@ export function noteImage(baseURL: string, upload: (file: File) => Promise<strin
     },
 
     addProseMirrorPlugins() {
-      const { editor, name } = this;
-      // One after the other, in order: a drop puts the first where it fell, the others after it.
-      async function insert(files: File[], pos?: number) {
-        for (const file of files) {
-          const src = await upload(file);
-          if (!src) continue;
-          const content = file.type.startsWith('image/')
-            ? { type: name, attrs: { src, alt: file.name } }
-            : { type: 'text', text: file.name, marks: [{ type: 'link', attrs: { href: src } }] };
-          if (pos === undefined) editor.chain().focus().insertContent(content).run();
-          else editor.chain().focus().insertContentAt(pos, content).run();
-          pos = undefined;
-        }
-      }
+      const { editor } = this;
+      const insert = (files: File[], pos?: number) => insertFiles(editor, upload, files, pos);
 
       return [
         new Plugin({
