@@ -590,7 +590,7 @@ const status = computed(() => {
             v-if="!readonly"
             :editor="editor"
             :items="parts.toolbar"
-            class="mx-7 shrink-0 border-b border-muted py-1"
+            class="mx-7 shrink-0 overflow-x-auto border-b border-muted py-1"
           />
           <UEditorToolbar
             v-for="bubble in readonly ? [] : parts.bubbles"
