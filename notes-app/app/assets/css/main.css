@@ -433,18 +433,14 @@
     @apply my-4 flex cursor-pointer justify-center overflow-x-auto rounded-md border border-muted bg-muted p-4;
   }
 
-  /* Boxed, on the error callout's colors: unboxed it read as text of the note. */
+  /* Boxed in the block's box, on the error callout's colors: unboxed it read as text of the note. */
   .ProseMirror .mermaid-error {
-    @apply justify-start rounded-md border border-error/40 bg-error/10 p-3 font-mono whitespace-pre-wrap! text-error text-sm;
+    @apply w-full rounded-md border border-error/40 bg-error/10 p-3 font-mono whitespace-pre-wrap! text-error text-sm;
   }
 
-  /* A formula KaTeX cannot read: its source, boxed like a diagram's error. */
+  /* A $formula$ KaTeX cannot read: its source, on the error colors. */
   .ProseMirror .math-error {
     @apply rounded-sm bg-error/10 px-1 font-mono text-error text-sm;
-  }
-
-  .ProseMirror div.math-error {
-    @apply my-4 block rounded-md border border-error/40 p-3;
   }
 
   /* Task lists are not in the Nuxt UI editor theme. */

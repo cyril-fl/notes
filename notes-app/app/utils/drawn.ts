@@ -50,9 +50,12 @@ function decorate(state: EditorState, dark: boolean, editable: boolean) {
           });
           draw(code, dark).then(
             (svg) => (box.innerHTML = svg),
+            // In the block's box, a box of its own: the drawing failed, not the block.
             (error: Error) => {
-              box.classList.add('mermaid-error');
-              box.textContent = error.message;
+              const message = document.createElement('div');
+              message.className = 'mermaid-error';
+              message.textContent = error.message;
+              box.replaceChildren(message);
             },
           );
           return box;
