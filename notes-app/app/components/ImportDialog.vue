@@ -14,10 +14,10 @@ const files = ref<File[]>([]);
 const importing = ref(false);
 const folderInput = useTemplateRef('folderInput');
 
-// The files the API reads: a picked folder also holds what the import would skip (PDFs, .obsidian…),
-// and its zips, which the API skips among other files and which would gray out the button.
-const accept = '.zip,.md,image/*';
-const kept = (file: File) => /\.md$/i.test(file.name) || file.type.startsWith('image/');
+// The files the API reads (domain.FileTypes, minus the zip): a picked folder also holds what the import
+// would skip (.obsidian…), and its zips, which the API skips among other files and would gray out the button.
+const accept = '.zip,.md,image/*,.pdf,.ogg,.mp3,.wav,.mp4,.webm';
+const kept = (file: File) => /\.(md|pdf|ogg|mp3|wav|mp4|webm)$/i.test(file.name) || file.type.startsWith('image/');
 
 function addFolder(event: Event) {
   const input = event.target as HTMLInputElement;

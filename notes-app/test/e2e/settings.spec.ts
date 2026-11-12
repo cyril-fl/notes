@@ -57,11 +57,12 @@ test('loose .md files are imported into the chosen folder', async ({ page }) => 
   await expect(page.getByRole('main').getByText('Deux.md')).toBeVisible();
 });
 
-// A picked folder keeps its notes but not its zips, which would gray out the button.
+// A picked folder keeps its notes and their attachments (#114), but not its zips, which would gray out the button.
 test('a picked folder holding a zip imports its notes', async ({ page }) => {
   const vault = test.info().outputPath('Coffre');
   await mkdir(join(vault, 'attachments'), { recursive: true });
-  await writeFile(join(vault, 'Une.md'), '# Une');
+  await writeFile(join(vault, 'Une.md'), '# Une\n\n[CV](cv.pdf)');
+  await writeFile(join(vault, 'cv.pdf'), '%PDF-1.4\n%%EOF\n');
   await copyFile('test/e2e/fixtures/notes.zip', join(vault, 'attachments', 'backup.zip'));
 
   await page.goto('/settings');
@@ -71,9 +72,14 @@ test('a picked folder holding a zip imports its notes', async ({ page }) => {
   await page.getByRole('option', { name: `/${box.prefix}` }).click();
   await dialog.locator('input[webkitdirectory]').setInputFiles(vault);
   await expect(dialog.getByText('Une.md')).toBeVisible();
+  await expect(dialog.getByText('cv.pdf')).toBeVisible();
   await expect(dialog.getByText('backup.zip')).toBeHidden();
   await dialog.getByRole('button', { name: 'Importer', exact: true }).click();
   await expect(page.getByText('1 note(s) et 1 dossier(s) importés').first()).toBeVisible();
+
+  const child = async (id: string) =>
+    ((await (await box.api.get(`/api/folders/${id}`)).json()).children as { id: string }[])[0]!.id;
+  expect(await box.content(await child(await child(box.folder.id)))).toContain('[CV](/api/files/');
 });
 
 // Playwright drops no folder: the drop is dispatched with fake entries, a folder holding a subfolder (#56).

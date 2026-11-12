@@ -57,7 +57,7 @@ La page Réglages (menu de l'avatar en bas de la barre latérale, ou la palette)
 - **Snippets** : du markdown nommé, dont les `#tags` deviennent les tags de la note où il arrive. Il s'insère au curseur en tapant `;;` dans une note, puis son nom, ou donne le texte de départ d'une nouvelle note (`T`, ou « Nouvelle note depuis un snippet » dans la palette) ; cette note n'est créée qu'une fois qu'on y tape.
 - **Corbeille** : la durée avant que les éléments supprimés soient effacés pour de bon (7, 30, 90, 365 jours, ou jamais).
 - **Exporter** télécharge toutes les notes en zip de fichiers `.md`, leurs images dans `_files/`, comme `notes export`.
-- **Importer** ouvre une fenêtre : le dossier de destination (la racine par défaut), puis un zip, des fichiers `.md` et leurs images (déposés ou choisis), ou un dossier entier (déposé ou « Choisir un dossier », son arborescence gardée). Comme `notes import --parent`. Un zip s'importe seul. Deux fichiers de même nom hors d'un dossier sont signalés et bloquent l'import : on en retire un. Si un dossier existe déjà à cet endroit, rien n'est importé.
+- **Importer** ouvre une fenêtre : le dossier de destination (la racine par défaut), puis un zip, des fichiers `.md` et leurs images et pièces jointes (PDF, audio, vidéo ; déposés ou choisis), ou un dossier entier (déposé ou « Choisir un dossier », son arborescence gardée). Comme `notes import --parent`. Un zip s'importe seul. Deux fichiers de même nom hors d'un dossier sont signalés et bloquent l'import : on en retire un. Si un dossier existe déjà à cet endroit, rien n'est importé.
 
 ## Commandes
 
