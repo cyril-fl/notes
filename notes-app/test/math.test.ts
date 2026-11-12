@@ -14,6 +14,7 @@ test('reads an inline formula at the start only', () => {
   assert.deepEqual(readInlineMath('$a_1 * b$ suite'), { type: 'inlineMath', raw: '$a_1 * b$', latex: 'a_1 * b' });
   assert.equal(readInlineMath('$x$')?.latex, 'x');
   assert.equal(readInlineMath('voir $x$'), undefined);
+  assert.equal(readInlineMath('$a = \\$5$ ici')?.latex, 'a = \\$5');
 });
 
 // A price is not a formula: what is not read stays the text written.
@@ -33,6 +34,7 @@ test('reads a block formula on one line or several', () => {
   });
   assert.equal(readBlockMath('$$x^2$$')?.latex, 'x^2');
   assert.equal(readBlockMath('$$x$$ suite'), undefined);
+  assert.equal(readBlockMath('$$\n\\text{Co} = \\$100\n$$')?.latex, '\\text{Co} = \\$100');
 });
 
 // Saved then opened again, a note keeps its text: the _ and * of a formula are not read as markdown.
@@ -44,6 +46,8 @@ test('writes the formulas back as they were written', () => {
     'Avant\n\n$$\nE = mc^2\n$$\n\nAprès',
     '$$\n\n$$',
     '```go\nx := 1\n```',
+    'Soit $a = \\$5$ ici.',
+    '$$\n\\text{Co} = \\$100\n$$',
   ]) {
     assert.equal(roundTrip(source), source);
   }

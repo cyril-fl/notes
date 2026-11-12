@@ -1,9 +1,9 @@
 import { Extension, Node, mergeAttributes, nodeInputRule, textblockTypeInputRule } from '@tiptap/core';
 
 // Pandoc's rule: no space inside the dollars, no digit after, so "$5 et $10" stays text.
-const INLINE = /^\$(?=[^$\s])([^$\n]*?[^$\s])\$(?!\d)/;
+const INLINE = /^\$(?=[^$\s])((?:\\\$|[^$\n])*[^$\s])\$(?!\d)/;
 // Empty too: an empty formula block is written $$ then $$.
-const BLOCK = /^\$\$\n?([^$]*?)\n?\$\$[ \t]*(?:\n|$)/;
+const BLOCK = /^\$\$\n?([\s\S]*?)\n?\$\$[ \t]*(?:\n|$)/;
 
 /** The $formula$ at the start of src, as a markdown token. */
 export function readInlineMath(src: string) {
