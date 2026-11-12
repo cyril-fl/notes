@@ -32,8 +32,9 @@ const cited = `(EXISTS (SELECT 1 FROM notes_on_files AS nf WHERE nf.file_id = f.
 	OR EXISTS (SELECT 1 FROM users AS au WHERE au.avatar = f.id))`
 
 // strayAge is how long an object without row is left alone: createfile puts its bytes inside the transaction
-// of its row, so bytes written just now may belong to an upload that has not committed yet.
-const strayAge = time.Hour
+// of its row, so bytes written just now may belong to an upload that has not committed yet. A var: the test
+// against the real Silo cannot date an object back.
+var strayAge = time.Hour
 
 // Process deletes the files no note cites any more. Those of a note deleted for good go at once (createschema's
 // trigger dates them -infinity), unless another note still cites them. Those removed from a text wait the trash

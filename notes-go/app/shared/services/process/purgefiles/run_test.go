@@ -171,19 +171,89 @@ func TestPurgeFiles(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	store.Written[stray] = time.Now().Add(-2 * strayAge)
+	// Every other object is aged too, the cited ones included: a key the query builds wrong would sweep them all.
+	cited := map[string]bool{}
+	for key := range store.Objects {
+		if key != fresh {
+			store.Written[key] = time.Now().Add(-2 * strayAge)
+		}
+		cited[key] = key != stray
+	}
 	sweep := Process(ctx, tx, store)
 	sweep.Run()
 	if sweep.HasErr() {
 		t.Fatalf("sweep: %v", sweep.GetErr())
 	}
-	if _, ok := store.Objects[stray]; ok {
+	for key, keep := range cited {
+		if _, ok := store.Objects[key]; ok != keep {
+			t.Errorf("object %s kept = %t, want %t", key, ok, keep)
+		}
+	}
+	if len(store.Objects) != len(cited)-1 {
+		t.Errorf("objects = %v, want all but the stray", store.Objects)
+	}
+}
+
+// The real Silo of compose.yaml, skipped when it is not running: the sweep must read the keys it lists the same
+// way the files table writes them, or it would take the cited bytes too.
+func TestPurgeStraysInSilo(t *testing.T) {
+	t.Setenv("S3_BUCKET", "notes-test") // like the base of the tests, not the bucket the API serves
+	ctx := context.Background()
+	reach, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+	store, err := silo.New(reach)
+	if err != nil {
+		t.Skipf("Silo not running: %v", err)
+	}
+
+	env := postgrey.NewEnvironment()
+	env.ReadEnv()
+	db := env.Connect()
+	defer db.Close()
+
+	schema := createschema.Process(ctx, db)
+	schema.Run()
+	if schema.HasErr() {
+		t.Fatalf("create schema: %v", schema.GetErr())
+	}
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback()
+	ctx, tx = testaccount.New(t, ctx, tx)
+
+	create := createfile.Process(ctx, tx, store, createfile.Input{Name: "cited.png", Data: []byte("\x89PNG\r\n\x1a\n")})
+	create.Run()
+	if create.HasErr() {
+		t.Fatal(create.GetErr())
+	}
+	cited := create.GetResult().Key()
+	defer store.Remove(ctx, cited)
+
+	stray := fmt.Sprintf("%s/stray-%d", domain.UserID(ctx), time.Now().UnixNano())
+	if err := store.Put(ctx, stray, []byte("\x89PNG\r\n\x1a\n"), "image/png"); err != nil {
+		t.Fatal(err)
+	}
+	defer store.Remove(ctx, stray)
+
+	// Silo dates an object itself, and its clock can run ahead of this one: below zero, a few seconds of skew
+	// cannot save the stray.
+	strayAge = -time.Minute
+	defer func() { strayAge = time.Hour }()
+
+	sweep := Process(ctx, tx, store)
+	sweep.Run()
+	if sweep.HasErr() {
+		t.Fatalf("sweep: %v", sweep.GetErr())
+	}
+	if _, err := store.Get(ctx, stray); err == nil {
 		t.Error("the stray object was kept, no row cites it")
 	}
-	if _, ok := store.Objects[fresh]; !ok {
-		t.Error("the object written just now was removed, its row may not be committed yet")
+	body, err := store.Get(ctx, cited)
+	if err != nil {
+		t.Fatalf("the sweep removed the bytes of a file with a row: %v", err)
 	}
-	if _, ok := store.Objects[files["live"].Key()]; !ok {
-		t.Error("the sweep removed live, which has a row")
-	}
+	body.Close()
 }
