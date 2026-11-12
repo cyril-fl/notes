@@ -61,6 +61,19 @@ func TestSilo(t *testing.T) {
 		t.Errorf("get = %q, want %q", got, data)
 	}
 
+	// purgefiles sweeps what List gives: the key must come back as written, and dated, not a prefix nor a folder.
+	objects, err := store.List(ctx)
+	if err != nil {
+		t.Fatalf("list: %v", err)
+	}
+	listed := false
+	for _, object := range objects {
+		listed = listed || object.Key == key && time.Since(object.Written) < time.Hour
+	}
+	if !listed {
+		t.Errorf("list = %+v, want %s written just now", objects, key)
+	}
+
 	if err := store.Remove(ctx, key); err != nil {
 		t.Fatalf("remove: %v", err)
 	}
