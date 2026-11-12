@@ -206,8 +206,9 @@ const toolbar = computed(() =>
           :handlers="parts.handlers"
           class="flex min-h-0 w-full flex-1 flex-col"
           :ui="{
-            content: compact ? 'min-h-0 overflow-y-auto px-3 pt-1 pb-3' : 'min-h-0 overflow-y-auto px-8 pt-1 pb-8',
-            base: 'sm:px-0 px-0',
+            content: compact ? 'min-h-0 overflow-y-auto' : 'min-h-0 overflow-y-auto px-8 pt-1 pb-8',
+            // Compact: the text fills the box, so a click anywhere in it writes.
+            base: compact ? 'min-h-full px-3 py-2' : 'sm:px-0 px-0',
           }"
           @update:model-value="emit('update:modelValue', cleanMarkdown($event))"
         >
