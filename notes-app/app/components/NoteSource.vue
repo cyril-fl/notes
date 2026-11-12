@@ -2,7 +2,7 @@
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { markdown } from '@codemirror/lang-markdown';
 import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
-import { highlightSelectionMatches, search, searchKeymap } from '@codemirror/search';
+import { highlightSelectionMatches, search, searchKeymap, selectNextOccurrence } from '@codemirror/search';
 import { Compartment, EditorState } from '@codemirror/state';
 import { crosshairCursor, drawSelection, EditorView, keymap, rectangularSelection } from '@codemirror/view';
 
@@ -29,11 +29,14 @@ const theme = EditorView.theme({
   '.cm-scroller': { fontFamily: 'var(--font-mono)', fontSize: '0.875rem', lineHeight: '1.6', overflow: 'auto' },
   '.cm-content': { padding: props.compact ? '0.5rem 0.75rem' : '0 2rem 2rem', caretColor: 'var(--ui-primary)' },
   '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--ui-primary)', borderLeftWidth: '2px' },
-  // The carets added by Cmd+D are drawn by CodeMirror, and shown even unfocused so the count stays readable.
-  '.cm-selectionBackground, &.cm-focused .cm-selectionBackground, .cm-content ::selection': {
-    backgroundColor: 'var(--ui-bg-accented)',
-  },
-  '.cm-selectionMatch': { backgroundColor: 'var(--ui-bg-elevated)' },
+  // The multi-cursor needs drawSelection: CodeMirror draws the selection itself, so it takes the theme's color
+  // in place of the browser's blue. The carets it adds are shown even unfocused, so their count stays readable.
+  // The layer carries the transparency: an alpha on the color itself comes out opaque through CodeMirror's styles.
+  // Its own rule for the focused selection is nested that deep, and only a selector of the same shape wins over it.
+  '.cm-selectionLayer': { opacity: '0.3' },
+  '.cm-selectionLayer .cm-selectionBackground, &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground':
+    { backgroundColor: 'var(--ui-primary)' },
+  '.cm-selectionMatch': { backgroundColor: 'var(--ui-bg-accented)' },
   '.cm-panels': { backgroundColor: 'var(--ui-bg-elevated)', color: 'var(--ui-text)', border: 'none' },
   '.cm-panels.cm-panels-top': { borderBottom: '1px solid var(--ui-border)' },
   '.cm-panel input, .cm-panel button': { fontFamily: 'inherit', fontSize: '0.75rem' },
@@ -95,7 +98,13 @@ onMounted(() => {
         EditorState.phrases.of(phrases()),
         EditorView.lineWrapping,
         EditorView.contentAttributes.of({ 'aria-label': props.label }),
-        keymap.of([...searchKeymap, ...defaultKeymap, ...historyKeymap]),
+        // Safari keeps Cmd+D for its bookmarks and never hands it over: Ctrl+D adds the next occurrence there.
+        keymap.of([
+          { key: 'Ctrl-d', run: selectNextOccurrence, preventDefault: true },
+          ...searchKeymap,
+          ...defaultKeymap,
+          ...historyKeymap,
+        ]),
         markdown(),
         syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
         theme,

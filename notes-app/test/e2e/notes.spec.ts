@@ -536,7 +536,7 @@ test('Cmd+D adds a cursor on the next occurrence of the source mode', async ({ p
   await page.keyboard.press('ControlOrMeta+Home');
   for (let i = 0; i < 3; i++) await page.keyboard.press('Shift+ArrowRight'); // The first foo selected.
   await page.keyboard.press('ControlOrMeta+d');
-  await page.keyboard.press('ControlOrMeta+d');
+  await page.keyboard.press('Control+d'); // The way out of Safari, which keeps Cmd+D for its bookmarks.
   await page.keyboard.type('xxx');
   await expect.poll(() => sourceText(source)).toBe('xxx bar\n\nxxx baz\n\nxxx qux');
   await expect.poll(() => box.content(note.id), { timeout: 5000 }).toBe('xxx bar\n\nxxx baz\n\nxxx qux');
