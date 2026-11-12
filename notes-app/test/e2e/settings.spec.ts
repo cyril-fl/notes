@@ -179,6 +179,12 @@ test('snippets are made in the settings and used in the notes', async ({ page })
     await page.getByRole('textbox', { name: 'Nom' }).fill(`${box.prefix} réunion`);
     await page.getByRole('textbox', { name: 'Contenu' }).click();
     await page.keyboard.type('## Réunion #e2esnippet '); // The space closes the tags menu the # opened.
+    await page.getByRole('button', { name: 'Mode source' }).click();
+    const sourceBox = page.getByRole('textbox', { name: 'Mode source' });
+    await expect(sourceBox).toHaveValue('## Réunion #e2esnippet');
+    await sourceBox.fill('## Réunion #e2esnippet\n\nOrdre du jour');
+    await page.getByRole('button', { name: 'Mode source' }).click(); // Back to the editor, over that text.
+    await expect(page.getByRole('textbox', { name: 'Contenu' })).toContainText('Ordre du jour');
     await page.getByRole('button', { name: 'Enregistrer' }).click();
     await expect(page.getByText(`${box.prefix} réunion`)).toBeVisible();
 

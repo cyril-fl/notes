@@ -4,10 +4,19 @@ import type { Snippet } from '~/types/items';
 const props = defineProps<{ title: string; value?: Snippet }>();
 const emit = defineEmits<{ close: [value?: Snippet] }>();
 
+const { icons } = useIcons();
+const { has } = usePro();
+
 const name = ref(props.value?.name ?? '');
 const content = ref(props.value?.content ?? '');
-// The editor starts from it and keeps its own text: handing back what it writes would move the cursor.
-const start = content.value;
+// The editor keeps its own text: handing back what it writes would start it again on every key.
+// It only reads start, which the source mode, written as plain text, sets back on its way out.
+const source = ref(false);
+const start = ref(content.value);
+function toggleSource() {
+  if (source.value) start.value = content.value;
+  source.value = !source.value;
+}
 
 function submit() {
   if (name.value.trim()) emit('close', { name: name.value.trim(), content: content.value });
@@ -25,20 +34,37 @@ function submit() {
           :placeholder="$t('settings.snippetName')"
           :aria-label="$t('settings.snippetName')"
         />
-        <UFormField :help="$t('settings.snippetHelp')">
-          <NoteWriter
-            :model-value="start"
-            compact
-            :label="$t('settings.snippetContent')"
-            class="h-80 rounded-md ring ring-accented"
-            @update:model-value="content = $event"
-          />
-        </UFormField>
+        <UTextarea
+          v-if="source"
+          v-model="content"
+          class="w-full"
+          :aria-label="$t('note.source')"
+          :ui="{ base: 'h-80 resize-none font-mono text-sm' }"
+        />
+        <NoteWriter
+          v-else
+          :model-value="start"
+          compact
+          :label="$t('settings.snippetContent')"
+          class="h-80 rounded-md ring ring-accented"
+          @update:model-value="content = $event"
+        />
       </form>
     </template>
     <template #footer>
-      <div class="flex w-full justify-end gap-2">
-        <UButton :label="$t('common.cancel')" color="neutral" variant="ghost" @click="emit('close')" />
+      <div class="flex w-full items-center gap-2">
+        <UTooltip v-if="has('sourceMode')" :text="source ? $t('note.editor') : $t('note.source')">
+          <UButton
+            :icon="icons.source"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            :aria-label="$t('note.source')"
+            :aria-pressed="source"
+            @click="toggleSource"
+          />
+        </UTooltip>
+        <UButton class="ms-auto" :label="$t('common.cancel')" color="neutral" variant="ghost" @click="emit('close')" />
         <UButton type="submit" form="snippet" :label="$t('settings.save')" :disabled="!name.trim()" />
       </div>
     </template>

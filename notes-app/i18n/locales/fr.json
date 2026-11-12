@@ -275,7 +275,6 @@
     "deleteSnippet": "Supprimer « {name} » ?",
     "snippetName": "Nom",
     "snippetContent": "Contenu",
-    "snippetHelp": "Un #tag ajoute ce tag à la note.",
     "save": "Enregistrer",
     "pro": "Mode avancé",
     "plan": "Formule",
