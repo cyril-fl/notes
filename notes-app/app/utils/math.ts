@@ -89,8 +89,9 @@ export const InlineMath = Node.create<MathOptions>({
 });
 
 /**
- * The $$formula$$ blocks, a ```latex code block in the editor: written and drawn like a diagram (drawn.ts), $$ in
- * the markdown as in Obsidian. "$$ " at the start of a line makes one, as ``` does.
+ * The $$formula$$ blocks, a ```math code block in the editor: written and drawn like a diagram (drawn.ts), $$ in
+ * the markdown as in Obsidian. "$$ " at the start of a line makes one, as ``` does. `math`, not `latex`: a ```latex
+ * fence stays a listing of LaTeX source (#124).
  */
 export const BlockMath = Extension.create({
   name: 'blockMath',
@@ -102,10 +103,10 @@ export const BlockMath = Extension.create({
     tokenize: (src) => readBlockMath(src),
   },
   parseMarkdown: (token, helpers) =>
-    helpers.createNode('codeBlock', { language: 'latex' }, token.latex ? [helpers.createTextNode(token.latex)] : []),
+    helpers.createNode('codeBlock', { language: 'math' }, token.latex ? [helpers.createTextNode(token.latex)] : []),
   addInputRules() {
     const type = this.editor.schema.nodes.codeBlock;
-    return type ? [textblockTypeInputRule({ find: /^\$\$\s$/, type, getAttributes: { language: 'latex' } })] : [];
+    return type ? [textblockTypeInputRule({ find: /^\$\$\s$/, type, getAttributes: { language: 'math' } })] : [];
   },
 });
 
@@ -113,7 +114,7 @@ export const BlockMath = Extension.create({
 export function withBlockMath<T extends Node>(codeBlock: T) {
   return codeBlock.extend({
     renderMarkdown(node, helpers, context) {
-      if (node.attrs?.language !== 'latex') return this.parent!(node, helpers, context);
+      if (node.attrs?.language !== 'math') return this.parent!(node, helpers, context);
       return `$$\n${helpers.renderChildren(node.content ?? [])}\n$$`;
     },
   });

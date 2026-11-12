@@ -16,7 +16,7 @@ const drawers: Record<string, (code: string, dark: boolean) => Promise<string>> 
     return (await mermaid.render(`mermaid-${renders++}`, code)).svg;
   },
   // KaTeX is ~300 KB and its CSS.
-  async latex(code) {
+  async math(code) {
     const [{ default: katex }] = await Promise.all([import('katex'), import('katex/dist/katex.min.css')]);
     return katex.renderToString(code, { displayMode: true });
   },
@@ -71,7 +71,7 @@ function decorate(state: EditorState, dark: boolean, editable: boolean) {
   return DecorationSet.create(state.doc, decorations);
 }
 
-/** The ```mermaid code blocks drawn as diagrams, in the dark theme when dark says so, the ```latex ones as formulas. */
+/** The ```mermaid code blocks drawn as diagrams, in the dark theme when dark says so, the ```math ones as formulas. */
 export const Drawn = Extension.create<{ dark: () => boolean }>({
   name: 'drawn',
   addOptions: () => ({ dark: () => false }),

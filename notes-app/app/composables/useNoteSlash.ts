@@ -6,7 +6,7 @@ export function useNoteSlash(): EditorModule {
   return {
     feature: 'slashCommands',
     handlers: {
-      formula: command((editor) => editor.chain().focus().setCodeBlock({ language: 'latex' })),
+      formula: command((editor) => editor.chain().focus().setCodeBlock({ language: 'math' })),
       diagram: command((editor) => editor.chain().focus().setCodeBlock({ language: 'mermaid' })),
     },
     menus: [

@@ -4,7 +4,6 @@ import { common, createLowlight } from 'lowlight';
 /** The languages offered over a code block; lowlight colors every other one of `common` written by hand (```rust). */
 const LANGUAGES = {
   mermaid: 'Mermaid',
-  latex: 'LaTeX',
   go: 'Go',
   typescript: 'TypeScript',
   javascript: 'JavaScript',
@@ -16,6 +15,7 @@ const LANGUAGES = {
   html: 'HTML',
   css: 'CSS',
   markdown: 'Markdown',
+  latex: 'LaTeX',
 };
 
 /** lowlight, whose guess colors a block only when sure: a word like `dd` was guessed bash, a sentence kotlin. */
@@ -30,7 +30,7 @@ function sureLowlight() {
   return lowlight;
 }
 
-/** The code blocks of the note editor colored by their language (```go), guessed when the block has none; ```mermaid and $$ (```latex) drawn. */
+/** The code blocks of the note editor colored by their language (```go), guessed when the block has none; ```mermaid and $$ (```math) drawn. */
 export function useNoteCode(): EditorModule {
   const colorMode = useColorMode();
   const { icons } = useIcons();
@@ -60,7 +60,11 @@ export function useNoteCode(): EditorModule {
               tooltip: { text: t('note.codeLanguage') },
               items: [
                 [{ kind: 'codeLanguage', language: null, label: t('note.codeAuto') }],
-                Object.entries(LANGUAGES).map(([language, label]) => ({ kind: 'codeLanguage', language, label })),
+                [
+                  // The formula, `math` and not `latex`, which stays a listing of LaTeX source (#124).
+                  { kind: 'codeLanguage', language: 'math', label: t('note.formula') },
+                  ...Object.entries(LANGUAGES).map(([language, label]) => ({ kind: 'codeLanguage', language, label })),
+                ],
               ],
             },
           ],

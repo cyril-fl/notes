@@ -355,7 +355,7 @@ test('a code block from the toolbar takes a language, LaTeX drawn as a formula',
   await page.keyboard.press('Enter');
   await page.getByRole('button', { name: 'Bloc de code' }).click();
   await page.getByRole('button', { name: 'Détecté' }).click();
-  await page.getByRole('menuitem', { name: 'LaTeX' }).click();
+  await page.getByRole('menuitem', { name: 'Formule LaTeX' }).click();
   await expect(editor).toBeFocused();
   await page.keyboard.type('x^2');
   await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('$$\nx^2\n$$');

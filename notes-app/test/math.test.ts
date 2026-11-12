@@ -46,6 +46,8 @@ test('writes the formulas back as they were written', () => {
     'Avant\n\n$$\nE = mc^2\n$$\n\nAprès',
     '$$\n\n$$',
     '```go\nx := 1\n```',
+    // A listing of LaTeX source is code, not a formula (#124).
+    '```latex\n\\documentclass{article}\n```',
     'Soit $a = \\$5$ ici.',
     '$$\n\\text{Co} = \\$100\n$$',
   ]) {
@@ -54,5 +56,5 @@ test('writes the formulas back as they were written', () => {
   assert.equal(markdown.parse('Soit $a_1 * b_2$').content![0]!.content![1]!.type, 'inlineMath');
   // A block formula is a code block in the editor, written and drawn like a diagram.
   const block = markdown.parse('$$\nx^2\n$$').content![0]!;
-  assert.deepEqual([block.type, block.attrs?.language, block.content![0]!.text], ['codeBlock', 'latex', 'x^2']);
+  assert.deepEqual([block.type, block.attrs?.language, block.content![0]!.text], ['codeBlock', 'math', 'x^2']);
 });
