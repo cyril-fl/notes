@@ -1,5 +1,5 @@
 import type { ContextMenuItem } from '@nuxt/ui';
-import type { FolderPath, Item, Pinned } from '~/types/items';
+import type { FolderPath, Item, ItemDetail, Pinned } from '~/types/items';
 
 // The part of the API's message saying a folder name is taken (domain.ErrFolderExists).
 const TAKEN = 'already exists here';
@@ -13,6 +13,7 @@ export function useItems() {
   const { prompt, confirm } = useDialogs();
   const { icons } = useIcons();
   const { t } = useI18n();
+  const toast = useToast();
 
   // On failure the toast already told the user.
   async function act<T>(request: () => Promise<T>): Promise<T | undefined> {
@@ -144,6 +145,26 @@ export function useItems() {
     window.location.assign(`${useRuntimeConfig().public.apiBase}/api/export?${query}`);
   }
 
+  /** Hands the note's markdown to the system's share sheet, or to the clipboard where there is none. */
+  async function shareItem(item: Item) {
+    const note = await api<ItemDetail>(`/api/notes/${item.id}`).catch(() => undefined);
+    if (!note) return; // The toast already told the user.
+    const title = displayTitle(item.title, t('untitled'));
+    const text = note.content ?? '';
+    if (navigator.share) {
+      // Cancelling the sheet rejects: nothing to say.
+      await navigator.share({ title, text }).catch(() => undefined);
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.add({ title: t('items.copied'), color: 'success' });
+    } catch {
+      // No clipboard either: the page is not a secure context (plain http).
+      toast.add({ title: t('items.shareFailed'), color: 'error' });
+    }
+  }
+
   /** What right-clicking an item offers. */
   function itemMenu(item: Item): ContextMenuItem[][] {
     const remove = {
@@ -159,7 +180,14 @@ export function useItems() {
         icon: pinned ? icons.unpin : icons.pin,
         onSelect: () => pinItem(item, !pinned),
       };
-      return [[pin], [remove]];
+      return [
+        [pin],
+        [
+          { label: t('items.share'), icon: icons.share, onSelect: () => shareItem(item) },
+          { label: t('settings.export'), icon: icons.export, onSelect: () => exportItems([item.id]) },
+        ],
+        [remove],
+      ];
     }
 
     const favorite = isPinned(item.id);
@@ -193,6 +221,7 @@ export function useItems() {
     emptyTrash,
     purgeItem,
     exportItems,
+    shareItem,
     itemMenu,
     renameTag,
     removeTag,

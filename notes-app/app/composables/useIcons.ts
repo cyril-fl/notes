@@ -44,6 +44,7 @@ export function useIcons() {
     lightMode: 'i-reicon-sun',
     darkMode: 'i-reicon-moon',
     systemMode: 'i-reicon-laptop4',
+    share: 'i-reicon-share',
     export: 'i-reicon-download',
     import: 'i-reicon-upload',
     snippet: 'i-reicon-text-block',
