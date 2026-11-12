@@ -61,8 +61,8 @@ function decorate(state: EditorState, dark: boolean, editable: boolean) {
           );
           return box;
         },
-        // Kept as long as its code and the mode are the same: not drawn again on each key typed elsewhere.
-        { side: -1, key: `${dark}:${code}` },
+        // Kept as long as its language, its code and the mode are the same: not drawn again on each key typed elsewhere.
+        { side: -1, key: `${dark}:${node.attrs.language}:${code}` },
       ),
     );
   });
