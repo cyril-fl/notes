@@ -189,6 +189,7 @@ func (p *run) importImage(ctx context.Context, tx bun.Tx, target string, imageOn
 	if file, ok := p.cache.images[target]; ok {
 		return file, !imageOnly || strings.HasPrefix(file.ContentType, "image/"), nil
 	}
+	// TODO: one file still goes through memory, twice with the copy createfile seals, when silo.Store takes a reader (#119).
 	data, err := fs.ReadFile(p.input.Dir, target)
 	if err != nil || imageOnly && !strings.HasPrefix(http.DetectContentType(data), "image/") {
 		return domain.File{}, false, nil

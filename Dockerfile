@@ -15,9 +15,12 @@ COPY notes-go/go.mod notes-go/go.sum ./
 RUN go mod download
 COPY notes-go .
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /notes .
+# scratch has no /tmp, where an import writes its body instead of holding it in memory (#119).
+RUN install -d /image-tmp
 
 FROM scratch
 COPY --from=api /notes /notes
+COPY --from=api --chown=65534:65534 /image-tmp /tmp
 COPY --from=web /src/.output/public /web
 USER 65534
 EXPOSE 8080

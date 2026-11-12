@@ -2,7 +2,6 @@ package importzip
 
 import (
 	"archive/zip"
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -10,8 +9,9 @@ import (
 	"mime"
 	"mime/multipart"
 	"net/http"
+	"os"
 	"path"
-	"testing/fstest"
+	"path/filepath"
 	"time"
 
 	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
@@ -55,7 +55,10 @@ func Handler(db bun.IDB, store silo.Store) http.HandlerFunc {
 		_ = control.SetWriteDeadline(time.Time{})
 
 		r.Body = http.MaxBytesReader(w, r.Body, maxZip)
-		dir, err := read(r)
+		dir, clean, err := read(r)
+		if clean != nil {
+			defer clean()
+		}
 		var tooLarge *http.MaxBytesError
 		if errors.As(err, &tooLarge) {
 			respond.JSON(w, http.StatusRequestEntityTooLarge, respond.Failure{Error: "request body too large"})
@@ -91,41 +94,57 @@ var (
 	errDuplicate = errors.New("two files have the same path")
 )
 
-// read gives the files of the body: a zip, or a multipart form.
-func read(r *http.Request) (fs.FS, error) {
+// read gives the files of the body: a zip, or a multipart form. Both land in a temporary file, never in memory:
+// the server shares its machine with Postgres and Silo, and a 200 MB import held in RAM, plus the sealed copy
+// of every file, had the OOM killer end it halfway (#119). clean removes what was written, nil only when
+// nothing was.
+func read(r *http.Request) (fs.FS, func(), error) {
 	if form, err := r.MultipartReader(); err == nil {
 		return readForm(form)
 	}
-	data, err := io.ReadAll(r.Body)
+
+	file, err := os.CreateTemp("", "import-*.zip")
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	archive, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+	clean := func() {
+		_ = file.Close()
+		_ = os.Remove(file.Name())
+	}
+	size, err := io.Copy(file, r.Body)
 	if err != nil {
-		return nil, errBadBody
+		return nil, clean, err // Still a *http.MaxBytesError past the limit.
 	}
-	var size uint64
-	for _, file := range archive.File {
-		size += file.UncompressedSize64
+	archive, err := zip.NewReader(file, size)
+	if err != nil {
+		return nil, clean, errBadBody
 	}
-	if size > maxContent {
-		return nil, errTooLarge
+	var content uint64
+	for _, entry := range archive.File {
+		content += entry.UncompressedSize64
 	}
-	return archive, nil
+	if content > maxContent {
+		return nil, clean, errTooLarge
+	}
+	return archive, clean, nil
 }
 
-// readForm keeps every file of the form at its path, its directories made from it. The body's limit bounds
-// the content: maxZip is below maxContent.
-func readForm(form *multipart.Reader) (fs.FS, error) {
-	dir := fstest.MapFS{}
+// readForm writes every file of the form at its path under a temporary directory, its directories made from it.
+// The body's limit bounds the content: maxZip is below maxContent.
+func readForm(form *multipart.Reader) (fs.FS, func(), error) {
+	root, err := os.MkdirTemp("", "import-*")
+	if err != nil {
+		return nil, nil, err
+	}
+	clean := func() { _ = os.RemoveAll(root) }
 	for {
 		part, err := form.NextPart()
 		// Not errors.Is: a cut body ends on a wrapped io.EOF, the end of the form on a bare one.
 		if err == io.EOF {
-			return dir, nil
+			return os.DirFS(root), clean, nil
 		}
 		if err != nil {
-			return nil, fmt.Errorf("%w: %w", errBadBody, err) // Still a *http.MaxBytesError past the limit.
+			return nil, clean, fmt.Errorf("%w: %w", errBadBody, err) // Still a *http.MaxBytesError past the limit.
 		}
 		// Not part.FileName(): it keeps the base name only, the path holds the folders.
 		_, params, _ := mime.ParseMediaType(part.Header.Get("Content-Disposition"))
@@ -133,16 +152,33 @@ func readForm(form *multipart.Reader) (fs.FS, error) {
 		if params["filename"] == "" {
 			continue // A field, not a file.
 		}
+		// fs.ValidPath refuses an absolute path and a .. that would write outside root.
 		if !fs.ValidPath(name) || name == "." {
-			return nil, errBadBody
+			return nil, clean, errBadBody
 		}
-		data, err := io.ReadAll(part)
-		if err != nil {
-			return nil, fmt.Errorf("%w: %w", errBadBody, err)
+		if err := writeFile(root, name, part); err != nil {
+			return nil, clean, err
 		}
-		if _, dup := dir[name]; dup {
-			return nil, fmt.Errorf("%w: %s", errDuplicate, name)
-		}
-		dir[name] = &fstest.MapFile{Data: data}
 	}
+}
+
+// writeFile writes part at name under root. O_EXCL answers errDuplicate: loose files have no folder in their
+// path, and two of the same name would keep the last one only (#69).
+func writeFile(root, name string, part io.Reader) error {
+	full := filepath.Join(root, filepath.FromSlash(name))
+	if err := os.MkdirAll(filepath.Dir(full), 0o700); err != nil {
+		return fmt.Errorf("%w: %w", errBadBody, err) // A file where a directory is needed, mostly.
+	}
+	file, err := os.OpenFile(full, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+	if errors.Is(err, fs.ErrExist) {
+		return fmt.Errorf("%w: %s", errDuplicate, name)
+	}
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	if _, err := io.Copy(file, part); err != nil {
+		return fmt.Errorf("%w: %w", errBadBody, err)
+	}
+	return nil
 }
