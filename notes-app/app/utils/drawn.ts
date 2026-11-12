@@ -26,7 +26,9 @@ function decorate(state: EditorState, dark: boolean, editable: boolean) {
   const { from, to } = state.selection;
   const decorations: Decoration[] = [];
   state.doc.descendants((node, pos) => {
-    const draw = node.type.name === 'codeBlock' && drawers[node.attrs.language];
+    // hasOwn: a language named like a key of Object.prototype (constructor, toString) is not a drawer.
+    const draw =
+      node.type.name === 'codeBlock' && Object.hasOwn(drawers, node.attrs.language) && drawers[node.attrs.language]!;
     const code = node.textContent;
     // An empty one stays a code block to write in: nothing to draw, it would vanish.
     if (!draw || !code.trim()) return;
