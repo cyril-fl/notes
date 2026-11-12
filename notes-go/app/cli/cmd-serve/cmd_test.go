@@ -40,7 +40,15 @@ func TestEvery(t *testing.T) {
 
 func TestWithWeb(t *testing.T) {
 	dir := t.TempDir()
-	for name, body := range map[string]string{"200.html": "app", "app.js": "js"} {
+	if err := os.Mkdir(filepath.Join(dir, "_nuxt"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for name, body := range map[string]string{
+		"200.html":       "app",
+		"index.html":     "home",
+		"app.js":         "js",
+		"_nuxt/chunk.js": "chunk",
+	} {
 		if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0o644); err != nil {
 			t.Fatal(err)
 		}
@@ -49,9 +57,13 @@ func TestWithWeb(t *testing.T) {
 	handler := withWeb(dir, api)
 
 	for path, want := range map[string]string{
-		"/api/me":   "api",
-		"/app.js":   "js",
-		"/notes/42": "app",
+		"/api/me":         "api",
+		"/app.js":         "js",
+		"/notes/42":       "app",
+		"/":               "home",
+		"/_nuxt/":         "app",
+		"/_nuxt":          "app",
+		"/_nuxt/chunk.js": "chunk",
 	} {
 		w := httptest.NewRecorder()
 		handler.ServeHTTP(w, httptest.NewRequest(http.MethodGet, path, nil))

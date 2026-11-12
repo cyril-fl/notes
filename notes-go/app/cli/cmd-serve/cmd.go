@@ -162,16 +162,24 @@ func withProxy(next http.Handler) http.Handler {
 }
 
 // withWeb serves the web app of dir next to the API, so both share one origin. A path that is no file is a page of
-// the app: 200.html, the fallback `nuxt generate` writes, lets its router show it.
+// the app: 200.html, the fallback `nuxt generate` writes, lets its router show it. A directory is never listed: only
+// its index.html counts as a file, so /_nuxt/ gets the app, not the build's file list.
 func withWeb(dir string, api http.Handler) http.Handler {
 	files := http.FileServer(http.Dir(dir))
 	mux := http.NewServeMux()
 	mux.Handle("/api/", api)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if f, err := http.Dir(dir).Open(r.URL.Path); err == nil {
+		name := r.URL.Path
+		if strings.HasSuffix(name, "/") {
+			name += "index.html"
+		}
+		if f, err := http.Dir(dir).Open(name); err == nil {
+			info, err := f.Stat()
 			f.Close()
-			files.ServeHTTP(w, r)
-			return
+			if err == nil && !info.IsDir() {
+				files.ServeHTTP(w, r)
+				return
+			}
 		}
 		http.ServeFile(w, r, filepath.Join(dir, "200.html"))
 	})
