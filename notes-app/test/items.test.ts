@@ -22,6 +22,7 @@ function fake({ path = '/', pinned = [] as string[], answer = undefined as unkno
     useDialogs: () => ({ prompt: async () => answer, confirm: async () => answer }),
     useIcons: () => ({ icons: new Proxy({}, { get: (_, name) => name }) }),
     useI18n: () => ({ t: (key: string) => key }),
+    useToast: () => ({ add: () => {} }),
     useNuxtData: () => ({ data: { value: pinned.map((id) => ({ id })) } }),
     refreshNuxtData: async () => void refreshes++,
     navigateTo: async (to: unknown) => void navigations.push(to),
@@ -111,11 +112,12 @@ test('a failed tag change stays on the page and reads nothing again', async () =
 
 const labels = (menu: { label?: string }[][]) => menu.map((group) => group.map((entry) => entry.label));
 
-test('a note offers to pin or unpin it, then to delete it', () => {
+test('a note offers to pin or unpin it, to share and export it, then to delete it', () => {
+  const share = [['items.share', 'settings.export'], ['common.delete']];
   fake();
-  assert.deepEqual(labels(useItems().itemMenu(note)), [['items.pin'], ['common.delete']]);
+  assert.deepEqual(labels(useItems().itemMenu(note)), [['items.pin'], ...share]);
   fake({ pinned: ['n1'] });
-  assert.deepEqual(labels(useItems().itemMenu(note)), [['items.unpin'], ['common.delete']]);
+  assert.deepEqual(labels(useItems().itemMenu(note)), [['items.unpin'], ...share]);
 });
 
 test('a folder offers what goes in it, favorite, rename, export, then delete', () => {
