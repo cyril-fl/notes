@@ -75,7 +75,8 @@ function restore() {
   open.value = false;
 }
 
-// A fork: the selected version as a new note beside this one, with its tags, titled after its date so its links stay apart.
+// A fork: the selected version as a new note beside this one, titled after its date so its links stay apart.
+// Its text carries its own #tags (#115): passing the note's current ones would stamp today's state on it.
 async function fork() {
   if (text.value === undefined || !selected.value) return;
   const note = await api<ItemDetail>(`/api/notes/${props.noteId}`);
@@ -86,7 +87,7 @@ async function fork() {
   const title = t('history.forkTitle', { title: displayTitle(note.item.title, t('untitled')), date });
   const item = await api<Item>('/api/notes', {
     method: 'POST',
-    body: { content: retitle(text.value, title), parent_id: note.item.parent_id, tags: note.tags },
+    body: { content: retitle(text.value, title), parent_id: note.item.parent_id },
     invalid: { [NO_PARENT]: t('items.parentInTrash') },
   });
   open.value = false;

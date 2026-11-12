@@ -571,8 +571,10 @@ test('the Pro history restores an earlier version', async ({ page }) => {
 
 // A fork: the version becomes a new note in the same folder, the note itself left as it is.
 test('the Pro history forks an earlier version into a new note', async ({ page }) => {
-  const note = await box.note(`# ${box.prefix} fork\n\nfirst`);
-  await box.api.patch(`/api/notes/${note.id}`, { data: { content: `# ${box.prefix} fork\n\nsecond` } });
+  const note = await box.note(`# ${box.prefix} fork\n\nfirst #${box.prefix}-old`);
+  await box.api.patch(`/api/notes/${note.id}`, {
+    data: { content: `# ${box.prefix} fork\n\nsecond #${box.prefix}-new` },
+  });
   try {
     await box.api.patch('/api/me', { data: { plan: 'pro' } });
     await page.goto(`/notes/${note.id}`);
@@ -586,7 +588,12 @@ test('the Pro history forks an earlier version into a new note', async ({ page }
     await expect(page).not.toHaveURL(new RegExp(note.id));
     await expect(page.locator('.ProseMirror')).toContainText(`${box.prefix} fork (version du`);
     await expect(page.locator('.ProseMirror')).toContainText('first');
-    expect(await box.content(note.id)).toBe(`# ${box.prefix} fork\n\nsecond`);
+    // The copy carries the tags of that version, not those the note wears today (#115).
+    const copy = page.url().split('/').pop()!;
+    const copied = await box.content(copy);
+    expect(copied).toContain(`#${box.prefix}-old`);
+    expect(copied).not.toContain(`#${box.prefix}-new`);
+    expect(await box.content(note.id)).toBe(`# ${box.prefix} fork\n\nsecond #${box.prefix}-new`);
   } finally {
     await box.api.patch('/api/me', { data: { plan: 'base' } });
   }
