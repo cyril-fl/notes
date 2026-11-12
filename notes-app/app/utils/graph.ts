@@ -57,3 +57,13 @@ export function neighborhood<G extends { notes: { id: string }[]; links: Link[] 
     links: graph.links.filter((link) => ids.has(link.source) && ids.has(link.target)),
   };
 }
+
+/** How many tags each note shares with one note, by id: the pairs of the graph are unique and oriented, so one pass is enough. */
+export function sharedTags(links: Link[], id: string) {
+  const counts = new Map<string, number>();
+  for (const link of links) {
+    if (link.source === id) counts.set(link.target, link.tags.length);
+    else if (link.target === id) counts.set(link.source, link.tags.length);
+  }
+  return counts;
+}

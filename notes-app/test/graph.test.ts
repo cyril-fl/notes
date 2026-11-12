@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { layoutGraph, neighborhood } from '../app/utils/graph.ts';
+import { layoutGraph, neighborhood, sharedTags } from '../app/utils/graph.ts';
 
 const notes = (...ids: string[]) => ids.map((id) => ({ id }));
 const link = (source: string, target: string, ...tags: string[]) => ({ source, target, tags });
@@ -73,4 +73,17 @@ test('the neighborhood keeps the note, its neighbors and the links between them'
     links: [link('a', 'b'), link('c', 'a'), link('b', 'c')],
   });
   assert.deepEqual(neighborhood(graph, 'x'), { notes: [], links: [] });
+});
+
+test('the shared tags are counted whichever side of the link the note is on', () => {
+  const links = [link('a', 'b', 'go', 'web'), link('c', 'a', 'go'), link('b', 'c', 'go'), link('a', 'd')];
+  assert.deepEqual(
+    sharedTags(links, 'a'),
+    new Map([
+      ['b', 2],
+      ['c', 1],
+      ['d', 0],
+    ]),
+  );
+  assert.deepEqual(sharedTags(links, 'x'), new Map());
 });
