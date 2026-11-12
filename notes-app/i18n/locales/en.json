@@ -191,7 +191,22 @@
     "lock": "Lock read-only",
     "unlock": "Unlock",
     "readonly": "Locked",
-    "locked": "Locked note: unlock it to edit it"
+    "locked": "Locked note: unlock it to edit it",
+    "search": {
+      "find": "Find",
+      "replace": "Replace",
+      "next": "next",
+      "previous": "previous",
+      "all": "all",
+      "matchCase": "match case",
+      "byWord": "by word",
+      "regexp": "regexp",
+      "replaceOne": "replace",
+      "replaceAll": "replace all",
+      "close": "close",
+      "goToLine": "Go to line",
+      "go": "go"
+    }
   },
   "tag": {
     "count": "{n} note | {n} notes",

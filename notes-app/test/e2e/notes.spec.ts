@@ -1,5 +1,5 @@
 import { expect, test, type Route } from '@playwright/test';
-import { cursorAtEnd, sandbox } from './helpers';
+import { cursorAtEnd, sandbox, sourceText } from './helpers';
 
 let box: Awaited<ReturnType<typeof sandbox>>;
 test.beforeEach(async () => (box = await sandbox()));
@@ -502,9 +502,9 @@ test('the Pro palette renames the open note', async ({ page }) => {
     await page.getByRole('button', { name: 'Mode source' }).click();
     await expect(page.getByText(/\d+ mots?$/)).toBeHidden();
     await rename(`${box.prefix} source`);
-    await expect(page.getByRole('textbox', { name: 'Mode source' })).toHaveValue(
-      `intro\n\n## ${box.prefix} source\n\ntext`,
-    );
+    await expect
+      .poll(() => sourceText(page.getByRole('textbox', { name: 'Mode source' })))
+      .toBe(`intro\n\n## ${box.prefix} source\n\ntext`);
     await expect(page).toHaveTitle(new RegExp(`${box.prefix} source`));
   } finally {
     await box.api.patch('/api/me', { data: { plan: 'base' } });
@@ -518,11 +518,28 @@ test('the source mode edits the markdown', async ({ page }) => {
   await expect(page.locator('.ProseMirror')).toContainText('gras');
   await page.getByRole('button', { name: 'Mode source' }).click();
   const source = page.getByRole('textbox', { name: 'Mode source' });
-  await expect(source).toHaveValue(`# ${box.prefix} source\n\n**gras**`);
+  await expect.poll(() => sourceText(source)).toBe(`# ${box.prefix} source\n\n**gras**`);
   await source.fill(`# ${box.prefix} source\n\n**gras**\n\n- [ ] tâche`);
   await expect.poll(() => box.content(note.id), { timeout: 5000 }).toContain('- [ ] tâche');
   await page.getByRole('button', { name: 'Mode source' }).click();
   await expect(page.locator('.ProseMirror input[type="checkbox"]')).toBeVisible();
+});
+
+// The reason the source mode is a code editor (#112): one cursor per occurrence, which the rich editor cannot carry.
+test('Cmd+D adds a cursor on the next occurrence of the source mode', async ({ page }) => {
+  const note = await box.note('foo bar\n\nfoo baz\n\nfoo qux');
+  await page.goto(`/notes/${note.id}`);
+  await expect(page.locator('.ProseMirror')).toContainText('foo bar');
+  await page.getByRole('button', { name: 'Mode source' }).click();
+  const source = page.getByRole('textbox', { name: 'Mode source' });
+  await source.click();
+  await page.keyboard.press('ControlOrMeta+Home');
+  for (let i = 0; i < 3; i++) await page.keyboard.press('Shift+ArrowRight'); // The first foo selected.
+  await page.keyboard.press('ControlOrMeta+d');
+  await page.keyboard.press('ControlOrMeta+d');
+  await page.keyboard.type('xxx');
+  await expect.poll(() => sourceText(source)).toBe('xxx bar\n\nxxx baz\n\nxxx qux');
+  await expect.poll(() => box.content(note.id), { timeout: 5000 }).toBe('xxx bar\n\nxxx baz\n\nxxx qux');
 });
 
 test('the empty Pro context panel explains the related notes and the history', async ({ page }) => {

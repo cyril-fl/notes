@@ -191,7 +191,22 @@
     "lock": "Verrouiller en lecture seule",
     "unlock": "Déverrouiller",
     "readonly": "Verrouillée",
-    "locked": "Note verrouillée : déverrouillez-la pour la modifier"
+    "locked": "Note verrouillée : déverrouillez-la pour la modifier",
+    "search": {
+      "find": "Chercher",
+      "replace": "Remplacer",
+      "next": "suivant",
+      "previous": "précédent",
+      "all": "tout",
+      "matchCase": "respecter la casse",
+      "byWord": "mots entiers",
+      "regexp": "regexp",
+      "replaceOne": "remplacer",
+      "replaceAll": "tout remplacer",
+      "close": "fermer",
+      "goToLine": "Aller à la ligne",
+      "go": "aller"
+    }
   },
   "tag": {
     "count": "{n} note | {n} notes",

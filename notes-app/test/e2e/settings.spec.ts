@@ -2,7 +2,7 @@ import { copyFile, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { API, APP } from '../../playwright.config';
-import { cursorAtEnd, sandbox } from './helpers';
+import { cursorAtEnd, sandbox, sourceText } from './helpers';
 
 let box: Awaited<ReturnType<typeof sandbox>>;
 test.beforeEach(async () => (box = await sandbox()));
@@ -181,7 +181,7 @@ test('snippets are made in the settings and used in the notes', async ({ page })
     await page.keyboard.type('## Réunion #e2esnippet '); // The space closes the tags menu the # opened.
     await page.getByRole('button', { name: 'Mode source' }).click();
     const sourceBox = page.getByRole('textbox', { name: 'Mode source' });
-    await expect(sourceBox).toHaveValue('## Réunion #e2esnippet');
+    await expect.poll(() => sourceText(sourceBox)).toBe('## Réunion #e2esnippet');
     await sourceBox.fill('## Réunion #e2esnippet\n\nOrdre du jour');
     await page.getByRole('button', { name: 'Mode source' }).click(); // Back to the editor, over that text.
     await expect(page.getByRole('textbox', { name: 'Contenu' })).toContainText('Ordre du jour');

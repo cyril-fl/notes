@@ -435,15 +435,13 @@ const status = computed(() => {
     @focusin="touched = true"
     @pointerdown.capture="touched = true"
   >
-    <UTextarea
+    <!-- Lazy: CodeMirror is loaded at the first use of the source mode, not with the page. -->
+    <LazyNoteSource
       v-if="source !== undefined"
       :model-value="source"
-      variant="none"
       autofocus
       :readonly="readonly"
-      :aria-label="$t('note.source')"
-      class="flex min-h-0 flex-1"
-      :ui="{ base: 'h-full resize-none px-8 pb-8 font-mono text-sm' }"
+      :label="$t('note.source')"
       @update:model-value="onSource"
     />
     <NoteWriter

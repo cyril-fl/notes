@@ -34,13 +34,9 @@ function submit() {
           :placeholder="$t('settings.snippetName')"
           :aria-label="$t('settings.snippetName')"
         />
-        <UTextarea
-          v-if="source"
-          v-model="content"
-          class="w-full"
-          :aria-label="$t('note.source')"
-          :ui="{ base: 'h-[32rem] max-h-[60vh] resize-none font-mono text-sm' }"
-        />
+        <div v-if="source" class="flex h-[32rem] max-h-[60vh] flex-col rounded-md ring ring-accented">
+          <LazyNoteSource v-model="content" compact :label="$t('note.source')" />
+        </div>
         <!-- The box holds the height: the editor fills it, flex-1 would ignore a height of its own. -->
         <div v-else class="flex h-[32rem] max-h-[60vh] flex-col rounded-md ring ring-accented">
           <NoteWriter

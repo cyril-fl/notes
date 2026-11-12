@@ -96,3 +96,12 @@ export async function cursorAtEnd(editor: Locator, text?: string) {
   // The focus command gives the focus on the next frame.
   await expect(editor).toBeFocused();
 }
+
+/**
+ * The text of the source mode: CodeMirror draws one div per line, so it has no value to read like a textarea.
+ * TODO: only the lines on screen are in the DOM, enough for the short notes of the tests; read the state if a long note is checked.
+ */
+export async function sourceText(source: Locator) {
+  const lines = await source.locator('.cm-line').allInnerTexts();
+  return lines.map((line) => line.replace(/\n$/, '')).join('\n');
+}
