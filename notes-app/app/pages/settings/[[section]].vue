@@ -230,12 +230,15 @@ async function deleteData() {
               />
             </div>
           </li>
-          <li v-for="section in sidebarSections" :key="section" class="flex items-center gap-4 px-4 py-3">
-            <div class="min-w-0 flex-1">
-              <p class="text-sm">{{ $t(`settings.sidebar.${section}`) }}</p>
-              <p class="text-xs text-muted">{{ $t(`settings.sidebar.${section}Description`) }}</p>
-            </div>
-            <USwitch v-model="sidebar[section]" :aria-label="$t(`settings.sidebar.${section}`)" />
+          <li class="px-4 py-3">
+            <p class="text-sm">{{ $t('settings.sidebar.title') }}</p>
+            <p class="text-xs text-muted">{{ $t('settings.sidebar.description') }}</p>
+            <ul class="mt-3 divide-y divide-default border-l border-default pl-4">
+              <li v-for="section in sidebarSections" :key="section" class="flex items-center gap-4 py-2">
+                <span class="min-w-0 flex-1 text-sm text-muted">{{ $t(`settings.sidebar.${section}`) }}</span>
+                <USwitch v-model="sidebar[section]" :aria-label="$t(`settings.sidebar.${section}`)" />
+              </li>
+            </ul>
           </li>
           <li class="flex flex-wrap items-center gap-4 px-4 py-3">
             <div class="flex-1 basis-48">

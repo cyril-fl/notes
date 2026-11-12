@@ -267,12 +267,11 @@
     "mode": "Mode",
     "modeDescription": "Clair, sombre, ou celui du système.",
     "sidebar": {
+      "title": "Navigation",
+      "description": "Les listes de la barre latérale, sur cet appareil",
       "favorites": "Favoris",
-      "favoritesDescription": "Les dossiers mis en favori, en haut de la barre latérale",
       "pinned": "Notes épinglées",
-      "pinnedDescription": "Les notes épinglées, sous les favoris",
-      "recent": "Notes récentes",
-      "recentDescription": "Les cinq dernières notes ouvertes"
+      "recent": "Notes récentes"
     },
     "modeSystem": "Système",
     "modeLight": "Clair",

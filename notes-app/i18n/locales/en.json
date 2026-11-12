@@ -267,12 +267,11 @@
     "mode": "Mode",
     "modeDescription": "Light, dark, or the system's.",
     "sidebar": {
+      "title": "Navigation",
+      "description": "The sidebar lists, on this device",
       "favorites": "Favorites",
-      "favoritesDescription": "The favorite folders, at the top of the sidebar",
       "pinned": "Pinned notes",
-      "pinnedDescription": "The pinned notes, under the favorites",
-      "recent": "Recent notes",
-      "recentDescription": "The last five notes opened"
+      "recent": "Recent notes"
     },
     "modeSystem": "System",
     "modeLight": "Light",
