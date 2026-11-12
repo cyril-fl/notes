@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { citedSrc, imageSize, imageSrc, openFile } from '../app/utils/noteImage.ts';
+import { citedSrc, imageSize, imageSrc, insertFiles, openFile } from '../app/utils/noteImage.ts';
 
 const API = 'http://localhost:8080';
 const FILE = '/api/files/3f2a0000-0000-0000-0000-00000000abcd';
@@ -28,4 +28,32 @@ test('opens a file of a note in a new tab, so an error of the API does not repla
   globalThis.window = { open: (...args: unknown[]) => opened.push(args) } as never;
   openFile(FILE, API);
   assert.deepEqual(opened, [[API + FILE, '_blank', 'noopener']]);
+});
+
+/** An editor writing down what it is asked to insert, destroyed as soon as the first file is sent. */
+function stubEditor(inserted: unknown[], destroy?: () => boolean) {
+  const chain = { focus: () => chain, insertContent: (c: unknown) => (inserted.push(c), chain), run: () => true };
+  return {
+    get isDestroyed() {
+      return destroy?.() ?? false;
+    },
+    chain: () => chain,
+  } as never;
+}
+
+test('writes the sent files in the note, and nothing once the note is left', async () => {
+  const file = new File(['x'], 'cat.png', { type: 'image/png' });
+
+  const inserted: unknown[] = [];
+  await insertFiles(stubEditor(inserted), async () => FILE, [file]);
+  assert.deepEqual(inserted, [{ type: 'image', attrs: { src: FILE, alt: 'cat.png' } }]);
+
+  const none: unknown[] = [];
+  let left = false;
+  await insertFiles(
+    stubEditor(none, () => left),
+    async () => ((left = true), FILE),
+    [file, file],
+  );
+  assert.deepEqual(none, []);
 });

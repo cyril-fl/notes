@@ -45,6 +45,8 @@ export async function insertFiles(
 ) {
   for (const file of files) {
     const src = await upload(file);
+    // Left the note while it was sending: there is nothing left to write in.
+    if (editor.isDestroyed) return;
     if (!src) continue;
     const content = file.type.startsWith('image/')
       ? { type: 'image', attrs: { src, alt: file.name } }
