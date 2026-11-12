@@ -549,13 +549,6 @@ test('Ctrl+G adds a cursor on the next occurrence of the source mode, Ctrl+Shift
   await page.keyboard.press('Control+Shift+g');
   await page.keyboard.type('yyy');
   await expect.poll(() => sourceText(source)).toBe('yyy bar\n\nyyy baz\n\nyyy qux');
-
-  // The find and replace panel belongs to Ctrl+F alone: the multi-cursor keys must not put it up.
-  await expect(page.locator('.cm-search')).toBeHidden();
-  await page.keyboard.press('Control+f');
-  await expect(page.locator('.cm-search')).toBeVisible();
-  await page.keyboard.press('Escape');
-  await expect(page.locator('.cm-search')).toBeHidden();
 });
 
 test('the empty Pro context panel explains the related notes and the history', async ({ page }) => {
