@@ -27,6 +27,7 @@ const settingsLinks = computed(() => [
     })),
 ]);
 
+const sections = useSidebarSections();
 const { data: pinned } = usePinned();
 const favorites = computed(() => pinned.value.filter((item) => item.kind === 'folder'));
 const pinnedNotes = computed(() => pinned.value.filter((item) => item.kind === 'note'));
@@ -201,7 +202,7 @@ const isOverRoot = useDropFolder(rootLink, () => null);
       </NuxtLink>
 
       <div class="min-h-0 flex-1 space-y-5 overflow-y-auto">
-        <section v-if="favorites.length">
+        <section v-if="sections.favorites && favorites.length">
           <h2 class="px-2 pb-1 text-xs font-medium text-muted">{{ $t('sidebar.favorites') }}</h2>
           <div
             v-for="folder in favorites"
@@ -225,7 +226,7 @@ const isOverRoot = useDropFolder(rootLink, () => null);
           </div>
         </section>
 
-        <section v-if="pinnedNotes.length">
+        <section v-if="sections.pinned && pinnedNotes.length">
           <h2 class="px-2 pb-1 text-xs font-medium text-muted">{{ $t('sidebar.pinned') }}</h2>
           <div
             v-for="note in pinnedNotes"
@@ -253,7 +254,7 @@ const isOverRoot = useDropFolder(rootLink, () => null);
           </div>
         </section>
 
-        <section v-if="recentNotes.length">
+        <section v-if="sections.recent && recentNotes.length">
           <h2 class="px-2 pb-1 text-xs font-medium text-muted">{{ $t('sidebar.recent') }}</h2>
           <NuxtLink
             v-for="note in recentNotes"

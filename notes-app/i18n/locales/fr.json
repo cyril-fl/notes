@@ -266,6 +266,14 @@
     "retentionNever": "Jamais effacés",
     "mode": "Mode",
     "modeDescription": "Clair, sombre, ou celui du système.",
+    "sidebar": {
+      "favorites": "Favoris",
+      "favoritesDescription": "Les dossiers mis en favori, en haut de la barre latérale",
+      "pinned": "Notes épinglées",
+      "pinnedDescription": "Les notes épinglées, sous les favoris",
+      "recent": "Notes récentes",
+      "recentDescription": "Les cinq dernières notes ouvertes"
+    },
     "modeSystem": "Système",
     "modeLight": "Clair",
     "modeDark": "Sombre",

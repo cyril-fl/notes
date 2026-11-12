@@ -266,6 +266,14 @@
     "retentionNever": "Never erased",
     "mode": "Mode",
     "modeDescription": "Light, dark, or the system's.",
+    "sidebar": {
+      "favorites": "Favorites",
+      "favoritesDescription": "The favorite folders, at the top of the sidebar",
+      "pinned": "Pinned notes",
+      "pinnedDescription": "The pinned notes, under the favorites",
+      "recent": "Recent notes",
+      "recentDescription": "The last five notes opened"
+    },
     "modeSystem": "System",
     "modeLight": "Light",
     "modeDark": "Dark",

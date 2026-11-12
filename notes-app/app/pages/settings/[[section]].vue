@@ -50,6 +50,8 @@ async function changeLanguage(next: string) {
 
 // The layout applies the theme of me, and saves the mode to the account whenever it changes.
 const colorMode = useColorMode();
+const sidebar = useSidebarSections();
+const sidebarSections = ['favorites', 'pinned', 'recent'] as const;
 const modes = computed(() => [
   { label: t('settings.modeSystem'), value: 'system', icon: icons.systemMode },
   { label: t('settings.modeLight'), value: 'light', icon: icons.lightMode },
@@ -227,6 +229,13 @@ async function deleteData() {
                 @click="changeTheme(theme.id)"
               />
             </div>
+          </li>
+          <li v-for="section in sidebarSections" :key="section" class="flex items-center gap-4 px-4 py-3">
+            <div class="min-w-0 flex-1">
+              <p class="text-sm">{{ $t(`settings.sidebar.${section}`) }}</p>
+              <p class="text-xs text-muted">{{ $t(`settings.sidebar.${section}Description`) }}</p>
+            </div>
+            <USwitch v-model="sidebar[section]" :aria-label="$t(`settings.sidebar.${section}`)" />
           </li>
           <li class="flex flex-wrap items-center gap-4 px-4 py-3">
             <div class="flex-1 basis-48">
