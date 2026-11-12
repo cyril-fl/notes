@@ -72,3 +72,11 @@ test('after too many wrong passwords the account page says how long to wait', as
   await page.getByRole('button', { name: 'Changer le mot de passe' }).click();
   await expect(page.getByText('Trop d’essais ratés : réessayez dans 5 min.').first()).toBeVisible();
 });
+
+test('the account page says when the avatar cannot be read', async ({ page }) => {
+  await page.goto('/account');
+  await page
+    .locator('input[type=file]')
+    .setInputFiles({ name: 'broken.png', mimeType: 'image/png', buffer: Buffer.from('not an image') });
+  await expect(page.getByText("broken.png n'a pas pu être envoyé").first()).toBeVisible();
+});

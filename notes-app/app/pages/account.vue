@@ -48,13 +48,18 @@ async function changeAvatar(event: Event) {
   if (!file) return;
   uploading.value = true;
   try {
-    const image = await square(file, 256);
+    // A file the browser cannot decode fails here, silently: the API's own errors are already told by useApi().
+    const image = await square(file, 256).catch(() => null);
+    if (!image) {
+      toast.add({ title: t('note.imageFailed', { name: file.name }), color: 'error' });
+      return;
+    }
     const name = `avatar.${image.type === 'image/webp' ? 'webp' : 'png'}`;
     const saved = await api<NoteFile>('/api/files', { method: 'POST', body: image, query: { name } });
     me.value = await api<User>('/api/me', { method: 'PATCH', body: { avatar: saved.id } });
   } finally {
     uploading.value = false;
-    input.value!.value = ''; // The same file can be picked again.
+    if (input.value) input.value.value = ''; // The same file can be picked again; the page may be gone.
   }
 }
 
