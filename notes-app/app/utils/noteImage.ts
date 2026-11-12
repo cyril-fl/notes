@@ -28,6 +28,11 @@ export function isFileLink(href?: string | null) {
   return !!href?.startsWith(FILES);
 }
 
+/** In a new tab: the download leaves the note open, and an error of the API stays in that tab instead of replacing it. */
+export function openFile(href: string, baseURL: string) {
+  window.open(imageSrc(href, baseURL), '_blank', 'noopener');
+}
+
 /**
  * Sends the files to the API with upload and writes each in the note, an image or a link to the file. One after the
  * other, in order: a drop puts the first where it fell, the others after it.
@@ -108,11 +113,10 @@ export function noteImage(baseURL: string, upload: (file: File) => Promise<strin
               insert(files, view.posAtCoords({ left: event.clientX, top: event.clientY })?.pos);
               return true;
             },
-            // The API answers it as a download: the note stays open.
             handleClick(_view, _pos, event) {
               const href = (event.target as HTMLElement).closest('a')?.getAttribute('href');
               if (!isFileLink(href)) return false;
-              window.location.href = imageSrc(href!, baseURL);
+              openFile(href!, baseURL);
               return true;
             },
           },

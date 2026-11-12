@@ -48,3 +48,15 @@ test('the import button of the toolbar sends the picked image and writes it in t
   await page.reload();
   await expect(page.locator('.ProseMirror img')).toHaveAttribute('src', /\/api\/files\/[0-9a-f-]{36}$/);
 });
+
+test('a link to a file the API no longer has leaves the note open', async ({ page }) => {
+  const note = await box.note(`# ${box.prefix} cassé\n\n[absent.pdf](/api/files/3f2a0000-0000-0000-0000-00000000abcd)`);
+  await page.goto(`/notes/${note.id}`);
+
+  // The 404 of the API is JSON: it goes to the thrown-away tab, not over the editor.
+  const popup = page.waitForEvent('popup');
+  await page.locator('.ProseMirror a', { hasText: 'absent.pdf' }).click();
+  await (await popup).close();
+  await expect(page).toHaveURL(`/notes/${note.id}`);
+  await expect(page.locator('.ProseMirror')).toContainText('absent.pdf');
+});

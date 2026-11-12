@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { citedSrc, imageSize, imageSrc } from '../app/utils/noteImage.ts';
+import { citedSrc, imageSize, imageSrc, openFile } from '../app/utils/noteImage.ts';
 
 const API = 'http://localhost:8080';
 const FILE = '/api/files/3f2a0000-0000-0000-0000-00000000abcd';
@@ -21,4 +21,11 @@ test('reads a size from the title of an image, any other title is not one', () =
   assert.equal(imageSize('Medium'), 'medium');
   assert.equal(imageSize('large'), 'large');
   for (const title of [null, undefined, '', 'huge', 'Mon chat']) assert.equal(imageSize(title), null, String(title));
+});
+
+test('opens a file of a note in a new tab, so an error of the API does not replace the note', () => {
+  const opened: unknown[][] = [];
+  globalThis.window = { open: (...args: unknown[]) => opened.push(args) } as never;
+  openFile(FILE, API);
+  assert.deepEqual(opened, [[API + FILE, '_blank', 'noopener']]);
 });
