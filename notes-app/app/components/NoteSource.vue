@@ -2,8 +2,14 @@
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { markdown } from '@codemirror/lang-markdown';
 import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
-import { highlightSelectionMatches, search, searchKeymap, selectNextOccurrence } from '@codemirror/search';
-import { Compartment, EditorState } from '@codemirror/state';
+import {
+  highlightSelectionMatches,
+  search,
+  searchKeymap,
+  selectNextOccurrence,
+  selectSelectionMatches,
+} from '@codemirror/search';
+import { Compartment, EditorState, Prec } from '@codemirror/state';
 import { crosshairCursor, drawSelection, EditorView, keymap, rectangularSelection } from '@codemirror/view';
 
 // compact: the padding of a box of its own (the snippet dialog), in place of the note's margins.
@@ -98,9 +104,19 @@ onMounted(() => {
         EditorState.phrases.of(phrases()),
         EditorView.lineWrapping,
         EditorView.contentAttributes.of({ 'aria-label': props.label }),
-        // Safari keeps Cmd+D for its bookmarks and never hands it over: Ctrl+D adds the next occurrence there.
+        // macOS holds a Ctrl+Shift+letter as its unshifted self, so a keymap entry never sees the Shift: read here.
+        Prec.highest(
+          EditorView.domEventHandlers({
+            keydown(event, view) {
+              if (!event.ctrlKey || !event.shiftKey || event.key.toLowerCase() !== 'g') return false;
+              return selectSelectionMatches(view);
+            },
+          }),
+        ),
+        // Safari keeps Cmd+D for its bookmarks and never hands it over, and macOS reads Ctrl+D as a forward delete:
+        // on a Mac, Ctrl+G takes the next occurrence and Ctrl+Shift+G all of them, next to the Cmd+G of the find.
         keymap.of([
-          { key: 'Ctrl-d', run: selectNextOccurrence, preventDefault: true },
+          { mac: 'Ctrl-g', run: selectNextOccurrence, preventDefault: true },
           ...searchKeymap,
           ...defaultKeymap,
           ...historyKeymap,

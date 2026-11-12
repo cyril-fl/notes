@@ -526,7 +526,9 @@ test('the source mode edits the markdown', async ({ page }) => {
 });
 
 // The reason the source mode is a code editor (#112): one cursor per occurrence, which the rich editor cannot carry.
-test('Cmd+D adds a cursor on the next occurrence of the source mode', async ({ page }) => {
+test('Ctrl+G adds a cursor on the next occurrence of the source mode, Ctrl+Shift+G on all of them', async ({
+  page,
+}) => {
   const note = await box.note('foo bar\n\nfoo baz\n\nfoo qux');
   await page.goto(`/notes/${note.id}`);
   await expect(page.locator('.ProseMirror')).toContainText('foo bar');
@@ -536,10 +538,17 @@ test('Cmd+D adds a cursor on the next occurrence of the source mode', async ({ p
   await page.keyboard.press('ControlOrMeta+Home');
   for (let i = 0; i < 3; i++) await page.keyboard.press('Shift+ArrowRight'); // The first foo selected.
   await page.keyboard.press('ControlOrMeta+d');
-  await page.keyboard.press('Control+d'); // The way out of Safari, which keeps Cmd+D for its bookmarks.
+  await page.keyboard.press('Control+g'); // The way out of Safari, which keeps Cmd+D for its bookmarks.
   await page.keyboard.type('xxx');
   await expect.poll(() => sourceText(source)).toBe('xxx bar\n\nxxx baz\n\nxxx qux');
   await expect.poll(() => box.content(note.id), { timeout: 5000 }).toBe('xxx bar\n\nxxx baz\n\nxxx qux');
+
+  // Ctrl+Shift+G takes every occurrence at once.
+  await page.keyboard.press('ControlOrMeta+Home');
+  for (let i = 0; i < 3; i++) await page.keyboard.press('Shift+ArrowRight');
+  await page.keyboard.press('Control+Shift+g');
+  await page.keyboard.type('yyy');
+  await expect.poll(() => sourceText(source)).toBe('yyy bar\n\nyyy baz\n\nyyy qux');
 });
 
 test('the empty Pro context panel explains the related notes and the history', async ({ page }) => {
