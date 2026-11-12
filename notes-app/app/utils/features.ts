@@ -12,6 +12,7 @@ export const planOf = (user: { plan: string }): Plan =>
 /** What each feature of the app needs: the one place to move a feature in or out of the Pro mode. */
 export const features = {
   graph: 'base',
+  tabs: 'pro',
   focusMode: 'pro',
   contextPanel: 'pro',
   settingsNav: 'pro',
@@ -49,6 +50,7 @@ export type Feature = keyof typeof features;
 /** The subsection of each feature in the settings' comparison: a Record, so a new feature cannot be left out. */
 const groups: Record<Feature, 'display' | 'editing' | 'navigation' | 'data'> = {
   graph: 'navigation',
+  tabs: 'navigation',
   focusMode: 'display',
   contextPanel: 'display',
   settingsNav: 'navigation',

@@ -33,11 +33,14 @@ function onCreated(id: string) {
 </script>
 
 <template>
-  <NoteEditor
-    :key="editor.key"
-    :note-id="editor.noteId"
-    :parent-id="editor.parentId"
-    :start="editor.start"
-    @created="onCreated"
-  />
+  <div class="flex min-h-0 flex-1 flex-col">
+    <NoteTabs />
+    <NoteEditor
+      :key="editor.key"
+      :note-id="editor.noteId"
+      :parent-id="editor.parentId"
+      :start="editor.start"
+      @created="onCreated"
+    />
+  </div>
 </template>

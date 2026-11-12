@@ -111,6 +111,8 @@
     "emptyDescription": "Les liens [[…]], les rétroliens et les notes aux mêmes tags apparaissent ici."
   },
   "note": {
+    "tabs": "Notes ouvertes",
+    "closeTab": "Fermer l'onglet {title}",
     "unsaved": "La note n'est pas enregistrée",
     "unsavedDescription": "Tes dernières modifications seront perdues.",
     "leaveAnyway": "Quitter quand même",
@@ -367,6 +369,7 @@
   },
   "features": {
     "graph": "Le graphe des notes",
+    "tabs": "Les onglets de l'éditeur, qui gardent plusieurs notes ouvertes",
     "focusMode": "Le mode focus, qui ne laisse que la note à l'écran",
     "contextPanel": "Le panneau de contexte à droite de la note : son plan, ses notes liées et son historique",
     "settingsNav": "La barre latérale des réglages, une page par section",

@@ -111,6 +111,8 @@
     "emptyDescription": "The [[…]] links, the backlinks and the notes with the same tags show up here."
   },
   "note": {
+    "tabs": "Open notes",
+    "closeTab": "Close the tab {title}",
     "unsaved": "The note is not saved",
     "unsavedDescription": "Your last changes will be lost.",
     "leaveAnyway": "Leave anyway",
@@ -367,6 +369,7 @@
   },
   "features": {
     "graph": "The graph of the notes",
+    "tabs": "The editor's tabs, keeping several notes open",
     "focusMode": "Focus mode, which leaves only the note on screen",
     "contextPanel": "The context panel beside the note: its outline, its related notes and its history",
     "settingsNav": "The settings sidebar, one page per section",
