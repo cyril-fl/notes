@@ -162,4 +162,28 @@ func TestPurgeFiles(t *testing.T) {
 	if err := tx.NewRaw("SELECT count(*) FROM files WHERE id = ? AND orphaned_at IS NULL", files["live"].ID).Scan(ctx, &orphaned); err != nil || orphaned != 1 {
 		t.Errorf("live: orphaned_at not cleared (%d, %v)", orphaned, err)
 	}
+
+	// Bytes without a row, as an import killed before its cleanup leaves them: the old one goes, the one written
+	// just now may be an upload whose transaction is still open.
+	stray, fresh := domain.UserID(ctx)+"/stray", domain.UserID(ctx)+"/fresh"
+	for _, key := range []string{stray, fresh} {
+		if err := store.Put(ctx, key, []byte("\x89PNG\r\n\x1a\n"), "image/png"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	store.Written[stray] = time.Now().Add(-2 * strayAge)
+	sweep := Process(ctx, tx, store)
+	sweep.Run()
+	if sweep.HasErr() {
+		t.Fatalf("sweep: %v", sweep.GetErr())
+	}
+	if _, ok := store.Objects[stray]; ok {
+		t.Error("the stray object was kept, no row cites it")
+	}
+	if _, ok := store.Objects[fresh]; !ok {
+		t.Error("the object written just now was removed, its row may not be committed yet")
+	}
+	if _, ok := store.Objects[files["live"].Key()]; !ok {
+		t.Error("the sweep removed live, which has a row")
+	}
 }

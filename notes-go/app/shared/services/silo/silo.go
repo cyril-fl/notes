@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 	"github.com/minio/minio-go/v7"
@@ -23,6 +24,14 @@ type Store interface {
 	Put(ctx context.Context, key string, data []byte, contentType string) error
 	Get(ctx context.Context, key string) (io.ReadCloser, error)
 	Remove(ctx context.Context, key string) error
+	List(ctx context.Context) ([]Object, error)
+}
+
+// Object is what the store keeps under a key, its bytes left out: purgefiles reads Written to leave alone an
+// upload that may still be running.
+type Object struct {
+	Key     string
+	Written time.Time
 }
 
 type s3 struct {
@@ -109,20 +118,34 @@ func (s *s3) Remove(ctx context.Context, key string) error {
 	return s.client.RemoveObject(ctx, s.bucket, key, minio.RemoveObjectOptions{})
 }
 
+// List walks the whole bucket, every account: the keys only, never the bytes.
+func (s *s3) List(ctx context.Context) ([]Object, error) {
+	var objects []Object
+	for info := range s.client.ListObjects(ctx, s.bucket, minio.ListObjectsOptions{Recursive: true}) {
+		if info.Err != nil {
+			return nil, info.Err
+		}
+		objects = append(objects, Object{Key: info.Key, Written: info.LastModified})
+	}
+	return objects, nil
+}
+
 // Memory is a Store in a map, for the tests.
 type Memory struct {
 	mu      sync.Mutex
 	Objects map[string][]byte
+	Written map[string]time.Time // when each key was put; a test moves it back to age an object
 }
 
 func NewMemory() *Memory {
-	return &Memory{Objects: map[string][]byte{}}
+	return &Memory{Objects: map[string][]byte{}, Written: map[string]time.Time{}}
 }
 
 func (m *Memory) Put(_ context.Context, key string, data []byte, _ string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.Objects[key] = data
+	m.Written[key] = time.Now()
 	return nil
 }
 
@@ -140,5 +163,16 @@ func (m *Memory) Remove(_ context.Context, key string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	delete(m.Objects, key)
+	delete(m.Written, key)
 	return nil
+}
+
+func (m *Memory) List(_ context.Context) ([]Object, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var objects []Object
+	for key := range m.Objects {
+		objects = append(objects, Object{Key: key, Written: m.Written[key]})
+	}
+	return objects, nil
 }
