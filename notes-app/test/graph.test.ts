@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { layoutGraph, neighborhood, sharedTags } from '../app/utils/graph.ts';
+import { layoutGraph, linkTargets, neighborhood, sharedTags } from '../app/utils/graph.ts';
 
 const notes = (...ids: string[]) => ids.map((id) => ({ id }));
 const link = (source: string, target: string, ...tags: string[]) => ({ source, target, tags });
@@ -86,4 +86,23 @@ test('the shared tags are counted whichever side of the link the note is on', ()
     ]),
   );
   assert.deepEqual(sharedTags(links, 'x'), new Map());
+});
+
+test('the [[ menu offers the other named notes, the closest ones first for a Pro account', () => {
+  const graph = {
+    notes: [
+      { id: 'a', title: 'A' },
+      { id: 'b', title: 'B' },
+      { id: 'c', title: 'C' },
+      { id: 'd', title: 'D' },
+      { id: 'e', title: '' },
+    ],
+    links: [link('b', 'a', 'go'), link('a', 'c', 'go', 'web')],
+  };
+  const titles = (id: string | undefined, suggest: boolean) =>
+    linkTargets(graph, id, suggest).map((note) => note.title);
+  assert.deepEqual(titles('a', true), ['C', 'B', 'D']);
+  assert.deepEqual(titles('a', false), ['B', 'C', 'D']);
+  assert.deepEqual(titles(undefined, true), ['A', 'B', 'C', 'D']);
+  assert.deepEqual(linkTargets(null, 'a', true), []);
 });

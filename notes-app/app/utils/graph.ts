@@ -67,3 +67,18 @@ export function sharedTags(links: Link[], id: string) {
   }
   return counts;
 }
+
+/**
+ * The other named notes offered after [[, this one left out.
+ * suggest (Pro): the ones sharing the most tags with it first; the sort being stable, the API's order stays between equals.
+ */
+export function linkTargets<N extends { id: string; title: string }>(
+  graph: { notes: N[]; links: Link[] } | null | undefined,
+  id: string | undefined,
+  suggest: boolean,
+) {
+  const counts = suggest && id ? sharedTags(graph?.links ?? [], id) : new Map<string, number>();
+  return (graph?.notes ?? [])
+    .filter((note) => note.id !== id && note.title)
+    .sort((a, b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0));
+}
