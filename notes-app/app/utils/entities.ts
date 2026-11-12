@@ -12,3 +12,9 @@ export function decodeEntities(markdown: string) {
     .map((part, index) => (index % 2 ? part : part.replace(/&(?:lt|gt|amp);/g, (entity) => ENTITIES[entity]!)))
     .join('');
 }
+
+/** The markdown of the editor as the note keeps it: it writes blank lines as non-breaking spaces, and & < > as entities.
+ * Spaces first: a typed "&nbsp;" is written "&amp;nbsp;" and must come back as typed. */
+export function cleanMarkdown(markdown: string) {
+  return decodeEntities(markdown.replace(/&nbsp;/gi, ' ').replace(/\u00a0/g, ' ')).trim();
+}

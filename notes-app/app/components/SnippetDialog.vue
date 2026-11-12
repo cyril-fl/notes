@@ -4,32 +4,34 @@ import type { Snippet } from '~/types/items';
 const props = defineProps<{ title: string; value?: Snippet }>();
 const emit = defineEmits<{ close: [value?: Snippet] }>();
 
-const snippet = ref<Snippet>({ name: '', content: '', ...props.value });
+const name = ref(props.value?.name ?? '');
+const content = ref(props.value?.content ?? '');
+// The editor starts from it and keeps its own text: handing back what it writes would move the cursor.
+const start = content.value;
 
 function submit() {
-  const name = snippet.value.name.trim();
-  if (name) emit('close', { ...snippet.value, name });
+  if (name.value.trim()) emit('close', { name: name.value.trim(), content: content.value });
 }
 </script>
 
 <template>
-  <UModal :title="title" :close="false" @update:open="emit('close')">
+  <UModal :title="title" :close="false" :ui="{ content: 'max-w-2xl' }" @update:open="emit('close')">
     <template #body>
       <form id="snippet" class="flex flex-col gap-4" @submit.prevent="submit">
         <UInput
-          v-model="snippet.name"
+          v-model="name"
           autofocus
           class="w-full"
           :placeholder="$t('settings.snippetName')"
           :aria-label="$t('settings.snippetName')"
         />
         <UFormField :help="$t('settings.snippetHelp')">
-          <UTextarea
-            v-model="snippet.content"
-            :rows="8"
-            autoresize
-            class="w-full font-mono"
-            :aria-label="$t('settings.snippetContent')"
+          <NoteWriter
+            :model-value="start"
+            compact
+            :label="$t('settings.snippetContent')"
+            class="h-80 rounded-md ring ring-accented"
+            @update:model-value="content = $event"
           />
         </UFormField>
       </form>
@@ -37,7 +39,7 @@ function submit() {
     <template #footer>
       <div class="flex w-full justify-end gap-2">
         <UButton :label="$t('common.cancel')" color="neutral" variant="ghost" @click="emit('close')" />
-        <UButton type="submit" form="snippet" :label="$t('settings.save')" :disabled="!snippet.name.trim()" />
+        <UButton type="submit" form="snippet" :label="$t('settings.save')" :disabled="!name.trim()" />
       </div>
     </template>
   </UModal>

@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import type { DropdownMenuItem, EditorSuggestionMenuItem, EditorToolbarItem } from '@nuxt/ui';
-import { createHandlers } from '@nuxt/ui/runtime/utils/editor.js';
-import type { Range } from '@tiptap/core';
 import type { Editor } from '@tiptap/vue-3';
 import type { FetchError } from 'ofetch';
 import type { RouteLocationNormalized } from 'vue-router';
-import type { Item, ItemDetail, NoteFile, NotesGraph } from '~/types/items';
+import type { Item, ItemDetail, NotesGraph } from '~/types/items';
 import type { Changes } from '~/utils/saver';
 
 const { icons } = useIcons();
@@ -127,7 +124,7 @@ async function mergeConflict(mine: string) {
 // When the merge fails (#78): the text typed here is kept as a version marked conflict, then the page reads the note again from the API.
 // Not kept, nothing reloads: the text stays on screen, the toast of useApi says why.
 async function reloadStale() {
-  const content = source.value ?? clean(editorRef.value?.editor?.getMarkdown() ?? '');
+  const content = source.value ?? cleanMarkdown(editorRef.value?.editor?.getMarkdown() ?? '');
   try {
     await api(`/api/notes/${id.value}/versions`, { method: 'POST', body: { content }, tooLarge: t('note.tooLarge') });
   } catch {
@@ -155,16 +152,6 @@ async function readTags(changes: Changes, note: ItemDetail) {
   links = linkedNotes(note.content ?? '');
   title.value = note.item.title;
   if (changed) await refreshNuxtData();
-}
-
-// The note scrolls in its own box, which the menus over the text do not watch (only the window): they follow it here.
-function placeBubbles() {
-  const editor = editorRef.value?.editor;
-  const shown = editor ? parts.value.bubbles.filter((bubble) => bubble.shouldShow({ editor })) : [];
-  if (!editor || !shown.length) return;
-  const { tr } = editor.state;
-  for (const bubble of shown) tr.setMeta(bubble.pluginKey, 'updatePosition');
-  editor.view.dispatch(tr);
 }
 
 // The API points the typed [[links]] to their note: the editor shows them resolved, without touching the cursor or the undo history.
@@ -220,19 +207,13 @@ const unhook = useNuxtApp().hook('app:data:refresh', () => {
 });
 onBeforeUnmount(unhook);
 
-// The editor writes blank lines as non-breaking spaces, and & < > as HTML entities.
-// Spaces first: a typed "&nbsp;" is written "&amp;nbsp;" and must come back as typed.
-function clean(markdown: string) {
-  return decodeEntities(markdown.replace(/&nbsp;/gi, ' ').replace(/\u00a0/g, ' ')).trim();
-}
-
 function save(content: string) {
   isEmpty.value = !content;
   saver.push({ content: content || undefined });
 }
 
 function onContent(markdown: string) {
-  if (touched.value && !readonly.value) save(clean(markdown));
+  if (touched.value && !readonly.value) save(markdown);
 }
 
 // What is typed before goes first: the API refuses it once locked.
@@ -262,9 +243,6 @@ function setText(content: string) {
   save(content); // The same text gives no update, yet must go: the API has another one after a conflict.
 }
 
-// false: no update event, unlocking must not save the note again.
-watch([() => editorRef.value?.editor, readonly], ([editor, locked]) => editor?.setEditable(!locked, false));
-
 // The markdown as text, in place of the editor; undefined in the editor. Back in the editor, it starts from that text.
 const source = ref<string>();
 function toggleSource() {
@@ -274,7 +252,7 @@ function toggleSource() {
     return;
   }
   const markdown = editorRef.value?.editor?.getMarkdown();
-  source.value = markdown === undefined ? initialContent.value : clean(markdown);
+  source.value = markdown === undefined ? initialContent.value : cleanMarkdown(markdown);
 }
 function onSource(text: string) {
   source.value = text;
@@ -395,145 +373,6 @@ onBeforeUnmount(async () => {
   await removeItem({ id: id.value, kind: 'note' });
 });
 
-// A dropped image takes no focus: the upload is an interaction, its image an edit.
-async function upload(file: File) {
-  touched.value = true;
-  try {
-    const saved = await api<NoteFile>('/api/files', {
-      method: 'POST',
-      body: file,
-      query: { name: file.name },
-      quiet: true,
-    });
-    return `/api/files/${saved.id}`;
-  } catch (error) {
-    const status = (error as FetchError).status;
-    const key = status === 413 ? 'note.imageTooLarge' : status === 415 ? 'note.imageType' : 'note.imageFailed';
-    toast.add({ title: t(key, { name: file.name }), color: 'error' });
-    return null;
-  }
-}
-
-// Merged once the account is known: UEditor reads its extensions when created, so it waits for ready.
-const modules = [
-  useNoteFormatting(),
-  useNoteLinks(id),
-  useNoteSuggestions(),
-  useNoteSlash(),
-  ...useNoteTables(),
-  useNoteCode(),
-  useNoteMath(),
-  ...useNoteCallouts(),
-  useNoteImages(baseURL, upload),
-  { extensions: [slashTrigger(openSlash)] },
-];
-const parts = computed(() => mergeModules(modules, has));
-
-// The / menu, its items of a same group (headings, lists, callouts) in a submenu; opened where the / was typed, the / goes away with the pick.
-const slashAt = ref<{ range: Range; left: number; top: number } | null>(null);
-const slashMenu = computed(() => {
-  const editor = editorRef.value?.editor;
-  const slash = parts.value.menus.find((menu) => menu.pluginKey === 'slashMenu');
-  if (!editor || !slash) return [];
-  const handlers = { ...createHandlers(), ...parts.value.handlers };
-  const items: DropdownMenuItem[] = [];
-  for (const item of toValue(slash.items) as (EditorSuggestionMenuItem & { kind: string; group?: string })[]) {
-    const entry = {
-      label: item.label,
-      icon: item.icon,
-      onSelect: () => {
-        if (slashAt.value) editor.chain().focus().deleteRange(slashAt.value.range).run();
-        handlers[item.kind]?.execute(editor, item).run();
-      },
-    };
-    if (!item.group) items.push(entry);
-    else {
-      const group = items.find((other) => other.label === item.group && other.children);
-      if (group) (group.children as DropdownMenuItem[]).push(entry);
-      else items.push({ label: item.group, icon: item.icon, children: [entry] });
-    }
-  }
-  return items;
-});
-function openSlash(range: Range, rect: DOMRect | null) {
-  if (rect && slashMenu.value.length) slashAt.value = { range, left: rect.left, top: rect.bottom };
-}
-const slashOpen = computed({
-  get: () => !!slashAt.value,
-  set: (open) => {
-    if (open) return;
-    slashAt.value = null;
-    editorRef.value?.editor?.commands.focus();
-  },
-});
-// The menu has the focus: a backspace there takes back the / and closes it, a second / is written (//), as in the text.
-function slashKey(event: KeyboardEvent) {
-  const editor = editorRef.value?.editor;
-  if (!editor || !slashAt.value || (event.key !== 'Backspace' && event.key !== '/')) return;
-  // chain().focus() focuses the editor as soon as it is built, run or not: only for these two keys.
-  const chain = editor.chain().focus();
-  if (event.key === 'Backspace') chain.deleteRange(slashAt.value.range).run();
-  else chain.insertContent('/').run();
-  event.preventDefault();
-  slashAt.value = null;
-}
-useEventListener(window, 'keydown', slashKey);
-// The same menu on a right click or a long press.
-// Not on a touch screen: a long press sends contextmenu, the menu would take the place of the native copy and paste one.
-const touch = useMediaQuery('(pointer: coarse)');
-const contextMenu = computed(() => (has('contextMenu') && !readonly.value && !touch.value ? slashMenu.value : []));
-// The menu keeps the browser from moving the cursor on a right click: it goes where the click was, unless inside the selected text.
-function placeCursor(event: MouseEvent) {
-  const editor = editorRef.value?.editor;
-  const pos = editor?.view.posAtCoords({ left: event.clientX, top: event.clientY })?.pos;
-  if (!editor || pos === undefined || !contextMenu.value.length) return;
-  const { from, to } = editor.state.selection;
-  if (pos < from || pos > to) editor.commands.setTextSelection(pos);
-}
-// No Ctrl+A nor Ctrl+Z on a touch screen: buttons undo and redo, select the whole note, or empty it like the AC of a calculator.
-async function clearNote() {
-  if (await confirm({ title: t('note.clear'), description: t('note.clearDescription'), action: t('note.clear') }))
-    editorRef.value?.editor?.chain().focus().clearContent(true).run();
-}
-// On a phone each group of formatting buttons (headings, marks, blocks) folds into one menu, showing the active one's icon.
-const phone = useMediaQuery('(max-width: 639px)');
-const formatting = computed((): EditorToolbarItem[][] =>
-  phone.value
-    ? parts.value.toolbar.map((group) => {
-        // A group of one (the import button) is already a button: a menu holding it alone would need two taps.
-        if (group.length < 2) return group;
-        const label = group.map((item) => item.tooltip?.text).join(', ');
-        return [
-          {
-            icon: group[0]?.icon,
-            tooltip: { text: label },
-            items: group.map((item) => ({ ...item, label: item.tooltip?.text })),
-          },
-        ];
-      })
-    : parts.value.toolbar,
-);
-const toolbar = computed(() =>
-  touch.value
-    ? [
-        [
-          { kind: 'undo', icon: icons.undo, tooltip: { text: t('note.undo') }, 'aria-label': t('note.undo') },
-          { kind: 'redo', icon: icons.redo, tooltip: { text: t('note.redo') }, 'aria-label': t('note.redo') },
-        ],
-        ...formatting.value,
-        [
-          {
-            icon: icons.selectAll,
-            tooltip: { text: t('note.selectAll') },
-            'aria-label': t('note.selectAll'),
-            onClick: () => editorRef.value?.editor?.chain().focus().selectAll().run(),
-          },
-          { icon: icons.clear, tooltip: { text: t('note.clear') }, 'aria-label': t('note.clear'), onClick: clearNote },
-        ],
-      ]
-    : formatting.value,
-);
-
 // The headings of the note, for the context panel: a click scrolls the text to one, without moving the cursor.
 const panel = useContextPanel();
 const { data: graph } = useLazyAsyncData('graph', () => api<NotesGraph>('/api/graph/notes'));
@@ -589,16 +428,13 @@ const status = computed(() => {
     :actions="[{ label: $t('common.backToNotes'), icon: icons.home, color: 'neutral', variant: 'subtle', to: '/' }]"
   />
 
-  <!-- UEditor hands its listeners to TipTap, not to the page: clicks on links are caught here.
-       Only the text scrolls: a sticky toolbar inside the scroll moves with Safari's elastic bounce. -->
+  <!-- Only the text scrolls: a sticky toolbar inside the scroll moves with Safari's elastic bounce. -->
   <article
     v-else-if="!loading && ready"
     class="flex min-h-0 flex-1 flex-col pt-4"
     @focusin="touched = true"
     @pointerdown.capture="touched = true"
-    @click="parts.onClick"
   >
-    <!-- A div takes the menu's listeners: UEditor hands its own to TipTap. -->
     <UTextarea
       v-if="source !== undefined"
       :model-value="source"
@@ -610,71 +446,17 @@ const status = computed(() => {
       :ui="{ base: 'h-full resize-none px-8 pb-8 font-mono text-sm' }"
       @update:model-value="onSource"
     />
-    <UContextMenu v-else :items="contextMenu" :disabled="!contextMenu.length">
-      <div class="flex min-h-0 flex-1 flex-col" @contextmenu.capture="placeCursor" @scroll.capture="placeBubbles">
-        <UEditor
-          ref="editor"
-          v-slot="{ editor }"
-          :model-value="initialContent"
-          content-type="markdown"
-          :placeholder="$t('note.placeholder')"
-          :autofocus="!noteId"
-          :image="false"
-          :mention="false"
-          :starter-kit="parts.starterKit"
-          :extensions="parts.extensions"
-          :handlers="parts.handlers"
-          class="flex min-h-0 w-full flex-1 flex-col"
-          :ui="{ content: 'min-h-0 overflow-y-auto px-8 pt-1 pb-8', base: 'sm:px-0 px-0' }"
-          @update:model-value="onContent"
-        >
-          <!-- Its commands write even in a read-only editor: hidden while locked. -->
-          <UEditorToolbar
-            v-if="!readonly"
-            :editor="editor"
-            :items="toolbar"
-            class="mx-7 shrink-0 overflow-x-auto border-b border-muted py-1"
-          />
-          <UEditorToolbar
-            v-for="bubble in readonly ? [] : parts.bubbles"
-            :key="bubble.pluginKey"
-            :editor="editor"
-            :items="bubble.items"
-            layout="bubble"
-            :plugin-key="bubble.pluginKey"
-            :options="{
-              placement: 'top-start',
-              // Above, or below when it fits only there; along a tall image, at the top of what shows of it, gone with it.
-              flip: { fallbackStrategy: 'initialPlacement' },
-              // 16: tiptap moves it by its offset (8) after the shift, which would leave it against the edge.
-              shift: { crossAxis: true, padding: 16 },
-              // Stuck over the image (pushed down by the shift), it also moves off its left edge.
-              offset: ({ y, placement, rects }) => ({
-                mainAxis: 8,
-                crossAxis: placement.startsWith('top') && y > rects.reference.y - rects.floating.height ? 8 : 0,
-              }),
-              hide: true,
-            }"
-            :should-show="bubble.shouldShow"
-            class="rounded-md border border-default bg-default p-1 shadow-sm"
-          />
-          <UEditorSuggestionMenu
-            v-for="{ items, ...menu } in parts.menus.filter((menu) => menu.pluginKey !== 'slashMenu')"
-            :key="menu.pluginKey"
-            :editor="editor"
-            v-bind="menu"
-            :items="toValue(items)"
-          />
-        </UEditor>
-      </div>
-    </UContextMenu>
-    <UDropdownMenu
-      v-model:open="slashOpen"
-      :items="slashMenu"
-      :content="{ align: 'start', onCloseAutoFocus: (event: Event) => event.preventDefault() }"
-    >
-      <span class="fixed size-0" :style="{ left: `${slashAt?.left}px`, top: `${slashAt?.top}px` }" />
-    </UDropdownMenu>
+    <NoteWriter
+      v-else
+      ref="editor"
+      :model-value="initialContent"
+      :note-id="id"
+      :readonly="readonly"
+      :placeholder="$t('note.placeholder')"
+      :autofocus="!noteId"
+      @update:model-value="onContent"
+      @touch="touched = true"
+    />
 
     <footer class="shrink-0 border-t border-default px-8">
       <RelatedNotes v-if="id && !panel" :key="id" :note-id="id" />
