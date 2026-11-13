@@ -2,7 +2,13 @@
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { markdown } from '@codemirror/lang-markdown';
 import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
-import { highlightSelectionMatches, selectNextOccurrence, selectSelectionMatches } from '@codemirror/search';
+import {
+  highlightSelectionMatches,
+  search,
+  searchKeymap,
+  selectNextOccurrence,
+  selectSelectionMatches,
+} from '@codemirror/search';
 import { Compartment, EditorState, Prec } from '@codemirror/state';
 import { crosshairCursor, drawSelection, EditorView, keymap, rectangularSelection } from '@codemirror/view';
 
@@ -16,13 +22,13 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{ 'update:modelValue': [string] }>();
 
+const { t } = useI18n();
 const box = ref<HTMLElement>();
 let view: EditorView | undefined;
 const editable = new Compartment();
 
-// CodeMirror is wired for the multi-cursor: Alt+click, Ctrl+G (next occurrence) and Ctrl+Shift+G (all of them),
-// which ProseMirror cannot do (#112), plus the markdown colors. The find and replace panel of CodeMirror is left
-// out: its keys fought the browser's and its look was not the app's. The work is on the `source-find-panel` branch.
+// CodeMirror is wired for the multi-cursor: Alt+click, Cmd+D (next occurrence) and Cmd+Shift+L (all of them),
+// which ProseMirror cannot do (#112), plus the search panel and the markdown colors.
 const theme = EditorView.theme({
   '&': { height: '100%', backgroundColor: 'transparent', color: 'var(--ui-text)' },
   '&.cm-focused': { outline: 'none' },
@@ -37,6 +43,48 @@ const theme = EditorView.theme({
   '.cm-selectionLayer .cm-selectionBackground, &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground':
     { backgroundColor: 'var(--ui-primary)' },
   '.cm-selectionMatch': { backgroundColor: 'var(--ui-bg-accented)' },
+  '.cm-panels': { backgroundColor: 'var(--ui-bg-elevated)', color: 'var(--ui-text)', border: 'none' },
+  '.cm-panels.cm-panels-top': { borderBottom: '1px solid var(--ui-border)' },
+  '.cm-panel input, .cm-panel button': { fontFamily: 'inherit', fontSize: '0.75rem' },
+  '.cm-panel input': {
+    backgroundColor: 'var(--ui-bg)',
+    border: '1px solid var(--ui-border-accented)',
+    borderRadius: '0.25rem',
+    padding: '0.125rem 0.25rem',
+  },
+  // Its buttons come with a light gradient of their own: unreadable over the dark mode's white text.
+  '.cm-panel button': {
+    backgroundColor: 'var(--ui-bg)',
+    backgroundImage: 'none',
+    color: 'var(--ui-text)',
+    border: '1px solid var(--ui-border-accented)',
+    borderRadius: '0.25rem',
+    padding: '0.125rem 0.375rem',
+  },
+  '.cm-panel button[name="close"]': {
+    backgroundColor: 'transparent',
+    border: 'none',
+    color: 'var(--ui-text-muted)',
+  },
+  '.cm-searchMatch': { backgroundColor: 'var(--ui-bg-accented)' },
+  '.cm-searchMatch-selected': { backgroundColor: 'var(--ui-primary)', color: 'var(--ui-bg)' },
+});
+
+// The search panel of CodeMirror writes its own labels: translated here, as every text of the app.
+const phrases = () => ({
+  Find: t('note.search.find'),
+  Replace: t('note.search.replace'),
+  next: t('note.search.next'),
+  previous: t('note.search.previous'),
+  all: t('note.search.all'),
+  'match case': t('note.search.matchCase'),
+  'by word': t('note.search.byWord'),
+  regexp: t('note.search.regexp'),
+  replace: t('note.search.replaceOne'),
+  'replace all': t('note.search.replaceAll'),
+  close: t('note.search.close'),
+  'Go to line': t('note.search.goToLine'),
+  go: t('note.search.go'),
 });
 
 onMounted(() => {
@@ -51,7 +99,9 @@ onMounted(() => {
         rectangularSelection(),
         crosshairCursor(),
         highlightSelectionMatches(),
+        search({ top: true }),
         EditorState.allowMultipleSelections.of(true),
+        EditorState.phrases.of(phrases()),
         EditorView.lineWrapping,
         EditorView.contentAttributes.of({ 'aria-label': props.label }),
         // macOS holds a Ctrl+Shift+letter as its unshifted self, so a keymap entry never sees the Shift: read here.
@@ -64,10 +114,10 @@ onMounted(() => {
           }),
         ),
         // Safari keeps Cmd+D for its bookmarks and never hands it over, and macOS reads Ctrl+D as a forward delete:
-        // Ctrl+G takes the next occurrence and Ctrl+Shift+G all of them.
+        // on a Mac, Ctrl+G takes the next occurrence and Ctrl+Shift+G all of them, next to the Cmd+G of the find.
         keymap.of([
-          { key: 'Ctrl-g', run: selectNextOccurrence, preventDefault: true },
-          { key: 'Mod-d', run: selectNextOccurrence, preventDefault: true },
+          { mac: 'Ctrl-g', run: selectNextOccurrence, preventDefault: true },
+          ...searchKeymap,
           ...defaultKeymap,
           ...historyKeymap,
         ]),
