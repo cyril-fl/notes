@@ -1,38 +1,32 @@
 ---
 name: notes-release
-description: Close a piece of work or a version of Notes - one commit per change with the house message style, READMEs, annotated tag, GitHub issues closed by hand (develop is not the default branch), the handoff for the next session. Use when a feature or fix is done, or when the user says "tag", "release", "version", "close the issue".
+description: Close a piece of work or a version of Notes - one commit per change with the house message style, READMEs, then the checks, the annotated tag, the GitHub issues and the handoff delegated to the notes-release-checker subagent (Sonnet). Use when a feature or fix is done, or when the user says "tag", "release", "version", "close the issue".
 ---
 
 # Release a version of Notes
 
-## Commits
+Two halves: you make the commits and the READMEs (they need judgment), then the `notes-release-checker` subagent, on Sonnet, runs the checks, tags, handles the issues and writes the handoff. Never hand the commits to a subagent.
 
-- One commit per change, in English, lower case after the prefix: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `style:`. The message says what the user gets ("feat: pick a theme of colors from its thumbnail in the settings"), not the files.
-- `Fixes #n` in the body for an issue.
-- On `develop` (`git branch --show-current`: another agent may have switched it). Stage paths explicitly; never `git add` files another agent left uncommitted (check `git status` first).
-- lefthook runs gofmt on staged Go files.
-- Never push: the user runs `git push origin develop --follow-tags`.
+## 1. Commits (you)
 
-## Before the tag
+- On `develop` (`git branch --show-current`: another agent may have switched it). Never push: the user runs `git push origin develop --follow-tags`.
+- One commit per change, in English, lower case after the prefix: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `style:`. The message says what the user gets ("feat: pick a theme of colors from its thumbnail in the settings"), not the files. `Fixes #n` in the body for an issue.
+- **Stage only your own lines.** Other agents share the checkout: `git status` first, and for each file you stage, read `git diff <file>`. A file that also holds changes you did not make (another agent's work, or several of your changes) is never `git add`-ed whole: stage only your hunks (`git diff <file>` cut to your hunks, then `git apply --cached`), or stop and ask the user.
+- Before each commit, `git diff --cached` holds only this change, and nothing in it needs a file left out (a component, a type, a route of uncommitted work): otherwise the commit does not build on its own.
+- Generated files (`notes-go/docs/swagger.yaml`, `notes-app/app/types/api.d.ts`) follow the same rule: regenerate them only when they hold nothing of another agent's, else stage your hunks.
+- lefthook runs gofmt, Prettier and actionlint on staged files, and checks the prefix.
+- READMEs in French, in their own `docs:` commit or with the change: `notes-go/README.md` (CLI, API), `notes-app/README.md` (the app).
 
-- `cd notes-go && make test`; `cd notes-app && bun run test && bun run typecheck && bun run e2e` (needs `make up`).
-- READMEs in French: `notes-go/README.md` (CLI, API), `notes-app/README.md` (the app).
+## 2. Checks, tag, issues, handoff (notes-release-checker)
 
-## Tag
+Once every commit is made, launch the `notes-release-checker` subagent with:
 
-- `git tag -a vX.Y.0 -m "vX.Y.0: <what the user gets>"`. Check `git tag --sort=-v:refname | head` first: another agent may already have used the next number.
-- A tag not yet pushed (`git branch -r --contains` / not in `origin/develop`) may be moved with `git tag -fa`; a pushed one never.
+- the short shas of the release's commits;
+- minor (a `feat:` in the release) or patch, and the tag message: what the user gets;
+- the issues to close, each with what was done, and the issues to open for what is left (title, label, **À faire**);
+- whether to run the e2e (`make up` must be running);
+- what the handoff must say.
 
-## Issues
+It never commits nor pushes. If it reports a failing check, fix it with a new commit (part 1), then launch it again.
 
-`gh issue list -R cyril-fl/notes`. `develop` is not the default branch: `Fixes #n` does not close anything. Close by hand once the work is committed:
-
-```sh
-gh issue close <n> -R cyril-fl/notes -c "Fait dans <short sha> (sur develop) : <what changed>."
-```
-
-Obsolete issues: `-r "not planned"` with the reason. Work left for later goes into a new issue (labels `bug`, `enhancement`, `documentation`, `question`), in French, with **À faire** or **Piste**.
-
-## Handoff
-
-The user switches sessions to save tokens: update the « Reprise » section of the plan file named in memory, and the roadmap memory, with what was done, the tag, and what is left (as issue numbers).
+Then report to the user in French: the commits, the tag, the issues closed and opened, and `git push origin develop --follow-tags`.

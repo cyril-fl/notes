@@ -19,11 +19,11 @@ A note-taking app, Obsidian-like: one Go program (`notes-go/`, CLI and HTTP API)
 - The wiki is updated only when the user asks (`notes-wiki` skill, which catches up every tag since the last one it knows), never as part of a fix, a tag or an issue; it is pushed in `../notes.wiki` (the only push the agent does).
 - Work left for later goes into GitHub issues (`gh issue list -R cyril-fl/notes`), and known limits into `TODO:` comments in the code (`TODO: <the limit>, <when to fix it>`), not `shortcut:`.
 - Before deleting or migrating data: `make backup` in `notes-go/`.
-- Several agents share this checkout: files left uncommitted by another one are not yours (stage paths explicitly), and the branch may have been switched under you (`git branch --show-current` before committing; work goes on `develop`, `main` follows it at releases).
+- Several agents share this checkout: files left uncommitted by another one are not yours (stage only your own hunks, never a shared file whole), and the branch may have been switched under you (`git branch --show-current` before committing; work goes on `develop`, `main` follows it at releases).
 - `AGENTS.md` files are links to these `CLAUDE.md`: edit the `CLAUDE.md`.
 
 ## Skills
 
 `notes-cli-command`, `notes-account-setting`, `notes-app-screenshot`, `notes-release`, `notes-wiki`, `notes-issue-done`, `notes-issue-hunt` (audit, then the missing issues), `plum-process`, `go-tests` / `go-test-create` / `go-test-run`, `primitive-first-review`.
 
-Subagents (`.claude/agents/`): `notes-auditor`, a read-only audit of the code used by `notes-issue-hunt`.
+Subagents (`.claude/agents/`): `notes-auditor`, a read-only audit of the code used by `notes-issue-hunt`; `notes-release-checker` (Sonnet), the checks, tag, issues and handoff of `notes-release` once the commits are made.
