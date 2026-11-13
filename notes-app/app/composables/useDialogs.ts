@@ -20,8 +20,14 @@ export function useDialogs() {
   const conflictDialog = overlay.create(ConflictDialog);
 
   return {
-    prompt: (props: { title: string; value?: string; placeholder?: string; action?: string; multiline?: boolean }) =>
-      promptDialog.open(props).result as Promise<string | undefined>,
+    prompt: (props: {
+      title: string;
+      value?: string;
+      placeholder?: string;
+      action?: string;
+      multiline?: boolean;
+      alternative?: { label: string; icon?: string; onSelect: () => void };
+    }) => promptDialog.open(props).result as Promise<string | undefined>,
     confirm: (props: { title: string; description?: string; action: string; expected?: string }) =>
       confirmDialog.open(props).result as Promise<boolean | undefined>,
     snippet: (props: { title: string; value?: Snippet }) =>

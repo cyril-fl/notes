@@ -5,6 +5,8 @@ const props = defineProps<{
   placeholder?: string;
   action?: string;
   multiline?: boolean;
+  // A second way out, between cancel and the action: the dialog closes, then runs it.
+  alternative?: { label: string; icon?: string; onSelect: () => void };
 }>();
 const emit = defineEmits<{ close: [value?: string] }>();
 
@@ -38,6 +40,17 @@ function submit() {
     <template #footer>
       <div class="flex w-full justify-end gap-2">
         <UButton :label="$t('common.cancel')" color="neutral" variant="ghost" @click="emit('close')" />
+        <UButton
+          v-if="alternative"
+          :label="alternative.label"
+          :icon="alternative.icon"
+          color="neutral"
+          variant="outline"
+          @click="
+            emit('close');
+            alternative.onSelect();
+          "
+        />
         <UButton type="submit" form="prompt" :label="action ?? $t('common.confirm')" :disabled="!text.trim()" />
       </div>
     </template>

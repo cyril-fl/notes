@@ -9,7 +9,6 @@ defineProps<{ collapsed?: boolean }>();
 const api = useApi();
 const route = useRoute();
 const { createFolder, tagMenu, pinItem } = useItems();
-const { addSavedSearch } = useSavedSearches();
 const searchOpen = useState('search-open', () => false);
 const colorMode = useColorMode();
 const { has } = usePro();
@@ -228,6 +227,11 @@ const isOverRoot = useDropFolder(rootLink, () => null);
           </div>
         </section>
 
+        <section v-if="has('savedSearches') && sections.savedSearches && me?.saved_searches?.length">
+          <h2 class="px-2 pb-1 text-xs font-medium text-muted">{{ $t('sidebar.savedSearches') }}</h2>
+          <SavedSearchRow v-for="search in me.saved_searches" :key="search.id" :search="search" />
+        </section>
+
         <section v-if="sections.pinned && pinnedNotes.length">
           <h2 class="px-2 pb-1 text-xs font-medium text-muted">{{ $t('sidebar.pinned') }}</h2>
           <div
@@ -297,23 +301,6 @@ const isOverRoot = useDropFolder(rootLink, () => null);
             </UTooltip>
           </div>
           <FolderTree />
-        </section>
-
-        <section v-if="has('savedSearches')">
-          <div class="flex items-center">
-            <h2 class="flex-1 px-2 pb-1 text-xs font-medium text-muted">{{ $t('sidebar.savedSearches') }}</h2>
-            <UTooltip :text="$t('search.saved.add')">
-              <UButton
-                :icon="icons.add"
-                color="neutral"
-                variant="ghost"
-                size="xs"
-                :aria-label="$t('search.saved.add')"
-                @click="addSavedSearch"
-              />
-            </UTooltip>
-          </div>
-          <SavedSearchRow v-for="search in me?.saved_searches" :key="search.id" :search="search" />
         </section>
       </div>
     </template>

@@ -8,6 +8,7 @@ type Call = { url: string; method?: string; body?: unknown };
 // The Nuxt auto-imports useItems reads, faked: an API that records its calls, dialogs that answer as told.
 function fake({ path = '/', pinned = [] as string[], answer = undefined as unknown, fails = false } = {}) {
   const calls: Call[] = [];
+  const prompts: { alternative?: { label: string } }[] = [];
   const navigations: unknown[] = [];
   let refreshes = 0;
   Object.assign(globalThis, {
@@ -19,7 +20,11 @@ function fake({ path = '/', pinned = [] as string[], answer = undefined as unkno
         return 'ok';
       },
     useRoute: () => ({ path }),
-    useDialogs: () => ({ prompt: async () => answer, confirm: async () => answer }),
+    useDialogs: () => ({
+      prompt: async (props: (typeof prompts)[number]) => (prompts.push(props), answer),
+      confirm: async () => answer,
+    }),
+    usePro: () => ({ has: () => true }),
     useIcons: () => ({ icons: new Proxy({}, { get: (_, name) => name }) }),
     useI18n: () => ({ t: (key: string) => key }),
     useToast: () => ({ add: () => {} }),
@@ -27,7 +32,7 @@ function fake({ path = '/', pinned = [] as string[], answer = undefined as unkno
     refreshNuxtData: async () => void refreshes++,
     navigateTo: async (to: unknown) => void navigations.push(to),
   });
-  return { calls, navigations, refreshes: () => refreshes };
+  return { calls, navigations, prompts, refreshes: () => refreshes };
 }
 
 const note = { id: 'n1', kind: 'note', title: 'Note' } as Item;
@@ -134,4 +139,14 @@ test('pinning from the menu patches the item at its route', async () => {
   const [[pin]] = useItems().itemMenu(folder).slice(1);
   await pin!.onSelect!(new Event('select'));
   assert.deepEqual(api.calls, [{ url: '/api/folders/f1', method: 'PATCH', body: { pinned: true } }]);
+});
+
+test('a new folder at the root offers a smart folder instead, a subfolder does not', async () => {
+  const api = fake();
+  await useItems().createFolder();
+  await useItems().createFolder('f1');
+  assert.deepEqual(
+    api.prompts.map((p) => p.alternative?.label),
+    ['search.saved.add', undefined],
+  );
 });

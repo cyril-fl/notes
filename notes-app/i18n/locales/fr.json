@@ -19,6 +19,7 @@
     "backToNotes": "Retour aux notes",
     "root": "Racine",
     "navigation": "Navigation",
+    "save": "Enregistrer",
     "typeToConfirm": "Tapez « {text} » pour confirmer"
   },
   "api": {
@@ -39,7 +40,7 @@
     "unpin": "Désépingler",
     "account": "Compte",
     "accountMenu": "Menu du compte",
-    "savedSearches": "Recherches enregistrées"
+    "savedSearches": "Dossiers intelligents"
   },
   "search": {
     "placeholder": "Chercher une note, une action…",
@@ -54,8 +55,8 @@
     "moveTo": "Déplacer vers…",
     "theme": "Changer de thème",
     "saved": {
-      "add": "Nouvelle recherche",
-      "edit": "Modifier la recherche",
+      "add": "Dossier intelligent",
+      "edit": "Modifier le dossier intelligent",
       "delete": "Supprimer « {name} » ?",
       "moveUp": "Monter",
       "moveDown": "Descendre",
@@ -77,8 +78,8 @@
       "editedTo": "Modifiée avant le",
       "text": "Texte",
       "textPlaceholder": "Contient le texte…",
-      "notFound": "Cette recherche n'existe pas",
-      "notFoundDescription": "Elle a peut-être été supprimée.",
+      "notFound": "Ce dossier intelligent n'existe pas",
+      "notFoundDescription": "Il a peut-être été supprimé.",
       "empty": "Aucune note ne correspond",
       "emptyDescription": "Change les critères de cette recherche dans les réglages."
     }
@@ -314,7 +315,8 @@
       "description": "Les listes de la barre latérale, sur cet appareil",
       "favorites": "Favoris",
       "pinned": "Notes épinglées",
-      "recent": "Notes récentes"
+      "recent": "Notes récentes",
+      "savedSearches": "Dossiers intelligents"
     },
     "modeSystem": "Système",
     "modeLight": "Clair",
@@ -341,9 +343,9 @@
     "addSnippet": "Ajouter",
     "editSnippet": "Modifier",
     "deleteSnippet": "Supprimer « {name} » ?",
-    "savedSearches": "Recherches enregistrées",
-    "savedSearchesDescription": "Affichées dans la barre latérale, après les dossiers.",
-    "savedSearchesEmpty": "Aucune recherche enregistrée.",
+    "savedSearches": "Dossiers intelligents",
+    "savedSearchesDescription": "Affichés dans la barre latérale, comme les favoris.",
+    "savedSearchesEmpty": "Aucun dossier intelligent.",
     "snippetName": "Nom",
     "snippetContent": "Contenu",
     "save": "Enregistrer",
@@ -377,7 +379,7 @@
       "proDescription": "Des outils en plus, pour un usage avancé.",
       "links": "Liens",
       "linksDescription": "Les liens entre notes qui ne mènent à aucune note, ou à plusieurs, et les fichiers cités que le serveur n’a pas.",
-      "savedSearches": "Recherches enregistrées",
+      "savedSearches": "Dossiers intelligents",
       "savedSearchesDescription": "Des dossiers virtuels : tags, dates et dossiers inclus ou exclus, rejoués à chaque ouverture.",
       "storage": "Stockage",
       "accounts": "Utilisateurs",
@@ -458,7 +460,7 @@
     "attachments": "Joindre un PDF, un zip, un son ou une vidéo à une note, en lien qui le télécharge",
     "linkCards": "Un lien web ou mail en lien simple, en mini carte ou en grande carte",
     "snippets": "Les snippets insérés avec ;; et les modèles de nouvelle note, définis dans les réglages",
-    "savedSearches": "Les recherches enregistrées, affichées comme des dossiers virtuels dans la barre latérale",
+    "savedSearches": "Les dossiers intelligents : des recherches rejouées, affichées dans la barre latérale",
     "search": "La recherche et la palette Cmd K",
     "themes": "Les thèmes de couleurs, en mode clair et sombre",
     "importExport": "Importer un zip, des fichiers .md ou un coffre Obsidian ; exporter tout, un dossier ou une sélection",

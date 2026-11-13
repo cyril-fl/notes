@@ -19,6 +19,7 @@
     "backToNotes": "Back to notes",
     "root": "Root",
     "navigation": "Navigation",
+    "save": "Save",
     "typeToConfirm": "Type “{text}” to confirm"
   },
   "api": {
@@ -39,7 +40,7 @@
     "unpin": "Unpin",
     "account": "Account",
     "accountMenu": "Account menu",
-    "savedSearches": "Saved searches"
+    "savedSearches": "Smart folders"
   },
   "search": {
     "placeholder": "Search a note, an action…",
@@ -54,8 +55,8 @@
     "moveTo": "Move to…",
     "theme": "Change theme",
     "saved": {
-      "add": "New saved search",
-      "edit": "Edit the saved search",
+      "add": "Smart folder",
+      "edit": "Edit the smart folder",
       "delete": "Delete “{name}”?",
       "moveUp": "Move up",
       "moveDown": "Move down",
@@ -77,7 +78,7 @@
       "editedTo": "Edited before",
       "text": "Text",
       "textPlaceholder": "Contains the text…",
-      "notFound": "This saved search does not exist",
+      "notFound": "This smart folder does not exist",
       "notFoundDescription": "It may have been deleted.",
       "empty": "No note matches",
       "emptyDescription": "Change this search's criteria in the settings."
@@ -314,7 +315,8 @@
       "description": "The sidebar lists, on this device",
       "favorites": "Favorites",
       "pinned": "Pinned notes",
-      "recent": "Recent notes"
+      "recent": "Recent notes",
+      "savedSearches": "Smart folders"
     },
     "modeSystem": "System",
     "modeLight": "Light",
@@ -343,9 +345,9 @@
     "deleteSnippet": "Delete “{name}”?",
     "snippetName": "Name",
     "snippetContent": "Content",
-    "savedSearches": "Saved searches",
-    "savedSearchesDescription": "Shown in the sidebar, after the folders.",
-    "savedSearchesEmpty": "No saved search.",
+    "savedSearches": "Smart folders",
+    "savedSearchesDescription": "Shown in the sidebar, like the favorites.",
+    "savedSearchesEmpty": "No smart folder.",
     "save": "Save",
     "pro": "Advanced mode",
     "plan": "Plan",
@@ -377,7 +379,7 @@
       "proDescription": "More tools, for advanced use.",
       "links": "Links",
       "linksDescription": "The links between notes that lead to no note, or to several, and the cited files the server lacks.",
-      "savedSearches": "Saved searches",
+      "savedSearches": "Smart folders",
       "savedSearchesDescription": "Virtual folders: tags, dates and included or excluded folders, replayed every time they are opened.",
       "storage": "Storage",
       "accounts": "Users",
@@ -458,7 +460,7 @@
     "attachments": "Attach a PDF, a zip, a sound or a video to a note, as a link that downloads it",
     "linkCards": "A web or mail link as a plain link, a mini card or a large card",
     "snippets": "Snippets inserted with ;; and templates for a new note, set in the settings",
-    "savedSearches": "Saved searches, shown as virtual folders in the sidebar",
+    "savedSearches": "Smart folders: searches replayed, shown in the sidebar",
     "search": "Search and the Cmd K palette",
     "themes": "Color themes, in light and dark mode",
     "importExport": "Import a zip, .md files or an Obsidian vault; export everything, a folder or a selection",

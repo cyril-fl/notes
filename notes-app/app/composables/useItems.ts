@@ -14,6 +14,8 @@ export function useItems() {
   const { icons } = useIcons();
   const { t } = useI18n();
   const toast = useToast();
+  const { has } = usePro();
+  const { addSavedSearch } = useSavedSearches();
 
   // On failure the toast already told the user.
   async function act<T>(request: () => Promise<T>): Promise<T | undefined> {
@@ -30,7 +32,10 @@ export function useItems() {
     const title = await prompt({
       title: t('common.newFolder'),
       placeholder: t('items.folderName'),
-      action: t('common.create'),
+      action: t('common.save'),
+      // A smart folder lives in the sidebar, not in a folder: offered at the root only.
+      alternative:
+        !parentId && has('savedSearches') ? { label: t('search.saved.add'), onSelect: addSavedSearch } : undefined,
     });
     if (!title) return;
     const body = { title, parent_id: parentId };

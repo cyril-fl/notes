@@ -52,7 +52,6 @@ async function changeLanguage(next: string) {
 // The layout applies the theme of me, and saves the mode to the account whenever it changes.
 const colorMode = useColorMode();
 const sidebar = useSidebarSections();
-const sidebarSections = ['favorites', 'pinned', 'recent'] as const;
 const modes = computed(() => [
   { label: t('settings.modeSystem'), value: 'system', icon: icons.systemMode },
   { label: t('settings.modeLight'), value: 'light', icon: icons.lightMode },
@@ -66,6 +65,9 @@ async function changeTheme(next: string) {
 const { plan, has } = usePro();
 
 // Read only where the section shows: it opens every note of the account.
+const sidebarSections = computed(() =>
+  (['favorites', 'pinned', 'recent', 'savedSearches'] as const).filter((s) => s !== 'savedSearches' || has(s)),
+);
 const showLinks = computed(() => show('links') && has('brokenLinks'));
 // A key per state: another section's page, still mounted during the navigation, would hand over its null.
 const { data: brokenLinks } = useLazyAsyncData(
