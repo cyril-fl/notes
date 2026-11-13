@@ -53,6 +53,7 @@ type commands struct {
 	Export        plumcliconfig.Cmdparams `yaml:"export"`
 	Import        plumcliconfig.Cmdparams `yaml:"import"`
 	Serve         plumcliconfig.Cmdparams `yaml:"serve"`
+	MCP           plumcliconfig.Cmdparams `yaml:"mcp"`
 	Login         plumcliconfig.Cmdparams `yaml:"login"`
 	Logout        plumcliconfig.Cmdparams `yaml:"logout"`
 	User          plumcliconfig.Cmdparams `yaml:"user"`

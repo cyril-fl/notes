@@ -105,7 +105,7 @@ var groups = []struct {
 	{cobra.Group{ID: "trash", Title: "Trash:"}, []string{"trash", "restore"}},
 	{cobra.Group{ID: "files", Title: "Markdown files:"}, []string{"import", "export"}},
 	{cobra.Group{ID: "account", Title: "Account:"}, []string{"login", "logout", "account"}},
-	{cobra.Group{ID: "admin", Title: "Admin (on the server):"}, []string{"user", "reset-password", "rotate-secret", "serve"}},
+	{cobra.Group{ID: "admin", Title: "Admin (on the server):"}, []string{"user", "reset-password", "rotate-secret", "serve", "mcp"}},
 }
 
 func groupCommands() {

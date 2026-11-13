@@ -169,6 +169,16 @@ notes search recette --json | jq -r '.[].id'
 
 Le détail de chaque commande est dans `notes <commande> --help`.
 
+## MCP (agents)
+
+```sh
+notes mcp   # parle MCP sur stdin/stdout, pour le compte de la session CLI (notes login)
+```
+
+`notes mcp` donne à un agent six outils sur les notes du compte : `search_notes`, `recent_notes`, `read_note`, `list_folder`, `create_note`, `edit_note`. Il passe par les mêmes processus que la CLI et l'API, n'écoute sur aucun port et n'a rien à authentifier : c'est la session CLI de la machine qui décide du compte. Une note se désigne par son uuid ou par son chemin depuis la racine (`/Dossier/Note`). `edit_note` remplace tout le contenu de la note, et refuse une note verrouillée.
+
+Côté client, c'est un serveur MCP lancé par commande (`command: notes`, `args: ["mcp"]`), à faire tourner là où la base est joignable. Pour un agent qui tourne sur le serveur, rien d'autre à installer.
+
 ## API
 
 ```sh

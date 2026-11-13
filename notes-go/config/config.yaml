@@ -299,6 +299,11 @@ commands:
         value: "invitation"
         usage: "How accounts are created: invitation (an admin invites or creates them) or public (anyone reaching the web app)"
         type: "string"
+  mcp:
+    use: "mcp"
+    short: "Serve the account's notes to an agent (MCP, stdio)"
+    long: "Serve the notes of the logged-in account to an agent over MCP on stdin and stdout: search, read, create and edit. It talks to the database like the rest of the CLI, listens on no port, and acts for the account of this CLI session (notes login)."
+    example: "notes mcp"
   login:
     use: "login"
     short: "Log the CLI in to an account"
