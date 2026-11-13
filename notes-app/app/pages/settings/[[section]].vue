@@ -186,20 +186,36 @@ const accountColumns = computed<TableColumn<Account>[]>(() => [
   { id: 'actions' },
 ]);
 
-// The link of a new invitation, shown until the page leaves: the API keeps the hash of the token only, so this is
-// the one chance to copy it. Its address is the page's own, the API not knowing where the app is served.
-const newInvite = ref('');
+// The base keeps the token sealed, so every pending invitation shows its own link. Its address is the page's own,
+// the API not knowing where the app is served.
+function inviteLink(token: string) {
+  return `${window.location.origin}/signup?invite=${token}`;
+}
+const inviting = ref(false);
+const invitesOpen = ref(false);
 
 async function invite() {
-  const made = await api<{ token: string }>('/api/invites', { method: 'POST' });
-  newInvite.value = `${window.location.origin}/signup?invite=${made.token}`;
+  if (inviting.value) return; // a second click before the button renders disabled would make a second invitation
+  inviting.value = true;
+  try {
+    const made = await api<{ invite: Invite }>('/api/invites', { method: 'POST' });
+    await refreshInvites();
+    invitesOpen.value = true; // the new link shows right away, the list being folded by default
+    // The token is read from the list, where it comes back opened, and not from the answer of the creation.
+    const token = (invites.value ?? []).find((pending) => pending.id === made.invite.id)?.token;
+    if (token) await copyInvite(token);
+  } finally {
+    inviting.value = false;
+  }
+}
+
+async function copyInvite(token: string) {
   // Over plain HTTP, or without the permission, the clipboard refuses: the link stays readable in the page.
-  const copied = await navigator.clipboard.writeText(newInvite.value).then(
+  const copied = await navigator.clipboard.writeText(inviteLink(token)).then(
     () => true,
     () => false,
   );
   if (copied) toast.add({ title: t('settings.inviteCopied'), color: 'success' });
-  await refreshInvites();
 }
 
 async function revokeInvite(id: string) {
@@ -485,15 +501,12 @@ async function deleteData() {
 
       <section v-if="showAccounts">
         <SettingsHeading id="accounts" />
-        <div class="mb-3 flex flex-wrap items-center gap-2">
-          <UInput
-            v-model="accountSearch"
-            :placeholder="$t('settings.searchAccount')"
-            :icon="icons.search"
-            class="flex-1 basis-48"
-          />
-          <UButton :label="$t('settings.invite')" :icon="icons.invite" color="neutral" @click="invite" />
-        </div>
+        <UInput
+          v-model="accountSearch"
+          :placeholder="$t('settings.searchAccount')"
+          :icon="icons.search"
+          class="mb-3 w-full"
+        />
         <div class="rounded-lg border border-default">
           <UTable :data="pagedAccounts" :columns="accountColumns" :ui="{ root: 'rounded-lg' }">
             <template #name-cell="{ row }">
@@ -542,33 +555,82 @@ async function deleteData() {
           </div>
         </div>
 
-        <h3 class="mt-6 mb-2 text-xs font-medium text-muted">{{ $t('settings.invites') }}</h3>
-        <p class="mb-2 text-xs text-muted">{{ $t('settings.invitesDescription') }}</p>
-        <UInput
-          v-if="newInvite"
-          :model-value="newInvite"
-          readonly
-          class="mb-2 w-full"
-          :aria-label="$t('settings.inviteLink')"
-        />
-        <ul class="divide-y divide-default rounded-lg border border-default">
-          <li v-for="pending in invites ?? []" :key="pending.id" class="flex items-center gap-3 px-4 py-2">
-            <UIcon :name="icons.invite" class="size-4 shrink-0 text-muted" />
-            <p class="min-w-0 flex-1 truncate text-sm">
-              {{ $t('settings.inviteExpires', { date: new Date(pending.expires_at).toLocaleDateString(locale) }) }}
-            </p>
-            <UButton
-              :label="$t('settings.revoke')"
-              color="error"
-              variant="ghost"
-              size="sm"
-              @click="revokeInvite(pending.id)"
-            />
-          </li>
-          <li v-if="invites && !invites.length" class="px-4 py-3 text-xs text-muted">
-            {{ $t('settings.invitesEmpty') }}
-          </li>
-        </ul>
+        <!-- Folded, and reduced to the Invite button without a pending invitation: the accounts stay the one list. -->
+        <UCollapsible v-if="invites?.length" v-model:open="invitesOpen" class="mt-2">
+          <template #default="{ open }">
+            <div class="flex flex-wrap items-center gap-4 py-3">
+              <UButton
+                :label="$t('settings.invites', { count: invites?.length ?? 0 })"
+                :trailing-icon="open ? icons.chevronUp : icons.chevronDown"
+                color="neutral"
+                variant="ghost"
+                size="xs"
+                class="-ml-2"
+              />
+              <!-- click.stop, the slot of a collapsible folding it on any click. -->
+              <UButton
+                :label="$t('settings.invite')"
+                :ui="{ label: 'max-sm:sr-only' }"
+                :icon="icons.invite"
+                :loading="inviting"
+                color="neutral"
+                variant="outline"
+                class="ml-auto"
+                @click.stop="invite"
+              />
+            </div>
+          </template>
+          <template #content>
+            <p class="mt-2 mb-2 text-xs text-muted">{{ $t('settings.invitesDescription') }}</p>
+            <ul class="divide-y divide-default rounded-lg border border-default">
+              <li v-for="pending in invites" :key="pending.id" class="flex flex-wrap items-center gap-3 px-4 py-2">
+                <UIcon :name="icons.invite" class="size-4 shrink-0 text-muted" />
+                <span class="shrink-0 text-xs text-muted">
+                  {{ $t('settings.inviteExpires', { date: new Date(pending.expires_at).toLocaleDateString(locale) }) }}
+                </span>
+                <!-- An invitation made before the token was kept has none: its row only expires and revokes. -->
+                <UInput
+                  v-if="pending.token"
+                  :model-value="inviteLink(pending.token)"
+                  readonly
+                  size="sm"
+                  class="min-w-0 flex-1 basis-64"
+                  :aria-label="$t('settings.inviteLink')"
+                >
+                  <template #trailing>
+                    <UButton
+                      :icon="icons.copy"
+                      :aria-label="$t('settings.copyInvite')"
+                      color="neutral"
+                      variant="link"
+                      size="sm"
+                      @click="copyInvite(pending.token)"
+                    />
+                  </template>
+                </UInput>
+                <UButton
+                  :label="$t('settings.revoke')"
+                  color="error"
+                  variant="ghost"
+                  size="sm"
+                  class="ml-auto"
+                  @click="revokeInvite(pending.id)"
+                />
+              </li>
+            </ul>
+          </template>
+        </UCollapsible>
+        <div v-else class="mt-2 flex justify-end py-3">
+          <UButton
+            :label="$t('settings.invite')"
+            :ui="{ label: 'max-sm:sr-only' }"
+            :icon="icons.invite"
+            :loading="inviting"
+            color="neutral"
+            variant="outline"
+            @click="invite"
+          />
+        </div>
       </section>
 
       <section v-if="show('pro')">

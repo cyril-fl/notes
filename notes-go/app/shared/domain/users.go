@@ -100,16 +100,20 @@ type Session struct {
 	ExpiresAt time.Time `bun:",notnull"`
 }
 
-// Invite is a link an admin hands out so someone creates their own account: the link holds the token, the base only its hash.
+// Invite is a link an admin hands out so someone creates their own account: the base keeps the hash of its token,
+// and the token sealed, which only the admin panel reads back.
 type Invite struct {
 	bun.BaseModel `bun:"table:invites,alias:iv" json:"-"`
 
-	ID        string    `bun:",pk,type:uuid,default:gen_random_uuid()" json:"id"`
-	TokenHash string    `bun:",notnull,unique" json:"-"`
-	UserID    string    `bun:",notnull,type:uuid" json:"created_by"` // the admin who made it
-	CreatedAt time.Time `bun:",notnull,default:current_timestamp" json:"created_at"`
-	ExpiresAt time.Time `bun:",notnull" json:"expires_at"`
-	UsedAt    time.Time `bun:",nullzero" json:"-"` // set when it created an account, so a link serves once
+	ID        string `bun:",pk,type:uuid,default:gen_random_uuid()" json:"id"`
+	TokenHash string `bun:",notnull,unique" json:"-"`
+	// The token itself, sealed with the key of the admin who made it, so the admin panel shows the link again:
+	// "" (NULL) for the invitations made before it was kept. The sign-up still finds an invitation by TokenHash.
+	Token     secret.Text `bun:",type:text" json:"token" swaggertype:"string"`
+	UserID    string      `bun:",notnull,type:uuid" json:"created_by"` // the admin who made it
+	CreatedAt time.Time   `bun:",notnull,default:current_timestamp" json:"created_at"`
+	ExpiresAt time.Time   `bun:",notnull" json:"expires_at"`
+	UsedAt    time.Time   `bun:",nullzero" json:"-"` // set when it created an account, so a link serves once
 }
 
 // AddUserModes are the ways an account is created on a server, the first one by default: by invitation of an admin

@@ -14,9 +14,13 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/adduser"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createsession"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deleteuser"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/silo"
 	"github.com/uptrace/bun"
 )
+
+// pendingInvites keeps the invitations still usable: neither used nor expired.
+const pendingInvites = "used_at IS NULL AND expires_at > current_timestamp"
 
 // Account is an account as the admin panel lists it: the settings of someone else are none of its business.
 type Account struct {
@@ -198,9 +202,23 @@ func Invites(db bun.IDB) http.HandlerFunc {
 			return
 		}
 
+		// Each token is sealed with the key of the admin who made it, and an admin reads the invitations of the
+		// others: their keys must be in memory before the scan opens the tokens.
+		var admins []string
+		if err := db.NewSelect().Model((*domain.Invite)(nil)).Distinct().Column("user_id").
+			Where(pendingInvites).Scan(r.Context(), &admins); err != nil {
+			respond.Error(w, err)
+			return
+		}
+		for _, admin := range admins {
+			if err := secret.Load(r.Context(), db, admin); err != nil {
+				respond.Error(w, err)
+				return
+			}
+		}
+
 		var invites []domain.Invite
-		err := db.NewSelect().Model(&invites).
-			Where("used_at IS NULL AND expires_at > current_timestamp").Order("created_at DESC").Scan(r.Context())
+		err := db.NewSelect().Model(&invites).Where(pendingInvites).Order("created_at DESC").Scan(r.Context())
 		if err != nil {
 			respond.Error(w, err)
 			return

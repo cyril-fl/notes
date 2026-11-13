@@ -2871,6 +2871,11 @@ export interface components {
             created_by: string;
             expires_at: string;
             id: string;
+            /**
+             * @description The token itself, sealed with the key of the admin who made it, so the admin panel shows the link again:
+             *     "" (NULL) for the invitations made before it was kept. The sign-up still finds an invitation by TokenHash.
+             */
+            token: string;
         };
         "domain.Item": {
             created_at: string;

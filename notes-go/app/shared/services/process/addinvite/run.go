@@ -6,6 +6,7 @@ import (
 
 	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/password"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 )
@@ -54,11 +55,19 @@ func (p *run) GetResult() Result {
 
 func (p *run) saveInvite() {
 	p.cache.result.Token = password.Token()
+	admin := domain.UserID(p.ctx)
+	sealed, err := secret.Seal(admin, p.cache.result.Token)
+	if err != nil {
+		p.SetErr(err)
+		return
+	}
 	p.cache.result.Invite = domain.Invite{
-		UserID:    domain.UserID(p.ctx),
+		UserID:    admin,
 		TokenHash: password.TokenHash(p.cache.result.Token),
+		Token:     sealed,
 		ExpiresAt: time.Now().Add(Lifetime),
 	}
-	_, err := p.db.NewInsert().Model(&p.cache.result.Invite).Returning("id, created_at").Exec(p.ctx)
+	_, err = p.db.NewInsert().Model(&p.cache.result.Invite).Returning("id, created_at").Exec(p.ctx)
 	p.SetErr(err)
+	p.cache.result.Invite.Token = secret.Text(p.cache.result.Token) // in clear, as the list gives it: never the sealed form
 }

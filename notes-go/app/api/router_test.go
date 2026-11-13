@@ -970,14 +970,23 @@ func TestAccounts(t *testing.T) {
 
 	var invite struct {
 		Token  string
-		Invite struct{ ID string }
+		Invite struct{ ID, Token string }
 	}
 	c.do("POST", "/api/invites", "", http.StatusCreated, &invite)
-	if invite.Token == "" || invite.Invite.ID == "" {
+	if invite.Token == "" || invite.Invite.ID == "" || invite.Invite.Token != invite.Token {
 		t.Fatalf("invite = %+v", invite)
 	}
 	if w := send("GET", "/api/add-user?invite="+invite.Token, ""); !strings.Contains(w.Body.String(), `"allowed":true`) {
 		t.Errorf("add-user with the invitation: body = %s", w.Body)
+	}
+
+	// The base keeps the token sealed: the admin panel reads it back to show the link of a pending invitation again.
+	var listed []struct{ ID, Token string }
+	c.do("GET", "/api/invites", "", http.StatusOK, &listed)
+	if !slices.ContainsFunc(listed, func(l struct{ ID, Token string }) bool {
+		return l.ID == invite.Invite.ID && l.Token == invite.Token
+	}) {
+		t.Errorf("the invitation does not give its token back: %+v", listed)
 	}
 
 	// A name already taken does not spend the invitation, a password too short neither.

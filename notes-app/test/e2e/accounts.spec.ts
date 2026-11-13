@@ -28,9 +28,9 @@ test('the accounts section invites, and the invitation link creates an account t
     await page.goto('/settings/accounts');
     await expect(page.getByRole('cell', { name: account.name })).toBeVisible();
 
-    // The link shows once, at its creation.
+    // Every pending invitation shows its link, the newest one first: the list may already hold others.
     await page.getByRole('button', { name: 'Inviter' }).click();
-    const link = page.getByRole('textbox', { name: /Lien d.invitation/ });
+    const link = page.getByRole('textbox', { name: /Lien d.invitation/ }).first();
     await expect(link).toBeVisible();
     const url = await link.inputValue();
     expect(url).toContain('/signup?invite=');
