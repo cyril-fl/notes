@@ -65,7 +65,7 @@ func (p *run) loadUser() {
 		return
 	}
 
-	err := p.db.NewSelect().Model(&p.cache.user).ExcludeColumn("snippets").Where("id = ?", p.userID).Scan(p.ctx)
+	err := p.db.NewSelect().Model(&p.cache.user).ExcludeColumn("snippets", "saved_searches").Where("id = ?", p.userID).Scan(p.ctx)
 	if errors.Is(err, sql.ErrNoRows) {
 		p.SetErr(ErrNotFound)
 		return

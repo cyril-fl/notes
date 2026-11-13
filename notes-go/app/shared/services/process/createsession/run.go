@@ -72,7 +72,7 @@ func (p *run) GetResult() Result {
 
 func (p *run) checkPassword() {
 	user := &p.cache.result.User
-	err := p.db.NewSelect().Model(user).ExcludeColumn("snippets").Where("lower(name) = lower(?)", strings.TrimSpace(p.input.Name)).Scan(p.ctx)
+	err := p.db.NewSelect().Model(user).ExcludeColumn("snippets", "saved_searches").Where("lower(name) = lower(?)", strings.TrimSpace(p.input.Name)).Scan(p.ctx)
 	if errors.Is(err, sql.ErrNoRows) {
 		password.Verify(p.input.Password, dummyHash)
 		p.SetErr(ErrBadCredentials)
@@ -87,7 +87,7 @@ func (p *run) checkPassword() {
 	}
 }
 
-// loadKey reads the snippets once the key of the account opens them.
+// loadKey reads the snippets and saved searches once the key of the account opens them.
 func (p *run) loadKey() {
 	if p.HasErr() {
 		return
@@ -96,7 +96,7 @@ func (p *run) loadKey() {
 	user := &p.cache.result.User
 	err := secret.Load(p.ctx, p.db, user.ID)
 	if err == nil {
-		err = p.db.NewSelect().Model(user).Column("snippets").WherePK().Scan(p.ctx)
+		err = p.db.NewSelect().Model(user).Column("snippets", "saved_searches").WherePK().Scan(p.ctx)
 	}
 	p.SetErr(err)
 }
