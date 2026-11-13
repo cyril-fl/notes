@@ -46,18 +46,21 @@ export const features = {
 
 export type Feature = keyof typeof features;
 
-/** The subsection of each feature in the settings' comparison: a Record, so a new feature cannot be left out. */
-const groups: Record<Feature, 'display' | 'editing' | 'navigation' | 'data'> = {
+/**
+ * The subsection of each feature in the settings' comparison: a Record, so a new feature cannot be left out.
+ * implied: left out of the table, it comes with a feature already listed (the " / " menu, the [[ links, the Data section).
+ */
+const groups: Record<Feature, 'display' | 'editing' | 'navigation' | 'data' | 'implied'> = {
   graph: 'navigation',
   focusMode: 'display',
   contextPanel: 'display',
   settingsNav: 'navigation',
   slashCommands: 'editing',
-  tables: 'editing',
+  tables: 'implied',
   codeHighlight: 'display',
-  callouts: 'editing',
+  callouts: 'implied',
   wordCount: 'display',
-  contextMenu: 'editing',
+  contextMenu: 'implied',
   paletteActions: 'navigation',
   sourceMode: 'editing',
   noteLock: 'editing',
@@ -65,20 +68,20 @@ const groups: Record<Feature, 'display' | 'editing' | 'navigation' | 'data'> = {
   brokenLinks: 'navigation',
   storageFiles: 'data',
   wikiLinks: 'editing',
-  linkSuggestions: 'editing',
-  noteEmbeds: 'editing',
+  linkSuggestions: 'implied',
+  noteEmbeds: 'implied',
   images: 'editing',
   attachments: 'editing',
   linkCards: 'editing',
-  tagSuggestions: 'editing',
+  tagSuggestions: 'implied',
   snippets: 'editing',
   search: 'navigation',
-  favorites: 'navigation',
-  backlinks: 'navigation',
+  favorites: 'implied',
+  backlinks: 'implied',
   themes: 'display',
   importExport: 'data',
   trash: 'data',
-  storageUsage: 'data',
+  storageUsage: 'implied',
 };
 
 /** The features the settings compare between the standard and the Pro mode, by subsection. */
