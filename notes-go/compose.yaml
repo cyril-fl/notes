@@ -22,7 +22,7 @@ services:
     environment:
       # The file of .env.docker does not exist in the image: use the config built into the binary.
       CONFIG_FILE: ""
-    command: serve --addr :8080 --origin=${WEB_ORIGIN:-}
+    command: serve --addr :8080 --origin=${WEB_ORIGIN:-} --add-user-mode=${NOTES_ADD_USER_MODE:-invitation}
     # No authentication: this port must stay on the loopback.
     ports:
       - "127.0.0.1:8080:8080"
