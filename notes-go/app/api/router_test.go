@@ -494,21 +494,20 @@ func TestTagsAndGraph(t *testing.T) {
 
 	var notes struct {
 		Notes []struct {
-			ID string `json:"id"`
+			ID   string   `json:"id"`
+			Tags []string `json:"tags"`
 		} `json:"notes"`
-		Links []struct {
-			Source string   `json:"source"`
-			Target string   `json:"target"`
-			Tags   []string `json:"tags"`
-		} `json:"links"`
+		Links []struct{} `json:"links"`
 	}
 	c.do("GET", "/api/graph/notes", "", http.StatusOK, &notes)
-	linked := false
-	for _, link := range notes.Links {
-		linked = linked || (link.Source == a.ID && link.Target == b.ID || link.Source == b.ID && link.Target == a.ID) && slices.Equal(link.Tags, []string{first})
+	tagged := 0
+	for _, note := range notes.Notes {
+		if (note.ID == a.ID || note.ID == b.ID) && slices.Contains(note.Tags, first) {
+			tagged++
+		}
 	}
-	if !linked {
-		t.Errorf("graph notes have no link between a and b on %s: %+v", first, notes.Links)
+	if tagged != 2 || notes.Links == nil {
+		t.Errorf("graph notes: a and b carry %s %d times, want 2; links %v", first, tagged, notes.Links)
 	}
 	var list []struct {
 		ID string `json:"id"`

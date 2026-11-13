@@ -486,21 +486,12 @@ components:
       type: object
     readgraph.Link:
       properties:
-        linked:
-          type: boolean
         source:
           type: string
-        tags:
-          items:
-            type: string
-          type: array
-          uniqueItems: false
         target:
           type: string
       required:
-      - linked
       - source
-      - tags
       - target
       type: object
     readgraph.Note:
@@ -509,6 +500,11 @@ components:
           type: string
         path:
           type: string
+        tags:
+          items:
+            type: string
+          type: array
+          uniqueItems: false
         title:
           type: string
       required:
@@ -1258,7 +1254,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/respond.Failure'
           description: Internal Server Error
-      summary: Read every note and the links between those sharing tags
+      summary: Read every note with its tags, and the links between them
       tags:
       - graph
   /api/import:

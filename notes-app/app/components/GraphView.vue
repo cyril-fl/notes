@@ -3,7 +3,8 @@ import type { NotesGraph } from '~/types/items';
 
 const { icons } = useIcons();
 
-type Link = NotesGraph['links'][number];
+// tag: a note to one of its tags; otherwise a [[link]] between two notes.
+type Edge = { source: string; target: string; tag: boolean };
 
 // mini: in a narrow panel, icons instead of titles, and the card of the hovered note in a popover drawn out of the panel.
 const props = defineProps<{ graph: NotesGraph; selected?: string; mini?: boolean }>();
@@ -19,15 +20,32 @@ function hover(id: string, event: Event) {
   carded.value = id;
   anchor.value = event.currentTarget as HTMLElement;
 }
+// A tag lights up its notes, without a card.
+function hoverTag(tag: string) {
+  hovered.value = tagNode(tag);
+}
 const active = computed(() => hovered.value ?? props.selected ?? null);
 
 const positions = computed(() => layoutGraph(props.graph.notes, props.graph.links));
 
-function isActiveLink(link: Link) {
-  return link.source === active.value || link.target === active.value;
+// The tags are nodes too, each with how many notes carry it.
+const tags = computed(() => {
+  const counts = new Map<string, number>();
+  for (const note of props.graph.notes) for (const tag of note.tags ?? []) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+  return counts;
+});
+const edges = computed<Edge[]>(() => [
+  ...props.graph.links.map((link) => ({ ...link, tag: false })),
+  ...props.graph.notes.flatMap((note) =>
+    (note.tags ?? []).map((tag) => ({ source: note.id, target: tagNode(tag), tag: true })),
+  ),
+]);
+
+function isActiveLink(edge: Edge) {
+  return edge.source === active.value || edge.target === active.value;
 }
 
-const activeLinks = computed(() => props.graph.links.filter(isActiveLink));
+const activeLinks = computed(() => edges.value.filter(isActiveLink));
 
 const linkedToActive = computed(() => new Set(activeLinks.value.flatMap((link) => [link.source, link.target])));
 
@@ -39,7 +57,7 @@ const cardLinks = computed(() =>
 
 const titles = computed(() => new Map(props.graph.notes.map((note) => [note.id, note.title])));
 
-function otherEnd(link: Link) {
+function otherEnd(link: Edge | NotesGraph['links'][number]) {
   return link.source === carded.value ? link.target : link.source;
 }
 
@@ -131,7 +149,12 @@ function iconClass(id: string) {
   return isDimmed(id) ? 'text-(--ui-border-accented)' : 'text-muted';
 }
 
-function linkClass(link: Link) {
+function tagClass(tag: string) {
+  if (tagNode(tag) === active.value) return 'font-medium text-primary';
+  return isDimmed(tagNode(tag)) ? 'text-dimmed opacity-30' : 'text-muted';
+}
+
+function linkClass(link: Edge) {
   if (active.value === null) return 'stroke-(--ui-border-accented)';
   return isActiveLink(link) ? 'stroke-(--ui-primary)' : 'stroke-(--ui-border-muted)';
 }
@@ -148,15 +171,15 @@ function linkClass(link: Link) {
     <div class="absolute inset-0" :style="{ transform: `translate(${offset.x}px, ${offset.y}px)` }">
       <svg class="absolute inset-0 size-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         <line
-          v-for="link in graph.links"
-          :key="`${link.source}-${link.target}`"
-          :x1="at(link.source).x"
-          :y1="at(link.source).y"
-          :x2="at(link.target).x"
-          :y2="at(link.target).y"
-          :stroke-width="Math.min(link.tags.length + (link.linked ? 1 : 0), 4)"
-          :stroke-dasharray="link.linked ? undefined : '0.5 0.5'"
-          :class="linkClass(link)"
+          v-for="edge in edges"
+          :key="`${edge.source}-${edge.target}`"
+          :x1="at(edge.source).x"
+          :y1="at(edge.source).y"
+          :x2="at(edge.target).x"
+          :y2="at(edge.target).y"
+          :stroke-width="edge.tag ? 1 : 2"
+          :stroke-dasharray="edge.tag ? '0.5 0.5' : undefined"
+          :class="linkClass(edge)"
           class="transition-colors duration-150"
           vector-effect="non-scaling-stroke"
         />
@@ -195,20 +218,43 @@ function linkClass(link: Link) {
         </template>
       </NuxtLink>
 
+      <NuxtLink
+        v-for="[tag] in tags"
+        :key="tagNode(tag)"
+        :to="tagPath(tag)"
+        draggable="false"
+        :style="{ left: `${at(tagNode(tag)).x}%`, top: `${at(tagNode(tag)).y}%` }"
+        :class="{ 'z-10': tagNode(tag) === active }"
+        :aria-label="mini ? `#${tag}` : undefined"
+        class="absolute max-w-32 -translate-x-1/2 -translate-y-1/2 rounded-sm px-0.5"
+        @mouseenter="hoverTag(tag)"
+        @mouseleave="hovered = null"
+        @focus="hoverTag(tag)"
+        @blur="hovered = null"
+      >
+        <!-- On the view's background: the links drawn under the tag must not show through it. -->
+        <span v-if="mini" class="flex rounded-sm bg-muted p-0.5">
+          <UIcon :name="icons.tag" class="size-3.5 shrink-0 transition-colors duration-150" :class="tagClass(tag)" />
+        </span>
+        <span v-else class="block truncate bg-default text-xs transition-colors duration-150" :class="tagClass(tag)"
+          >#{{ tag }}</span
+        >
+      </NuxtLink>
+
       <DefineCard v-if="cardNote">
         <span class="shrink-0 truncate font-medium">{{ displayTitle(cardNote.title, $t('untitled')) }}</span>
         <span class="shrink-0 truncate text-muted">{{ cardNote.path }}</span>
-        <ul
-          v-if="cardLinks.length"
-          class="mt-1 flex min-h-0 flex-col gap-0.5 overflow-hidden border-t border-default pt-1"
-        >
-          <li v-for="link in cardLinks" :key="`${link.source}-${link.target}`" class="flex gap-2">
-            <span class="truncate">{{ displayTitle(titles.get(otherEnd(link)), $t('untitled')) }}</span>
-            <span class="ml-auto shrink-0 text-primary">{{
-              [...(link.linked ? [$t('graph.link')] : []), ...link.tags.map((tag) => `#${tag}`)].join(' ')
-            }}</span>
-          </li>
-        </ul>
+        <template v-if="cardLinks.length || cardNote.tags?.length">
+          <span v-if="cardNote.tags?.length" class="truncate text-primary">{{
+            cardNote.tags.map((tag) => `#${tag}`).join(' ')
+          }}</span>
+          <ul class="mt-1 flex min-h-0 flex-col gap-0.5 overflow-hidden border-t border-default pt-1 empty:hidden">
+            <li v-for="link in cardLinks" :key="`${link.source}-${link.target}`" class="flex gap-2">
+              <span class="truncate">{{ displayTitle(titles.get(otherEnd(link)), $t('untitled')) }}</span>
+              <span class="ml-auto shrink-0 text-primary">{{ $t('graph.link') }}</span>
+            </li>
+          </ul>
+        </template>
         <span v-else class="text-muted">{{ $t('graph.noLink') }}</span>
       </DefineCard>
       <div

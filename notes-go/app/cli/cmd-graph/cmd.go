@@ -42,7 +42,7 @@ func loadPage(ctx context.Context, target navigator.Target) (navigator.Page, err
 	return notesPage(ctx)
 }
 
-// notesPage lists every note with how many notes it is linked to, like the web graph.
+// notesPage lists every note with how many [[links]] and tags join it to the others, like the web graph.
 func notesPage(ctx context.Context) (navigator.Page, error) {
 	process := readgraph.Process(ctx, postgrey.GetDb(), true)
 	process.Run()
@@ -56,7 +56,7 @@ func notesPage(ctx context.Context) (navigator.Page, error) {
 	p := navigator.Page{Title: "Graph", Path: "notes", Info: count(len(result.Notes), "note"), Empty: "No note yet"}
 	for _, note := range result.Notes {
 		p.Rows = append(p.Rows, navigator.Row{
-			Cells:  []string{untitled(string(note.Title)), note.Path, count(linked[note.ID], "linked note")},
+			Cells:  []string{untitled(string(note.Title)), note.Path, count(linked[note.ID], "link") + " · " + count(len(note.Tags), "tag")},
 			Target: navigator.Target{Kind: navigator.KindNote, Key: note.ID},
 		})
 	}

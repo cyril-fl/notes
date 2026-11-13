@@ -652,7 +652,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Read every note and the links between those sharing tags */
+        /** Read every note with its tags, and the links between them */
         get: {
             parameters: {
                 query?: never;
@@ -3172,14 +3172,13 @@ export interface components {
             parent_id?: string;
         };
         "readgraph.Link": {
-            linked: boolean;
             source: string;
-            tags: string[];
             target: string;
         };
         "readgraph.Note": {
             id: string;
             path: string;
+            tags?: string[];
             title: string;
         };
         "readgraph.Result": {

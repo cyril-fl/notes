@@ -99,26 +99,15 @@ func TestGraph(t *testing.T) {
 		}
 	}
 
-	if tags := linkTags(got, ids["Two"], ids["Three"]); !slices.Equal(tags, []string{a, b}) {
-		t.Errorf("Two-Three tags = %v, want [a b]", tags)
+	if tags := noteTags(got, ids["Two"]); !slices.Equal(tags, []string{a, b}) {
+		t.Errorf("Two tags = %v, want [a b]", tags)
 	}
-	if tags := linkTags(got, ids["Two"], ids["One"]); !slices.Equal(tags, []string{b}) {
-		t.Errorf("Two-One tags = %v, want [b]", tags)
+	if tags := noteTags(got, ids["One"]); !slices.Equal(tags, []string{b}) {
+		t.Errorf("One tags = %v, want [b]", tags)
 	}
-	for _, title := range []string{"Alone", "Trashed", "InTrashedFolder"} {
-		if countLinks(got, ids[title]) != 0 {
-			t.Errorf("note %s should have no link", title)
-		}
-	}
-	if link := findLink(got, ids["Source"], ids["Target"]); link == nil || !link.Linked || len(link.Tags) != 0 {
-		t.Errorf("Source-Target = %+v, want linked with no tags", link)
-	}
-	if link := findLink(got, ids["Two"], ids["Three"]); link == nil || link.Linked {
-		t.Errorf("Two-Three = %+v, want tags only", link)
-	}
-	// Two links to Three and One, whichever way round: one link per pair.
-	if n := countLinks(got, ids["Two"]); n != 2 {
-		t.Errorf("Two has %d links, want 2", n)
+	// Only the [[links]]: sharing tags makes no link.
+	if len(got.Links) != 1 || findLink(got, ids["Source"], ids["Target"]) == nil {
+		t.Errorf("links = %+v, want Source-Target alone", got.Links)
 	}
 
 	notes := Process(ctx, tx, false)
@@ -126,7 +115,7 @@ func TestGraph(t *testing.T) {
 	if notes.HasErr() {
 		t.Fatalf("notes: %v", notes.GetErr())
 	}
-	if only := notes.GetResult(); !slices.Equal(only.Notes, got.Notes) || only.Links != nil {
+	if only := notes.GetResult(); len(only.Notes) != len(got.Notes) || only.Links != nil || noteTags(only, ids["Two"]) != nil {
 		t.Errorf("without links = %d notes, %d links, want the %d notes alone", len(only.Notes), len(only.Links), len(got.Notes))
 	}
 }
@@ -146,21 +135,11 @@ func findLink(result Result, a, b string) *Link {
 	return nil
 }
 
-func linkTags(result Result, a, b string) []string {
-	for _, link := range result.Links {
-		if link.Source == a && link.Target == b || link.Source == b && link.Target == a {
-			return link.Tags
+func noteTags(result Result, id string) []string {
+	for _, note := range result.Notes {
+		if note.ID == id {
+			return note.Tags
 		}
 	}
 	return nil
-}
-
-func countLinks(result Result, id string) int {
-	n := 0
-	for _, link := range result.Links {
-		if link.Source == id || link.Target == id {
-			n++
-		}
-	}
-	return n
 }

@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { layoutGraph, linkTargets, neighborGraph } from '../app/utils/graph.ts';
+import { graphEdges, layoutGraph, linkTargets, neighborGraph, tagNode } from '../app/utils/graph.ts';
 
-const notes = (...ids: string[]) => ids.map((id) => ({ id }));
-const link = (source: string, target: string, ...tags: string[]) => ({ source, target, tags });
+const note = (id: string, ...tags: string[]) => ({ id, tags });
+const link = (source: string, target: string) => ({ source, target });
 
 function distance(positions: ReturnType<typeof layoutGraph>, a: string, b: string) {
   const from = positions.get(a)!;
@@ -16,46 +16,68 @@ test('no note, no position', () => {
 });
 
 test('one note sits in the center', () => {
-  assert.deepEqual(layoutGraph(notes('a'), []).get('a'), { x: 50, y: 50 });
+  assert.deepEqual(layoutGraph([note('a')], []).get('a'), { x: 50, y: 50 });
 });
 
-test('notes sharing tags gather, away from the others', () => {
-  const positions = layoutGraph(notes('a', 'b', 'c', 'd', 'e', 'f'), [
-    link('a', 'b', 'go'),
-    link('b', 'c', 'go'),
-    link('a', 'c', 'go'),
-    link('d', 'e', 'cuisine'),
-    link('e', 'f', 'cuisine'),
-    link('d', 'f', 'cuisine'),
-  ]);
-  const inside = Math.max(distance(positions, 'a', 'b'), distance(positions, 'b', 'c'), distance(positions, 'a', 'c'));
-  const across = Math.min(
-    ...['d', 'e', 'f'].flatMap((other) => ['a', 'b', 'c'].map((id) => distance(positions, id, other))),
+test('the tags are nodes, joined to their notes', () => {
+  const positions = layoutGraph([note('a', 'go'), note('b', 'go')], []);
+  assert.deepEqual([...positions.keys()], ['a', 'b', tagNode('go')]);
+});
+
+test('a rare tag pulls harder than a common one, shared among the tags of the note', () => {
+  const notes = [
+    note('a', 'rare', 'common'),
+    note('b', 'rare', 'common'),
+    ...'cdefgh'.split('').map((id) => note(id, 'common')),
+  ];
+  const edges = graphEdges(notes, []);
+  const pull = (id: string, tag: string) =>
+    edges.find((edge) => edge.source === id && edge.target === tagNode(tag))!.strength;
+  assert.ok(pull('a', 'rare') > pull('a', 'common'));
+  // c has the common tag alone: the whole of its weight, where a splits it in two.
+  assert.equal(pull('c', 'common'), 2 * pull('a', 'common'));
+});
+
+test('a tag on every note still holds them, a lone note is pulled fully', () => {
+  assert.ok(graphEdges([note('a', 'all'), note('b', 'all')], [])[0]!.strength > 0);
+  assert.equal(graphEdges([note('a', 'go')], [])[0]!.strength, 1);
+});
+
+test('a big tag keeps its notes further away than a small one', () => {
+  const notes = Array.from({ length: 30 }, (_, i) => note(`n${i}`, 'big', ...(i < 2 ? ['small'] : [])));
+  const edges = graphEdges(notes, []);
+  const far = (tag: string) => edges.find((edge) => edge.target === tagNode(tag))!.distance;
+  assert.ok(far('big') > far('small'));
+});
+
+test('notes of a small tag, or joined by a [[link]], gather closer than notes sharing only a big one', () => {
+  const notes = Array.from({ length: 40 }, (_, i) => note(`n${i}`, 'big'));
+  notes[0]!.tags.push('small');
+  notes[1]!.tags.push('small');
+  const positions = layoutGraph(notes, [link('n2', 'n3')]);
+  const spread = distance(positions, 'n10', 'n20');
+  assert.ok(distance(positions, 'n0', 'n1') < spread, `small ${distance(positions, 'n0', 'n1')}, big ${spread}`);
+  assert.ok(distance(positions, 'n2', 'n3') < spread, `linked ${distance(positions, 'n2', 'n3')}, big ${spread}`);
+});
+
+test('notes sharing a tag gather around it, away from the others', () => {
+  const groups = { go: ['a', 'b', 'c'], cuisine: ['d', 'e', 'f'] };
+  const positions = layoutGraph(
+    Object.entries(groups).flatMap(([tag, ids]) => ids.map((id) => note(id, tag))),
+    [],
   );
-  assert.ok(inside < across, `${inside} inside, ${across} across`);
+  for (const [tag, ids] of Object.entries(groups)) {
+    const other = tag === 'go' ? 'cuisine' : 'go';
+    for (const id of ids)
+      assert.ok(
+        distance(positions, id, tagNode(tag)) < distance(positions, id, tagNode(other)),
+        `${id} nearer ${other}`,
+      );
+  }
 });
 
-test('more shared tags bring notes closer', () => {
-  const positions = layoutGraph(notes('a', 'b', 'c'), [link('a', 'b', 'x', 'y', 'z'), link('b', 'c', 'x')]);
-  assert.ok(distance(positions, 'a', 'b') < distance(positions, 'b', 'c'));
-});
-
-test('every note stays in the view, with its links untouched', () => {
-  const ids = Array.from({ length: 80 }, (_, i) => `n${i}`);
-  const links = ids.slice(1).map((id) => link('n0', id, 'go'));
-  const positions = layoutGraph(notes(...ids), links);
-  assert.equal(positions.size, 80);
-  for (const { x, y } of positions.values()) assert.ok(x >= 8 && x <= 92 && y >= 8 && y <= 92, `${x}, ${y}`);
-  assert.equal(links[0]!.source, 'n0');
-});
-
-test('the same notes get the same map', () => {
-  const graph = [notes('a', 'b', 'c'), [link('a', 'b', 'go')]] as const;
-  assert.deepEqual(layoutGraph(...graph), layoutGraph(...graph));
-});
-
-test('a [[link]] alone pulls notes together like a shared tag', () => {
-  const positions = layoutGraph(notes('a', 'b', 'c'), [{ source: 'a', target: 'b', tags: [], linked: true }]);
+test('a [[link]] alone pulls notes together', () => {
+  const positions = layoutGraph([note('a'), note('b'), note('c')], [link('a', 'b')]);
   for (const id of ['a', 'b', 'c']) {
     const { x, y } = positions.get(id)!;
     assert.ok(Number.isFinite(x) && Number.isFinite(y), `${id} at ${x}, ${y}`);
@@ -63,10 +85,24 @@ test('a [[link]] alone pulls notes together like a shared tag', () => {
   assert.ok(distance(positions, 'a', 'b') < distance(positions, 'a', 'c'));
 });
 
-test('the graph of the neighbors joins the note to each, a [[link]] in either way merged with the shared tags', () => {
+test('every note stays in the view, with its links untouched', () => {
+  const notes = Array.from({ length: 80 }, (_, i) => note(`n${i}`, 'go'));
+  const links = [link('n0', 'n1')];
+  const positions = layoutGraph(notes, links);
+  assert.equal(positions.size, 81);
+  for (const { x, y } of positions.values()) assert.ok(x >= 8 && x <= 92 && y >= 8 && y <= 92, `${x}, ${y}`);
+  assert.deepEqual(links[0], link('n0', 'n1'));
+});
+
+test('the same notes get the same map', () => {
+  const graph = [[note('a', 'go'), note('b', 'go'), note('c')], [link('a', 'c')]] as const;
+  assert.deepEqual(layoutGraph(...graph), layoutGraph(...graph));
+});
+
+test('the graph of the neighbors keeps the note with its tags, the neighbors with the shared ones, and the [[links]] either way', () => {
   const near = (id: string) => ({ id, title: id.toUpperCase(), path: `/${id}` });
   const graph = neighborGraph({
-    note: { item: { id: 'a', title: 'A' }, path: '/a' },
+    note: { item: { id: 'a', title: 'A' }, path: '/a', tags: ['go', 'web', 'own'] },
     neighbors: [
       { ...near('b'), tags: ['go', 'web'] },
       { ...near('c'), tags: ['go'] },
@@ -74,12 +110,13 @@ test('the graph of the neighbors joins the note to each, a [[link]] in either wa
     links: [near('c'), near('a')],
     backlinks: [near('d')],
   });
-  assert.deepEqual(graph.notes, ['a', 'b', 'c', 'd'].map(near));
-  assert.deepEqual(graph.links, [
-    { source: 'a', target: 'b', tags: ['go', 'web'], linked: false },
-    { source: 'a', target: 'c', tags: ['go'], linked: true },
-    { source: 'a', target: 'd', tags: [], linked: true },
+  assert.deepEqual(graph.notes, [
+    { ...near('a'), tags: ['go', 'web', 'own'] },
+    { ...near('b'), tags: ['go', 'web'] },
+    { ...near('c'), tags: ['go'] },
+    near('d'),
   ]);
+  assert.deepEqual(graph.links, [link('a', 'c'), link('a', 'd')]);
 });
 
 test('the [[ menu offers the other named notes, the closest ones first for a Pro account', () => {

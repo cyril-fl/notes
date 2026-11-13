@@ -535,7 +535,10 @@ const status = computed(() => {
         @restore="restoreVersion"
       />
       <!-- At the bottom of the panel, kept in sight while the rest scrolls. -->
-      <section v-if="has('graph') && nearGraph?.links.length" class="sticky bottom-0 mt-auto -mb-4 bg-default pb-4">
+      <section
+        v-if="has('graph') && nearGraph && nearGraph.notes.length > 1"
+        class="sticky bottom-0 mt-auto -mb-4 bg-default pb-4"
+      >
         <div class="mb-2 flex items-center justify-between">
           <h2 class="text-xs font-medium text-muted">{{ $t('common.graph') }}</h2>
         </div>

@@ -10,23 +10,22 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// Note is a node of the graph.
+// Note is a node of the graph, with its tags: the tags are nodes too, joined to their notes.
 type Note struct {
 	ID    string      `json:"id"`
 	Title secret.Text `json:"title" swaggertype:"string"`
 	Path  string      `json:"path"`
+	Tags  []string    `json:"tags,omitempty" binding:"optional"`
 }
 
-// Link joins two notes once per pair (Source < Target): Linked when a [[link]] goes from one to the
-// other, Tags the tags they share. One of the two at least.
+// Link is a [[link]] between two notes, once per pair (Source < Target) whichever way it goes.
 type Link struct {
-	Source string   `json:"source"`
-	Target string   `json:"target"`
-	Tags   []string `bun:",array" json:"tags"`
-	Linked bool     `json:"linked"`
+	Source string `json:"source"`
+	Target string `json:"target"`
 }
 
-// Result is every live note and the links between them.
+// Result is every live note, with its tags, and the [[links]] between them.
+// Its size follows the tags put on notes, not the pairs of notes sharing one (n² for a tag on n notes).
 type Result struct {
 	Notes []Note `json:"notes"`
 	Links []Link `json:"links"`
@@ -45,7 +44,7 @@ type cache struct {
 	result Result
 }
 
-// Process reads the notes, and the links between them when links is set: the pairs sharing a tag grow as the square of the notes.
+// Process reads the notes, and their tags and [[links]] when links is set.
 func Process(ctx context.Context, db bun.IDB, links bool) *run {
 	return &run{
 		ctx:   ctx,
@@ -56,6 +55,7 @@ func Process(ctx context.Context, db bun.IDB, links bool) *run {
 
 func (p *run) Run() {
 	p.loadNotes()
+	p.loadTags()
 	p.loadLinks()
 }
 
@@ -88,39 +88,58 @@ func (p *run) loadNotes() {
 	domain.SortFold(p.cache.result.Notes, func(n Note) string { return n.Path }, nil)
 }
 
-// loadLinks pairs the notes sharing a tag (the tag links joined with themselves) with the notes joined by
-// a [[link]] in either direction, each pair once. The tags come sealed, opened and ordered here.
+// loadTags gives each live note its tags. A tag is one row, sealed once: opened once, whatever its number of notes.
+func (p *run) loadTags() {
+	if p.HasErr() || !p.links {
+		return
+	}
+
+	var rows []struct {
+		NoteID string
+		Value  string
+	}
+	p.SetErr(p.db.NewRaw(domain.LiveCTE+`
+		SELECT nt.note_id, t.value
+		FROM notes_on_tags AS nt
+		JOIN live ON live.id = nt.note_id
+		JOIN tags AS t ON t.id = nt.tag_id`, domain.UserID(p.ctx)).
+		Scan(p.ctx, &rows))
+	if p.HasErr() {
+		return
+	}
+
+	opened := map[string]string{}
+	tags := map[string][]string{}
+	for _, row := range rows {
+		text, ok := opened[row.Value]
+		if !ok {
+			var err error
+			if text, err = secret.Open(row.Value); err != nil {
+				p.SetErr(err)
+				return
+			}
+			opened[row.Value] = text
+		}
+		tags[row.NoteID] = append(tags[row.NoteID], text)
+	}
+	for i := range p.cache.result.Notes {
+		note := &p.cache.result.Notes[i]
+		note.Tags = tags[note.ID]
+		domain.SortFold(note.Tags, func(v string) string { return v }, nil)
+	}
+}
+
+// loadLinks reads the [[links]] between live notes, each pair once whichever way it goes.
 func (p *run) loadLinks() {
 	if p.HasErr() || !p.links {
 		return
 	}
 
-	p.SetErr(p.db.NewRaw(domain.LiveCTE+`,
-		shared AS (
-			SELECT a.note_id AS source, b.note_id AS target, array_agg(t.value) AS tags
-			FROM notes_on_tags AS a
-			JOIN notes_on_tags AS b ON b.tag_id = a.tag_id AND a.note_id < b.note_id
-			JOIN tags AS t ON t.id = a.tag_id
-			GROUP BY a.note_id, b.note_id
-		),
-		linked AS (
-			SELECT DISTINCT least(source_id, target_id) AS source, greatest(source_id, target_id) AS target
-			FROM notes_on_links
-		)
-		SELECT coalesce(shared.source, linked.source) AS source, coalesce(shared.target, linked.target) AS target,
-			coalesce(shared.tags, '{}') AS tags, linked.source IS NOT NULL AS linked
-		FROM shared FULL JOIN linked ON linked.source = shared.source AND linked.target = shared.target
-		JOIN live AS source_live ON source_live.id = coalesce(shared.source, linked.source)
-		JOIN live AS target_live ON target_live.id = coalesce(shared.target, linked.target)
+	p.SetErr(p.db.NewRaw(domain.LiveCTE+`
+		SELECT DISTINCT least(nl.source_id, nl.target_id) AS source, greatest(nl.source_id, nl.target_id) AS target
+		FROM notes_on_links AS nl
+		JOIN live AS source_live ON source_live.id = nl.source_id
+		JOIN live AS target_live ON target_live.id = nl.target_id
 		ORDER BY 1, 2`, domain.UserID(p.ctx)).
 		Scan(p.ctx, &p.cache.result.Links))
-
-	for i := range p.cache.result.Links {
-		if p.HasErr() {
-			return
-		}
-		tags, err := domain.OpenTags(p.cache.result.Links[i].Tags)
-		p.cache.result.Links[i].Tags = tags
-		p.SetErr(err)
-	}
 }

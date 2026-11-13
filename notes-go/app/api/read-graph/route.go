@@ -29,8 +29,8 @@ func Handler(db bun.IDB) http.HandlerFunc {
 	}
 }
 
-// Notes gives every live note and the links between those sharing tags: GET /api/graph/notes.
-// @Summary  Read every note and the links between those sharing tags
+// Notes gives every live note with its tags, and the [[links]] between them: GET /api/graph/notes.
+// @Summary  Read every note with its tags, and the links between them
 // @Tags     graph
 // @Produce  json
 // @Success  200 {object} readgraph.Result
