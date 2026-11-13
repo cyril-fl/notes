@@ -343,7 +343,7 @@
       "links": "Links",
       "linksDescription": "The links between notes that lead to no note, or to several, and the cited files the server lacks.",
       "storage": "Storage",
-      "accounts": "Accounts",
+      "accounts": "Users",
       "accountsDescription": "The accounts of the server and the invitations. Shown for an admin account only."
     },
     "linksEmpty": "No broken or ambiguous link, no missing file.",

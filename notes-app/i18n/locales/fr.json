@@ -343,7 +343,7 @@
       "links": "Liens",
       "linksDescription": "Les liens entre notes qui ne mènent à aucune note, ou à plusieurs, et les fichiers cités que le serveur n’a pas.",
       "storage": "Stockage",
-      "accounts": "Comptes",
+      "accounts": "Utilisateurs",
       "accountsDescription": "Les comptes du serveur et les invitations. Visible pour un compte admin seulement."
     },
     "linksEmpty": "Aucun lien cassé ni ambigu, aucun fichier absent.",
