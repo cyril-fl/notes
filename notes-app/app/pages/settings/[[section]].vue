@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { BrokenLink, NoteFile, Snippet, User } from '~/types/items';
+import type { TableColumn } from '@nuxt/ui';
+import type { Account, BrokenLink, Invite, NoteFile, Snippet, User } from '~/types/items';
 
 // Decided before the page renders, so the Pro mode never shows every section first and then jumps to one.
 definePageMeta({
@@ -155,6 +156,70 @@ async function removeSnippet(index: number) {
   if (!confirmed) return;
   snippets.splice(index, 1);
   await saveSnippets(snippets);
+}
+
+// The accounts of the server, for an admin only: read where the section shows, like the links and the files.
+const showAccounts = computed(() => show('accounts') && !!me.value?.admin);
+const { data: accounts, refresh: refreshAccounts } = useLazyAsyncData(
+  () => (showAccounts.value ? 'accounts' : 'accounts-hidden'),
+  () => (showAccounts.value ? api<Account[]>('/api/users') : Promise.resolve(null)),
+);
+const { data: invites, refresh: refreshInvites } = useLazyAsyncData(
+  () => (showAccounts.value ? 'invites' : 'invites-hidden'),
+  () => (showAccounts.value ? api<Invite[]>('/api/invites') : Promise.resolve(null)),
+);
+
+const accountSearch = ref('');
+const accountsPerPage = 10;
+const accountsPage = ref(1);
+const foundAccounts = computed(() =>
+  (accounts.value ?? []).filter((account) => account.name.toLowerCase().includes(accountSearch.value.toLowerCase())),
+);
+const pagedAccounts = computed(() =>
+  foundAccounts.value.slice((accountsPage.value - 1) * accountsPerPage, accountsPage.value * accountsPerPage),
+);
+// A search that empties the page would show nothing at all.
+watch(accountSearch, () => (accountsPage.value = 1));
+const accountColumns = computed<TableColumn<Account>[]>(() => [
+  { accessorKey: 'name', header: t('login.name') },
+  { accessorKey: 'created_at', header: t('settings.accountCreated') },
+  { id: 'actions' },
+]);
+
+// The link of a new invitation, shown until the page leaves: the API keeps the hash of the token only, so this is
+// the one chance to copy it. Its address is the page's own, the API not knowing where the app is served.
+const newInvite = ref('');
+
+async function invite() {
+  const made = await api<{ token: string }>('/api/invites', { method: 'POST' });
+  newInvite.value = `${window.location.origin}/signup?invite=${made.token}`;
+  // Over plain HTTP, or without the permission, the clipboard refuses: the link stays readable in the page.
+  const copied = await navigator.clipboard.writeText(newInvite.value).then(
+    () => true,
+    () => false,
+  );
+  if (copied) toast.add({ title: t('settings.inviteCopied'), color: 'success' });
+  await refreshInvites();
+}
+
+async function revokeInvite(id: string) {
+  const confirmed = await confirm({ title: t('settings.revokeInvite'), action: t('settings.revoke') });
+  if (!confirmed) return;
+  await api(`/api/invites/${id}`, { method: 'DELETE' });
+  await refreshInvites();
+}
+
+async function deleteAccount(account: Account) {
+  const confirmed = await confirm({
+    title: t('settings.deleteAccount', { name: account.name }),
+    description: t('settings.deleteAccountConfirm'),
+    action: t('common.delete'),
+    expected: account.name,
+  });
+  if (!confirmed) return;
+  await api(`/api/users/${account.id}`, { method: 'DELETE' });
+  toast.add({ title: t('settings.accountDeleted', { name: account.name }), color: 'success' });
+  await refreshAccounts();
 }
 
 async function deleteData() {
@@ -414,6 +479,94 @@ async function deleteData() {
           </li>
           <li v-if="brokenLinks && !brokenLinks.length" class="px-4 py-3 text-xs text-muted">
             {{ $t('settings.linksEmpty') }}
+          </li>
+        </ul>
+      </section>
+
+      <section v-if="showAccounts">
+        <SettingsHeading id="accounts" />
+        <div class="mb-3 flex flex-wrap items-center gap-2">
+          <UInput
+            v-model="accountSearch"
+            :placeholder="$t('settings.searchAccount')"
+            :icon="icons.search"
+            class="flex-1 basis-48"
+          />
+          <UButton :label="$t('settings.invite')" :icon="icons.invite" color="neutral" @click="invite" />
+        </div>
+        <div class="rounded-lg border border-default">
+          <UTable :data="pagedAccounts" :columns="accountColumns" :ui="{ root: 'rounded-lg' }">
+            <template #name-cell="{ row }">
+              <span class="flex items-center gap-2">
+                {{ row.original.name }}
+                <UBadge v-if="row.original.admin" :label="$t('settings.admin')" size="sm" variant="subtle" />
+                <UBadge
+                  v-if="row.original.id === me?.id"
+                  :label="$t('settings.you')"
+                  size="sm"
+                  color="neutral"
+                  variant="subtle"
+                />
+              </span>
+            </template>
+            <template #created_at-cell="{ row }">
+              <span class="text-xs text-muted">{{ new Date(row.original.created_at).toLocaleDateString(locale) }}</span>
+            </template>
+            <template #actions-cell="{ row }">
+              <div class="text-right">
+                <UButton
+                  v-if="row.original.id !== me?.id"
+                  :icon="icons.delete"
+                  :aria-label="$t('common.delete')"
+                  color="error"
+                  variant="ghost"
+                  size="sm"
+                  @click="deleteAccount(row.original)"
+                />
+              </div>
+            </template>
+          </UTable>
+          <p v-if="accounts && !foundAccounts.length" class="px-4 py-3 text-xs text-muted">
+            {{ $t('settings.accountsEmpty') }}
+          </p>
+          <div
+            v-if="foundAccounts.length > accountsPerPage"
+            class="flex justify-center border-t border-default px-4 py-2"
+          >
+            <UPagination
+              v-model:page="accountsPage"
+              :total="foundAccounts.length"
+              :items-per-page="accountsPerPage"
+              size="sm"
+            />
+          </div>
+        </div>
+
+        <h3 class="mt-6 mb-2 text-xs font-medium text-muted">{{ $t('settings.invites') }}</h3>
+        <p class="mb-2 text-xs text-muted">{{ $t('settings.invitesDescription') }}</p>
+        <UInput
+          v-if="newInvite"
+          :model-value="newInvite"
+          readonly
+          class="mb-2 w-full"
+          :aria-label="$t('settings.inviteLink')"
+        />
+        <ul class="divide-y divide-default rounded-lg border border-default">
+          <li v-for="pending in invites ?? []" :key="pending.id" class="flex items-center gap-3 px-4 py-2">
+            <UIcon :name="icons.invite" class="size-4 shrink-0 text-muted" />
+            <p class="min-w-0 flex-1 truncate text-sm">
+              {{ $t('settings.inviteExpires', { date: new Date(pending.expires_at).toLocaleDateString(locale) }) }}
+            </p>
+            <UButton
+              :label="$t('settings.revoke')"
+              color="error"
+              variant="ghost"
+              size="sm"
+              @click="revokeInvite(pending.id)"
+            />
+          </li>
+          <li v-if="invites && !invites.length" class="px-4 py-3 text-xs text-muted">
+            {{ $t('settings.invitesEmpty') }}
           </li>
         </ul>
       </section>

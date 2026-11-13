@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { FetchError } from 'ofetch';
+import type { AddUserMode } from '~/types/items';
 
 // No sidebar: there is nothing to show before logging in.
 definePageMeta({ layout: false });
@@ -7,6 +8,14 @@ definePageMeta({ layout: false });
 const api = useApi();
 const route = useRoute();
 const { t } = useI18n();
+
+// What this server allows: a base without an account waits for its first one, so the page hands over to the sign-up
+// at once. In the public mode the sign-up is just offered; in the invitation mode it takes an invitation link.
+const { data: mode } = await useAsyncData('add-user', () => api<AddUserMode>('/api/add-user', { quiet: true }));
+const canSignup = computed(() => mode.value?.allowed && mode.value.mode === 'public');
+watchEffect(() => {
+  if (mode.value?.allowed && mode.value.mode === 'invitation') navigateTo('/signup', { replace: true });
+});
 
 const name = ref('');
 const password = ref('');
@@ -47,6 +56,7 @@ async function login() {
       </UFormField>
       <p v-if="failure" class="text-sm text-error" role="alert">{{ failure }}</p>
       <UButton type="submit" :label="$t('login.submit')" block :loading="pending" :disabled="!name || !password" />
+      <UButton v-if="canSignup" :label="$t('signup.title')" to="/signup" variant="link" color="neutral" block />
     </form>
   </main>
 </template>

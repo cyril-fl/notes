@@ -236,6 +236,17 @@
     "submit": "Log in",
     "badCredentials": "Wrong name or password."
   },
+  "signup": {
+    "title": "Create an account",
+    "submit": "Create the account",
+    "passwordAgain": "Password (again)",
+    "passwordsDiffer": "The two passwords differ.",
+    "shortPassword": "The password needs {count} characters or more.",
+    "nameTaken": "This name is already taken.",
+    "closed": "This server takes no new account. Ask for an invitation link.",
+    "badInvite": "This invitation is used, expired or unknown.",
+    "backToLogin": "I already have an account"
+  },
   "settings": {
     "account": "Account",
     "loggedInAs": "Logged in as",
@@ -331,7 +342,9 @@
       "proDescription": "More tools, for advanced use.",
       "links": "Links",
       "linksDescription": "The links between notes that lead to no note, or to several, and the cited files the server lacks.",
-      "storage": "Storage"
+      "storage": "Storage",
+      "accounts": "Accounts",
+      "accountsDescription": "The accounts of the server and the invitations. Shown for an admin account only."
     },
     "linksEmpty": "No broken or ambiguous link, no missing file.",
     "linkKinds": {
@@ -348,7 +361,24 @@
       "documents": "Documents",
       "audio": "Sounds",
       "video": "Videos"
-    }
+    },
+    "admin": "Admin",
+    "you": "You",
+    "accountCreated": "Created",
+    "searchAccount": "Search an account",
+    "accountsEmpty": "No account.",
+    "deleteAccount": "Delete the account {name}?",
+    "deleteAccountConfirm": "Its notes, folders, tags and images are deleted for good. Nothing comes back.",
+    "accountDeleted": "The account {name} was deleted",
+    "invite": "Invite",
+    "invites": "Invitations in progress",
+    "invitesDescription": "Each link creates one account, once, and expires after 7 days. The link shows at its creation only: the person chooses their own name and password.",
+    "invitesEmpty": "No invitation in progress.",
+    "inviteLink": "Invitation link",
+    "inviteCopied": "Invitation link copied",
+    "inviteExpires": "Expires on {date}",
+    "revoke": "Revoke",
+    "revokeInvite": "Revoke this invitation?"
   },
   "account": {
     "title": "Account",

@@ -1,7 +1,7 @@
 # API
 
-- One folder per route, `app/api/<verb>-<noun>/route.go`, wired in `router.go`; account routes in `login/`.
-- `router.go` wraps the mux in `guard` (Origin check against `--origin`) then `auth` (session cookie `notes_session`, the account into the ctx). Only `POST /api/login` works without a session.
+- One folder per route, `app/api/<verb>-<noun>/route.go`, wired in `router.go`; an account's own routes in `login/`, the admin's and the sign-up in `users/`.
+- `router.go` wraps the mux in `guard` (Origin check against `--origin`) then `auth` (session cookie `notes_session`, the account into the ctx). Only the routes of `auth`'s `public` map work without a session: the login, the sign-up and the mode it reads. An admin-only route checks the flag itself (`users.isAdmin`), the middleware knows nothing of it.
 - A handler decodes with `respond.Decode` (unknown fields refused, 10 MiB max), runs the process with `r.Context()`, then `respond.Error(w, process.GetErr())` or `respond.JSON`/`respond.List`.
 - A new sentinel error of a process goes into the `statuses` table of `services/respond/respond.go`, or it answers 500.
 - The swag comments above the handler (`@Summary`, `@Param body body <pkg>.Input true "body"`, `@Success`, `@Failure`, `@Router`) are the OpenAPI: fields are required unless tagged `binding:"optional"`. Then `make openapi` and `bun run types` in `notes-app/`.

@@ -236,6 +236,17 @@
     "submit": "Se connecter",
     "badCredentials": "Nom ou mot de passe incorrect."
   },
+  "signup": {
+    "title": "Créer un compte",
+    "submit": "Créer le compte",
+    "passwordAgain": "Mot de passe (à nouveau)",
+    "passwordsDiffer": "Les deux mots de passe diffèrent.",
+    "shortPassword": "Le mot de passe demande {count} caractères ou plus.",
+    "nameTaken": "Ce nom est déjà pris.",
+    "closed": "Ce serveur n’accepte pas de nouveau compte. Demandez un lien d’invitation.",
+    "badInvite": "Cette invitation est déjà utilisée, expirée ou inconnue.",
+    "backToLogin": "J’ai déjà un compte"
+  },
   "settings": {
     "account": "Compte",
     "loggedInAs": "Connecté en tant que",
@@ -331,7 +342,9 @@
       "proDescription": "Des outils en plus, pour un usage avancé.",
       "links": "Liens",
       "linksDescription": "Les liens entre notes qui ne mènent à aucune note, ou à plusieurs, et les fichiers cités que le serveur n’a pas.",
-      "storage": "Stockage"
+      "storage": "Stockage",
+      "accounts": "Comptes",
+      "accountsDescription": "Les comptes du serveur et les invitations. Visible pour un compte admin seulement."
     },
     "linksEmpty": "Aucun lien cassé ni ambigu, aucun fichier absent.",
     "linkKinds": {
@@ -348,7 +361,24 @@
       "documents": "Documents",
       "audio": "Sons",
       "video": "Vidéos"
-    }
+    },
+    "admin": "Admin",
+    "you": "Vous",
+    "accountCreated": "Créé le",
+    "searchAccount": "Chercher un compte",
+    "accountsEmpty": "Aucun compte.",
+    "deleteAccount": "Supprimer le compte {name} ?",
+    "deleteAccountConfirm": "Ses notes, dossiers, tags et images sont effacés pour de bon. Rien ne revient.",
+    "accountDeleted": "Le compte {name} a été supprimé",
+    "invite": "Inviter",
+    "invites": "Invitations en cours",
+    "invitesDescription": "Chaque lien crée un compte, une seule fois, et expire au bout de 7 jours. Le lien ne s’affiche qu’à sa création : la personne choisit elle-même son nom et son mot de passe.",
+    "invitesEmpty": "Aucune invitation en cours.",
+    "inviteLink": "Lien d’invitation",
+    "inviteCopied": "Lien d’invitation copié",
+    "inviteExpires": "Expire le {date}",
+    "revoke": "Révoquer",
+    "revokeInvite": "Révoquer cette invitation ?"
   },
   "account": {
     "title": "Compte",

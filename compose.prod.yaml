@@ -16,10 +16,13 @@ services:
       S3_SECRET_KEY: ${S3_SECRET_KEY}
       S3_BUCKET: ${S3_BUCKET:-notes}
       NOTES_SECRET: ${NOTES_SECRET:?set NOTES_SECRET in .env}
+      # The first account, created on an empty base at startup: it manages the others. Inert once one exists.
+      NOTES_HOST_NAME: ${NOTES_HOST_NAME:-}
+      NOTES_HOST_PASSWORD: ${NOTES_HOST_PASSWORD:-}
       CONFIG_FILE: ""
     # The address the browser types: requests from any other page are refused. Published on 127.0.0.1, only the proxy
     # reaches the API, which then reads the address of each device in X-Forwarded-For.
-    command: serve --addr :8080 --web /web --published=${NOTES_LISTEN:-127.0.0.1:8080} --origin=${WEB_ORIGIN:?set WEB_ORIGIN in .env}
+    command: serve --addr :8080 --web /web --published=${NOTES_LISTEN:-127.0.0.1:8080} --origin=${WEB_ORIGIN:?set WEB_ORIGIN in .env} --add-user-mode=${NOTES_ADD_USER_MODE:-invitation}
     # Plain HTTP, and the session cookie needs HTTPS: a proxy in front gives it.
     ports:
       - "${NOTES_LISTEN:-127.0.0.1:8080}:8080"

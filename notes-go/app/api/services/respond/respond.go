@@ -18,6 +18,7 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createtag"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deleteitems"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deletetag"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deleteuser"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/editfolder"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/editnote"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/editpassword"
@@ -69,14 +70,17 @@ var statuses = []struct {
 	{http.StatusUnauthorized, []error{
 		createsession.ErrBadCredentials, readsession.ErrNoSession,
 	}},
+	{http.StatusForbidden, []error{
+		adduser.ErrBadInvite,
+	}},
 	{http.StatusNotFound, []error{
-		editfolder.ErrNotFound, editnote.ErrNotFound, emptytrash.ErrNotFound, edittag.ErrNotFound, exportnotes.ErrNotFound, pinnote.ErrNotFound, readfile.ErrNotFound, readitem.ErrNotFound, readtag.ErrNotFound,
+		deleteuser.ErrNotFound, editfolder.ErrNotFound, editnote.ErrNotFound, emptytrash.ErrNotFound, edittag.ErrNotFound, exportnotes.ErrNotFound, pinnote.ErrNotFound, readfile.ErrNotFound, readitem.ErrNotFound, readtag.ErrNotFound,
 	}},
 	{http.StatusUnsupportedMediaType, []error{
 		createfile.ErrFileType,
 	}},
 	{http.StatusConflict, []error{
-		domain.ErrFolderExists, edittag.ErrAlreadyExists, adduser.ErrNameTaken, moveitems.ErrCycle, restoreitems.ErrParentInTrash, patchnote.ErrLocked, patchnote.ErrStale,
+		domain.ErrFolderExists, edittag.ErrAlreadyExists, adduser.ErrNameTaken, deleteuser.ErrSelf, deleteuser.ErrLastAdmin, moveitems.ErrCycle, restoreitems.ErrParentInTrash, patchnote.ErrLocked, patchnote.ErrStale,
 	}},
 }
 

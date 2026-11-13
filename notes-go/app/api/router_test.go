@@ -31,8 +31,9 @@ const unknownID = "3f2a4b1c-0d9e-4a8b-9c7d-1e2f3a4b5c6d"
 // client calls the whole API, guard included, inside a transaction rolled back at the end.
 type client struct {
 	t       *testing.T
-	handler http.Handler // logged in
-	api     http.Handler // as a request without session gets it
+	ctx     context.Context // the account of handler, for the fixtures a test writes straight in the base
+	handler http.Handler    // logged in
+	api     http.Handler    // as a request without session gets it
 	db      bun.Tx
 	store   *silo.Memory
 }
@@ -74,8 +75,8 @@ func logIn(t *testing.T, tx bun.Tx) *client {
 		t.Fatal(err)
 	}
 	store := silo.NewMemory()
-	api := New(bun.IDB(savepoint), store, "")
-	return &client{t: t, api: api, db: savepoint, store: store, handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	api := New(bun.IDB(savepoint), store, "", domain.AddUserModes[0])
+	return &client{t: t, ctx: ctx, api: api, db: savepoint, store: store, handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.Header.Set("Authorization", "Bearer "+token)
 		api.ServeHTTP(w, r)
 	})}
@@ -660,7 +661,7 @@ func TestImportForm(t *testing.T) {
 }
 
 func TestRouterGuards(t *testing.T) {
-	handler := New(nil, nil, "http://localhost:3001")
+	handler := New(nil, nil, "http://localhost:3001", domain.AddUserModes[0])
 
 	r := httptest.NewRequest(http.MethodDelete, "/api/notes/"+unknownID, nil)
 	r.Host = "localhost:8080"
@@ -847,7 +848,7 @@ func TestLogin(t *testing.T) {
 		t.Errorf("negative retention: status = %d, want 400", w.Code)
 	}
 	if w := send("PATCH", "/api/me", `{"theme":"dracula","color_mode":"dark","view":"grid","plan":"pro","trash_retention_days":7}`, cookies[0]); w.Code != http.StatusOK ||
-		!strings.Contains(w.Body.String(), `"locale":"en","theme":"dracula","color_mode":"dark","view":"grid","plan":"pro","trash_retention_days":7`) {
+		!strings.Contains(w.Body.String(), `"locale":"en","theme":"dracula","color_mode":"dark","view":"grid","plan":"pro","admin":false,"trash_retention_days":7`) {
 		t.Errorf("edit settings: status = %d, body = %s", w.Code, w.Body)
 	}
 	if w := send("PATCH", "/api/me", `{"snippets":[{"name":"","content":"x"}]}`, cookies[0]); w.Code != http.StatusBadRequest {
@@ -917,5 +918,130 @@ func TestLogin(t *testing.T) {
 	}
 	if w := send("GET", "/api/me", "", revoked); w.Code != http.StatusUnauthorized {
 		t.Errorf("session after resetpassword: status = %d, want 401", w.Code)
+	}
+}
+
+// account is an account as the admin panel lists it.
+type account struct {
+	ID, Name string
+	Admin    bool
+}
+
+func TestAccounts(t *testing.T) {
+	c := newClient(t)
+	me := domain.UserID(c.ctx)
+
+	send := func(method, path, body string) *httptest.ResponseRecorder {
+		r := httptest.NewRequest(method, path, strings.NewReader(body))
+		r.Host = "localhost:8080"
+		w := httptest.NewRecorder()
+		c.api.ServeHTTP(w, r)
+		return w
+	}
+	admin := func(is bool) {
+		t.Helper()
+		if _, err := c.db.NewUpdate().Model((*domain.User)(nil)).Set("admin = ?", is).Where("id = ?", me).Exec(c.ctx); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Without the admin flag, the account manages nothing.
+	admin(false)
+	for _, route := range []string{"GET /api/users", "GET /api/invites", "POST /api/invites"} {
+		method, path, _ := strings.Cut(route, " ")
+		c.do(method, path, `{"name":"nope","password":"a-good-password"}`, http.StatusForbidden, nil)
+	}
+
+	admin(true)
+	var accounts []account
+	c.do("GET", "/api/users", "", http.StatusOK, &accounts)
+	if !slices.ContainsFunc(accounts, func(a account) bool { return a.ID == me && a.Admin }) {
+		t.Errorf("accounts = %+v, want this admin in it", accounts)
+	}
+
+	// In the invitation mode, the sign-up needs an invitation: the base already has accounts.
+	if w := send("GET", "/api/add-user", ""); w.Code != http.StatusOK || !strings.Contains(w.Body.String(), `"allowed":false`) {
+		t.Errorf("add-user without invitation: status = %d, body = %s", w.Code, w.Body)
+	}
+	invited := unique("invited")
+	if w := send("POST", "/api/signup", fmt.Sprintf(`{"name":%q,"password":"a-good-password"}`, invited)); w.Code != http.StatusForbidden {
+		t.Fatalf("signup without invitation: status = %d, want 403: %s", w.Code, w.Body)
+	}
+
+	var invite struct {
+		Token  string
+		Invite struct{ ID string }
+	}
+	c.do("POST", "/api/invites", "", http.StatusCreated, &invite)
+	if invite.Token == "" || invite.Invite.ID == "" {
+		t.Fatalf("invite = %+v", invite)
+	}
+	if w := send("GET", "/api/add-user?invite="+invite.Token, ""); !strings.Contains(w.Body.String(), `"allowed":true`) {
+		t.Errorf("add-user with the invitation: body = %s", w.Body)
+	}
+
+	// A name already taken does not spend the invitation, a password too short neither.
+	if w := send("POST", "/api/signup", fmt.Sprintf(`{"name":%q,"password":"a-good-password","invite":%q}`, accounts[0].Name, invite.Token)); w.Code != http.StatusConflict {
+		t.Errorf("a name taken: status = %d, want 409: %s", w.Code, w.Body)
+	}
+	if w := send("POST", "/api/signup", fmt.Sprintf(`{"name":%q,"password":"short","invite":%q}`, unique("short"), invite.Token)); w.Code != http.StatusBadRequest {
+		t.Errorf("a short password: status = %d, want 400: %s", w.Code, w.Body)
+	}
+
+	// The invitation signs the account up and logs it in at once; it serves only once.
+	w := send("POST", "/api/signup", fmt.Sprintf(`{"name":%q,"password":"a-good-password","invite":%q}`, invited, invite.Token))
+	if cookies := w.Result().Cookies(); w.Code != http.StatusOK || len(cookies) != 1 || !cookies[0].HttpOnly {
+		t.Fatalf("signup: status = %d, cookies = %v: %s", w.Code, w.Result().Cookies(), w.Body)
+	}
+	if w := send("POST", "/api/signup", fmt.Sprintf(`{"name":%q,"password":"a-good-password","invite":%q}`, unique("twice"), invite.Token)); w.Code != http.StatusForbidden {
+		t.Errorf("the invitation used twice: status = %d, want 403: %s", w.Code, w.Body)
+	}
+	var pending []struct{ ID string }
+	c.do("GET", "/api/invites", "", http.StatusOK, &pending)
+	if slices.ContainsFunc(pending, func(p struct{ ID string }) bool { return p.ID == invite.Invite.ID }) {
+		t.Errorf("the used invitation is still listed: %+v", pending)
+	}
+
+	// A revoked invitation signs nobody up.
+	c.do("POST", "/api/invites", "", http.StatusCreated, &invite)
+	c.do("DELETE", "/api/invites/"+invite.Invite.ID, "", http.StatusNoContent, nil)
+	c.do("DELETE", "/api/invites/"+invite.Invite.ID, "", http.StatusNotFound, nil)
+	if w := send("POST", "/api/signup", fmt.Sprintf(`{"name":%q,"password":"a-good-password","invite":%q}`, unique("revoked"), invite.Token)); w.Code != http.StatusForbidden {
+		t.Errorf("a revoked invitation: status = %d, want 403: %s", w.Code, w.Body)
+	}
+
+	// An account is deleted with everything it holds, but never by itself.
+	c.do("GET", "/api/users", "", http.StatusOK, &accounts)
+	signedUp, found := slices.BinarySearchFunc(accounts, invited, func(a account, name string) int {
+		return strings.Compare(a.Name, name)
+	})
+	if !found {
+		t.Fatalf("the account signed up is not listed: %+v", accounts)
+	}
+	c.do("DELETE", "/api/users/"+me, "", http.StatusConflict, nil)
+	c.do("DELETE", "/api/users/"+unknownID, "", http.StatusNotFound, nil)
+	c.do("DELETE", "/api/users/"+accounts[signedUp].ID, "", http.StatusNoContent, nil)
+	c.do("GET", "/api/users", "", http.StatusOK, &accounts)
+	if slices.ContainsFunc(accounts, func(a account) bool { return a.Name == invited }) {
+		t.Errorf("the account deleted is still listed: %+v", accounts)
+	}
+}
+
+func TestAccountsPublicMode(t *testing.T) {
+	c := newClient(t)
+	api := New(bun.IDB(c.db), c.store, "", domain.AddUserModes[1])
+
+	send := func(path, body string) *httptest.ResponseRecorder {
+		r := httptest.NewRequest(http.MethodPost, path, strings.NewReader(body))
+		r.Host = "localhost:8080"
+		w := httptest.NewRecorder()
+		api.ServeHTTP(w, r)
+		return w
+	}
+
+	// Anyone reaching the web app creates an account, no invitation needed.
+	w := send("/api/signup", fmt.Sprintf(`{"name":%q,"password":"a-good-password"}`, unique("public")))
+	if w.Code != http.StatusOK {
+		t.Fatalf("signup in the public mode: status = %d, want 200: %s", w.Code, w.Body)
 	}
 }

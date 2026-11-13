@@ -1,5 +1,29 @@
 components:
   schemas:
+    addinvite.Result:
+      properties:
+        invite:
+          $ref: '#/components/schemas/domain.Invite'
+        token:
+          type: string
+      required:
+      - invite
+      - token
+      type: object
+    adduser.Input:
+      properties:
+        invite:
+          description: 'The token of an invitation to consume, none when empty: the
+            CLI, an admin, or the first account of a base.'
+          type: string
+        name:
+          type: string
+        password:
+          type: string
+      required:
+      - name
+      - password
+      type: object
     counttags.TagCount:
       properties:
         notes:
@@ -83,6 +107,23 @@ components:
       - name
       - size
       type: object
+    domain.Invite:
+      properties:
+        created_at:
+          type: string
+        created_by:
+          description: the admin who made it
+          type: string
+        expires_at:
+          type: string
+        id:
+          type: string
+      required:
+      - created_at
+      - created_by
+      - expires_at
+      - id
+      type: object
     domain.Item:
       properties:
         created_at:
@@ -154,6 +195,10 @@ components:
       type: object
     domain.User:
       properties:
+        admin:
+          description: may create, invite and delete accounts; the first account of
+            the base gets it
+          type: boolean
         avatar:
           description: the id of a File of the account, purgefiles keeps it
           type: string
@@ -189,6 +234,7 @@ components:
           description: how the web app lists items, one of Views
           type: string
       required:
+      - admin
       - avatar
       - color_mode
       - created_at
@@ -589,6 +635,36 @@ components:
       - snippet
       - title
       type: object
+    users.Account:
+      properties:
+        admin:
+          type: boolean
+        created_at:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+      required:
+      - admin
+      - created_at
+      - id
+      - name
+      type: object
+    users.Mode:
+      properties:
+        allowed:
+          description: |-
+            Whether the sign-up page may create an account right now: the mode is public, the base has no account yet
+            (it is waiting for its host), or the invitation given is good.
+          type: boolean
+        mode:
+          description: one of domain.AddUserModes
+          type: string
+      required:
+      - allowed
+      - mode
+      type: object
 externalDocs:
   description: ""
   url: ""
@@ -597,6 +673,30 @@ info:
   version: "1.0"
 openapi: 3.1.0
 paths:
+  /api/add-user:
+    get:
+      parameters:
+      - description: token of an invitation
+        in: query
+        name: invite
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/users.Mode'
+          description: OK
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Whether an account can be created
+      tags:
+      - account
   /api/export:
     get:
       parameters:
@@ -1142,6 +1242,99 @@ paths:
       summary: Import markdown files from a zip or a form of files
       tags:
       - transfer
+  /api/invites:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/domain.Invite'
+                type: array
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: The invitations still usable
+      tags:
+      - admin
+    post:
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/addinvite.Result'
+          description: Created
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Create an invitation
+      tags:
+      - admin
+  /api/invites/{id}:
+    delete:
+      responses:
+        "204":
+          description: No Content
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Revoke an invitation
+      tags:
+      - admin
   /api/items:
     get:
       parameters:
@@ -1862,6 +2055,51 @@ paths:
       summary: Find notes by title or content
       tags:
       - search
+  /api/signup:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/adduser.Input'
+              description: body
+              summary: body
+        description: body
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/createsession.Result'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Forbidden
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Conflict
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Create an account and log it in
+      tags:
+      - account
   /api/tags:
     get:
       responses:
@@ -2096,3 +2334,73 @@ paths:
       summary: Delete one removal of the trash for good
       tags:
       - trash
+  /api/users:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/users.Account'
+                type: array
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Every account
+      tags:
+      - admin
+  /api/users/{id}:
+    delete:
+      responses:
+        "204":
+          description: No Content
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Delete an account and all its data
+      tags:
+      - admin

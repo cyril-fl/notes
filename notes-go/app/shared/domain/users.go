@@ -23,6 +23,7 @@ type User struct {
 	ColorMode    string `bun:",notnull,default:'system'" json:"color_mode"` // light or dark, one of ColorModes
 	View         string `bun:",notnull,default:'list'" json:"view"`         // how the web app lists items, one of Views
 	Plan         string `bun:",notnull,default:'base'" json:"plan"`         // the features of the web app, one of Plans
+	Admin        bool   `bun:",notnull,default:false" json:"admin"`         // may create, invite and delete accounts; the first account of the base gets it
 	// Days before the trash is purged, 0 to never purge. An insert of 0 gets the default: only an update sets it.
 	TrashRetentionDays int       `bun:",notnull,default:30" json:"trash_retention_days"`
 	Avatar             string    `bun:",type:uuid,nullzero" json:"avatar,omitempty"` // the id of a File of the account, purgefiles keeps it
@@ -98,6 +99,22 @@ type Session struct {
 	CreatedAt time.Time `bun:",notnull,default:current_timestamp"`
 	ExpiresAt time.Time `bun:",notnull"`
 }
+
+// Invite is a link an admin hands out so someone creates their own account: the link holds the token, the base only its hash.
+type Invite struct {
+	bun.BaseModel `bun:"table:invites,alias:iv" json:"-"`
+
+	ID        string    `bun:",pk,type:uuid,default:gen_random_uuid()" json:"id"`
+	TokenHash string    `bun:",notnull,unique" json:"-"`
+	UserID    string    `bun:",notnull,type:uuid" json:"created_by"` // the admin who made it
+	CreatedAt time.Time `bun:",notnull,default:current_timestamp" json:"created_at"`
+	ExpiresAt time.Time `bun:",notnull" json:"expires_at"`
+	UsedAt    time.Time `bun:",nullzero" json:"-"` // set when it created an account, so a link serves once
+}
+
+// AddUserModes are the ways an account is created on a server, the first one by default: by invitation of an admin
+// only, or by anyone reaching the web app.
+var AddUserModes = []string{"invitation", "public"}
 
 var ErrNoUser = errors.New("not logged in")
 

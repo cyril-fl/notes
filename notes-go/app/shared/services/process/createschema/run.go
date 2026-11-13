@@ -131,6 +131,8 @@ func getTables(tx bun.Tx) []*bun.CreateTableQuery {
 		tx.NewCreateTable().Model((*domain.User)(nil)),
 		tx.NewCreateTable().Model((*domain.Session)(nil)).
 			ForeignKey(`("user_id") REFERENCES "users" ("id") ON DELETE CASCADE`),
+		tx.NewCreateTable().Model((*domain.Invite)(nil)).
+			ForeignKey(`("user_id") REFERENCES "users" ("id") ON DELETE CASCADE`),
 		tx.NewCreateTable().Model((*domain.Item)(nil)).
 			ForeignKey(`("user_id") REFERENCES "users" ("id") ON DELETE CASCADE`).
 			ColumnExpr("CONSTRAINT items_kind_check CHECK (kind IN (?))", bun.List([]domain.Kind{domain.NOTE, domain.FOLDER})).
@@ -156,7 +158,6 @@ func getTables(tx bun.Tx) []*bun.CreateTableQuery {
 			ForeignKey(`("target_id") REFERENCES "metadata_notes" ("item_id") ON DELETE CASCADE`),
 		tx.NewCreateTable().Model((*domain.NoteVersion)(nil)).
 			ForeignKey(`("item_id") REFERENCES "metadata_notes" ("item_id") ON DELETE CASCADE`),
-		// TODO: deleting an account leaves its objects in Silo, remove the prefix <user_id>/ if accounts ever get deleted.
 		tx.NewCreateTable().Model((*domain.File)(nil)).
 			ForeignKey(`("user_id") REFERENCES "users" ("id") ON DELETE CASCADE`),
 		tx.NewCreateTable().Model((*domain.NoteFile)(nil)).

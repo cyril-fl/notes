@@ -17,7 +17,7 @@ import (
 const Cookie = "notes_session"
 
 // Public routes answer without a session.
-var public = map[string]bool{"POST /api/login": true}
+var public = map[string]bool{"POST /api/login": true, "POST /api/signup": true, "GET /api/add-user": true}
 
 // New runs next with the account of the request's session in its context: the cookie, or a
 // "Authorization: Bearer <token>" header for scripts. Without a valid one, 401.

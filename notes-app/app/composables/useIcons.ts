@@ -2,6 +2,7 @@
 export function useIcons() {
   const icons = {
     // Items
+    add: 'i-reicon-add',
     note: 'i-reicon-document-text',
     noteAdd: 'i-reicon-add',
     noteNotFound: 'i-reicon-file-error',
@@ -57,6 +58,9 @@ export function useIcons() {
     fileAudio: 'i-reicon-music-note',
     fileVideo: 'i-reicon-video',
     pro: 'i-reicon-sparkles',
+    accounts: 'i-lucide-users',
+    invite: 'i-lucide-user-plus',
+    copy: 'i-lucide-copy',
     source: 'i-reicon-document-code',
     selectAll: 'i-reicon-text-select',
     clear: 'i-reicon-eraser',

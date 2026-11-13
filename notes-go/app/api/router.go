@@ -35,6 +35,7 @@ import (
 	apisearch "github.com/cyril-fl/notes/notes-go/app/api/search"
 	"github.com/cyril-fl/notes/notes-go/app/api/services/auth"
 	"github.com/cyril-fl/notes/notes-go/app/api/services/guard"
+	apiusers "github.com/cyril-fl/notes/notes-go/app/api/users"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/silo"
 	"github.com/uptrace/bun"
 )
@@ -43,8 +44,8 @@ import (
 // @version  1.0
 
 // New gives the API, reachable by web pages from origin only (none when empty), and by logged-in accounts only.
-// The images of the notes are in store.
-func New(db bun.IDB, store silo.Store, origin string) http.Handler {
+// The images of the notes are in store. addUserMode is how accounts are created, one of domain.AddUserModes.
+func New(db bun.IDB, store silo.Store, origin, addUserMode string) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.Handle("POST /api/login", apilogin.Handler(db))
@@ -53,6 +54,14 @@ func New(db bun.IDB, store silo.Store, origin string) http.Handler {
 	mux.Handle("PATCH /api/me", apilogin.EditMe(db))
 	mux.Handle("DELETE /api/me/data", apilogin.DeleteData(db))
 	mux.Handle("PATCH /api/me/password", apilogin.EditPassword(db))
+
+	mux.Handle("GET /api/add-user", apiusers.Modes(db, addUserMode))
+	mux.Handle("POST /api/signup", apiusers.Signup(db, addUserMode))
+	mux.Handle("GET /api/users", apiusers.List(db))
+	mux.Handle("DELETE /api/users/{id}", apiusers.Delete(db, store))
+	mux.Handle("GET /api/invites", apiusers.Invites(db))
+	mux.Handle("POST /api/invites", apiusers.Invite(db))
+	mux.Handle("DELETE /api/invites/{id}", apiusers.Revoke(db))
 
 	mux.Handle("POST /api/notes", apicreatenote.Handler(db))
 	mux.Handle("GET /api/notes/{id}", apireadnote.Handler(db))

@@ -12,6 +12,8 @@ const { createFolder, tagMenu, pinItem } = useItems();
 const searchOpen = useState('search-open', () => false);
 const colorMode = useColorMode();
 const { has } = usePro();
+// The account, loaded by the layout: its avatar opens the account menu, and an admin gets the accounts section.
+const { data: me } = useNuxtData<User>('me');
 // Pro: on the settings, the sidebar becomes their nav, like Kaneo's.
 const settingsNav = computed(
   () => has('settingsNav') && (route.path.startsWith('/settings') || route.path === '/account'),
@@ -20,6 +22,7 @@ const settingsLinks = computed(() => [
   { label: t('sidebar.account'), icon: icons.account, to: '/account' },
   ...settingsSections
     .filter((section) => !('feature' in section) || has(section.feature))
+    .filter((section) => !('admin' in section) || me.value?.admin)
     .map((section) => ({
       label: t(`settings.sections.${section.id}`),
       icon: icons[section.icon],
@@ -47,8 +50,6 @@ const { data: tags } = useLazyAsyncData('tags', () => api<TagCount[]>('/api/grap
   default: () => [] as TagCount[],
 });
 
-// The account, loaded by the layout: its avatar opens the account menu.
-const { data: me } = useNuxtData<User>('me');
 const baseURL = useRuntimeConfig().public.apiBase;
 const avatarSrc = computed(() => (me.value?.avatar ? imageSrc(`/api/files/${me.value.avatar}`, baseURL) : undefined));
 const logout = useLogout();
@@ -285,7 +286,7 @@ const isOverRoot = useDropFolder(rootLink, () => null);
             </NuxtLink>
             <UTooltip :text="$t('common.newFolder')">
               <UButton
-                :icon="icons.folderAdd"
+                :icon="icons.add"
                 color="neutral"
                 variant="ghost"
                 size="xs"

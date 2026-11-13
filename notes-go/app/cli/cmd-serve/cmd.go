@@ -3,24 +3,30 @@ package cmdserve
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"slices"
 	"strings"
 	"syscall"
 	"time"
 
 	"github.com/cyril-fl/notes/notes-go/app/api"
 	"github.com/cyril-fl/notes/notes-go/app/api/services/guard"
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/adduser"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/purgefiles"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/purgeinvites"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/purgeitems"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/purgesessions"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/silo"
 	"github.com/spf13/cobra"
+	"github.com/uptrace/bun"
 )
 
 const (
@@ -52,6 +58,13 @@ func Serve(cobra *cobra.Command, args []string) error {
 	if published == "" {
 		published = addr
 	}
+	addUserMode, err := cobra.Flags().GetString("add-user-mode")
+	if err != nil {
+		return err
+	}
+	if !slices.Contains(domain.AddUserModes, addUserMode) {
+		return fmt.Errorf("--add-user-mode must be one of %v", domain.AddUserModes)
+	}
 
 	ctx, stop := signal.NotifyContext(cobra.Context(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -59,6 +72,9 @@ func Serve(cobra *cobra.Command, args []string) error {
 	db := postgrey.GetDb()
 	store, err := silo.New(ctx)
 	if err != nil {
+		return err
+	}
+	if err := addHost(ctx, db); err != nil {
 		return err
 	}
 	// The files after the items: a note purged now frees its images in the same round.
@@ -78,9 +94,14 @@ func Serve(cobra *cobra.Command, args []string) error {
 		if sessions.HasErr() && ctx.Err() == nil {
 			log.Printf("purge sessions: %v", sessions.GetErr())
 		}
+		invites := purgeinvites.Process(ctx, db)
+		invites.Run()
+		if invites.HasErr() && ctx.Err() == nil {
+			log.Printf("purge invites: %v", invites.GetErr())
+		}
 	})
 
-	handler := api.New(db, store, origin)
+	handler := api.New(db, store, origin, addUserMode)
 	if web != "" {
 		handler = withWeb(web, handler)
 	}
@@ -113,6 +134,27 @@ func Serve(cobra *cobra.Command, args []string) error {
 		return err
 	}
 	log.Print("stopped")
+	return nil
+}
+
+// addHost creates the account of NOTES_HOST_NAME and NOTES_HOST_PASSWORD on a base with no account yet: a server
+// put up from a compose file is reachable at once, without a shell on it. It does nothing once an account exists.
+func addHost(ctx context.Context, db bun.IDB) error {
+	name, pass := os.Getenv("NOTES_HOST_NAME"), os.Getenv("NOTES_HOST_PASSWORD")
+	if name == "" || pass == "" {
+		return nil
+	}
+	taken, err := db.NewSelect().Model((*domain.User)(nil)).Exists(ctx)
+	if err != nil || taken {
+		return err
+	}
+
+	process := adduser.Process(ctx, db, adduser.Input{Name: name, Password: pass})
+	process.Run()
+	if process.HasErr() {
+		return process.GetErr()
+	}
+	log.Printf("created the first account, %s: it manages the others", process.GetResult().Name)
 	return nil
 }
 

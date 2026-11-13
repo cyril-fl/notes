@@ -43,7 +43,7 @@ S3_BUCKET=notes
 
 ### Comptes
 
-Chaque note, dossier et tag appartient à un compte, et un compte ne voit jamais ceux des autres. Les comptes se créent sur le serveur, par la CLI :
+Chaque note, dossier et tag appartient à un compte, et un compte ne voit jamais ceux des autres. Le premier compte de la base est admin : lui seul invite, liste et supprime les autres depuis l'app (voir *Serveur* dans le README racine). La CLI, elle, crée un compte quel que soit le mode du serveur :
 
 ```sh
 notes user add cyril            # demande le mot de passe deux fois (8 caractères au moins)
@@ -55,6 +55,7 @@ notes account purge             # vide le compte connecté (notes, dossiers, tag
 ```
 
 - **Scripts :** `--password-stdin` lit le mot de passe sur l'entrée standard, pour `user add` et `reset-password`.
+- **Admin :** le drapeau est posé par le premier compte créé dans une base vide, quelle que soit la façon. Pour le déplacer ou en ajouter un, il faut toucher la base : `UPDATE users SET admin = true WHERE name = '<nom>'`.
 - **Session de la CLI :** elle est gardée dans `~/.config/notes/session` sous Linux et `~/Library/Application Support/notes/session` sous macOS, lisible par l'utilisateur seul. Elle dure 30 jours, prolongés à chaque usage.
 
 Les commandes `note` et `folder`, ainsi que `move`, `finder` et `graph`, acceptent un UUID ou un chemin :
@@ -175,10 +176,12 @@ make api                                     # dans Docker, avec WEB_ORIGIN déf
 notes serve --origin http://localhost:3000   # ou directement sur la machine
 ```
 
-`--addr` choisit l'adresse d'écoute (`127.0.0.1:8080` par défaut) et `--origin` l'origine de l'app web autorisée, `--web` un dossier de l'app générée (`bun run generate`) servi à la même adresse que l'API. Quand l'API n'est joignable que depuis la machine (`127.0.0.1`), elle prend l'adresse de chaque appareil dans le `X-Forwarded-For` du proxy (`tailscale serve`), pour que le délai après de mauvais mots de passe ne bloque que l'appareil fautif. Dans un conteneur, `--published` donne l'adresse publiée côté machine (`NOTES_LISTEN`), à la place de `--addr`.
+`--addr` choisit l'adresse d'écoute (`127.0.0.1:8080` par défaut) et `--origin` l'origine de l'app web autorisée, `--web` un dossier de l'app générée (`bun run generate`) servi à la même adresse que l'API. `--add-user-mode` décide qui crée un compte depuis l'app : `invitation` (par défaut, sur lien d'un admin) ou `public` (n'importe qui). Sur une base sans aucun compte, `NOTES_HOST_NAME` et `NOTES_HOST_PASSWORD` en créent le premier au démarrage. Quand l'API n'est joignable que depuis la machine (`127.0.0.1`), elle prend l'adresse de chaque appareil dans le `X-Forwarded-For` du proxy (`tailscale serve`), pour que le délai après de mauvais mots de passe ne bloque que l'appareil fautif. Dans un conteneur, `--published` donne l'adresse publiée côté machine (`NOTES_LISTEN`), à la place de `--addr`.
 
 | Ressource | Routes (préfixe `/api`) | Corps JSON |
 |---|---|---|
+| Comptes (admin) | `GET`, `DELETE /users/{id}`, `GET`, `POST /invites`, `DELETE /invites/{id}` | |
+| Création de compte | `GET /add-user[?invite=<jeton>]`, `POST /signup` | `name`, `password`, `invite` (le jeton du lien) |
 | Compte | `POST /login`, `POST /logout`, `GET`, `PATCH /me`, `PATCH /me/password` | `name`, `password` (connexion) ; réglages : `locale`, `theme`, `color_mode`, `view`, `trash_retention_days` (0 à 3650, 0 pour ne jamais purger), `name`, `avatar` (id d'une image du compte, `""` pour aucune) ; mot de passe : `current`, `new` |
 | Notes | `POST /notes`, `GET`, `PATCH`, `DELETE /notes/{id}`, `GET /notes/{id}/neighbors`, `GET /pinned` | `content`, `tags`, `parent_id` (création), `pinned`, `readonly` |
 | Dossiers | `GET`, `POST /folders`, `GET`, `PATCH`, `DELETE /folders/{id}` | `title`, `parent_id` (création), `pinned` |
@@ -190,7 +193,7 @@ notes serve --origin http://localhost:3000   # ou directement sur la machine
 | Export / import | `GET /export` (zip), `POST /import?parent=<uuid>` (zip en corps, `Content-Type: application/zip`, ou formulaire `multipart/form-data` de fichiers `files` nommés par leur chemin, `dossier/note.md` ; racine sans `parent`) | |
 | Images et pièces jointes | `POST /files?name=<nom>` (le fichier en corps), `GET /files/{id}` | |
 
-- Tout, sauf `POST /login`, demande une session, sinon 401. La connexion pose un cookie `notes_session` (`HttpOnly`, `Secure`, `SameSite=Strict`), qui dure 30 jours prolongés à chaque requête. Les scripts peuvent envoyer le jeton dans `Authorization: Bearer <jeton>`. Les sessions expirées sont effacées de la base à la purge horaire du serveur.
+- Tout, sauf `POST /login`, `GET /add-user` et `POST /signup`, demande une session, sinon 401. Les routes `/users` et `/invites` demandent en plus un compte admin, sinon 403. `POST /signup` n'est ouverte que sur une base sans compte, avec un jeton d'invitation valable, ou en mode `public` ; le jeton sert une fois et expire au bout de 7 jours, la base n'en garde que l'empreinte. Supprimer un compte efface ses notes, dossiers, tags et images (octets compris), mais ni le compte connecté, ni le dernier admin. La connexion pose un cookie `notes_session` (`HttpOnly`, `Secure`, `SameSite=Strict`), qui dure 30 jours prolongés à chaque requête. Les scripts peuvent envoyer le jeton dans `Authorization: Bearer <jeton>`. Les sessions expirées sont effacées de la base à la purge horaire du serveur.
 - Après des mauvais mots de passe d'affilée (par adresse pour `POST /login`, par compte pour `PATCH /me/password`), la route répond 429 avec `Retry-After` (en secondes) : rien jusqu'à 3 échecs, puis 30 s, 1 min, 5 min, 15 min, et 1 h dès 8. Une réussite remet le compteur à zéro.
 - Le titre d'une note vient de son contenu, comme dans la CLI : l'API refuse un champ `title` pour une note.
 - `PATCH /notes/{id}` ne change que les champs envoyés. `{"pinned": true}` seul épingle la note sans toucher à son texte ni à sa date de modification. Sans `tags`, les tags sont les `#mots` du contenu. Avec `tags`, cette liste réécrit le contenu : `"tags": []` efface tous ses `#mots`. Il répond la note complète, comme `GET` (texte enregistré, tags, chemin). `{"readonly": true}` verrouille la note : `content` et `tags` sont alors refusés (409), sauf avec `"readonly": false` dans la même requête. Avec `updated_at` (celui lu par `GET`, ou `created_at` pour une note jamais modifiée), `content` et `tags` sont refusés (409) si la note a changé depuis : un appareil resté ouvert n'écrase pas ce qu'un autre a écrit.

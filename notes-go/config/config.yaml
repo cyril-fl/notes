@@ -271,7 +271,7 @@ commands:
   serve:
     use: "serve"
     short: "Run the HTTP API"
-    long: "Run the HTTP API. It has no authentication: keep it on the loopback. Web pages can only call it from --origin."
+    long: "Run the HTTP API. It has no authentication: keep it on the loopback. Web pages can only call it from --origin. Accounts are created by invitation of an admin, unless --add-user-mode=public; NOTES_HOST_NAME and NOTES_HOST_PASSWORD create the first account on an empty base."
     example: "notes serve --origin http://localhost:3000"
     args:
       - name: "addr"
@@ -293,6 +293,11 @@ commands:
         shorthand: ""
         value: ""
         usage: "Address the API is published on, when not --addr (the host side of a container port): on the loopback, only a local proxy reaches it, and the client's address is read from X-Forwarded-For"
+        type: "string"
+      - name: "add-user-mode"
+        shorthand: ""
+        value: "invitation"
+        usage: "How accounts are created: invitation (an admin invites or creates them) or public (anyone reaching the web app)"
         type: "string"
   login:
     use: "login"
