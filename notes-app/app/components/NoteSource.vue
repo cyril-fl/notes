@@ -114,9 +114,10 @@ onMounted(() => {
           }),
         ),
         // Safari keeps Cmd+D for its bookmarks and never hands it over, and macOS reads Ctrl+D as a forward delete:
-        // on a Mac, Ctrl+G takes the next occurrence and Ctrl+Shift+G all of them, next to the Cmd+G of the find.
+        // Ctrl+G takes the next occurrence and Ctrl+Shift+G all of them, next to the Cmd+G of the find. Bound for
+        // every platform, and before searchKeymap, whose Mod-g (find next, which opens the panel) would take it.
         keymap.of([
-          { mac: 'Ctrl-g', run: selectNextOccurrence, preventDefault: true },
+          { key: 'Ctrl-g', run: selectNextOccurrence, preventDefault: true },
           ...searchKeymap,
           ...defaultKeymap,
           ...historyKeymap,
