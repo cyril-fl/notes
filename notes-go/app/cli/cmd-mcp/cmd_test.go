@@ -41,7 +41,7 @@ func TestAddTools(t *testing.T) {
 			t.Errorf("tool %q: schema %v, description %q", tool.Name, tool.InputSchema, tool.Description)
 		}
 	}
-	for _, want := range []string{"search_notes", "recent_notes", "read_note", "list_folder", "create_note", "edit_note"} {
+	for _, want := range []string{"search_notes", "recent_notes", "read_note", "list_folder", "create_note", "edit_note", "create_folder", "rename_folder", "move_item", "delete_note", "delete_folder", "list_trash", "restore_item", "list_tags", "read_tag"} {
 		if !slices.Contains(names, want) {
 			t.Errorf("tools = %v, missing %q", names, want)
 		}

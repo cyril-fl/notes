@@ -8,12 +8,20 @@ import (
 
 	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/counttags"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createfolder"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createnote"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deleteitems"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/editfolder"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/editnote"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listitems"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listrecent"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listtrash"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/moveitems"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readitem"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readtag"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/resolveitem"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/restoreitems"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/searchnotes"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/spf13/cobra"
@@ -60,6 +68,29 @@ type editArgs struct {
 	Note    string   `json:"note" jsonschema:"the note to rewrite: its uuid, or its path from the root (/Folder/Note)"`
 	Content string   `json:"content" jsonschema:"the new markdown content; it replaces the whole note"`
 	Tags    []string `json:"tags,omitempty" jsonschema:"tags to add to the content, without the #"`
+}
+
+type createFolderArgs struct {
+	Title  string `json:"title" jsonschema:"the new folder's title"`
+	Folder string `json:"folder,omitempty" jsonschema:"the folder to create it in: its uuid, or its path from the root (/Folder); the root itself when empty"`
+}
+
+type renameFolderArgs struct {
+	Folder string `json:"folder" jsonschema:"the folder to rename: its uuid, or its path from the root (/Folder)"`
+	Title  string `json:"title" jsonschema:"its new title"`
+}
+
+type moveArgs struct {
+	Item   string `json:"item" jsonschema:"the note or folder to move: its uuid, or its path from the root (/Folder/Note)"`
+	Folder string `json:"folder,omitempty" jsonschema:"the folder to move it into: its uuid, or its path from the root (/Folder); the root itself when empty"`
+}
+
+type trashedArgs struct {
+	Item string `json:"item" jsonschema:"the uuid of the trashed note or folder, as list_trash gives it"`
+}
+
+type tagArgs struct {
+	Tag string `json:"tag" jsonschema:"the tag, without the #"`
 }
 
 // Serve speaks MCP on stdin and stdout: nothing else may be printed there.
@@ -123,11 +154,7 @@ func AddTools(server *mcp.Server, ctx context.Context) {
 			return nil, nil, process.GetErr()
 		}
 
-		items := make([]item, 0, len(process.GetResult()))
-		for _, found := range process.GetResult() {
-			items = append(items, item{ID: found.ID, Kind: string(found.Kind), Title: string(found.Title)})
-		}
-		return nil, items, nil
+		return nil, made(process.GetResult()...), nil
 	})
 
 	mcp.AddTool(server, &mcp.Tool{
@@ -166,6 +193,152 @@ func AddTools(server *mcp.Server, ctx context.Context) {
 		edited, err := readNote(ctx, id)
 		return nil, edited, err
 	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "create_folder",
+		Description: "Create a folder.",
+	}, func(_ context.Context, _ *mcp.CallToolRequest, args createFolderArgs) (*mcp.CallToolResult, item, error) {
+		parentID, err := resolveFolder(ctx, args.Folder)
+		if err != nil {
+			return nil, item{}, err
+		}
+
+		process := createfolder.Process(ctx, postgrey.GetDb(), createfolder.Input{Title: args.Title, ParentID: parentID})
+		process.Run()
+		if process.HasErr() {
+			return nil, item{}, process.GetErr()
+		}
+		return nil, one(process.GetResult()), nil
+	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "rename_folder",
+		Description: "Change the title of a folder.",
+	}, func(_ context.Context, _ *mcp.CallToolRequest, args renameFolderArgs) (*mcp.CallToolResult, item, error) {
+		id, err := resolve(ctx, domain.FOLDER, args.Folder)
+		if err != nil {
+			return nil, item{}, err
+		}
+
+		process := editfolder.Process(ctx, postgrey.GetDb(), editfolder.Input{ID: id, Title: args.Title})
+		process.Run()
+		if process.HasErr() {
+			return nil, item{}, process.GetErr()
+		}
+		return nil, one(process.GetResult()), nil
+	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "move_item",
+		Description: "Move a note or a folder into another folder. A folder takes its content with it.",
+	}, func(_ context.Context, _ *mcp.CallToolRequest, args moveArgs) (*mcp.CallToolResult, []item, error) {
+		id, err := resolve(ctx, "", args.Item)
+		if err != nil {
+			return nil, nil, err
+		}
+		parentID, err := resolveFolder(ctx, args.Folder)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		process := moveitems.Process(ctx, postgrey.GetDb(), moveitems.Input{IDs: []string{id}, ParentID: parentID})
+		process.Run()
+		if process.HasErr() {
+			return nil, nil, process.GetErr()
+		}
+		return nil, made(process.GetResult()...), nil
+	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "delete_note",
+		Description: "Move a note to the trash, where restore_item can take it back.",
+	}, func(_ context.Context, _ *mcp.CallToolRequest, args noteArgs) (*mcp.CallToolResult, []item, error) {
+		return deleteItem(ctx, domain.NOTE, args.Note)
+	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "delete_folder",
+		Description: "Move a folder and everything inside it to the trash, where restore_item can take it back.",
+	}, func(_ context.Context, _ *mcp.CallToolRequest, args folderArgs) (*mcp.CallToolResult, []item, error) {
+		return deleteItem(ctx, domain.FOLDER, args.Folder)
+	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "list_trash",
+		Description: "List what is in the trash, last removed first, with the uuid restore_item takes.",
+	}, func(_ context.Context, _ *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, []listtrash.Trashed, error) {
+		process := listtrash.Process(ctx, postgrey.GetDb())
+		process.Run()
+		if process.HasErr() {
+			return nil, nil, process.GetErr()
+		}
+		return nil, process.GetResult(), nil
+	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "restore_item",
+		Description: "Take a note or a folder out of the trash, with everything removed at the same time as it.",
+	}, func(_ context.Context, _ *mcp.CallToolRequest, args trashedArgs) (*mcp.CallToolResult, []item, error) {
+		// No resolve: a trashed item has no path to look up.
+		process := restoreitems.Process(ctx, postgrey.GetDb(), []string{args.Item})
+		process.Run()
+		if process.HasErr() {
+			return nil, nil, process.GetErr()
+		}
+		return nil, made(process.GetResult()...), nil
+	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "list_tags",
+		Description: "List the account's tags, most used first, with how many notes carry each.",
+	}, func(_ context.Context, _ *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, []counttags.TagCount, error) {
+		process := counttags.Process(ctx, postgrey.GetDb())
+		process.Run()
+		if process.HasErr() {
+			return nil, nil, process.GetErr()
+		}
+		return nil, process.GetResult(), nil
+	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "read_tag",
+		Description: "List the notes carrying a tag, with their path. Tags of a note are set by create_note and edit_note.",
+	}, func(_ context.Context, _ *mcp.CallToolRequest, args tagArgs) (*mcp.CallToolResult, readtag.Result, error) {
+		process := readtag.Process(ctx, postgrey.GetDb(), args.Tag)
+		process.Run()
+		if process.HasErr() {
+			return nil, readtag.Result{}, process.GetErr()
+		}
+		return nil, process.GetResult(), nil
+	})
+}
+
+// deleteItem trashes one note or folder, named by uuid or by path.
+func deleteItem(ctx context.Context, kind domain.Kind, ref string) (*mcp.CallToolResult, []item, error) {
+	id, err := resolve(ctx, kind, ref)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	process := deleteitems.Process(ctx, postgrey.GetDb(), kind, []string{id})
+	process.Run()
+	if process.HasErr() {
+		return nil, nil, process.GetErr()
+	}
+	return nil, made(process.GetResult()...), nil
+}
+
+// one turns an item the processes answer into what the agent reads.
+func one(found domain.Item) item {
+	return item{ID: found.ID, Kind: string(found.Kind), Title: string(found.Title)}
+}
+
+func made(found ...domain.Item) []item {
+	items := make([]item, 0, len(found))
+	for _, found := range found {
+		items = append(items, one(found))
+	}
+	return items
 }
 
 // resolve turns a path into the uuid the processes take; a uuid goes through untouched.

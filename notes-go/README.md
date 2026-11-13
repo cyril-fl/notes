@@ -175,7 +175,7 @@ Le détail de chaque commande est dans `notes <commande> --help`.
 notes mcp   # parle MCP sur stdin/stdout, pour le compte de la session CLI (notes login)
 ```
 
-`notes mcp` donne à un agent six outils sur les notes du compte : `search_notes`, `recent_notes`, `read_note`, `list_folder`, `create_note`, `edit_note`. Il passe par les mêmes processus que la CLI et l'API, n'écoute sur aucun port et n'a rien à authentifier : c'est la session CLI de la machine qui décide du compte. Une note se désigne par son uuid ou par son chemin depuis la racine (`/Dossier/Note`). `edit_note` remplace tout le contenu de la note, et refuse une note verrouillée.
+`notes mcp` donne à un agent quinze outils sur les notes du compte : lecture (`search_notes`, `recent_notes`, `read_note`, `list_folder`, `list_tags`, `read_tag`), écriture (`create_note`, `edit_note`, `create_folder`, `rename_folder`, `move_item`) et corbeille (`delete_note`, `delete_folder`, `list_trash`, `restore_item`). Il passe par les mêmes processus que la CLI et l'API, n'écoute sur aucun port et n'a rien à authentifier : c'est la session CLI de la machine qui décide du compte. Une note ou un dossier se désigne par son uuid ou par son chemin depuis la racine (`/Dossier/Note`). `edit_note` remplace tout le contenu de la note, et refuse une note verrouillée. Une suppression passe par la corbeille, d'où `restore_item` la ressort ; le vidage définitif reste à la CLI et à l'app.
 
 Côté client, c'est un serveur MCP lancé par commande (`command: notes`, `args: ["mcp"]`), à faire tourner là où la base est joignable. Pour un agent qui tourne sur le serveur, rien d'autre à installer.
 
