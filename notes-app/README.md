@@ -35,9 +35,11 @@ La barre latérale se redimensionne en tirant son bord (sa largeur reste d'une v
 
 Un clic droit sur un dossier le met en favori, un clic droit sur un tag le renomme ou le supprime.
 
+Les listes de la barre latérale (Favoris, Épinglées, Récentes) s'affichent ou se masquent une à une dans les réglages, sous la ligne Navigation de la section Apparence.
+
 Quand la note a changé sur un autre appareil pendant qu'on l'écrit, l'app fusionne les deux textes ligne à ligne, depuis le texte qu'ils avaient en commun : des changements à des endroits différents se fusionnent seuls (un toast le dit) ; au même endroit, la fenêtre « Conflits » montre chaque passage avec « La mienne », « L'autre » ou « Les deux », le texte tapé ici étant d'abord gardé dans l'historique comme une version « conflit ». Si la fusion échoue (note verrouillée ailleurs, réseau), « Recharger » dans le toast garde le texte tapé ici dans l'historique puis relit la note.
 
-Le bouton de mode source, en bas d'une note, montre son markdown en texte brut, enregistré à la frappe comme dans l'éditeur, qui repart de ce texte au retour ; le plan et le nombre de mots (mode avancé) n'y sont pas affichés.
+Le bouton de mode source, en bas d'une note, montre son markdown en texte brut dans un éditeur CodeMirror, enregistré à la frappe comme dans l'éditeur, qui repart de ce texte au retour ; le plan et le nombre de mots (mode avancé) n'y sont pas affichés. `Ctrl+G` y ajoute un curseur sur l'occurrence suivante du mot sélectionné, `Ctrl+Shift+G` sur toutes (les touches de macOS prennent `Ctrl+D` et `Cmd+F` avant l'éditeur).
 
 Un bloc de code ` ```mermaid ` s'affiche en diagramme (thème sombre en mode sombre), son code visible tant que le curseur y est ; un clic sur le diagramme y met le curseur. Les formules LaTeX `$…$` (dans le texte) et `$$…$$` (en bloc) s'affichent avec KaTeX, et un clic ouvre leur source à modifier (sur plusieurs lignes pour un bloc, `⌘↵` pour valider) ; `$5 et $10` reste du texte (pas d'espace juste à l'intérieur des dollars, pas de chiffre après). Les diagrammes et formules s'affichent aussi dans une note incluse (`![[Note]]`). Mermaid et KaTeX ne sont chargés qu'à la première note qui en contient, et le markdown reste celui écrit.
 
