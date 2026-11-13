@@ -32,6 +32,7 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/pinnote"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readfile"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readitem"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readsavedsearch"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readsession"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readtag"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/restoreitems"
@@ -56,7 +57,7 @@ var statuses = []struct {
 		deletetag.ErrNoValue,
 		editfolder.ErrNoValue, editfolder.ErrNoTitle,
 		editnote.ErrNoValue, editnote.ErrNoContent,
-		edituser.ErrInvalidLocale, edituser.ErrInvalidTheme, edituser.ErrInvalidColorMode, edituser.ErrInvalidView, edituser.ErrInvalidPlan, edituser.ErrInvalidRetention, edituser.ErrInvalidAvatar, edituser.ErrInvalidSnippet,
+		edituser.ErrInvalidLocale, edituser.ErrInvalidTheme, edituser.ErrInvalidColorMode, edituser.ErrInvalidView, edituser.ErrInvalidPlan, edituser.ErrInvalidRetention, edituser.ErrInvalidAvatar, edituser.ErrInvalidSnippet, edituser.ErrInvalidSavedSearch,
 		adduser.ErrNoName, adduser.ErrShortPassword, editpassword.ErrWrongPassword,
 		edittag.ErrNoValue,
 		hashtag.ErrInvalid,
@@ -74,7 +75,7 @@ var statuses = []struct {
 		adduser.ErrBadInvite,
 	}},
 	{http.StatusNotFound, []error{
-		deleteuser.ErrNotFound, editfolder.ErrNotFound, editnote.ErrNotFound, emptytrash.ErrNotFound, edittag.ErrNotFound, exportnotes.ErrNotFound, pinnote.ErrNotFound, readfile.ErrNotFound, readitem.ErrNotFound, readtag.ErrNotFound,
+		deleteuser.ErrNotFound, editfolder.ErrNotFound, editnote.ErrNotFound, emptytrash.ErrNotFound, edittag.ErrNotFound, exportnotes.ErrNotFound, pinnote.ErrNotFound, readfile.ErrNotFound, readitem.ErrNotFound, readsavedsearch.ErrNotFound, readtag.ErrNotFound,
 	}},
 	{http.StatusUnsupportedMediaType, []error{
 		createfile.ErrFileType,

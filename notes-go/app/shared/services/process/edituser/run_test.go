@@ -36,6 +36,10 @@ func TestInvalidInput(t *testing.T) {
 		{Input{Snippets: &[]domain.Snippet{{Name: " ", Content: "x"}}}, ErrInvalidSnippet},
 		{Input{Snippets: &[]domain.Snippet{{Name: "big", Content: string(make([]byte, MaxSnippetSize+1))}}}, ErrInvalidSnippet},
 		{Input{Snippets: new(make([]domain.Snippet, MaxSnippets+1))}, ErrInvalidSnippet},
+		{Input{SavedSearches: &[]domain.SavedSearch{{ID: "a", Name: " "}}}, ErrInvalidSavedSearch},
+		{Input{SavedSearches: &[]domain.SavedSearch{{Name: "no id"}}}, ErrInvalidSavedSearch},
+		{Input{SavedSearches: &[]domain.SavedSearch{{ID: "a", Name: "x", TagMode: "both"}}}, ErrInvalidSavedSearch},
+		{Input{SavedSearches: &[]domain.SavedSearch{{ID: "a", Name: "x", FolderMode: "maybe"}}}, ErrInvalidSavedSearch},
 	}
 	for _, test := range tests {
 		process := Process(context.Background(), nil, test.input)
@@ -94,6 +98,13 @@ func TestEditUser(t *testing.T) {
 	process.Run()
 	if got := process.GetResult(); process.HasErr() || len(got.Snippets) != 2 || got.Snippets[1] != snippets[1] {
 		t.Errorf("snippets: result = %+v, err = %v; want both saved", got.Snippets, process.GetErr())
+	}
+
+	searches := []domain.SavedSearch{{ID: "s1", Name: "Work", TagMode: "all"}, {ID: "s2", Name: "Recent"}}
+	process = Process(ctx, tx, Input{SavedSearches: &searches})
+	process.Run()
+	if got := process.GetResult(); process.HasErr() || len(got.SavedSearches) != 2 || got.SavedSearches[0].Name != "Work" || got.SavedSearches[0].TagMode != "all" {
+		t.Errorf("saved searches: result = %+v, err = %v; want both saved", got.SavedSearches, process.GetErr())
 	}
 
 	process = Process(ctx, tx, Input{})

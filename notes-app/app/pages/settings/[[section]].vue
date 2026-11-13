@@ -128,6 +128,7 @@ async function changeRetention(next: number) {
 }
 
 const { confirm, snippet: editSnippet, importNotes } = useDialogs();
+const { addSavedSearch } = useSavedSearches();
 
 // The API takes the whole list: an edit sends it back with the one changed.
 async function saveSnippets(snippets: Snippet[]) {
@@ -376,6 +377,31 @@ async function deleteData() {
           </li>
           <li v-if="me && !me.snippets.length" class="px-4 py-3 text-xs text-muted">
             {{ $t('settings.snippetsEmpty') }}
+          </li>
+        </ul>
+      </section>
+
+      <section v-if="show('savedSearches')">
+        <SettingsHeading id="savedSearches" />
+        <ul class="divide-y divide-default rounded-lg border border-default">
+          <li class="flex flex-wrap items-center gap-4 px-4 py-3">
+            <div class="flex-1 basis-48">
+              <p class="text-sm">{{ $t('settings.savedSearches') }}</p>
+              <p class="text-xs text-muted">{{ $t('settings.savedSearchesDescription') }}</p>
+            </div>
+            <UButton
+              :label="$t('search.saved.add')"
+              :ui="{ label: 'max-sm:sr-only' }"
+              :icon="icons.noteAdd"
+              color="neutral"
+              variant="outline"
+              :disabled="!me"
+              @click="addSavedSearch"
+            />
+          </li>
+          <SavedSearchSettingsRow v-for="search in me?.saved_searches" :key="search.id" :search="search" />
+          <li v-if="me && !me.saved_searches.length" class="px-4 py-3 text-xs text-muted">
+            {{ $t('settings.savedSearchesEmpty') }}
           </li>
         </ul>
       </section>

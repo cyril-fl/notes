@@ -23,28 +23,37 @@ const (
 	MaxSnippetSize = 64 << 10
 )
 
+// MaxSavedSearches and MaxSavedSearchIDs keep the saved searches of an account a small list, each with a short
+// enough set of tags/folders that a WHERE ... IN (?) stays cheap.
+const (
+	MaxSavedSearches  = 100
+	MaxSavedSearchIDs = 50
+)
+
 var (
-	ErrInvalidLocale    = errors.New("unknown locale")
-	ErrInvalidTheme     = errors.New("unknown theme")
-	ErrInvalidColorMode = errors.New("unknown color mode")
-	ErrInvalidView      = errors.New("unknown view")
-	ErrInvalidPlan      = errors.New("unknown plan")
-	ErrInvalidRetention = fmt.Errorf("the trash retention is between 0 and %d days", MaxRetentionDays)
-	ErrInvalidAvatar    = errors.New("the avatar is not an image of the account")
-	ErrInvalidSnippet   = fmt.Errorf("a snippet needs a name, at most %d of them of %d bytes each", MaxSnippets, MaxSnippetSize)
+	ErrInvalidLocale      = errors.New("unknown locale")
+	ErrInvalidTheme       = errors.New("unknown theme")
+	ErrInvalidColorMode   = errors.New("unknown color mode")
+	ErrInvalidView        = errors.New("unknown view")
+	ErrInvalidPlan        = errors.New("unknown plan")
+	ErrInvalidRetention   = fmt.Errorf("the trash retention is between 0 and %d days", MaxRetentionDays)
+	ErrInvalidAvatar      = errors.New("the avatar is not an image of the account")
+	ErrInvalidSnippet     = fmt.Errorf("a snippet needs a name, at most %d of them of %d bytes each", MaxSnippets, MaxSnippetSize)
+	ErrInvalidSavedSearch = fmt.Errorf("a saved search needs a name and a known tag/folder mode, at most %d of them", MaxSavedSearches)
 )
 
 // Input holds the settings to change: a nil one is kept.
 type Input struct {
-	Locale             *string           `json:"locale,omitempty" binding:"optional"`
-	Theme              *string           `json:"theme,omitempty" binding:"optional"`
-	ColorMode          *string           `json:"color_mode,omitempty" binding:"optional"`
-	View               *string           `json:"view,omitempty" binding:"optional"`
-	Plan               *string           `json:"plan,omitempty" binding:"optional"`
-	TrashRetentionDays *int              `json:"trash_retention_days,omitempty" binding:"optional"`
-	Name               *string           `json:"name,omitempty" binding:"optional"`
-	Avatar             *string           `json:"avatar,omitempty" binding:"optional"`   // the id of an image of the account, "" for none
-	Snippets           *[]domain.Snippet `json:"snippets,omitempty" binding:"optional"` // the whole list, it replaces the saved one
+	Locale             *string               `json:"locale,omitempty" binding:"optional"`
+	Theme              *string               `json:"theme,omitempty" binding:"optional"`
+	ColorMode          *string               `json:"color_mode,omitempty" binding:"optional"`
+	View               *string               `json:"view,omitempty" binding:"optional"`
+	Plan               *string               `json:"plan,omitempty" binding:"optional"`
+	TrashRetentionDays *int                  `json:"trash_retention_days,omitempty" binding:"optional"`
+	Name               *string               `json:"name,omitempty" binding:"optional"`
+	Avatar             *string               `json:"avatar,omitempty" binding:"optional"`         // the id of an image of the account, "" for none
+	Snippets           *[]domain.Snippet     `json:"snippets,omitempty" binding:"optional"`       // the whole list, it replaces the saved one
+	SavedSearches      *[]domain.SavedSearch `json:"saved_searches,omitempty" binding:"optional"` // the whole list, it replaces the saved one
 }
 
 type run struct {
@@ -101,6 +110,8 @@ func (p *run) checkInput() {
 		p.SetErr(adduser.ErrNoName)
 	case !validSnippets(p.input.Snippets):
 		p.SetErr(ErrInvalidSnippet)
+	case !validSavedSearches(p.input.SavedSearches):
+		p.SetErr(ErrInvalidSavedSearch)
 	}
 }
 
@@ -166,6 +177,15 @@ func (p *run) updateUser() {
 			query.Set("snippets = ?", sealed)
 		}
 
+		// TODO: the last of two devices editing the saved searches wins, same as the snippets above.
+		if p.input.SavedSearches != nil {
+			sealed, err := domain.SavedSearches(*p.input.SavedSearches).Seal(domain.UserID(p.ctx))
+			if err != nil {
+				return err
+			}
+			query.Set("saved_searches = ?", sealed)
+		}
+
 		var pgErr pgdriver.Error
 		err := query.Scan(ctx)
 		if errors.As(err, &pgErr) && pgErr.Field('C') == "23505" {
@@ -192,6 +212,30 @@ func validSnippets(snippets *[]domain.Snippet) bool {
 	}
 	for _, snippet := range *snippets {
 		if strings.TrimSpace(snippet.Name) == "" || len(snippet.Content) > MaxSnippetSize {
+			return false
+		}
+	}
+	return true
+}
+
+// validSavedSearches accepts saved searches left out, or a short list of named ones with a known tag/folder mode
+// and a short enough list of tag/folder ids.
+func validSavedSearches(searches *[]domain.SavedSearch) bool {
+	if searches == nil {
+		return true
+	}
+	if len(*searches) > MaxSavedSearches {
+		return false
+	}
+	for _, search := range *searches {
+		switch {
+		case strings.TrimSpace(search.ID) == "" || strings.TrimSpace(search.Name) == "":
+			return false
+		case search.TagMode != "" && !slices.Contains(domain.TagModes, search.TagMode):
+			return false
+		case search.FolderMode != "" && !slices.Contains(domain.FolderModes, search.FolderMode):
+			return false
+		case len(search.TagIDs) > MaxSavedSearchIDs || len(search.FolderIDs) > MaxSavedSearchIDs:
 			return false
 		}
 	}

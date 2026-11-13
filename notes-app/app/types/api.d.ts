@@ -2207,6 +2207,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/searches/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Run a saved search */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description saved search id */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["runsavedsearch.Match"][];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/signup": {
         parameters: {
             query?: never;
@@ -2898,6 +2955,21 @@ export interface components {
             created_at: string;
             id: string;
         };
+        "domain.SavedSearch": {
+            created_from?: string;
+            created_to?: string;
+            edited_from?: string;
+            edited_to?: string;
+            folder_ids?: string[];
+            /** @description "include" or "exclude", one of FolderModes */
+            folder_mode?: string;
+            id: string;
+            name: string;
+            tag_ids?: string[];
+            /** @description "any" (default) or "all", one of TagModes */
+            tag_mode?: string;
+            text?: string;
+        };
         "domain.Snippet": {
             content: string;
             name: string;
@@ -2921,6 +2993,7 @@ export interface components {
             name: string;
             /** @description the features of the web app, one of Plans */
             plan: string;
+            saved_searches: components["schemas"]["domain.SavedSearch"][];
             snippets: components["schemas"]["domain.Snippet"][];
             /** @description the colors of the web app, one of Themes */
             theme: string;
@@ -2957,6 +3030,8 @@ export interface components {
             locale?: string;
             name?: string;
             plan?: string;
+            /** @description the whole list, it replaces the saved one */
+            saved_searches?: components["schemas"]["domain.SavedSearch"][];
             /** @description the whole list, it replaces the saved one */
             snippets?: components["schemas"]["domain.Snippet"][];
             theme?: string;
@@ -3065,6 +3140,13 @@ export interface components {
         };
         "restore.Body": {
             ids: string[];
+        };
+        "runsavedsearch.Match": {
+            id: string;
+            path: string;
+            readonly?: boolean;
+            snippet: string;
+            title: string;
         };
         "searchnotes.Match": {
             id: string;

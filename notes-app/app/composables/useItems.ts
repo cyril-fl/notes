@@ -1,5 +1,5 @@
 import type { ContextMenuItem } from '@nuxt/ui';
-import type { FolderPath, Item, ItemDetail, Pinned } from '~/types/items';
+import type { FolderPath, Item, ItemDetail, Pinned, SavedSearch, Tag, User } from '~/types/items';
 
 // The part of the API's message saying a folder name is taken (domain.ErrFolderExists).
 const TAKEN = 'already exists here';
@@ -279,4 +279,91 @@ export function useChildren(parentId?: string) {
   return useLazyAsyncData(`items:${parentId ?? 'root'}`, () => api<Item[]>('/api/items', { query }), {
     default: () => [] as Item[],
   });
+}
+
+/** Every tag of the account, with its id: a saved search's criteria match tags by id, never by their decrypted value. */
+export function useTags() {
+  const api = useApi();
+  return useLazyAsyncData('tags-list', () => api<Tag[]>('/api/tags'), { default: () => [] as Tag[] });
+}
+
+/** Saved searches ("smart folders"): create/edit/delete/reorder all replace the whole list via PATCH /api/me,
+ * exactly like the snippets of the settings page. */
+export function useSavedSearches() {
+  const api = useApi();
+  const { t } = useI18n();
+  const { icons } = useIcons();
+  const { savedSearch, confirm } = useDialogs();
+
+  async function save(searches: SavedSearch[]) {
+    const me = await api<User>('/api/me', { method: 'PATCH', body: { saved_searches: searches } });
+    useNuxtData<User>('me').data.value = me;
+    return me.saved_searches;
+  }
+
+  function list() {
+    return useNuxtData<User>('me').data.value?.saved_searches ?? [];
+  }
+
+  async function addSavedSearch() {
+    const added = await savedSearch({ title: t('search.saved.add') });
+    if (!added) return;
+    await save([...list(), { ...added, id: crypto.randomUUID() }]);
+  }
+
+  async function editSavedSearch(search: SavedSearch) {
+    const changed = await savedSearch({ title: t('search.saved.edit'), value: search });
+    if (!changed) return;
+    await save(list().map((s) => (s.id === search.id ? { ...changed, id: search.id } : s)));
+  }
+
+  async function removeSavedSearch(search: SavedSearch) {
+    const confirmed = await confirm({
+      title: t('search.saved.delete', { name: search.name }),
+      action: t('common.delete'),
+    });
+    if (confirmed) await save(list().filter((s) => s.id !== search.id));
+  }
+
+  /** Moves a saved search next to its neighbor: the Monter/Descendre fallback to dragging a row. */
+  async function moveSavedSearch(id: string, direction: 'up' | 'down') {
+    const searches = [...list()];
+    const from = searches.findIndex((s) => s.id === id);
+    const to = direction === 'up' ? from - 1 : from + 1;
+    if (from < 0 || to < 0 || to >= searches.length) return;
+    [searches[from], searches[to]] = [searches[to]!, searches[from]!];
+    await save(searches);
+  }
+
+  /** Drops what useDragItem carried onto this saved search, moving the dragged one right before it. */
+  async function reorderSavedSearch(draggedId: string, targetId: string) {
+    if (draggedId === targetId) return;
+    const searches = [...list()];
+    const from = searches.findIndex((s) => s.id === draggedId);
+    const to = searches.findIndex((s) => s.id === targetId);
+    if (from < 0 || to < 0) return;
+    const [moved] = searches.splice(from, 1);
+    searches.splice(to, 0, moved!);
+    await save(searches);
+  }
+
+  function savedSearchMenu(search: SavedSearch): ContextMenuItem[][] {
+    return [
+      [
+        { label: t('common.edit'), icon: icons.rename, onSelect: () => editSavedSearch(search) },
+        { label: t('search.saved.moveUp'), icon: icons.up, onSelect: () => moveSavedSearch(search.id, 'up') },
+        { label: t('search.saved.moveDown'), icon: icons.down, onSelect: () => moveSavedSearch(search.id, 'down') },
+      ],
+      [
+        {
+          label: t('common.delete'),
+          icon: icons.delete,
+          color: 'error' as const,
+          onSelect: () => removeSavedSearch(search),
+        },
+      ],
+    ];
+  }
+
+  return { addSavedSearch, editSavedSearch, removeSavedSearch, moveSavedSearch, reorderSavedSearch, savedSearchMenu };
 }

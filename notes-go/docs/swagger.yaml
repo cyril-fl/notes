@@ -179,6 +179,42 @@ components:
       - created_at
       - id
       type: object
+    domain.SavedSearch:
+      properties:
+        created_from:
+          type: string
+        created_to:
+          type: string
+        edited_from:
+          type: string
+        edited_to:
+          type: string
+        folder_ids:
+          items:
+            type: string
+          type: array
+          uniqueItems: false
+        folder_mode:
+          description: '"include" or "exclude", one of FolderModes'
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        tag_ids:
+          items:
+            type: string
+          type: array
+          uniqueItems: false
+        tag_mode:
+          description: '"any" (default) or "all", one of TagModes'
+          type: string
+        text:
+          type: string
+      required:
+      - id
+      - name
+      type: object
     domain.Snippet:
       properties:
         content:
@@ -224,6 +260,11 @@ components:
         plan:
           description: the features of the web app, one of Plans
           type: string
+        saved_searches:
+          items:
+            $ref: '#/components/schemas/domain.SavedSearch'
+          type: array
+          uniqueItems: false
         snippets:
           items:
             $ref: '#/components/schemas/domain.Snippet'
@@ -248,6 +289,7 @@ components:
       - locale
       - name
       - plan
+      - saved_searches
       - snippets
       - theme
       - trash_retention_days
@@ -312,6 +354,12 @@ components:
           type: string
         plan:
           type: string
+        saved_searches:
+          description: the whole list, it replaces the saved one
+          items:
+            $ref: '#/components/schemas/domain.SavedSearch'
+          type: array
+          uniqueItems: false
         snippets:
           description: the whole list, it replaces the saved one
           items:
@@ -622,6 +670,24 @@ components:
           uniqueItems: false
       required:
       - ids
+      type: object
+    runsavedsearch.Match:
+      properties:
+        id:
+          type: string
+        path:
+          type: string
+        readonly:
+          type: boolean
+        snippet:
+          type: string
+        title:
+          type: string
+      required:
+      - id
+      - path
+      - snippet
+      - title
       type: object
     searchnotes.Match:
       properties:
@@ -2061,6 +2127,39 @@ paths:
       summary: Find notes by title or content
       tags:
       - search
+  /api/searches/{id}:
+    get:
+      parameters:
+      - description: saved search id
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/runsavedsearch.Match'
+                type: array
+          description: OK
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Run a saved search
+      tags:
+      - searches
   /api/signup:
     post:
       requestBody:

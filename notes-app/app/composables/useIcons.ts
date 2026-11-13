@@ -37,6 +37,8 @@ export function useIcons() {
     chevronRight: 'i-reicon-chevron-right',
     chevronUp: 'i-reicon-chevron-up',
     chevronDown: 'i-reicon-chevron-down',
+    up: 'i-reicon-chevron-up',
+    down: 'i-reicon-chevron-down',
     close: 'i-reicon-x',
 
     // Views and settings

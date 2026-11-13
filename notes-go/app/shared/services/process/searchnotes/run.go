@@ -118,7 +118,7 @@ func (p *run) makeMatches() {
 	inTitle := func(r row) bool { return strings.Contains(strings.ToLower(string(r.Title)), text) }
 	for _, r := range p.cache.rows {
 		if inTitle(r) || strings.Contains(strings.ToLower(string(r.Content)), text) {
-			p.cache.result = append(p.cache.result, Match{ID: r.ID, Title: string(r.Title), Path: r.Path, Snippet: snippet(string(r.Content), p.cache.text), Readonly: r.Readonly})
+			p.cache.result = append(p.cache.result, Match{ID: r.ID, Title: string(r.Title), Path: r.Path, Snippet: Snippet(string(r.Content), p.cache.text), Readonly: r.Readonly})
 		}
 	}
 	slices.SortStableFunc(p.cache.result, func(a, b Match) int {
@@ -135,8 +135,8 @@ func boolOrder(b bool) int {
 	return 0
 }
 
-// snippet is the first content line containing text, cut around it; the first line when only the title matched.
-func snippet(content, text string) string {
+// Snippet is the first content line containing text, cut around it; the first line when only the title matched.
+func Snippet(content, text string) string {
 	lines := strings.Split(content, "\n")
 	line, at := strings.TrimSpace(lines[0]), 0
 	for _, l := range lines {

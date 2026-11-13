@@ -28,6 +28,7 @@ import (
 	apireadnote "github.com/cyril-fl/notes/notes-go/app/api/read-note"
 	apireadpinned "github.com/cyril-fl/notes/notes-go/app/api/read-pinned"
 	apireadrecent "github.com/cyril-fl/notes/notes-go/app/api/read-recent"
+	apireadsearch "github.com/cyril-fl/notes/notes-go/app/api/read-search"
 	apireadtag "github.com/cyril-fl/notes/notes-go/app/api/read-tag"
 	apireadtrash "github.com/cyril-fl/notes/notes-go/app/api/read-trash"
 	apireadversions "github.com/cyril-fl/notes/notes-go/app/api/read-versions"
@@ -91,6 +92,7 @@ func New(db bun.IDB, store silo.Store, origin, addUserMode string) http.Handler 
 	mux.Handle("GET /api/graph/notes", apireadgraph.Notes(db))
 	mux.Handle("GET /api/links/broken", apireadbrokenlinks.Handler(db))
 	mux.Handle("GET /api/search", apisearch.Handler(db))
+	mux.Handle("GET /api/searches/{id}", apireadsearch.Handler(db))
 	mux.Handle("GET /api/recent", apireadrecent.Handler(db))
 	mux.Handle("GET /api/pinned", apireadpinned.Handler(db))
 	mux.Handle("GET /api/trash", apireadtrash.Handler(db))

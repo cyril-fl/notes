@@ -35,8 +35,8 @@ func TestSnippet(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		if got := snippet(test.content, test.text); got != test.want {
-			t.Errorf("%s: snippet() = %q, want %q", name, got, test.want)
+		if got := Snippet(test.content, test.text); got != test.want {
+			t.Errorf("%s: Snippet() = %q, want %q", name, got, test.want)
 		}
 	}
 }

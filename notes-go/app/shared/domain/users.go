@@ -25,10 +25,11 @@ type User struct {
 	Plan         string `bun:",notnull,default:'base'" json:"plan"`         // the features of the web app, one of Plans
 	Admin        bool   `bun:",notnull,default:false" json:"admin"`         // may create, invite and delete accounts; the first account of the base gets it
 	// Days before the trash is purged, 0 to never purge. An insert of 0 gets the default: only an update sets it.
-	TrashRetentionDays int       `bun:",notnull,default:30" json:"trash_retention_days"`
-	Avatar             string    `bun:",type:uuid,nullzero" json:"avatar,omitempty"` // the id of a File of the account, purgefiles keeps it
-	Snippets           Snippets  `bun:",type:jsonb,notnull,default:'[]'" json:"snippets"`
-	CreatedAt          time.Time `bun:",notnull,default:current_timestamp" json:"created_at"`
+	TrashRetentionDays int           `bun:",notnull,default:30" json:"trash_retention_days"`
+	Avatar             string        `bun:",type:uuid,nullzero" json:"avatar,omitempty"` // the id of a File of the account, purgefiles keeps it
+	Snippets           Snippets      `bun:",type:jsonb,notnull,default:'[]'" json:"snippets"`
+	SavedSearches      SavedSearches `bun:",type:jsonb,notnull,default:'[]'" json:"saved_searches"`
+	CreatedAt          time.Time     `bun:",notnull,default:current_timestamp" json:"created_at"`
 }
 
 // Snippet is a piece of markdown of the account, inserted while typing or starting a new note; its #tags become tags of that note.

@@ -9,6 +9,7 @@ defineProps<{ collapsed?: boolean }>();
 const api = useApi();
 const route = useRoute();
 const { createFolder, tagMenu, pinItem } = useItems();
+const { addSavedSearch } = useSavedSearches();
 const searchOpen = useState('search-open', () => false);
 const colorMode = useColorMode();
 const { has } = usePro();
@@ -296,6 +297,23 @@ const isOverRoot = useDropFolder(rootLink, () => null);
             </UTooltip>
           </div>
           <FolderTree />
+        </section>
+
+        <section v-if="has('savedSearches')">
+          <div class="flex items-center">
+            <h2 class="flex-1 px-2 pb-1 text-xs font-medium text-muted">{{ $t('sidebar.savedSearches') }}</h2>
+            <UTooltip :text="$t('search.saved.add')">
+              <UButton
+                :icon="icons.add"
+                color="neutral"
+                variant="ghost"
+                size="xs"
+                :aria-label="$t('search.saved.add')"
+                @click="addSavedSearch"
+              />
+            </UTooltip>
+          </div>
+          <SavedSearchRow v-for="search in me?.saved_searches" :key="search.id" :search="search" />
         </section>
       </div>
     </template>

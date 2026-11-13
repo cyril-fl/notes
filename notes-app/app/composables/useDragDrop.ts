@@ -27,6 +27,43 @@ export function useDragItem(target: Target, item: () => Item) {
   });
 }
 
+/** Lets an element be dragged to reorder a list (saved searches): carries only its own id. */
+export function useReorderItem(target: Target, id: () => string) {
+  watchEffect((onCleanup) => {
+    const element = elementOf(target);
+    if (!element) return;
+    onCleanup(draggable({ element, getInitialData: () => ({ reorderId: id() }) }));
+  });
+}
+
+/** Drops a reordered element on this one: onDrop gets the dragged id and this row's id, in that order. */
+export function useDropReorder(
+  target: Target,
+  id: () => string,
+  onDrop: (draggedId: string, targetId: string) => void,
+) {
+  const isOver = ref(false);
+
+  watchEffect((onCleanup) => {
+    const element = elementOf(target);
+    if (!element) return;
+    onCleanup(
+      dropTargetForElements({
+        element,
+        canDrop: ({ source }) => typeof source.data.reorderId === 'string',
+        onDragEnter: () => (isOver.value = true),
+        onDragLeave: () => (isOver.value = false),
+        onDrop: ({ source }) => {
+          isOver.value = false;
+          onDrop(source.data.reorderId as string, id());
+        },
+      }),
+    );
+  });
+
+  return isOver;
+}
+
 /** Moves what is dropped on an element into this folder, null being the root. */
 export function useDropFolder(target: Target, folderId: () => string | null) {
   const { moveItem } = useItems();
