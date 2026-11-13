@@ -3,11 +3,11 @@ export function useIcons() {
   const icons = {
     // Items
     note: 'i-reicon-document-text',
-    noteAdd: 'i-reicon-note-add',
+    noteAdd: 'i-reicon-add',
     noteNotFound: 'i-reicon-file-error',
     notes: 'i-reicon-notebook',
     folder: 'i-reicon-folder',
-    folderAdd: 'i-reicon-add',
+    folderAdd: 'i-reicon-folder-add3',
     folderEmpty: 'i-reicon-folder-open',
     folderNotFound: 'i-reicon-folder-cross',
     tag: 'i-reicon-hashtag',
