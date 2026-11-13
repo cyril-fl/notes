@@ -15,7 +15,10 @@ services:
   # Not started by `make up`: run it with `make api`.
   api:
     profiles: [api]
-    build: .
+    build:
+      context: .
+      args:
+        VERSION: ${VERSION:-}
     container_name: note-api
     env_file:
       - .env.docker

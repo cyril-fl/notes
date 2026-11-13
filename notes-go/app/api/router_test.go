@@ -947,7 +947,7 @@ func TestAccounts(t *testing.T) {
 
 	// Without the admin flag, the account manages nothing.
 	admin(false)
-	for _, route := range []string{"GET /api/users", "GET /api/invites", "POST /api/invites"} {
+	for _, route := range []string{"GET /api/users", "GET /api/invites", "POST /api/invites", "GET /api/version"} {
 		method, path, _ := strings.Cut(route, " ")
 		c.do(method, path, `{"name":"nope","password":"a-good-password"}`, http.StatusForbidden, nil)
 	}
@@ -957,6 +957,14 @@ func TestAccounts(t *testing.T) {
 	c.do("GET", "/api/users", "", http.StatusOK, &accounts)
 	if !slices.ContainsFunc(accounts, func(a account) bool { return a.ID == me && a.Admin }) {
 		t.Errorf("accounts = %+v, want this admin in it", accounts)
+	}
+
+	var version struct {
+		Version string `json:"version"`
+	}
+	c.do("GET", "/api/version", "", http.StatusOK, &version)
+	if version.Version == "" {
+		t.Errorf("version = %+v, want a non-empty version", version)
 	}
 
 	// In the invitation mode, the sign-up needs an invitation: the base already has accounts.

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 
 	plumcliconfig "github.com/cyril-fl/plum/cli/config"
@@ -12,6 +13,27 @@ import (
 	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v3"
 )
+
+// version is set by the images (-ldflags -X), whose build context has no .git to read the commit from.
+var version string
+
+// Version comes from the build (the tag of an image, the git commit, or module version without one): nothing to keep
+// in sync by hand. The CLI and the API run from the same binary, so this is also what `notes serve` answers.
+func Version() string {
+	if version != "" {
+		return version
+	}
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "unknown"
+	}
+	for _, setting := range info.Settings {
+		if setting.Key == "vcs.revision" {
+			return setting.Value
+		}
+	}
+	return info.Main.Version
+}
 
 // embedded is the config built into the binary, so it runs from any folder; CONFIG_FILE overrides it.
 //

@@ -50,7 +50,7 @@ pgsql:
 	fi
 
 api:
-	@docker compose up -d --build api
+	@VERSION=$$(git describe --tags --always --dirty) docker compose up -d --build api
 
 # Generates docs/swagger.yaml from the @ comments of app/api; no docs.go, the binary stays out of it.
 # Every field is required unless tagged binding:"optional".

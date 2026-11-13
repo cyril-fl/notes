@@ -16,6 +16,7 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deleteuser"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/silo"
+	"github.com/cyril-fl/notes/notes-go/config"
 	"github.com/uptrace/bun"
 )
 
@@ -28,6 +29,11 @@ type Account struct {
 	Name      string    `json:"name"`
 	Admin     bool      `json:"admin"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+// Version is the server's build, for the admin panel.
+type Version struct {
+	Version string `json:"version"`
 }
 
 // Mode tells the login and sign-up pages what the server allows.
@@ -277,6 +283,24 @@ func allowed(r *http.Request, db bun.IDB, mode, token string) (bool, error) {
 	return db.NewSelect().Model((*domain.Invite)(nil)).
 		Where("token_hash = ? AND used_at IS NULL AND expires_at > current_timestamp", password.TokenHash(token)).
 		Exists(r.Context())
+}
+
+// Version is the server's build, for the admin to spot a mismatch with another deploy: GET /api/version.
+// @Summary  The server's build version
+// @Tags     admin
+// @Produce  json
+// @Success  200 {object} Version
+// @Failure  401 {object} respond.Failure
+// @Failure  403 {object} respond.Failure
+// @Failure  500 {object} respond.Failure
+// @Router   /api/version [get]
+func VersionHandler(db bun.IDB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !isAdmin(w, r, db) {
+			return
+		}
+		respond.JSON(w, http.StatusOK, Version{Version: config.Version()})
+	}
 }
 
 // isAdmin answers 403 unless the account of the request may manage the others; on false the answer is written.

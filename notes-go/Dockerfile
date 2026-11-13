@@ -4,7 +4,9 @@ WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 go build -o /notes .
+# The version shown to the admin: the context has no .git for go build to read the commit from.
+ARG VERSION
+RUN CGO_ENABLED=0 go build -ldflags "-X github.com/cyril-fl/notes/notes-go/config.version=$VERSION" -o /notes .
 # scratch has no /tmp, where an import writes its body instead of holding it in memory (#119).
 RUN install -d /image-tmp
 

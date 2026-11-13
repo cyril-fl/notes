@@ -32,6 +32,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+          build-args: VERSION=${{ github.ref_name }}
           labels: ${{ steps.meta.outputs.labels }}
           # Reads the cache the CI writes on main: a tag never reads its own, so it writes none.
           cache-from: type=gha

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"runtime/debug"
 
 	"charm.land/huh/v2"
 	cmdaccount "github.com/cyril-fl/notes/notes-go/app/cli/cmd-account"
@@ -23,7 +22,7 @@ var cmdRoot = &cobra.Command{
 	Use:     c.Name,
 	Short:   cmd.Root.Short,
 	Long:    cmd.Root.Long,
-	Version: version(),
+	Version: config.Version(),
 	Example: cmd.Root.Example,
 	// Errors are printed by Execute so a form abort (Ctrl+C / Esc) stays silent.
 	SilenceUsage:  true,
@@ -79,20 +78,6 @@ func needsDb(command *cobra.Command) bool {
 		}
 	}
 	return true
-}
-
-// version comes from the build (git commit, or module version without one): nothing to keep in sync by hand.
-func version() string {
-	info, ok := debug.ReadBuildInfo()
-	if !ok {
-		return "unknown"
-	}
-	for _, setting := range info.Settings {
-		if setting.Key == "vcs.revision" {
-			return setting.Value
-		}
-	}
-	return info.Main.Version
 }
 
 // groups sorts the commands of the help by scope; a command left out shows under "Additional Commands".

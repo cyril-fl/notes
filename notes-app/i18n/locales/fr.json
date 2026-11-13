@@ -284,6 +284,7 @@
     "logout": "Se déconnecter",
     "language": "Langue",
     "languageDescription": "La langue de l'interface, pour ce compte.",
+    "version": "Version",
     "data": "Données",
     "export": "Exporter",
     "exportDescription": "Toutes les notes en fichiers markdown, un dossier par dossier, dans un zip.",

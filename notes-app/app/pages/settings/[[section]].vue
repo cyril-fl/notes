@@ -161,6 +161,10 @@ async function removeSnippet(index: number) {
 
 // The accounts of the server, for an admin only: read where the section shows, like the links and the files.
 const showAccounts = computed(() => show('accounts') && !!me.value?.admin);
+const { data: version } = useLazyAsyncData(
+  () => (me.value?.admin ? 'version' : 'version-hidden'),
+  () => (me.value?.admin ? api<{ version: string }>('/api/version') : Promise.resolve(null)),
+);
 const { data: accounts, refresh: refreshAccounts } = useLazyAsyncData(
   () => (showAccounts.value ? 'accounts' : 'accounts-hidden'),
   () => (showAccounts.value ? api<Account[]>('/api/users') : Promise.resolve(null)),
@@ -292,6 +296,10 @@ async function deleteData() {
               class="w-56"
               @update:model-value="changeLanguage"
             />
+          </li>
+          <li v-if="me?.admin && version" class="flex flex-wrap items-center gap-4 px-4 py-3">
+            <p class="min-w-0 flex-1 text-sm text-muted">{{ $t('settings.version') }}</p>
+            <span class="font-mono text-xs text-muted">{{ version.version }}</span>
           </li>
         </ul>
       </section>

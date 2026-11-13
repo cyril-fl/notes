@@ -284,6 +284,7 @@
     "logout": "Log out",
     "language": "Language",
     "languageDescription": "The language of the interface, for this account.",
+    "version": "Version",
     "data": "Data",
     "export": "Export",
     "exportDescription": "Every note as a markdown file, one folder per folder, in a zip.",

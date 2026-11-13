@@ -737,6 +737,13 @@ components:
       - allowed
       - mode
       type: object
+    users.Version:
+      properties:
+        version:
+          type: string
+      required:
+      - version
+      type: object
 externalDocs:
   description: ""
   url: ""
@@ -2507,5 +2514,35 @@ paths:
                 $ref: '#/components/schemas/respond.Failure'
           description: Internal Server Error
       summary: Delete an account and all its data
+      tags:
+      - admin
+  /api/version:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/users.Version'
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: The server's build version
       tags:
       - admin
