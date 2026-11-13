@@ -23,7 +23,10 @@ test('a removed note comes back from the trash, then leaves it for good', async 
   const main = page.getByRole('main');
 
   await main.getByRole('link', { name: /Recyclée/ }).click({ button: 'right' });
+  // The open menu hides the page from the roles: wait for the removal itself, or the navigation cancels it.
+  const removed = page.waitForResponse((response) => response.url().endsWith(`/api/notes/${note.id}`));
   await page.getByRole('menuitem', { name: 'Supprimer' }).click();
+  await removed;
   await expect(main.getByRole('link', { name: /Recyclée/ })).toBeHidden();
 
   await page.goto('/trash');

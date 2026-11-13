@@ -495,7 +495,7 @@ test('the settings follow the Pro mode, one page or a page per section', async (
     await page.goto('/settings/pro');
     await page.getByRole('tab', { name: 'Standard' }).click();
     await expect(page).toHaveURL(/\/settings$/);
-    await expect(page.getByRole('heading', { name: 'Réglages' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Réglages', level: 1 })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Retour aux notes' })).toHaveCount(0);
   } finally {
     await box.api.patch('/api/me', { data: { plan: 'base' } });
