@@ -38,7 +38,7 @@ func Handler(db bun.IDB) http.HandlerFunc {
 // @Router   /api/graph/notes [get]
 func Notes(db bun.IDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		process := readgraph.Process(r.Context(), db)
+		process := readgraph.Process(r.Context(), db, true)
 		process.Run()
 		if process.HasErr() {
 			respond.Error(w, process.GetErr())
@@ -48,6 +48,25 @@ func Notes(db bun.IDB) http.HandlerFunc {
 		result.Notes = append([]readgraph.Note{}, result.Notes...)
 		result.Links = append([]readgraph.Link{}, result.Links...)
 		respond.JSON(w, http.StatusOK, result)
+	}
+}
+
+// List gives every live note, its id, title and path, for the [[ menu: GET /api/notes.
+// @Summary  List every note
+// @Tags     notes
+// @Produce  json
+// @Success  200 {array} readgraph.Note
+// @Failure  500 {object} respond.Failure
+// @Router   /api/notes [get]
+func List(db bun.IDB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		process := readgraph.Process(r.Context(), db, false)
+		process.Run()
+		if process.HasErr() {
+			respond.Error(w, process.GetErr())
+			return
+		}
+		respond.List(w, http.StatusOK, process.GetResult().Notes)
 	}
 }
 

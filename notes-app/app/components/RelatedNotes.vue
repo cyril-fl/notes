@@ -1,17 +1,12 @@
 <script setup lang="ts">
-import type { Neighbors } from '~/types/items';
-
 const { icons } = useIcons();
 const { t } = useI18n();
 
 // panel: in the context panel, open, without the graph link: the mini graph below has its own, and shown even empty, like the history below.
 const props = defineProps<{ noteId: string; panel?: boolean }>();
 
-const api = useApi();
 const { has } = usePro();
-const { data, status } = useLazyAsyncData(`neighbors:${props.noteId}`, () =>
-  api<Neighbors>(`/api/notes/${props.noteId}/neighbors`, { quiet: true }),
-);
+const { data, status } = useNeighbors(() => props.noteId);
 
 const sections = computed(() =>
   [

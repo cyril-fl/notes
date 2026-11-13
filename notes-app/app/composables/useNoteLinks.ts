@@ -2,7 +2,7 @@ import { Extension, type Range } from '@tiptap/core';
 import { Plugin, PluginKey, type EditorState } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import type { Editor } from '@tiptap/vue-3';
-import type { ItemDetail, NotesGraph } from '~/types/items';
+import type { ItemDetail, NoteRef } from '~/types/items';
 import type { LinkSize } from '~/utils/linkCard';
 import LinkCard from '~/components/LinkCard.vue';
 import NoteEmbed from '~/components/NoteEmbed.vue';
@@ -62,11 +62,12 @@ export function useNoteLinks(id: Ref<string | undefined>): EditorModule {
   }
 
   // The notes offered after [[: picked, the link points to the note's id right away.
-  const { data: graph } = useLazyAsyncData('graph', () => api<NotesGraph>('/api/graph/notes'));
+  const { data: notes } = useLazyAsyncData('notes', () => api<NoteRef[]>('/api/notes'));
+  const { data: neighbors } = useNeighbors(id);
   const { has } = usePro();
   // The menu's own filter keeps the order of these items between equal matches.
   const noteItems = computed(() =>
-    linkTargets(graph.value, id.value, has('linkSuggestions')).map((note) => ({
+    linkTargets(notes.value, id.value, has('linkSuggestions') ? neighbors.value?.neighbors : undefined).map((note) => ({
       kind: 'wikiLink',
       label: note.title,
       description: note.path,
@@ -82,7 +83,7 @@ export function useNoteLinks(id: Ref<string | undefined>): EditorModule {
     return noteItems.value.find((note) => note.label.toLowerCase() === name);
   });
   const headings = ref<string[]>([]);
-  // By id: a save refreshes the graph, the same note comes back as a new item.
+  // By id: a save refreshes the notes, the same note comes back as a new item.
   watch(
     () => headingNote.value?.id,
     async (noteId) => {

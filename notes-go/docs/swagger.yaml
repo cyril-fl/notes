@@ -1702,6 +1702,25 @@ paths:
       tags:
       - items
   /api/notes:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/readgraph.Note'
+                type: array
+          description: OK
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: List every note
+      tags:
+      - notes
     post:
       requestBody:
         content:

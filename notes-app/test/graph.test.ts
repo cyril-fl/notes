@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { layoutGraph, linkTargets, neighborhood, sharedTags } from '../app/utils/graph.ts';
+import { layoutGraph, linkTargets, neighborGraph } from '../app/utils/graph.ts';
 
 const notes = (...ids: string[]) => ids.map((id) => ({ id }));
 const link = (source: string, target: string, ...tags: string[]) => ({ source, target, tags });
@@ -63,46 +63,41 @@ test('a [[link]] alone pulls notes together like a shared tag', () => {
   assert.ok(distance(positions, 'a', 'b') < distance(positions, 'a', 'c'));
 });
 
-test('the neighborhood keeps the note, its neighbors and the links between them', () => {
-  const graph = {
-    notes: notes('a', 'b', 'c', 'd'),
-    links: [link('a', 'b'), link('c', 'a'), link('b', 'c'), link('c', 'd')],
-  };
-  assert.deepEqual(neighborhood(graph, 'a'), {
-    notes: notes('a', 'b', 'c'),
-    links: [link('a', 'b'), link('c', 'a'), link('b', 'c')],
+test('the graph of the neighbors joins the note to each, a [[link]] in either way merged with the shared tags', () => {
+  const near = (id: string) => ({ id, title: id.toUpperCase(), path: `/${id}` });
+  const graph = neighborGraph({
+    note: { item: { id: 'a', title: 'A' }, path: '/a' },
+    neighbors: [
+      { ...near('b'), tags: ['go', 'web'] },
+      { ...near('c'), tags: ['go'] },
+    ],
+    links: [near('c'), near('a')],
+    backlinks: [near('d')],
   });
-  assert.deepEqual(neighborhood(graph, 'x'), { notes: [], links: [] });
-});
-
-test('the shared tags are counted whichever side of the link the note is on', () => {
-  const links = [link('a', 'b', 'go', 'web'), link('c', 'a', 'go'), link('b', 'c', 'go'), link('a', 'd')];
-  assert.deepEqual(
-    sharedTags(links, 'a'),
-    new Map([
-      ['b', 2],
-      ['c', 1],
-      ['d', 0],
-    ]),
-  );
-  assert.deepEqual(sharedTags(links, 'x'), new Map());
+  assert.deepEqual(graph.notes, ['a', 'b', 'c', 'd'].map(near));
+  assert.deepEqual(graph.links, [
+    { source: 'a', target: 'b', tags: ['go', 'web'], linked: false },
+    { source: 'a', target: 'c', tags: ['go'], linked: true },
+    { source: 'a', target: 'd', tags: [], linked: true },
+  ]);
 });
 
 test('the [[ menu offers the other named notes, the closest ones first for a Pro account', () => {
-  const graph = {
-    notes: [
-      { id: 'a', title: 'A' },
-      { id: 'b', title: 'B' },
-      { id: 'c', title: 'C' },
-      { id: 'd', title: 'D' },
-      { id: 'e', title: '' },
-    ],
-    links: [link('b', 'a', 'go'), link('a', 'c', 'go', 'web')],
-  };
-  const titles = (id: string | undefined, suggest: boolean) =>
-    linkTargets(graph, id, suggest).map((note) => note.title);
-  assert.deepEqual(titles('a', true), ['C', 'B', 'D']);
-  assert.deepEqual(titles('a', false), ['B', 'C', 'D']);
-  assert.deepEqual(titles(undefined, true), ['A', 'B', 'C', 'D']);
-  assert.deepEqual(linkTargets(null, 'a', true), []);
+  const notes = [
+    { id: 'a', title: 'A' },
+    { id: 'b', title: 'B' },
+    { id: 'c', title: 'C' },
+    { id: 'd', title: 'D' },
+    { id: 'e', title: '' },
+  ];
+  const neighbors = [
+    { id: 'c', shared: 2 },
+    { id: 'b', shared: 1 },
+  ];
+  const titles = (id: string | undefined, near?: typeof neighbors) =>
+    linkTargets(notes, id, near).map((note) => note.title);
+  assert.deepEqual(titles('a', neighbors), ['C', 'B', 'D']);
+  assert.deepEqual(titles('a'), ['B', 'C', 'D']);
+  assert.deepEqual(titles(undefined), ['A', 'B', 'C', 'D']);
+  assert.deepEqual(linkTargets(null, 'a', neighbors), []);
 });

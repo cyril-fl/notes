@@ -36,18 +36,21 @@ type run struct {
 	plumprimitive.Process
 	cache
 
-	ctx context.Context
-	db  bun.IDB // *bun.DB or bun.Tx: tests run inside a rolled-back transaction
+	ctx   context.Context
+	db    bun.IDB // *bun.DB or bun.Tx: tests run inside a rolled-back transaction
+	links bool
 }
 
 type cache struct {
 	result Result
 }
 
-func Process(ctx context.Context, db bun.IDB) *run {
+// Process reads the notes, and the links between them when links is set: the pairs sharing a tag grow as the square of the notes.
+func Process(ctx context.Context, db bun.IDB, links bool) *run {
 	return &run{
-		ctx: ctx,
-		db:  db,
+		ctx:   ctx,
+		db:    db,
+		links: links,
 	}
 }
 
@@ -88,7 +91,7 @@ func (p *run) loadNotes() {
 // loadLinks pairs the notes sharing a tag (the tag links joined with themselves) with the notes joined by
 // a [[link]] in either direction, each pair once. The tags come sealed, opened and ordered here.
 func (p *run) loadLinks() {
-	if p.HasErr() {
+	if p.HasErr() || !p.links {
 		return
 	}
 

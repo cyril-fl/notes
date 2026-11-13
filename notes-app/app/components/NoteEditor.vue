@@ -2,7 +2,7 @@
 import type { Editor } from '@tiptap/vue-3';
 import type { FetchError } from 'ofetch';
 import type { RouteLocationNormalized } from 'vue-router';
-import type { Item, ItemDetail, NotesGraph } from '~/types/items';
+import type { Item, ItemDetail } from '~/types/items';
 import type { Changes } from '~/utils/saver';
 
 const { icons } = useIcons();
@@ -375,8 +375,8 @@ onBeforeUnmount(async () => {
 
 // The headings of the note, for the context panel: a click scrolls the text to one, without moving the cursor.
 const panel = useContextPanel();
-const { data: graph } = useLazyAsyncData('graph', () => api<NotesGraph>('/api/graph/notes'));
-const nearGraph = computed(() => (graph.value && id.value ? neighborhood(graph.value, id.value) : undefined));
+const { data: neighbors } = useNeighbors(id);
+const nearGraph = computed(() => (neighbors.value ? neighborGraph(neighbors.value) : undefined));
 const outline = ref<{ level: number; text: string; pos: number }[]>([]);
 function readOutline(editor: Editor) {
   const headings: typeof outline.value = [];

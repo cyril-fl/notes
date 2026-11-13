@@ -71,7 +71,7 @@ func (p *run) GetResult() []Link {
 
 // loadNotes reads the live notes, their titles and paths, sorted by path: the graph's nodes.
 func (p *run) loadNotes() {
-	graph := readgraph.Process(p.ctx, p.db)
+	graph := readgraph.Process(p.ctx, p.db, false)
 	graph.Run()
 	if graph.HasErr() {
 		p.SetErr(graph.GetErr())

@@ -44,7 +44,7 @@ func loadPage(ctx context.Context, target navigator.Target) (navigator.Page, err
 
 // notesPage lists every note with how many notes it is linked to, like the web graph.
 func notesPage(ctx context.Context) (navigator.Page, error) {
-	process := readgraph.Process(ctx, postgrey.GetDb())
+	process := readgraph.Process(ctx, postgrey.GetDb(), true)
 	process.Run()
 
 	result := process.GetResult()

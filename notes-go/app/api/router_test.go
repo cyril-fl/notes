@@ -510,6 +510,13 @@ func TestTagsAndGraph(t *testing.T) {
 	if !linked {
 		t.Errorf("graph notes have no link between a and b on %s: %+v", first, notes.Links)
 	}
+	var list []struct {
+		ID string `json:"id"`
+	}
+	c.do("GET", "/api/notes", "", http.StatusOK, &list)
+	if len(list) != len(notes.Notes) || !strings.Contains(c.raw("/api/notes"), a.ID) {
+		t.Errorf("notes = %d, want the %d of the graph with a", len(list), len(notes.Notes))
+	}
 
 	var all []struct {
 		Value string `json:"value"`
@@ -794,7 +801,7 @@ func TestAccountsAreApart(t *testing.T) {
 	bob.do("GET", "/api/notes/"+note.ID+"/versions/"+versions[0].ID, "", http.StatusNotFound, nil)
 	bob.do("DELETE", "/api/notes/"+note.ID, "", http.StatusNotFound, nil)
 	bob.do("POST", "/api/notes", fmt.Sprintf(`{"content":"# Intrus","parent_id":%q}`, folder.ID), http.StatusBadRequest, nil)
-	for _, path := range []string{"/api/items", "/api/search?q=Secret", "/api/graph", "/api/graph/notes", "/api/links/broken", "/api/files", "/api/recent", "/api/folders", "/api/tags"} {
+	for _, path := range []string{"/api/items", "/api/search?q=Secret", "/api/graph", "/api/graph/notes", "/api/notes", "/api/links/broken", "/api/files", "/api/recent", "/api/folders", "/api/tags"} {
 		if got := bob.raw(path); strings.Contains(got, note.ID) || strings.Contains(got, folder.ID) || strings.Contains(got, "privé") {
 			t.Errorf("%s shows alice's data to bob: %s", path, got)
 		}

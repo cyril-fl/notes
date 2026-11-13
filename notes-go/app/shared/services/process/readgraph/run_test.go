@@ -81,7 +81,7 @@ func TestGraph(t *testing.T) {
 		}
 	}
 
-	process := Process(ctx, tx)
+	process := Process(ctx, tx, true)
 	process.Run()
 	if process.HasErr() {
 		t.Fatalf("graph: %v", process.GetErr())
@@ -119,6 +119,15 @@ func TestGraph(t *testing.T) {
 	// Two links to Three and One, whichever way round: one link per pair.
 	if n := countLinks(got, ids["Two"]); n != 2 {
 		t.Errorf("Two has %d links, want 2", n)
+	}
+
+	notes := Process(ctx, tx, false)
+	notes.Run()
+	if notes.HasErr() {
+		t.Fatalf("notes: %v", notes.GetErr())
+	}
+	if only := notes.GetResult(); !slices.Equal(only.Notes, got.Notes) || only.Links != nil {
+		t.Errorf("without links = %d notes, %d links, want the %d notes alone", len(only.Notes), len(only.Links), len(got.Notes))
 	}
 }
 

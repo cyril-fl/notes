@@ -47,38 +47,42 @@ export function layoutGraph(notes: { id: string }[], links: Link[]) {
   return new Map(nodes.map((node) => [node.id, { x: x(node.x!), y: y(node.y!) }]));
 }
 
-/** The graph around one note: the note, the notes it shares a [[link]] or a tag with, and the links between them. */
-export function neighborhood<G extends { notes: { id: string }[]; links: Link[] }>(graph: G, id: string): G {
-  const ids = new Set([id]);
-  for (const link of graph.links) if (link.source === id || link.target === id) ids.add(link.source).add(link.target);
-  return {
-    ...graph,
-    notes: graph.notes.filter((note) => ids.has(note.id)),
-    links: graph.links.filter((link) => ids.has(link.source) && ids.has(link.target)),
-  };
-}
+type Near = { id: string; title: string; path: string };
 
-/** How many tags each note shares with one note, by id: the pairs of the graph are unique and oriented, so one pass is enough. */
-export function sharedTags(links: Link[], id: string) {
-  const counts = new Map<string, number>();
-  for (const link of links) {
-    if (link.source === id) counts.set(link.target, link.tags.length);
-    else if (link.target === id) counts.set(link.source, link.tags.length);
-  }
-  return counts;
+/**
+ * The graph around one note, from its neighbors: the note, the notes it shares a [[link]] or a tag with, and its own links only.
+ * The links between the neighbors are left out: a tag on hundreds of notes makes tens of thousands of them.
+ */
+export function neighborGraph(near: {
+  note: { item: { id: string; title: string }; path: string };
+  neighbors: (Near & { tags: string[] })[];
+  links: Near[];
+  backlinks: Near[];
+}) {
+  const id = near.note.item.id;
+  const notes = new Map<string, Near>([[id, { id, title: near.note.item.title, path: near.note.path }]]);
+  const links = new Map<string, Required<Link>>();
+  const add = (note: Near, tags: string[], linked: boolean) => {
+    if (note.id === id) return;
+    notes.set(note.id, { id: note.id, title: note.title, path: note.path });
+    links.set(note.id, { source: id, target: note.id, tags, linked });
+  };
+  for (const note of near.neighbors) add(note, note.tags, false);
+  for (const note of [...near.links, ...near.backlinks]) add(note, links.get(note.id)?.tags ?? [], true);
+  return { notes: [...notes.values()], links: [...links.values()] };
 }
 
 /**
  * The other named notes offered after [[, this one left out.
- * suggest (Pro): the ones sharing the most tags with it first; the sort being stable, the API's order stays between equals.
+ * neighbors (Pro): the ones sharing the most tags with it first; the sort being stable, the API's order stays between equals.
  */
 export function linkTargets<N extends { id: string; title: string }>(
-  graph: { notes: N[]; links: Link[] } | null | undefined,
+  notes: N[] | null | undefined,
   id: string | undefined,
-  suggest: boolean,
+  neighbors?: { id: string; shared: number }[],
 ) {
-  const counts = suggest && id ? sharedTags(graph?.links ?? [], id) : new Map<string, number>();
-  return (graph?.notes ?? [])
+  const shared = new Map(neighbors?.map((note) => [note.id, note.shared]));
+  return (notes ?? [])
     .filter((note) => note.id !== id && note.title)
-    .sort((a, b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0));
+    .sort((a, b) => (shared.get(b.id) ?? 0) - (shared.get(a.id) ?? 0));
 }

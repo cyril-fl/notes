@@ -1500,7 +1500,36 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** List every note */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["readgraph.Note"][];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+            };
+        };
         put?: never;
         /** Create a note */
         post: {
