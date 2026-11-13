@@ -667,6 +667,8 @@ test.describe('on a touch screen', () => {
     await page.getByRole('button', { name: 'Vider la note' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Vider la note' }).click();
     await expect(page.locator('.ProseMirror')).not.toContainText('texte');
+    // The dialog gives the focus back to the editor after it closes: typing before that loses the first key.
+    await expect(page.locator('.ProseMirror')).toBeFocused();
     // An empty note is not saved: what is typed next replaces the text.
     await page.keyboard.type('neuf');
     await expect.poll(() => box.content(note.id), { timeout: 5000 }).toBe('neuf');
