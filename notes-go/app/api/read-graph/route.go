@@ -40,7 +40,7 @@ func Handler(db bun.IDB) http.HandlerFunc {
 // @Router   /api/graph/notes [get]
 func Notes(db bun.IDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		layout(w, layoutgraph.Process(r.Context(), db, ""))
+		layout(w, r, layoutgraph.Process(r.Context(), db, ""))
 	}
 }
 
@@ -60,7 +60,7 @@ func Graph(db bun.IDB) http.HandlerFunc {
 		if !ok {
 			return
 		}
-		layout(w, layoutgraph.Process(r.Context(), db, id))
+		layout(w, r, layoutgraph.Process(r.Context(), db, id))
 	}
 }
 
@@ -112,7 +112,7 @@ func Neighbors(db bun.IDB) http.HandlerFunc {
 	}
 }
 
-func layout(w http.ResponseWriter, process interface {
+func layout(w http.ResponseWriter, r *http.Request, process interface {
 	Run()
 	HasErr() bool
 	GetErr() error
@@ -126,5 +126,5 @@ func layout(w http.ResponseWriter, process interface {
 	result := process.GetResult()
 	result.Notes = append([]readgraph.Note{}, result.Notes...)
 	result.Links = append([]readgraph.Link{}, result.Links...)
-	respond.JSON(w, http.StatusOK, result)
+	respond.Gzip(w, r, http.StatusOK, result)
 }

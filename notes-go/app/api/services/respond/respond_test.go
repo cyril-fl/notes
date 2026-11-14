@@ -1,8 +1,10 @@
 package respond
 
 import (
+	"compress/gzip"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -44,6 +46,28 @@ func TestListEmpty(t *testing.T) {
 	List[string](w, http.StatusOK, nil)
 	if strings.TrimSpace(w.Body.String()) != "[]" {
 		t.Errorf("body = %q, want []", w.Body)
+	}
+}
+
+func TestGzip(t *testing.T) {
+	for _, encoding := range []string{"", "gzip, deflate, br"} {
+		r := httptest.NewRequest(http.MethodGet, "/", nil)
+		r.Header.Set("Accept-Encoding", encoding)
+		w := httptest.NewRecorder()
+		Gzip(w, r, http.StatusOK, []string{"a"})
+
+		body := io.Reader(w.Body)
+		if encoding != "" {
+			zr, err := gzip.NewReader(w.Body)
+			if err != nil {
+				t.Fatalf("%q: not gzip: %v", encoding, err)
+			}
+			body = zr
+		}
+		data, _ := io.ReadAll(body)
+		if strings.TrimSpace(string(data)) != `["a"]` || w.Header().Get("Vary") != "Accept-Encoding" {
+			t.Errorf("%q: body = %q, vary = %q", encoding, data, w.Header().Get("Vary"))
+		}
 	}
 }
 
