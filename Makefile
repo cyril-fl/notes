@@ -1,4 +1,4 @@
-.PHONY: up down e2e
+.PHONY: up down e2e perf
 
 WEB_PORT := 3000
 WEB_LOG := $(CURDIR)/.build/notes-app.log
@@ -24,3 +24,11 @@ down:
 # The browser tests run against the stack, in the installed Chrome.
 e2e: up
 	@cd notes-app && bun run e2e
+
+# The app at scale (#138): the account perf of 50,000 generated notes, made once (14 s), then the timings of its API
+# and pages, a table to paste in an issue. PERF_NOTES only counts when the account does not exist yet.
+PERF_PASSWORD := perf-password
+PERF_NOTES := 50000
+perf: up
+	@echo "$(PERF_PASSWORD)" | docker exec -i note-api /notes user perf perf $(PERF_NOTES) --password-stdin
+	@cd notes-app && PERF_PASSWORD=$(PERF_PASSWORD) node scripts/perf.mjs

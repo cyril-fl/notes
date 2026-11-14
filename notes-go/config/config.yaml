@@ -326,6 +326,17 @@ commands:
         value: ""
         usage: "Read the password from the first line of stdin"
         type: "bool"
+  user-perf:
+    use: "perf <name> [notes]"
+    short: "Create an account of generated notes, to measure the app at scale (hidden)"
+    long: "Create the account with [notes] generated notes (50000 by default): one big folder and 30 small ones, 1 to 4 tags per note among 150 on a Zipf law, a few [[links]]. Nothing is done when the account exists. The password is read from stdin with --password-stdin. Used by make perf."
+    example: "echo perf-password | notes user perf perf --password-stdin"
+    args:
+      - name: "password-stdin"
+        shorthand: ""
+        value: ""
+        usage: "Read the password from the first line of stdin"
+        type: "bool"
   reset-password:
     use: "reset-password <name>"
     short: "Give an account a new password (admin, on the server)"

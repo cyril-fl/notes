@@ -80,6 +80,7 @@ type commands struct {
 	Logout        plumcliconfig.Cmdparams `yaml:"logout"`
 	User          plumcliconfig.Cmdparams `yaml:"user"`
 	UserAdd       plumcliconfig.Cmdparams `yaml:"user-add"`
+	UserPerf      plumcliconfig.Cmdparams `yaml:"user-perf"`
 	ResetPassword plumcliconfig.Cmdparams `yaml:"reset-password"`
 	RotateSecret  plumcliconfig.Cmdparams `yaml:"rotate-secret"`
 	Account       plumcliconfig.Cmdparams `yaml:"account"`

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"charm.land/huh/v2"
@@ -22,6 +23,7 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readsession"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/resetpassword"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/rotatesecret"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/seedperf"
 	"github.com/spf13/cobra"
 )
 
@@ -115,6 +117,33 @@ func AddUser(cobra *cobra.Command, args []string) error {
 		return process.GetErr()
 	}
 	fmt.Printf("Successfully created account %s\n", process.GetResult().Name)
+	return nil
+}
+
+// SeedPerf creates an account of generated notes, 50,000 unless args[1] says otherwise, to measure the app at scale.
+func SeedPerf(cobra *cobra.Command, args []string) error {
+	notes := 50000
+	if len(args) == 2 {
+		var err error
+		if notes, err = strconv.Atoi(args[1]); err != nil || notes < 1 {
+			return fmt.Errorf("notes: %q is not a positive number", args[1])
+		}
+	}
+	password, err := newPassword(cobra)
+	if err != nil {
+		return err
+	}
+
+	process := seedperf.Process(cobra.Context(), postgrey.GetDb(), seedperf.Input{Name: args[0], Password: password, Notes: notes})
+	process.Run()
+	if process.HasErr() {
+		return process.GetErr()
+	}
+	if created, count := process.GetResult(); created {
+		fmt.Printf("Successfully created account %s with %d notes\n", args[0], count)
+	} else {
+		fmt.Printf("Account %s exists: nothing done\n", args[0])
+	}
 	return nil
 }
 
