@@ -26,9 +26,10 @@ const { data: matches, status } = useLazyAsyncData(
 );
 const { data: recent } = useLazyAsyncData('recent', () => api<Recent[]>('/api/recent', { quiet: true }), {
   default: () => [] as Recent[],
+  dedupe: 'defer',
 });
 
-const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
+const { data: me } = useMe();
 const snippets = computed<CommandPaletteItem[]>(() =>
   (me.value?.snippets ?? []).map((snippet, index) => ({
     label: snippet.name,

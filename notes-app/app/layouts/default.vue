@@ -23,7 +23,7 @@ const contextPanel = useContextPanel();
 const notePanel = computed(() => contextPanel.value && route.path.startsWith('/notes/'));
 
 // The account's language wins over the cookie's, which only remembers this browser's last one.
-const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
+const { data: me } = useMe();
 watch(
   () => me.value?.locale,
   (locale) => locale && setLocale(locale as 'fr' | 'en'),

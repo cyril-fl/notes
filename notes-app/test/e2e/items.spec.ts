@@ -100,3 +100,18 @@ test('the sidebar tree opens a folder without reading its notes', async ({ page 
   await expect(row.getByText('Cachée')).toHaveCount(0); // The recent notes above may show it, the tree not.
   expect(reads.filter((url) => !url.includes('kind=folder') && url.includes(box.folder.id))).toEqual([]);
 });
+
+// Every row asks for the account (through usePro): the app reads it once, not once per row (#156).
+test('opening a folder reads the account once', async ({ page }) => {
+  await box.notes(Array.from({ length: 40 }, (_, i) => `# Ligne ${i}`));
+  const reads = { me: 0, folders: 0, recent: 0 };
+  page.on('request', (request) => {
+    const path = new URL(request.url()).pathname.replace('/api/', '');
+    if (path in reads) reads[path as keyof typeof reads]++;
+  });
+  await page.goto(`/folders/${box.folder.id}`);
+
+  await expect(page.getByRole('main').getByRole('link', { name: /Ligne/ }).first()).toBeVisible();
+  await page.waitForLoadState('networkidle');
+  expect(reads).toEqual({ me: 1, folders: 1, recent: 1 });
+});

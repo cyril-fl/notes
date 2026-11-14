@@ -11,7 +11,7 @@ const logout = useLogout();
 const baseURL = useRuntimeConfig().public.apiBase;
 const input = useTemplateRef('input');
 
-const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
+const { data: me } = useMe();
 
 const avatarSrc = computed(() => me.value?.avatar && imageSrc(`/api/files/${me.value.avatar}`, baseURL));
 const uploading = ref(false);

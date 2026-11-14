@@ -251,8 +251,10 @@ export const ROOT = 'root';
 export function useDestinations(exclude: () => string[] = () => []) {
   const api = useApi();
   const { t } = useI18n();
+  // defer: the views that each ask for it at once share the pending request rather than cancelling and resending it.
   const { data: folders } = useLazyAsyncData('folder-paths', () => api<FolderPath[]>('/api/folders'), {
     default: () => [] as FolderPath[],
+    dedupe: 'defer',
   });
   return computed(() => [
     { label: t('common.root'), value: ROOT },

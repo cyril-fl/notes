@@ -41,6 +41,7 @@ const darkMode = computed({
 });
 const { data: recent } = useLazyAsyncData('recent', () => api<Recent[]>('/api/recent', { quiet: true }), {
   default: () => [] as Recent[],
+  dedupe: 'defer',
 });
 // A pinned note is already one click away: Recent lists the others, so the open note lights up once.
 const recentNotes = computed(() =>

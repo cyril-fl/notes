@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import type { ItemDetail, User } from '~/types/items';
+import type { ItemDetail } from '~/types/items';
 
 // Same page for every note: a new note getting its address must keep its editor, and the cursor in it.
 definePageMeta({ key: 'note' });
 
 const route = useRoute();
 const api = useApi();
-const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
+const { data: me } = useMe();
 
 function editorFor() {
   const id = route.params.id as string;

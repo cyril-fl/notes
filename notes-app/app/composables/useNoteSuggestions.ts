@@ -1,4 +1,4 @@
-import type { TagCount, User } from '~/types/items';
+import type { TagCount } from '~/types/items';
 
 /** The menus of the note editor that insert text: the tags after #, the snippets after ;; */
 export function useNoteSuggestions(): EditorModule {
@@ -6,7 +6,7 @@ export function useNoteSuggestions(): EditorModule {
   const api = useApi();
 
   // The snippets offered after ;; : picked, their markdown goes in at the cursor.
-  const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
+  const { data: me } = useMe();
   const snippetItems = computed(() =>
     (me.value?.snippets ?? []).map((snippet) => ({
       kind: 'snippet',

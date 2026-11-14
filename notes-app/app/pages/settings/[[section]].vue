@@ -34,7 +34,7 @@ const toast = useToast();
 // The API sends the zip as an attachment: a plain link downloads it.
 const exportURL = `${useRuntimeConfig().public.apiBase}/api/export`;
 
-const { data: me } = useLazyAsyncData('me', () => api<User>('/api/me'));
+const { data: me } = useMe();
 const avatarSrc = computed(
   () => me.value?.avatar && imageSrc(`/api/files/${me.value.avatar}`, useRuntimeConfig().public.apiBase),
 );
