@@ -58,6 +58,8 @@ export function useNoteCode(): EditorModule {
               icon: icons.codeBlock,
               label: t('note.codeLanguage'),
               tooltip: { text: t('note.codeLanguage') },
+              // Closed, the menu gave the focus back to its button, after the editor's: the first key typed was lost.
+              content: { onCloseAutoFocus: (event: Event) => event.preventDefault() },
               items: [
                 [{ kind: 'codeLanguage', language: null, label: t('note.codeAuto') }],
                 [
