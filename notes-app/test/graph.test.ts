@@ -1,6 +1,15 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { graphEdges, layoutGraph, linkTargets, neighborGraph, tagNode } from '../app/utils/graph.ts';
+import {
+  fitLayout,
+  graphEdges,
+  graphSignature,
+  layoutGraph,
+  linkTargets,
+  neighborGraph,
+  simulateGraph,
+  tagNode,
+} from '../app/utils/graph.ts';
 
 const note = (id: string, ...tags: string[]) => ({ id, tags });
 const link = (source: string, target: string) => ({ source, target });
@@ -97,6 +106,27 @@ test('every note stays in the view, with its links untouched', () => {
 test('the same notes get the same map', () => {
   const graph = [[note('a', 'go'), note('b', 'go'), note('c')], [link('a', 'c')]] as const;
   assert.deepEqual(layoutGraph(...graph), layoutGraph(...graph));
+});
+
+test('the signature follows the notes, their tags and links', () => {
+  const notes = [note('a', 'go'), note('b')];
+  assert.equal(graphSignature(notes, []), graphSignature([note('a', 'go'), note('b')], []));
+  assert.notEqual(graphSignature(notes, []), graphSignature([note('a', 'web'), note('b')], []));
+  assert.notEqual(graphSignature(notes, []), graphSignature(notes, [link('a', 'b')]));
+});
+
+test('from a saved layout, the notes stay in place and a new one joins its tag', () => {
+  const groups = { go: ['a', 'b', 'c'], cuisine: ['d', 'e', 'f'] };
+  const notes = Object.entries(groups).flatMap(([tag, ids]) => ids.map((id) => note(id, tag)));
+  const saved = simulateGraph(notes, []);
+  const warm = simulateGraph([...notes, note('g', 'cuisine')], [], saved);
+  const before = fitLayout(saved);
+  const after = fitLayout(warm);
+  const at = (positions: typeof warm, id: string) => positions.get(id)!;
+  const gap = (from: { x: number; y: number }, to: { x: number; y: number }) =>
+    Math.hypot(from.x - to.x, from.y - to.y);
+  for (const id of 'abcdef') assert.ok(gap(at(before, id), at(after, id)) < 10, `${id} moved`);
+  assert.ok(gap(at(warm, 'g'), at(warm, tagNode('cuisine'))) < gap(at(warm, 'g'), at(warm, tagNode('go'))));
 });
 
 test('the graph of the neighbors keeps the note with its tags, the neighbors with the shared ones, and the [[links]] either way', () => {

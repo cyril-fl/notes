@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { NotesGraph } from '~/types/items';
+import type { NotesGraph, User } from '~/types/items';
 
 definePageMeta({ feature: 'graph' });
 
@@ -16,6 +16,7 @@ const { data: all } = useLazyAsyncData(
   () => (noteId.value ? Promise.resolve(null) : api<NotesGraph>('/api/graph/notes')),
   { watch: [noteId] },
 );
+const me = useNuxtData<User>('me').data;
 const graph = computed(() => (noteId.value ? neighbors.value && neighborGraph(neighbors.value) : all.value));
 
 const selectedNotePath = computed(() => {
@@ -41,7 +42,13 @@ const selectedNotePath = computed(() => {
       />
     </PageHeader>
     <template v-if="graph">
-      <GraphView v-if="graph.notes.length" class="min-h-0 flex-1" :graph="graph" :selected="noteId" />
+      <GraphView
+        v-if="graph.notes.length"
+        class="min-h-0 flex-1"
+        :graph="graph"
+        :selected="noteId"
+        :cache="noteId ? undefined : `graph:${me?.id}`"
+      />
       <UEmpty
         v-else
         :icon="icons.graph"

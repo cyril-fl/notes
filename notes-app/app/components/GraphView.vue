@@ -8,7 +8,8 @@ const appConfig = useAppConfig();
 type Edge = { source: string; target: string; strength: number; tag: boolean };
 
 // mini: in a narrow panel, icons instead of titles, and the card of the hovered note in a popover drawn out of the panel.
-const props = defineProps<{ graph: NotesGraph; selected?: string; mini?: boolean }>();
+// cache: where the settled layout is kept for the next visit (layoutCache), for a graph worth it.
+const props = defineProps<{ graph: NotesGraph; selected?: string; mini?: boolean; cache?: string }>();
 
 const hovered = ref<string | null>(null);
 // The card keeps the last hovered note: the popover still draws it while it fades out.
@@ -39,6 +40,7 @@ watch(
     worker.postMessage({
       notes: graph.notes.map(({ id, tags }) => ({ id, tags: tags && [...tags] })),
       links: graph.links.map(({ source, target }) => ({ source, target })),
+      cache: props.cache,
     });
     onCleanup(() => worker.terminate());
   },

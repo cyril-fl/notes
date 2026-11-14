@@ -5,6 +5,7 @@ export function useLogout() {
   return async function logout() {
     await api('/api/logout', { method: 'POST' });
     clearNuxtData(); // The next account must not see what this one read.
+    forgetLayouts();
     await navigateTo('/login');
   };
 }

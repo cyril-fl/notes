@@ -70,18 +70,37 @@ export function graphEdges(notes: Note[], links: Link[]) {
   return edges;
 }
 
+type Point = { x: number; y: number };
+// From a saved layout, only what changed settles: a little heat, a few ticks.
+const WARM_ALPHA = 0.1;
+const WARM_TICKS = 40;
+
 /**
- * Where the notes and their tags go, in % of the view: see graphEdges for the springs.
+ * Where the notes and their tags go, in the simulation's units: see graphEdges for the springs.
  * The pull to the center weakens as the graph grows (1/√ of its nodes), or a big one shrinks into a ball.
- * d3 seeds its randomness, so the same notes get the same map on every load. GraphView zooms by spreading them.
+ * seed: a layout saved before; the nodes it lacks start next to a neighbor it has, and the whole only settles a little.
+ * d3 seeds its randomness, so the same notes get the same map on every load.
  */
-export function layoutGraph(notes: Note[], links: Link[]) {
+export function simulateGraph(notes: Note[], links: Link[], seed?: Map<string, Point>) {
   const tags = new Set(notes.flatMap((note) => note.tags ?? []));
   const nodes: Node[] = [...notes.map(({ id }) => ({ id })), ...[...tags].map((tag) => ({ id: tagNode(tag) }))];
   const edges = graphEdges(notes, links);
   const gravity = Math.sqrt(10 / Math.max(nodes.length, 10));
 
-  forceSimulation(nodes)
+  if (seed) {
+    const near = new Map<string, Point>();
+    for (const { source, target } of edges) {
+      if (seed.has(source) && !near.has(target)) near.set(target, seed.get(source)!);
+      if (seed.has(target) && !near.has(source)) near.set(source, seed.get(target)!);
+    }
+    for (const node of nodes) {
+      const at = seed.get(node.id) ?? near.get(node.id);
+      // Beside its neighbor, not on it: two nodes at the same point have no direction to push apart.
+      if (at) [node.x, node.y] = seed.has(node.id) ? [at.x, at.y] : [at.x + COLLIDE_RADIUS, at.y + COLLIDE_RADIUS];
+    }
+  }
+
+  const simulation = forceSimulation(nodes)
     .force('charge', forceManyBody().strength(-300).theta(THETA))
     .force(
       'link',
@@ -93,12 +112,34 @@ export function layoutGraph(notes: Note[], links: Link[]) {
     .force('collide', nodes.length <= COLLIDE_LIMIT ? forceCollide(COLLIDE_RADIUS) : null)
     .force('x', forceX().strength(0.04 * gravity))
     .force('y', forceY().strength(0.08 * gravity))
-    .stop()
-    .tick(TICKS);
+    .stop();
+  if (seed) simulation.alpha(WARM_ALPHA);
+  simulation.tick(seed ? WARM_TICKS : TICKS);
 
-  const x = fit(nodes.map((node) => node.x!));
-  const y = fit(nodes.map((node) => node.y!));
-  return new Map(nodes.map((node) => [node.id, { x: x(node.x!), y: y(node.y!) }]));
+  return new Map(nodes.map((node) => [node.id, { x: node.x!, y: node.y! }]));
+}
+
+/** A simulated layout in % of the view. GraphView zooms by spreading it. */
+export function fitLayout(positions: Map<string, Point>) {
+  const x = fit([...positions.values()].map((at) => at.x));
+  const y = fit([...positions.values()].map((at) => at.y));
+  return new Map([...positions].map(([id, at]) => [id, { x: x(at.x), y: y(at.y) }]));
+}
+
+/** Where the notes and their tags go, in % of the view, from scratch. */
+export function layoutGraph(notes: Note[], links: Link[]) {
+  return fitLayout(simulateGraph(notes, links));
+}
+
+/** A fingerprint of the notes, their tags and links (FNV-1a): a saved layout serves as is only for the same graph. */
+export function graphSignature(notes: Note[], links: Link[]) {
+  let hash = 0x811c9dc5;
+  const add = (text: string) => {
+    for (let i = 0; i < text.length; i++) hash = Math.imul(hash ^ text.charCodeAt(i), 0x01000193);
+  };
+  for (const { id, tags = [] } of notes) add(`${id}:${tags.join(',')};`);
+  for (const { source, target } of links) add(`${source}>${target};`);
+  return `${notes.length}:${links.length}:${(hash >>> 0).toString(36)}`;
 }
 
 type Near = { id: string; title: string; path: string };
