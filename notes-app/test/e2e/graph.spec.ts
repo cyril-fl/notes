@@ -5,12 +5,14 @@ let box: Awaited<ReturnType<typeof sandbox>>;
 test.beforeEach(async () => (box = await sandbox()));
 test.afterEach(async () => box.dispose());
 
-// Zoom spreads the notes: two linked notes move apart, and Recentrer puts them back.
+// Zoom spreads the notes from the center: dezoomed, two linked notes come closer, and Recentrer puts them back.
+// Dezoomed, not zoomed: the server lays the notes out to the edges, zoomed one leaves the view and loses its link.
+// The neighborhood of a note, not every note: on a full account the titles thin out and a note is a bare dot, without link.
 test('the graph zooms and recenters', async ({ page }) => {
   const tag = box.prefix.replace('-', '');
-  await box.note(`# Un ${box.prefix}\n\n#${tag}`);
+  const note = await box.note(`# Un ${box.prefix}\n\n#${tag}`);
   await box.note(`# Deux ${box.prefix}\n\n#${tag}`);
-  await page.goto('/graph');
+  await page.goto(`/graph?note=${note.id}`);
   await expect(page.locator('[data-settled]')).toHaveCount(1); // The layout moves the notes until then.
   const one = page.getByRole('main').getByRole('link', { name: `Un ${box.prefix}` });
   const two = page.getByRole('main').getByRole('link', { name: `Deux ${box.prefix}` });
@@ -20,8 +22,8 @@ test('the graph zooms and recenters', async ({ page }) => {
   };
 
   const before = await gap();
-  await page.getByRole('button', { name: 'Zoomer', exact: true }).click();
-  expect(await gap()).toBeGreaterThan(before * 1.3);
+  await page.getByRole('button', { name: 'Dézoomer' }).click();
+  expect(await gap()).toBeLessThan(before / 1.3);
   await page.getByRole('button', { name: 'Recentrer' }).click();
   expect(Math.abs((await gap()) - before)).toBeLessThan(1);
   await box.api.delete(`/api/tags/${tag}`); // Deleting the notes leaves their tag.
