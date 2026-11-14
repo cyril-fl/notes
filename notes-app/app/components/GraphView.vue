@@ -167,7 +167,7 @@ function swallowClickAfterDrag(event: MouseEvent) {
 
 function dotClass(id: string) {
   if (id === active.value) return 'bg-primary';
-  return isDimmed(id) ? 'bg-(--ui-border-accented)' : 'bg-(--ui-text-dimmed)';
+  return isDimmed(id) ? 'bg-(--ui-border-accented)' : 'bg-(--ui-text-muted)';
 }
 
 function iconClass(id: string) {
@@ -177,7 +177,7 @@ function iconClass(id: string) {
 
 function tagClass(tag: string) {
   if (tagNode(tag) === active.value) return 'font-medium text-primary';
-  return isDimmed(tagNode(tag)) ? 'text-dimmed opacity-30' : 'text-primary';
+  return isDimmed(tagNode(tag)) ? 'text-dimmed opacity-30' : 'text-muted';
 }
 
 // What is on screen, in px from the view's corner; a margin keeps a dot or a title cut by the edge.
@@ -306,10 +306,9 @@ function strokeEdges(ctx: CanvasRenderingContext2D, list: Edge[], stroke: string
   ctx.globalAlpha = 1;
 }
 
-// A tag in the theme's color, a note in grey; the dimmed ones fade into the background. One path per color.
+// The dimmed ones fade into the background. One path per color.
 function dotColor(id: string) {
-  if (isDimmed(id)) return '--ui-border-accented';
-  return isTag(id) ? '--ui-primary' : '--ui-text-dimmed';
+  return isDimmed(id) ? '--ui-border-accented' : '--ui-text-muted';
 }
 
 function fillDots(ctx: CanvasRenderingContext2D, ids: string[], color: (token: string) => string) {
