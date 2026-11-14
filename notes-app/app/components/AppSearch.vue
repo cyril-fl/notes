@@ -9,6 +9,7 @@ const api = useApi();
 const { has } = usePro();
 const route = useRoute();
 const { createFolder, moveItem, renameFolder, renameTag } = useItems();
+const { importNotes } = useDialogs();
 
 const open = useState('search-open', () => false);
 // The T shortcut opens the palette on the snippets alone.
@@ -108,6 +109,7 @@ const groups = computed<CommandPaletteGroup[]>(() => {
           kbds: ['shift', 'N'],
           onSelect: () => createFolder(currentFolder(route)),
         },
+        { label: t('settings.import'), icon: icons.import, onSelect: () => importNotes() },
         ...proActions.value,
         ...(has('graph') ? [{ label: t('common.graph'), icon: icons.graph, to: '/graph' }] : []),
         { label: t('common.trash'), icon: icons.trash, to: '/trash' },
