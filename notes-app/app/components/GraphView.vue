@@ -167,7 +167,7 @@ function swallowClickAfterDrag(event: MouseEvent) {
 
 function dotClass(id: string) {
   if (id === active.value) return 'bg-primary';
-  return isDimmed(id) ? 'bg-(--ui-border-accented)' : 'bg-(--ui-text-muted)';
+  return isDimmed(id) ? 'bg-(--ui-border-accented)' : 'bg-(--ui-text-dimmed)';
 }
 
 function iconClass(id: string) {
@@ -308,7 +308,7 @@ function strokeEdges(ctx: CanvasRenderingContext2D, list: Edge[], stroke: string
 
 // The dimmed ones fade into the background. One path per color.
 function dotColor(id: string) {
-  return isDimmed(id) ? '--ui-border-accented' : '--ui-text-muted';
+  return isDimmed(id) ? '--ui-border-accented' : '--ui-text-dimmed';
 }
 
 function fillDots(ctx: CanvasRenderingContext2D, ids: string[], color: (token: string) => string) {
