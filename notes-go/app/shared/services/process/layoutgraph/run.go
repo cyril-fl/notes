@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"math"
+	"sync"
 
 	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/forcelayout"
@@ -21,6 +22,10 @@ type saved struct {
 	Signature string                       `json:"signature"`
 	Positions map[string]forcelayout.Point `json:"positions"`
 }
+
+// layouts keeps the last saved of each account, by account id: opening and decoding 50,000 positions costs 60 ms a
+// visit. Never stale: a layout is only used for the graph of its signature. Shared, do not modify it.
+var layouts sync.Map
 
 type run struct {
 	plumprimitive.Process
@@ -94,6 +99,10 @@ func (p *run) loadSaved() {
 		return
 	}
 
+	if cached, ok := layouts.Load(domain.UserID(p.ctx)); ok {
+		p.cache.saved = cached.(*saved)
+		return
+	}
 	var row domain.GraphLayout
 	err := p.db.NewSelect().Model(&row).Where("user_id = ?", domain.UserID(p.ctx)).Scan(p.ctx)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -107,6 +116,7 @@ func (p *run) loadSaved() {
 	var layout saved
 	if err == nil && json.Unmarshal(data, &layout) == nil {
 		p.cache.saved = &layout
+		layouts.Store(row.UserID, &layout)
 	}
 }
 
@@ -152,6 +162,9 @@ func (p *run) saveLayout() {
 	_, err = p.db.NewInsert().Model(&domain.GraphLayout{UserID: user, Data: data}).
 		On("CONFLICT (user_id) DO UPDATE").Set("data = EXCLUDED.data").Exec(p.ctx)
 	p.SetErr(err)
+	if err == nil {
+		layouts.Store(user, p.cache.saved)
+	}
 }
 
 // applyLayout puts each node at its place in % of the view, and each spring's pull on its tag or link.
