@@ -109,7 +109,7 @@ entre comptes : c'est le compte, en entier.
 
 ## 3. Ce qu'il peut faire
 
-À la connexion, l'agent reçoit les vingt-trois outils avec leur description et leur schéma, puis travaille
+À la connexion, l'agent reçoit les vingt-deux outils avec leur description et leur schéma, puis travaille
 en langage naturel : « range mes notes de réunion de novembre dans /Travail/Réunions » devient un
 `search_notes`, un `create_folder`, puis une suite de `move_item`.
 
@@ -119,8 +119,7 @@ en langage naturel : « range mes notes de réunion de novembre dans /Travail/R�
 | `recent_notes` | Les notes modifiées le plus récemment, la plus récente d'abord |
 | `read_note` | Le contenu d'une note, son chemin et ses tags |
 | `list_folder` | Les notes et dossiers directement dans un dossier |
-| `list_tags` | Les tags du compte, les plus utilisés d'abord, avec le nombre de notes |
-| `read_tag` | Les notes portant un tag, avec leur chemin |
+| `tags` | Les notes portant un tag, avec leur chemin ; sans tag, les tags du compte, les plus utilisés d'abord |
 | `create_note` | Une note à partir de markdown : le premier titre devient le titre, les `#hashtags` des tags |
 | `edit_note` | Remplace **tout** le contenu d'une note ; refuse une note verrouillée |
 | `create_folder` | Un dossier, à la racine ou dans un autre |
@@ -142,9 +141,12 @@ en langage naturel : « range mes notes de réunion de novembre dans /Travail/R�
 **Un outil par domaine, pas un par processus.** Chaque outil annoncé coûte du contexte à l'agent à
 chaque connexion (environ 300 à 750 octets de nom, description et schéma d'entrée ; le schéma de
 sortie, que les clients ne donnent en général pas au modèle, double à peu près ce chiffre). Lister et
-lire passent donc par le même outil, un argument vide donnant la liste (`note_history`, `note_links`,
-`read_file`) : treize processus tiennent en huit outils. La création d'un tag seul n'est pas exposée,
+lire passent donc par le même outil, un argument vide donnant la liste (`tags`, `note_history`,
+`note_links`, `read_file`) : `list_tags` et `read_tag` sont devenus `tags`, et les treize processus
+ajoutés ensuite tiennent en huit outils. La création d'un tag seul n'est pas exposée,
 un tag sans note ne sert à rien à un agent.
+`delete_note` et `delete_folder` restent séparés exprès : un chemin de dossier donné à `delete_note`
+est refusé, au lieu d'envoyer tout un sous-arbre à la corbeille.
 
 Ils passent par les mêmes processus (`app/shared/services/process/`) que la CLI et l'API : une règle
 (titre, tags, liens, corbeille, chiffrement) s'applique pareil des trois côtés.
@@ -176,7 +178,7 @@ Ils passent par les mêmes processus (`app/shared/services/process/`) que la CLI
 ## Vérifier que ça marche
 
 Le test `app/cli/cmd-mcp/cmd_test.go` branche un client MCP en mémoire sur le serveur et vérifie que
-les vingt-trois outils sont annoncés avec un schéma et une description — ce que le SDK ne sait pas déduire
+les vingt-deux outils sont annoncés avec un schéma et une description — ce que le SDK ne sait pas déduire
 seul d'une structure d'arguments mal formée.
 
 ```sh

@@ -115,6 +115,17 @@ type tagArgs struct {
 	Tag string `json:"tag" jsonschema:"the tag, without the #"`
 }
 
+type tagsArgs struct {
+	Tag string `json:"tag,omitempty" jsonschema:"the tag, without the #; the list of tags when empty"`
+}
+
+// tags is the account's tags with their count, or one tag with the notes carrying it.
+type tags struct {
+	Tags  []counttags.TagCount `json:"tags,omitempty"`
+	Tag   *domain.Tag          `json:"tag,omitempty"`
+	Notes []readtag.Note       `json:"notes,omitempty"`
+}
+
 type renameTagArgs struct {
 	Tag string `json:"tag" jsonschema:"the tag to rename, without the #"`
 	To  string `json:"to" jsonschema:"its new name, without the #"`
@@ -376,27 +387,22 @@ func AddTools(server *mcp.Server, ctx context.Context) {
 	})
 
 	mcp.AddTool(server, &mcp.Tool{
-		Name:        "list_tags",
-		Description: "List the account's tags, most used first, with how many notes carry each.",
-	}, func(_ context.Context, _ *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, []counttags.TagCount, error) {
-		process := counttags.Process(ctx, postgrey.GetDb())
-		process.Run()
-		if process.HasErr() {
-			return nil, nil, process.GetErr()
+		Name:        "tags",
+		Description: "List the notes carrying a tag, with their path. Without a tag, the account's tags, most used first. Tags of a note are set by create_note and edit_note.",
+	}, func(_ context.Context, _ *mcp.CallToolRequest, args tagsArgs) (*mcp.CallToolResult, tags, error) {
+		if args.Tag == "" {
+			process := counttags.Process(ctx, postgrey.GetDb())
+			process.Run()
+			return nil, tags{Tags: process.GetResult()}, process.GetErr()
 		}
-		return nil, process.GetResult(), nil
-	})
 
-	mcp.AddTool(server, &mcp.Tool{
-		Name:        "read_tag",
-		Description: "List the notes carrying a tag, with their path. Tags of a note are set by create_note and edit_note.",
-	}, func(_ context.Context, _ *mcp.CallToolRequest, args tagArgs) (*mcp.CallToolResult, readtag.Result, error) {
 		process := readtag.Process(ctx, postgrey.GetDb(), args.Tag)
 		process.Run()
 		if process.HasErr() {
-			return nil, readtag.Result{}, process.GetErr()
+			return nil, tags{}, process.GetErr()
 		}
-		return nil, process.GetResult(), nil
+		result := process.GetResult()
+		return nil, tags{Tag: &result.Tag, Notes: result.Notes}, nil
 	})
 
 	mcp.AddTool(server, &mcp.Tool{
