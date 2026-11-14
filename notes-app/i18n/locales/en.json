@@ -131,7 +131,9 @@
     "noLink": "No link",
     "zoomOut": "Zoom out",
     "zoomIn": "Zoom in",
-    "recenter": "Recenter"
+    "recenter": "Recenter",
+    "loading": "Placing the notes…",
+    "showAll": "Whole graph"
   },
   "related": {
     "links": "Links",
