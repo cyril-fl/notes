@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/adduser"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createschema"
@@ -14,6 +15,7 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deletesession"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readsession"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/resetpassword"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 )
 
 // An account from its creation to a new password: log in, find the session, log out.
@@ -111,5 +113,59 @@ func TestAccountLifecycle(t *testing.T) {
 	}
 	if err := run(readsession.Process(ctx, tx, again.GetResult().Token)); !errors.Is(err, readsession.ErrNoSession) {
 		t.Errorf("session after logout: err = %v, want %v", err, readsession.ErrNoSession)
+	}
+}
+
+// After a restart no key is in memory: the login reads the sealed columns of users only once it loaded the key.
+func TestLoginBeforeKeyLoaded(t *testing.T) {
+	ctx := context.Background()
+	env := postgrey.NewEnvironment()
+	env.ReadEnv()
+	db := env.Connect()
+	defer db.Close()
+
+	schema := createschema.Process(ctx, db)
+	schema.Run()
+	if schema.HasErr() {
+		t.Fatalf("create schema: %v", schema.GetErr())
+	}
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback()
+
+	name := fmt.Sprintf("Restart-%d", time.Now().UnixNano())
+	add := adduser.Process(ctx, tx, adduser.Input{Name: name, Password: "correct horse"})
+	add.Run()
+	if add.HasErr() {
+		t.Fatalf("add: %v", add.GetErr())
+	}
+	userID := add.GetResult().ID
+	if err := secret.Load(ctx, tx, userID); err != nil {
+		t.Fatal(err)
+	}
+	snippets, err := domain.Snippets{{Name: "sig", Content: "Cyril"}}.Seal(userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	searches, err := domain.SavedSearches{{ID: "s1", Name: "Go"}}.Seal(userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tx.NewUpdate().Model((*domain.User)(nil)).Set("snippets = ?", snippets).Set("saved_searches = ?", searches).Where("id = ?", userID).Exec(ctx); err != nil {
+		t.Fatal(err)
+	}
+	secret.Forget(userID)
+
+	login := createsession.Process(ctx, tx, createsession.Input{Name: name, Password: "correct horse"})
+	login.Run()
+	if login.HasErr() {
+		t.Fatalf("login: %v", login.GetErr())
+	}
+	user := login.GetResult().User
+	if len(user.Snippets) != 1 || user.Snippets[0].Content != "Cyril" || len(user.SavedSearches) != 1 || user.SavedSearches[0].Name != "Go" {
+		t.Errorf("login = %+v, %+v; want the snippets and saved searches in clear", user.Snippets, user.SavedSearches)
 	}
 }

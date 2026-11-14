@@ -82,6 +82,11 @@ func Load(ctx context.Context, db bun.IDB, userID string) error {
 	return nil
 }
 
+// Forget drops the key of an account from memory, as a restart of the server does: tests replay a login before Load.
+func Forget(userID string) {
+	keys.Delete(userID)
+}
+
 // Rewrap gives back the key of an account sealed by oldSecret, sealed by NOTES_SECRET instead; unchanged when
 // NOTES_SECRET opens it already.
 func Rewrap(wrapped, oldSecret string) (string, error) {

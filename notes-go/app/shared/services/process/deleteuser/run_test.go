@@ -10,6 +10,7 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/adduser"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createschema"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/silo"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/testaccount"
 	"github.com/uptrace/bun"
@@ -29,6 +30,22 @@ func TestDeleteUser(t *testing.T) {
 	if err := store.Put(ctx, file.Key(), []byte("png"), file.ContentType); err != nil {
 		t.Fatal(err)
 	}
+	// Sealed snippets and saved searches, then its key forgotten as after a restart: the delete must not read them.
+	if err := secret.Load(ctx, tx, victim.ID); err != nil {
+		t.Fatal(err)
+	}
+	snippets, err := domain.Snippets{{Name: "sig", Content: "victim"}}.Seal(victim.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	searches, err := domain.SavedSearches{{ID: "s1", Name: "Go"}}.Seal(victim.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tx.NewUpdate().Model((*domain.User)(nil)).Set("snippets = ?", snippets).Set("saved_searches = ?", searches).Where("id = ?", victim.ID).Exec(ctx); err != nil {
+		t.Fatal(err)
+	}
+	secret.Forget(victim.ID)
 
 	process := Process(ctx, tx, store, victim.ID)
 	process.Run()
