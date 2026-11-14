@@ -56,3 +56,25 @@ test('a new note in a trashed folder is refused with a French text', async ({ pa
   const items = await (await box.api.get(`/api/items?parent=${box.folder.id}`)).json();
   expect(items).toHaveLength(0);
 });
+
+// The tree learns from has_folders that a folder opens, and reads only folders, never the notes of a big one (#140).
+test('the sidebar tree opens a folder without reading its notes', async ({ page }) => {
+  const branch = await (
+    await box.api.post('/api/folders', { data: { title: 'Branche', parent_id: box.folder.id } })
+  ).json();
+  await box.api.post('/api/folders', { data: { title: 'Feuille', parent_id: branch.id } });
+  await box.note('# Cachée');
+  const reads: string[] = [];
+  page.on('request', (request) => request.url().includes('/api/items') && reads.push(request.url()));
+
+  await page.goto('/');
+  const tree = page.getByRole('navigation');
+  const row = tree.getByRole('listitem').filter({ has: page.getByRole('link', { name: box.prefix, exact: true }) });
+  await row.getByRole('button', { name: 'Déplier' }).first().click();
+  const branchRow = row.getByRole('listitem').filter({ hasText: 'Branche' });
+  await branchRow.getByRole('button', { name: 'Déplier' }).click();
+  await expect(branchRow.getByRole('link', { name: 'Feuille' })).toBeVisible();
+  await expect(branchRow.getByRole('listitem').filter({ hasText: 'Feuille' }).getByRole('button')).toHaveCount(0);
+  await expect(row.getByText('Cachée')).toHaveCount(0); // The recent notes above may show it, the tree not.
+  expect(reads.filter((url) => !url.includes('kind=folder') && url.includes(box.folder.id))).toEqual([]);
+});

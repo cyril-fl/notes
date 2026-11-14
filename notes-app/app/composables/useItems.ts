@@ -277,11 +277,12 @@ export function newNotePath(parentId?: string, snippet?: number) {
   return { path: '/notes/new', query: { parent: parentId, snippet } };
 }
 
-/** Items a folder holds, the root without an id. */
-export function useChildren(parentId?: string) {
+/** Items a folder holds, the root without an id; only those of this kind when given. */
+export function useChildren(parentId?: string, kind?: Item['kind']) {
   const api = useApi();
-  const query = parentId ? { parent: parentId } : {};
-  return useLazyAsyncData(`items:${parentId ?? 'root'}`, () => api<Item[]>('/api/items', { query }), {
+  const query = { parent: parentId, kind };
+  const key = `items:${parentId ?? 'root'}${kind ? `:${kind}` : ''}`;
+  return useLazyAsyncData(key, () => api<Item[]>('/api/items', { query }), {
     default: () => [] as Item[],
   });
 }

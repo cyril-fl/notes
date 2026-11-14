@@ -10,10 +10,6 @@ const { itemMenu } = useItems();
 
 const open = useState(`open:${props.folder.id}`, () => false);
 
-// TODO: reads each shown folder's children one level ahead to know if it has subfolders (one request per folder); have the API tell it if that grows slow.
-const { data: children } = useChildren(props.folder.id);
-const hasSubfolders = computed(() => children.value.some((item) => item.kind === 'folder'));
-
 // The whole node drags, so the check of useDropFolder sees the subfolders inside it.
 const node = useTemplateRef('node');
 const row = useTemplateRef('row');
@@ -37,7 +33,7 @@ watch(isOver, (over) => (over ? start() : stop()));
           <span class="truncate">{{ folder.title }}</span>
         </NuxtLink>
         <button
-          v-if="hasSubfolders"
+          v-if="folder.has_folders"
           type="button"
           class="flex size-5 shrink-0 items-center justify-center rounded"
           :aria-label="open ? $t('items.collapse') : $t('items.expand')"

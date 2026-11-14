@@ -1,8 +1,8 @@
 <script setup lang="ts">
 const props = defineProps<{ parentId?: string }>();
 
-const { data: items } = useChildren(props.parentId);
-const folders = computed(() => items.value.filter((item) => item.kind === 'folder'));
+// Folders only: a folder of thousands of notes would download them all for nothing.
+const { data: folders } = useChildren(props.parentId, 'folder');
 </script>
 
 <template>

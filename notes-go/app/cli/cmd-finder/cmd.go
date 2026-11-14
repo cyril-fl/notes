@@ -143,7 +143,7 @@ func loadFolder(ctx context.Context, id string) (readitem.Result, error) {
 		return process.GetResult(), process.GetErr()
 	}
 
-	process := listitems.Process(ctx, postgrey.GetDb(), "")
+	process := listitems.Process(ctx, postgrey.GetDb(), "", "")
 	process.Run()
 	root := readitem.Result{Item: domain.Item{Kind: domain.FOLDER, Title: "Notes"}, Path: "/", Children: process.GetResult()}
 	return root, process.GetErr()

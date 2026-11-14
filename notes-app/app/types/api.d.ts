@@ -965,6 +965,8 @@ export interface paths {
                 query?: {
                     /** @description folder uuid, the root when left out */
                     parent?: string;
+                    /** @description folder or note, both when left out */
+                    kind?: string;
                 };
                 header?: never;
                 path?: never;
@@ -3085,6 +3087,8 @@ export interface components {
         };
         "domain.Item": {
             created_at: string;
+            /** @description a folder with subfolders, read by listitems */
+            has_folders?: boolean;
             id: string;
             kind: components["schemas"]["domain.Kind"];
             parent_id?: string;

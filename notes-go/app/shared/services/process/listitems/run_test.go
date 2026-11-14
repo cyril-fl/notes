@@ -51,14 +51,17 @@ func TestListItems(t *testing.T) {
 	sub.Run()
 	trashed := createfolder.Process(ctx, tx, createfolder.Input{Title: "Trashed", ParentID: id})
 	trashed.Run()
-	trash := deleteitems.Process(ctx, tx, domain.FOLDER, []string{trashed.GetResult().ID})
+	// Z folder's only subfolder is in the trash: it has none to show.
+	gone := createfolder.Process(ctx, tx, createfolder.Input{Title: "Gone", ParentID: sub.GetResult().ID})
+	gone.Run()
+	trash := deleteitems.Process(ctx, tx, domain.FOLDER, []string{trashed.GetResult().ID, gone.GetResult().ID})
 	trash.Run()
-	if note.HasErr() || sub.HasErr() || trashed.HasErr() || trash.HasErr() {
-		t.Fatalf("seed: %v %v %v %v", note.GetErr(), sub.GetErr(), trashed.GetErr(), trash.GetErr())
+	if note.HasErr() || sub.HasErr() || trashed.HasErr() || gone.HasErr() || trash.HasErr() {
+		t.Fatalf("seed: %v %v %v %v %v", note.GetErr(), sub.GetErr(), trashed.GetErr(), gone.GetErr(), trash.GetErr())
 	}
 
 	// Folders first even when a note sorts before them by title; the trashed folder is gone.
-	children := Process(ctx, tx, id)
+	children := Process(ctx, tx, id, "")
 	children.Run()
 	var got []string
 	for _, item := range children.GetResult() {
@@ -70,16 +73,31 @@ func TestListItems(t *testing.T) {
 	if items := children.GetResult(); len(items) == 2 && (items[0].Readonly || !items[1].Readonly) {
 		t.Errorf("readonly = %v, %v; want only the locked note", items[0].Readonly, items[1].Readonly)
 	}
+	if items := children.GetResult(); len(items) == 2 && (items[0].HasFolders || items[1].HasFolders) {
+		t.Errorf("has_folders = %v, %v; want false (subfolder in the trash, a note)", items[0].HasFolders, items[1].HasFolders)
+	}
 
-	root := Process(ctx, tx, "")
+	folders := Process(ctx, tx, id, domain.FOLDER)
+	folders.Run()
+	if items := folders.GetResult(); folders.HasErr() || len(items) != 1 || items[0].Title != "Z folder" {
+		t.Errorf("folders = %v, %v; want only Z folder", items, folders.GetErr())
+	}
+
+	root := Process(ctx, tx, "", "")
 	root.Run()
-	found := slices.ContainsFunc(root.GetResult(), func(item domain.Item) bool { return item.ID == id })
+	found := slices.ContainsFunc(root.GetResult(), func(item domain.Item) bool { return item.ID == id && item.HasFolders })
 	if root.HasErr() || !found {
-		t.Errorf("root = %v; want Parent in it", root.GetErr())
+		t.Errorf("root = %v; want Parent in it, with folders", root.GetErr())
+	}
+
+	kind := Process(ctx, tx, "", "tag")
+	kind.Run()
+	if !errors.Is(kind.GetErr(), ErrInvalidKind) {
+		t.Errorf("err = %v, want %v", kind.GetErr(), ErrInvalidKind)
 	}
 
 	// Last: a DB error.
-	invalid := Process(ctx, tx, "nope")
+	invalid := Process(ctx, tx, "nope", "")
 	invalid.Run()
 	if !errors.Is(invalid.GetErr(), ErrInvalidID) {
 		t.Errorf("err = %v, want %v", invalid.GetErr(), ErrInvalidID)

@@ -15,7 +15,10 @@ import (
 // invalidText is the Postgres SQLSTATE raised when the id is not a uuid.
 const invalidText = "22P02"
 
-var ErrInvalidID = errors.New("not a uuid")
+var (
+	ErrInvalidID   = errors.New("not a uuid")
+	ErrInvalidKind = errors.New("invalid kind")
+)
 
 type run struct {
 	plumprimitive.Process
@@ -24,6 +27,7 @@ type run struct {
 	ctx      context.Context
 	db       bun.IDB // *bun.DB or bun.Tx: tests run inside a rolled-back transaction
 	parentID string
+	kind     domain.Kind
 }
 
 type cache struct {
@@ -31,16 +35,18 @@ type cache struct {
 	result   []domain.Item
 }
 
-// Process lists the direct children of a folder; an empty parentID lists the root.
-func Process(ctx context.Context, db bun.IDB, parentID string) *run {
+// Process lists the direct children of a folder; an empty parentID lists the root, an empty kind both kinds.
+func Process(ctx context.Context, db bun.IDB, parentID string, kind domain.Kind) *run {
 	return &run{
 		ctx:      ctx,
 		db:       db,
 		parentID: parentID,
+		kind:     kind,
 	}
 }
 
 func (p *run) Run() {
+	p.checkKind()
 	p.makeParentID()
 	p.loadItems()
 }
@@ -53,17 +59,29 @@ func (p *run) GetResult() []domain.Item {
 
 // Methods
 
+func (p *run) checkKind() {
+	if p.kind != "" && p.kind != domain.FOLDER && p.kind != domain.NOTE {
+		p.SetErr(fmt.Errorf("%w: %s", ErrInvalidKind, p.kind))
+	}
+}
+
 func (p *run) makeParentID() {
 	p.cache.parentID = strings.TrimSpace(p.parentID)
 }
 
 // loadItems lists folders first, then notes, by title (sealed: ordered here); soft_delete hides the trashed ones.
-// readonly marks the locked notes, for their padlock in the folder.
+// readonly marks the locked notes, for their padlock in the folder; has_folders tells the sidebar a folder opens
+// without reading its children.
 func (p *run) loadItems() {
+	if p.HasErr() {
+		return
+	}
+
 	query := p.db.NewSelect().
 		Model(&p.cache.result).
 		Column("id", "parent_id", "created_at", "updated_at", "kind", "title").
 		ColumnExpr("COALESCE((SELECT mn.readonly FROM metadata_notes AS mn WHERE mn.item_id = i.id), false) AS readonly").
+		ColumnExpr("EXISTS (SELECT 1 FROM items AS c WHERE c.parent_id = i.id AND c.kind = ? AND c.deleted_at IS NULL) AS has_folders", domain.FOLDER).
 		Where("user_id = ?", domain.UserID(p.ctx)).
 		OrderExpr("kind = ? DESC, id", domain.FOLDER)
 
@@ -71,6 +89,9 @@ func (p *run) loadItems() {
 		query.Where("parent_id IS NULL")
 	} else {
 		query.Where("parent_id = ?", p.cache.parentID)
+	}
+	if p.kind != "" {
+		query.Where("kind = ?", p.kind)
 	}
 
 	p.SetErr(toDomainErr(query.Scan(p.ctx)))

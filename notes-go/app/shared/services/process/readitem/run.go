@@ -147,7 +147,7 @@ func (p *run) loadChildren() {
 		return
 	}
 
-	process := listitems.Process(p.ctx, p.db, p.cache.id)
+	process := listitems.Process(p.ctx, p.db, p.cache.id, "")
 	process.Run()
 	p.cache.result.Children = process.GetResult()
 	p.SetErr(process.GetErr())

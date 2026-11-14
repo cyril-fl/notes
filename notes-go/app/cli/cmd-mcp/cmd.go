@@ -246,7 +246,7 @@ func AddTools(server *mcp.Server, ctx context.Context) {
 			return nil, nil, err
 		}
 
-		process := listitems.Process(ctx, postgrey.GetDb(), parentID)
+		process := listitems.Process(ctx, postgrey.GetDb(), parentID, "")
 		process.Run()
 		if process.HasErr() {
 			return nil, nil, process.GetErr()

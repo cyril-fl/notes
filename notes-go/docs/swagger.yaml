@@ -134,6 +134,9 @@ components:
       properties:
         created_at:
           type: string
+        has_folders:
+          description: a folder with subfolders, read by listitems
+          type: boolean
         id:
           type: string
         kind:
@@ -1442,6 +1445,11 @@ paths:
       - description: folder uuid, the root when left out
         in: query
         name: parent
+        schema:
+          type: string
+      - description: folder or note, both when left out
+        in: query
+        name: kind
         schema:
           type: string
       responses:
