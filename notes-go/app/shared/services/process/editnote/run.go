@@ -133,18 +133,20 @@ func (p *run) readOldTitle(ctx context.Context, tx bun.Tx) error {
 
 // updateItem matches a note not in the trash (soft_delete adds deleted_at IS NULL): anything else is not found.
 func (p *run) updateItem(ctx context.Context, tx bun.Tx) error {
-	title, hash, err := domain.SealTitle(p.ctx, notetitle.From(p.cache.input.Content))
-	if err != nil {
-		return err
-	}
-	err = tx.NewUpdate().
+	query := tx.NewUpdate().
 		Model(&p.cache.item).
-		Set("title = ?, title_hash = NULLIF(?, '')", title, hash). // NULL = untitled, like createnote's nullzero
 		Set("updated_at = current_timestamp").
 		Where("id = ? AND kind = ? AND user_id = ?", p.cache.input.ID, domain.NOTE, domain.UserID(p.ctx)).
-		Returning("id, parent_id, created_at, updated_at, kind, title").
-		Scan(ctx)
-	return toDomainErr(err, p.cache.input.ID)
+		Returning("id, parent_id, created_at, updated_at, kind, title")
+	// Sealed again only when it changed: a new seal bumps users.items_version, and with it the cache of domain.Paths.
+	if title := notetitle.From(p.cache.input.Content); title != p.cache.oldTitle {
+		sealed, hash, err := domain.SealTitle(p.ctx, title)
+		if err != nil {
+			return err
+		}
+		query.Set("title = ?, title_hash = NULLIF(?, '')", sealed, hash) // NULL = untitled, like createnote's nullzero
+	}
+	return toDomainErr(query.Scan(ctx), p.cache.input.ID)
 }
 
 func (p *run) updateMetadata(ctx context.Context, tx bun.Tx) error {

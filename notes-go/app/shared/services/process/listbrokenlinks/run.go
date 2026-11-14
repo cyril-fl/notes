@@ -80,7 +80,7 @@ func (p *run) loadNotes() {
 	p.cache.notes = graph.GetResult().Notes
 }
 
-// TODO: decrypts every live note on each call, like linknotes' resolveWaiting; a cache or a flag on the note if it gets slow (#23).
+// TODO: decrypts every live note on each call, like linknotes' resolveWaiting; a cache or a flag on the note if it gets slow (#145).
 func (p *run) loadContents() {
 	if p.HasErr() {
 		return

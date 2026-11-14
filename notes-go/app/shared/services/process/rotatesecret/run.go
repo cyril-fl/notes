@@ -52,7 +52,9 @@ func (p *run) Run() {
 			}
 			p.cache.rewrapped++
 		}
-		return nil
+		// The servers running rebuild their cache of paths, titles in clear, at the next read of each account.
+		_, err := tx.NewUpdate().Model((*domain.User)(nil)).Set("items_version = nextval('items_version')").Where("true").Exec(ctx)
+		return err
 	}))
 }
 

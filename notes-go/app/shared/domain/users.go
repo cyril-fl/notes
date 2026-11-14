@@ -30,6 +30,9 @@ type User struct {
 	Snippets           Snippets      `bun:",type:jsonb,notnull,default:'[]'" json:"snippets"`
 	SavedSearches      SavedSearches `bun:",type:jsonb,notnull,default:'[]'" json:"saved_searches"`
 	CreatedAt          time.Time     `bun:",notnull,default:current_timestamp" json:"created_at"`
+	// Bumped by the triggers of createschema at every write that changes a path, from any process: Paths reads it to
+	// know its cache is still right. From a sequence, so a rolled-back write never hands its number to another.
+	ItemsVersion int64 `bun:",notnull,default:0" json:"-"`
 }
 
 // Snippet is a piece of markdown of the account, inserted while typing or starting a new note; its #tags become tags of that note.

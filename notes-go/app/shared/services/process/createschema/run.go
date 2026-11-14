@@ -199,6 +199,25 @@ var triggers = []string{
 		RETURN OLD;
 	END $$ LANGUAGE plpgsql`,
 	`CREATE OR REPLACE TRIGGER items_orphan_files BEFORE DELETE ON items FOR EACH ROW EXECUTE FUNCTION orphan_files_of_item()`,
+	// users.items_version, for the cache of domain.Paths: bumped once per statement that adds, removes, renames,
+	// moves, trashes or restores items, whoever runs it (API or CLI). Not by a content edit.
+	`CREATE SEQUENCE IF NOT EXISTS items_version`,
+	`CREATE OR REPLACE FUNCTION bump_items_version() RETURNS trigger AS $$
+	BEGIN
+		UPDATE users SET items_version = nextval('items_version') WHERE id IN (SELECT user_id FROM changed);
+		RETURN NULL;
+	END $$ LANGUAGE plpgsql`,
+	`CREATE OR REPLACE FUNCTION bump_items_version_on_update() RETURNS trigger AS $$
+	BEGIN
+		UPDATE users SET items_version = nextval('items_version') WHERE id IN (
+			SELECT n.user_id FROM new_items AS n JOIN old_items AS o USING (id)
+			WHERE n.title IS DISTINCT FROM o.title OR n.parent_id IS DISTINCT FROM o.parent_id
+				OR n.deleted_at IS DISTINCT FROM o.deleted_at);
+		RETURN NULL;
+	END $$ LANGUAGE plpgsql`,
+	`CREATE OR REPLACE TRIGGER items_version_insert AFTER INSERT ON items REFERENCING NEW TABLE AS changed FOR EACH STATEMENT EXECUTE FUNCTION bump_items_version()`,
+	`CREATE OR REPLACE TRIGGER items_version_delete AFTER DELETE ON items REFERENCING OLD TABLE AS changed FOR EACH STATEMENT EXECUTE FUNCTION bump_items_version()`,
+	`CREATE OR REPLACE TRIGGER items_version_update AFTER UPDATE ON items REFERENCING OLD TABLE AS old_items NEW TABLE AS new_items FOR EACH STATEMENT EXECUTE FUNCTION bump_items_version_on_update()`,
 }
 
 // Interface

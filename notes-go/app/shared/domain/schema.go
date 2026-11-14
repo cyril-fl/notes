@@ -25,10 +25,21 @@ const LiveCTE = `WITH RECURSIVE live AS (
 
 // Paths gives every live item of the account of ctx its path from its root (/Projects/Go/Ideas), by id: a trashed
 // folder hides its whole subtree, so an id missing from it is not live. Titles are sealed: paths are made here, not in SQL.
-// TODO: loads and decrypts every item of the account on each call, 7 ms for 5,000 notes (#23); cache it per account past ~50,000.
+// Cached per account while users.items_version stays the same (one query, not 75 ms of decryption at 50,000 items):
+// the map is shared, do not modify it.
 func Paths(ctx context.Context, db bun.IDB) (map[string]string, error) {
+	userID := UserID(ctx)
+	// The version before the items: a write committed between the two only makes the next call rebuild.
+	var version int64
+	if err := db.NewSelect().Model((*User)(nil)).Column("items_version").Where("id = ?", userID).Scan(ctx, &version); err != nil {
+		return nil, err
+	}
+	if cached, ok := pathsCache.Load(userID); ok && cached.(cachedPaths).version == version {
+		return cached.(cachedPaths).paths, nil
+	}
+
 	var items []Item
-	err := db.NewSelect().Model(&items).Column("id", "parent_id", "title").Where("user_id = ?", UserID(ctx)).Scan(ctx)
+	err := db.NewSelect().Model(&items).Column("id", "parent_id", "title").Where("user_id = ?", userID).Scan(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +65,16 @@ func Paths(ctx context.Context, db bun.IDB) (map[string]string, error) {
 		}
 	}
 	walk("", "")
+	pathsCache.Store(userID, cachedPaths{version: version, paths: paths})
 	return paths, nil
+}
+
+// pathsCache keeps the last Paths of each account, by account id. Titles in clear: in memory only, never written.
+var pathsCache sync.Map
+
+type cachedPaths struct {
+	version int64
+	paths   map[string]string
 }
 
 // collators are pooled: a collate.Collator is not safe for concurrent use.
