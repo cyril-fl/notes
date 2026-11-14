@@ -61,6 +61,7 @@ func New(db bun.IDB, store silo.Store, origin, addUserMode string) http.Handler 
 	mux.Handle("POST /api/signup", apiusers.Signup(db, addUserMode))
 	mux.Handle("GET /api/users", apiusers.List(db))
 	mux.Handle("DELETE /api/users/{id}", apiusers.Delete(db, store))
+	mux.Handle("POST /api/users/{id}/password", apiusers.ResetPassword(db))
 	mux.Handle("GET /api/invites", apiusers.Invites(db))
 	mux.Handle("POST /api/invites", apiusers.Invite(db))
 	mux.Handle("DELETE /api/invites/{id}", apiusers.Revoke(db))

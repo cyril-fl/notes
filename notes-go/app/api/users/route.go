@@ -3,6 +3,8 @@
 package users
 
 import (
+	"database/sql"
+	"errors"
 	"net"
 	"net/http"
 	"time"
@@ -16,6 +18,7 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/adduser"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createsession"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deleteuser"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/resetpassword"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/silo"
 	"github.com/cyril-fl/notes/notes-go/config"
@@ -34,6 +37,11 @@ type Account struct {
 	Name      string    `json:"name"`
 	Admin     bool      `json:"admin"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+// Reset is the new password of an account: it goes to the admin once, the base keeping only its hash.
+type Reset struct {
+	Password string `json:"password"`
 }
 
 // Version is the server's build, for the admin panel.
@@ -179,6 +187,47 @@ func Delete(db bun.IDB, store silo.Store) http.HandlerFunc {
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// ResetPassword gives an account a random password and logs all its devices out: POST /api/users/{id}/password.
+// The password is in the answer and nowhere else.
+// @Summary  Reset the password of an account
+// @Tags     admin
+// @Produce  json
+// @Success  200 {object} Reset
+// @Failure  400 {object} respond.Failure
+// @Failure  401 {object} respond.Failure
+// @Failure  403 {object} respond.Failure
+// @Failure  404 {object} respond.Failure
+// @Failure  500 {object} respond.Failure
+// @Router   /api/users/{id}/password [post]
+func ResetPassword(db bun.IDB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !isAdmin(w, r, db) {
+			return
+		}
+		id, ok := respond.ID(w, r)
+		if !ok {
+			return
+		}
+		var name string
+		err := db.NewSelect().Model((*domain.User)(nil)).Column("name").Where("id = ?", id).Scan(r.Context(), &name)
+		if errors.Is(err, sql.ErrNoRows) {
+			err = resetpassword.ErrNotFound
+		}
+		if err != nil {
+			respond.Error(w, err)
+			return
+		}
+		reset := Reset{Password: password.Token()}
+		process := resetpassword.Process(r.Context(), db, name, reset.Password)
+		process.Run()
+		if process.HasErr() {
+			respond.Error(w, process.GetErr())
+			return
+		}
+		respond.JSON(w, http.StatusOK, reset)
 	}
 }
 

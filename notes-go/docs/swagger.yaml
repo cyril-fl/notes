@@ -774,6 +774,13 @@ components:
       - allowed
       - mode
       type: object
+    users.Reset:
+      properties:
+        password:
+          type: string
+      required:
+      - password
+      type: object
     users.Version:
       properties:
         version:
@@ -2651,6 +2658,48 @@ paths:
                 $ref: '#/components/schemas/respond.Failure'
           description: Internal Server Error
       summary: Delete an account and all its data
+      tags:
+      - admin
+  /api/users/{id}/password:
+    post:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/users.Reset'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Reset the password of an account
       tags:
       - admin
   /api/version:

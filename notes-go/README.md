@@ -233,7 +233,7 @@ Le texte et les titres des notes, les noms des dossiers, les tags, les snippets 
 
 - Génère la clé avec `openssl rand -base64 32` et mets la même dans `.env` (CLI) et `.env.docker` (API).
 - **Garde une copie de la clé dans un gestionnaire de mots de passe, jamais dans une sauvegarde.** Si tu la perds, les notes deviennent illisibles, même avec une sauvegarde.
-- Un mot de passe oublié ne fait rien perdre : `notes reset-password` suffit, car les clés ne dépendent pas du mot de passe.
+- Un mot de passe oublié ne fait rien perdre : l’admin le réinitialise dans Réglages > Comptes (ou `notes reset-password` sur le serveur, seul recours pour son propre compte), car les clés ne dépendent pas du mot de passe.
 - Changer le secret : `make backup`, mets le nouveau dans `NOTES_SECRET` (`.env`), puis `NOTES_OLD_SECRET=<ancien> notes rotate-secret`. Seules les clés des comptes sont rechiffrées, pas les notes. Mets ensuite le nouveau secret dans `.env.docker` et lance `make api`. Un second passage ne fait rien.
 - `notes export` sort du texte en clair.
 - Pour retrouver un tag, un dossier ou une note par son nom, et garder ces noms uniques, la base garde une empreinte HMAC du nom en minuscules (`title_hash`, `value_hash`). Elle ne se lit pas, mais deux noms identiques ont la même empreinte. Les chemins, les tris et la recherche se font dans l'API, après déchiffrement.

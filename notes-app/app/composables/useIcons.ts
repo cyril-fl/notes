@@ -63,6 +63,7 @@ export function useIcons() {
     pro: 'i-reicon-sparkles',
     accounts: 'i-lucide-users',
     invite: 'i-lucide-user-plus',
+    resetPassword: 'i-lucide-key-round',
     copy: 'i-lucide-copy',
     source: 'i-reicon-document-code',
     selectAll: 'i-reicon-text-select',

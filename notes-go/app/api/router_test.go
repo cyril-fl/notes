@@ -986,7 +986,7 @@ func TestAccounts(t *testing.T) {
 
 	// Without the admin flag, the account manages nothing.
 	admin(false)
-	for _, route := range []string{"GET /api/users", "GET /api/invites", "POST /api/invites", "GET /api/version"} {
+	for _, route := range []string{"GET /api/users", "GET /api/invites", "POST /api/invites", "GET /api/version", "POST /api/users/" + me + "/password"} {
 		method, path, _ := strings.Cut(route, " ")
 		c.do(method, path, `{"name":"nope","password":"a-good-password"}`, http.StatusForbidden, nil)
 	}
@@ -1074,6 +1074,18 @@ func TestAccounts(t *testing.T) {
 	if !found {
 		t.Fatalf("the account signed up is not listed: %+v", accounts)
 	}
+
+	// The admin gives it a new password, shown once: the old one no longer logs in.
+	var reset struct{ Password string }
+	c.do("POST", "/api/users/"+unknownID+"/password", "", http.StatusNotFound, nil)
+	c.do("POST", "/api/users/"+accounts[signedUp].ID+"/password", "", http.StatusOK, &reset)
+	if w := send("POST", "/api/login", fmt.Sprintf(`{"name":%q,"password":"a-good-password"}`, invited)); w.Code != http.StatusUnauthorized {
+		t.Errorf("the old password after a reset: status = %d, want 401: %s", w.Code, w.Body)
+	}
+	if w := send("POST", "/api/login", fmt.Sprintf(`{"name":%q,"password":%q}`, invited, reset.Password)); w.Code != http.StatusOK {
+		t.Errorf("the new password after a reset: status = %d, want 200: %s", w.Code, w.Body)
+	}
+
 	c.do("DELETE", "/api/users/"+me, "", http.StatusConflict, nil)
 	c.do("DELETE", "/api/users/"+unknownID, "", http.StatusNotFound, nil)
 	c.do("DELETE", "/api/users/"+accounts[signedUp].ID, "", http.StatusNoContent, nil)

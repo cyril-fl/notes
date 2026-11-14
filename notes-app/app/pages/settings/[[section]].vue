@@ -259,6 +259,30 @@ async function revokeInvite(id: string) {
   await refreshInvites();
 }
 
+// The new password of the last account reset: the base keeps only its hash, so it shows until the page is left.
+const reset = ref<{ name: string; password: string } | null>(null);
+
+async function resetPassword(account: Account) {
+  const confirmed = await confirm({
+    title: t('settings.resetPassword', { name: account.name }),
+    description: t('settings.resetPasswordConfirm'),
+    action: t('settings.reset'),
+  });
+  if (!confirmed) return;
+  const { password } = await api<{ password: string }>(`/api/users/${account.id}/password`, { method: 'POST' });
+  reset.value = { name: account.name, password };
+  await copyPassword(password);
+}
+
+async function copyPassword(password: string) {
+  // Same as copyInvite: without the clipboard, the password stays readable in the page.
+  const copied = await navigator.clipboard.writeText(password).then(
+    () => true,
+    () => false,
+  );
+  if (copied) toast.add({ title: t('settings.passwordCopied'), color: 'success' });
+}
+
 async function deleteAccount(account: Account) {
   const confirmed = await confirm({
     title: t('settings.deleteAccount', { name: account.name }),
@@ -605,6 +629,15 @@ async function deleteData() {
               <div class="text-right">
                 <UButton
                   v-if="row.original.id !== me?.id"
+                  :icon="icons.resetPassword"
+                  :aria-label="$t('settings.reset')"
+                  color="neutral"
+                  variant="ghost"
+                  size="sm"
+                  @click="resetPassword(row.original)"
+                />
+                <UButton
+                  v-if="row.original.id !== me?.id"
                   :icon="icons.delete"
                   :aria-label="$t('common.delete')"
                   color="error"
@@ -629,6 +662,29 @@ async function deleteData() {
               size="sm"
             />
           </div>
+        </div>
+
+        <div v-if="reset" class="mt-2 flex flex-wrap items-center gap-3 rounded-lg border border-default px-4 py-2">
+          <UIcon :name="icons.resetPassword" class="size-4 shrink-0 text-muted" />
+          <span class="shrink-0 text-xs text-muted">{{ $t('settings.newPassword', { name: reset.name }) }}</span>
+          <UInput
+            :model-value="reset.password"
+            readonly
+            size="sm"
+            class="min-w-0 flex-1 basis-64"
+            :aria-label="$t('settings.newPassword', { name: reset.name })"
+          >
+            <template #trailing>
+              <UButton
+                :icon="icons.copy"
+                :aria-label="$t('settings.copyPassword')"
+                color="neutral"
+                variant="link"
+                size="sm"
+                @click="copyPassword(reset.password)"
+              />
+            </template>
+          </UInput>
         </div>
 
         <!-- Folded, and reduced to the Invite button without a pending invitation: the accounts stay the one list. -->

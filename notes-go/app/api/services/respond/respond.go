@@ -35,6 +35,7 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readsavedsearch"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readsession"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readtag"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/resetpassword"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/restoreitems"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/searchnotes"
 )
@@ -75,7 +76,7 @@ var statuses = []struct {
 		adduser.ErrBadInvite,
 	}},
 	{http.StatusNotFound, []error{
-		deleteuser.ErrNotFound, editfolder.ErrNotFound, editnote.ErrNotFound, emptytrash.ErrNotFound, edittag.ErrNotFound, exportnotes.ErrNotFound, pinnote.ErrNotFound, readfile.ErrNotFound, readitem.ErrNotFound, readsavedsearch.ErrNotFound, readtag.ErrNotFound,
+		deleteuser.ErrNotFound, editfolder.ErrNotFound, editnote.ErrNotFound, emptytrash.ErrNotFound, edittag.ErrNotFound, exportnotes.ErrNotFound, pinnote.ErrNotFound, readfile.ErrNotFound, readitem.ErrNotFound, readsavedsearch.ErrNotFound, readtag.ErrNotFound, resetpassword.ErrNotFound,
 	}},
 	{http.StatusUnsupportedMediaType, []error{
 		createfile.ErrFileType,
