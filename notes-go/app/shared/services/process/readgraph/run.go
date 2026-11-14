@@ -3,6 +3,7 @@ package readgraph
 import (
 	"context"
 
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/forcelayout"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/secret"
 
 	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
@@ -11,24 +12,30 @@ import (
 )
 
 // Note is a node of the graph, with its tags: the tags are nodes too, joined to their notes.
+// Laid out (layoutgraph): its place in % of the view, never 0 (a margin keeps it off the edges), and the pull of each tag.
 type Note struct {
-	ID    string      `json:"id"`
-	Title secret.Text `json:"title" swaggertype:"string"`
-	Path  string      `json:"path"`
-	Tags  []string    `json:"tags,omitempty" binding:"optional"`
+	ID           string      `json:"id"`
+	Title        secret.Text `json:"title" swaggertype:"string"`
+	Path         string      `json:"path"`
+	Tags         []string    `json:"tags,omitempty" binding:"optional"`
+	X            float64     `json:"x,omitempty" binding:"optional"`
+	Y            float64     `json:"y,omitempty" binding:"optional"`
+	TagStrengths []float64   `json:"tag_strengths,omitempty" binding:"optional"` // in the order of Tags
 }
 
-// Link is a [[link]] between two notes, once per pair (Source < Target) whichever way it goes.
+// Link is a [[link]] between two notes, once per pair (Source < Target) whichever way it goes. Laid out: its pull.
 type Link struct {
-	Source string `json:"source"`
-	Target string `json:"target"`
+	Source   string  `json:"source"`
+	Target   string  `json:"target"`
+	Strength float64 `json:"strength,omitempty" binding:"optional"`
 }
 
-// Result is every live note, with its tags, and the [[links]] between them.
+// Result is every live note, with its tags, and the [[links]] between them. Laid out: the place of each tag, by name.
 // Its size follows the tags put on notes, not the pairs of notes sharing one (n² for a tag on n notes).
 type Result struct {
-	Notes []Note `json:"notes"`
-	Links []Link `json:"links"`
+	Notes        []Note                       `json:"notes"`
+	Links        []Link                       `json:"links"`
+	TagPositions map[string]forcelayout.Point `json:"tag_positions,omitempty" binding:"optional"`
 }
 
 type run struct {

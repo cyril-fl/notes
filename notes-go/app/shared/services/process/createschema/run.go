@@ -163,6 +163,8 @@ func getTables(tx bun.Tx) []*bun.CreateTableQuery {
 		tx.NewCreateTable().Model((*domain.NoteFile)(nil)).
 			ForeignKey(`("note_id") REFERENCES "metadata_notes" ("item_id") ON DELETE CASCADE`).
 			ForeignKey(`("file_id") REFERENCES "files" ("id") ON DELETE CASCADE`),
+		tx.NewCreateTable().Model((*domain.GraphLayout)(nil)).
+			ForeignKey(`("user_id") REFERENCES "users" ("id") ON DELETE CASCADE`),
 	}
 }
 

@@ -375,8 +375,8 @@ onBeforeUnmount(async () => {
 
 // The headings of the note, for the context panel: a click scrolls the text to one, without moving the cursor.
 const panel = useContextPanel();
-const { data: neighbors } = useNeighbors(id);
-const nearGraph = computed(() => (neighbors.value ? neighborGraph(neighbors.value) : undefined));
+// Laid out by the server, only when the panel shows it.
+const { data: nearGraph } = useNoteGraph(() => (panel.value && has('graph') ? id.value : undefined));
 const outline = ref<{ level: number; text: string; pos: number }[]>([]);
 function readOutline(editor: Editor) {
   const headings: typeof outline.value = [];

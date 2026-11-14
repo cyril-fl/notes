@@ -652,7 +652,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Read every note with its tags, and the links between them */
+        /** Read every note with its tags, and the links between them, laid out */
         get: {
             parameters: {
                 query?: never;
@@ -1757,6 +1757,63 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/notes/{id}/graph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the graph around a note, laid out */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description uuid */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["readgraph.Result"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/notes/{id}/neighbors": {
@@ -3130,6 +3187,10 @@ export interface components {
             trash_retention_days?: number;
             view?: string;
         };
+        "forcelayout.Point": {
+            x: number;
+            y: number;
+        };
         "importnotes.Result": {
             folders: number;
             notes: number;
@@ -3173,17 +3234,25 @@ export interface components {
         };
         "readgraph.Link": {
             source: string;
+            strength?: number;
             target: string;
         };
         "readgraph.Note": {
             id: string;
             path: string;
+            /** @description in the order of Tags */
+            tag_strengths?: number[];
             tags?: string[];
             title: string;
+            x?: number;
+            y?: number;
         };
         "readgraph.Result": {
             links: components["schemas"]["readgraph.Link"][];
             notes: components["schemas"]["readgraph.Note"][];
+            tag_positions?: {
+                [key: string]: components["schemas"]["forcelayout.Point"];
+            };
         };
         "readitem.Result": {
             children?: components["schemas"]["domain.Item"][];

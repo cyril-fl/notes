@@ -373,6 +373,16 @@ components:
         view:
           type: string
       type: object
+    forcelayout.Point:
+      properties:
+        x:
+          type: number
+        "y":
+          type: number
+      required:
+      - x
+      - "y"
+      type: object
     importnotes.Result:
       properties:
         folders:
@@ -488,6 +498,8 @@ components:
       properties:
         source:
           type: string
+        strength:
+          type: number
         target:
           type: string
       required:
@@ -500,6 +512,12 @@ components:
           type: string
         path:
           type: string
+        tag_strengths:
+          description: in the order of Tags
+          items:
+            type: number
+          type: array
+          uniqueItems: false
         tags:
           items:
             type: string
@@ -507,6 +525,10 @@ components:
           uniqueItems: false
         title:
           type: string
+        x:
+          type: number
+        "y":
+          type: number
       required:
       - id
       - path
@@ -524,6 +546,10 @@ components:
             $ref: '#/components/schemas/readgraph.Note'
           type: array
           uniqueItems: false
+        tag_positions:
+          additionalProperties:
+            $ref: '#/components/schemas/forcelayout.Point'
+          type: object
       required:
       - links
       - notes
@@ -1254,7 +1280,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/respond.Failure'
           description: Internal Server Error
-      summary: Read every note with its tags, and the links between them
+      summary: Read every note with its tags, and the links between them, laid out
       tags:
       - graph
   /api/import:
@@ -1867,6 +1893,37 @@ paths:
                 $ref: '#/components/schemas/respond.Failure'
           description: Internal Server Error
       summary: Change the fields given
+      tags:
+      - notes
+  /api/notes/{id}/graph:
+    get:
+      parameters:
+      - description: uuid
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/readgraph.Result'
+          description: OK
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Read the graph around a note, laid out
       tags:
       - notes
   /api/notes/{id}/neighbors:

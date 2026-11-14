@@ -61,11 +61,9 @@ for (const path of [
 }
 
 const browser = await chromium.launch({ channel: 'chrome' });
-// A fresh context per page: nothing cached from the page before (the graph's saved layout aside, measured on purpose).
-// linger: ms left to the page after it is ready, for the graph to save its layout before the page closes.
-async function visit(label, path, ready, context, linger = 0) {
-  const own = !context;
-  context ??= await browser.newContext({ storageState, locale: 'fr-FR', viewport: { width: 1280, height: 800 } });
+// A fresh context per page, as a new device: nothing cached from the page before.
+async function visit(label, path, ready) {
+  const context = await browser.newContext({ storageState, locale: 'fr-FR', viewport: { width: 1280, height: 800 } });
   const page = await context.newPage();
   const start = Date.now();
   try {
@@ -78,19 +76,17 @@ async function visit(label, path, ready, context, linger = 0) {
   } catch {
     rows.push([label, format(undefined), '']);
   }
-  await page.waitForTimeout(linger);
   await page.close();
-  if (own) await context.close();
+  await context.close();
 }
 
 await visit(`Le dossier Archives (${big.path})`, `/folders/${big.id}`);
 await visit(`Une note du tag #${tag.value} (${tag.notes} notes)`, `/notes/${note.id}`);
 await visit(`La page du tag #${tag.value}`, `/tags/${encodeURIComponent(tag.value)}`);
 await visit(`La recherche « ${word} »`, `/search?q=${word}`);
-const graph = await browser.newContext({ storageState, locale: 'fr-FR', viewport: { width: 1280, height: 800 } });
-await visit('Le graphe, première visite', '/graph', '[data-settled]', graph, 10_000);
-await visit('Le graphe, revisite (mise en page gardée)', '/graph', '[data-settled]', graph);
-await graph.close();
+// The server lays the graph out once per change of the account, then serves it to every device (#153).
+await visit('Le graphe, premier appareil (mise en page calculée si le compte a changé)', '/graph', '[data-settled]');
+await visit('Le graphe, un autre appareil (mise en page gardée par le serveur)', '/graph', '[data-settled]');
 await browser.close();
 
 console.log(`Compte \`${NAME}\` : ${notes} notes, ${new Date().toISOString().slice(0, 10)}.\n`);

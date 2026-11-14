@@ -492,23 +492,39 @@ func TestTagsAndGraph(t *testing.T) {
 		t.Errorf("graph has no %s with 2 notes: %+v", first, graph)
 	}
 
-	var notes struct {
+	type laidOut struct {
 		Notes []struct {
 			ID   string   `json:"id"`
 			Tags []string `json:"tags"`
+			X    float64  `json:"x"`
+			Y    float64  `json:"y"`
 		} `json:"notes"`
-		Links []struct{} `json:"links"`
+		Links        []struct{}                    `json:"links"`
+		TagPositions map[string]struct{ X, Y any } `json:"tag_positions"`
 	}
+	var notes laidOut
 	c.do("GET", "/api/graph/notes", "", http.StatusOK, &notes)
 	tagged := 0
 	for _, note := range notes.Notes {
-		if (note.ID == a.ID || note.ID == b.ID) && slices.Contains(note.Tags, first) {
+		if (note.ID == a.ID || note.ID == b.ID) && slices.Contains(note.Tags, first) && note.X > 0 && note.Y > 0 {
 			tagged++
 		}
 	}
-	if tagged != 2 || notes.Links == nil {
-		t.Errorf("graph notes: a and b carry %s %d times, want 2; links %v", first, tagged, notes.Links)
+	if _, ok := notes.TagPositions[first]; tagged != 2 || notes.Links == nil || !ok {
+		t.Errorf("graph notes: a and b carry %s laid out %d times, want 2; links %v; tag laid out %v", first, tagged, notes.Links, ok)
 	}
+	var near laidOut
+	c.do("GET", "/api/notes/"+a.ID+"/graph", "", http.StatusOK, &near)
+	if _, ok := near.TagPositions[first]; len(near.Notes) != 2 || near.Notes[0].ID != a.ID || near.Notes[0].X == 0 || !ok {
+		t.Errorf("graph of a = %+v, want a and b laid out with %s", near, first)
+	}
+	c.do("GET", "/api/notes/"+unknownID+"/graph", "", http.StatusNotFound, nil)
+	var stranger laidOut
+	c.other(t).do("GET", "/api/graph/notes", "", http.StatusOK, &stranger)
+	if len(stranger.Notes) != 0 {
+		t.Errorf("another account sees %d notes in its graph", len(stranger.Notes))
+	}
+	c.other(t).do("GET", "/api/notes/"+a.ID+"/graph", "", http.StatusNotFound, nil)
 	var list []struct {
 		ID string `json:"id"`
 	}

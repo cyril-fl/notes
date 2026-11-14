@@ -30,8 +30,9 @@ func (p *run) Run() {
 
 // Methods
 
-// purge hard deletes the items, the ON DELETE CASCADE FKs remove metadata, tag links and links. The images get
-// orphaned_at = -infinity, cited or not: purgefiles removes their bytes from Silo at its next round.
+// purge hard deletes the items and the graph's layout (it names the notes and tags), the ON DELETE CASCADE FKs remove
+// metadata, tag links and links. The images get orphaned_at = -infinity, cited or not: purgefiles removes their bytes
+// from Silo at its next round.
 func (p *run) purge() {
 	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
 		user := domain.UserID(ctx)
@@ -39,6 +40,9 @@ func (p *run) purge() {
 			return err
 		}
 		if _, err := tx.NewDelete().Model((*domain.Tag)(nil)).Where("user_id = ?", user).Exec(ctx); err != nil {
+			return err
+		}
+		if _, err := tx.NewDelete().Model((*domain.GraphLayout)(nil)).Where("user_id = ?", user).Exec(ctx); err != nil {
 			return err
 		}
 		_, err := tx.NewUpdate().Model((*domain.File)(nil)).Set("orphaned_at = '-infinity'").Where("user_id = ?", user).Exec(ctx)

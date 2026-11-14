@@ -71,6 +71,7 @@ func New(db bun.IDB, store silo.Store, origin, addUserMode string) http.Handler 
 	mux.Handle("PATCH /api/notes/{id}", apieditnote.Handler(db))
 	mux.Handle("DELETE /api/notes/{id}", apideletenote.Handler(db))
 	mux.Handle("GET /api/notes/{id}/neighbors", apireadgraph.Neighbors(db))
+	mux.Handle("GET /api/notes/{id}/graph", apireadgraph.Graph(db))
 	mux.Handle("GET /api/notes/{id}/versions", apireadversions.Handler(db))
 	mux.Handle("POST /api/notes/{id}/versions", apireadversions.Keep(db))
 	mux.Handle("GET /api/notes/{id}/versions/{version}", apireadversions.Read(db))

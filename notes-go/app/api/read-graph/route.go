@@ -5,6 +5,7 @@ import (
 
 	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/counttags"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/layoutgraph"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readgraph"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readneighbors"
 	"github.com/uptrace/bun"
@@ -29,8 +30,9 @@ func Handler(db bun.IDB) http.HandlerFunc {
 	}
 }
 
-// Notes gives every live note with its tags, and the [[links]] between them: GET /api/graph/notes.
-// @Summary  Read every note with its tags, and the links between them
+// Notes gives every live note with its tags, and the [[links]] between them, laid out: GET /api/graph/notes.
+// The account's layout is kept by the server, computed again only when the graph changed.
+// @Summary  Read every note with its tags, and the links between them, laid out
 // @Tags     graph
 // @Produce  json
 // @Success  200 {object} readgraph.Result
@@ -38,16 +40,27 @@ func Handler(db bun.IDB) http.HandlerFunc {
 // @Router   /api/graph/notes [get]
 func Notes(db bun.IDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		process := readgraph.Process(r.Context(), db, true)
-		process.Run()
-		if process.HasErr() {
-			respond.Error(w, process.GetErr())
+		layout(w, layoutgraph.Process(r.Context(), db, ""))
+	}
+}
+
+// Graph gives the graph around a note, laid out: its tags, the notes sharing one, its [[links]] either way:
+// GET /api/notes/{id}/graph.
+// @Summary  Read the graph around a note, laid out
+// @Tags     notes
+// @Produce  json
+// @Param    id path string true "uuid"
+// @Success  200 {object} readgraph.Result
+// @Failure  404 {object} respond.Failure
+// @Failure  500 {object} respond.Failure
+// @Router   /api/notes/{id}/graph [get]
+func Graph(db bun.IDB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, ok := respond.ID(w, r)
+		if !ok {
 			return
 		}
-		result := process.GetResult()
-		result.Notes = append([]readgraph.Note{}, result.Notes...)
-		result.Links = append([]readgraph.Link{}, result.Links...)
-		respond.JSON(w, http.StatusOK, result)
+		layout(w, layoutgraph.Process(r.Context(), db, id))
 	}
 }
 
@@ -97,4 +110,21 @@ func Neighbors(db bun.IDB) http.HandlerFunc {
 		result.Neighbors = append([]readneighbors.Neighbor{}, result.Neighbors...)
 		respond.JSON(w, http.StatusOK, result)
 	}
+}
+
+func layout(w http.ResponseWriter, process interface {
+	Run()
+	HasErr() bool
+	GetErr() error
+	GetResult() readgraph.Result
+}) {
+	process.Run()
+	if process.HasErr() {
+		respond.Error(w, process.GetErr())
+		return
+	}
+	result := process.GetResult()
+	result.Notes = append([]readgraph.Note{}, result.Notes...)
+	result.Links = append([]readgraph.Link{}, result.Links...)
+	respond.JSON(w, http.StatusOK, result)
 }

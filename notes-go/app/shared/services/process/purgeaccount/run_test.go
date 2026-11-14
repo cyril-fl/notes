@@ -90,7 +90,7 @@ func TestPurgeAccount(t *testing.T) {
 		table   string
 		account context.Context
 		want    int64
-	}{{"items", ctx, 0}, {"tags", ctx, 0}, {"files", ctx, 0}, {"items", other, 1}, {"tags", other, 1}} {
+	}{{"items", ctx, 0}, {"tags", ctx, 0}, {"files", ctx, 0}, {"graph_layouts", ctx, 0}, {"items", other, 1}, {"tags", other, 1}} {
 		count, err := tx.NewSelect().Table(c.table).Where("user_id = ?", domain.UserID(c.account)).Count(ctx)
 		if err != nil {
 			t.Fatal(err)

@@ -45,3 +45,27 @@ test('the graph of a note shows its neighbors, then every note', async ({ page }
   await expect(main.getByRole('link', { name: `Seule ${box.prefix}` })).toBeVisible();
   await box.api.delete(`/api/tags/${tag}`);
 });
+
+// The server keeps the layout (#153): another device, with nothing in its browser, gets the same map.
+test('another device gets the same layout of the graph', async ({ page, browser }) => {
+  const tag = box.prefix.replace('-', '');
+  await box.note(`# Un ${box.prefix}\n\n#${tag}`);
+  await box.note(`# Deux ${box.prefix}\n\n#${tag}`);
+  const place = async (on: typeof page) => {
+    await on.goto('/graph');
+    await expect(on.locator('[data-settled]')).toHaveCount(1);
+    return on
+      .getByRole('main')
+      .getByRole('link', { name: `Un ${box.prefix}` })
+      .boundingBox();
+  };
+
+  const here = await place(page);
+  const device = await browser.newContext({ storageState: 'test-results/.session.json', locale: 'fr-FR' });
+  try {
+    expect(await place(await device.newPage())).toEqual(here);
+  } finally {
+    await device.close();
+  }
+  await box.api.delete(`/api/tags/${tag}`);
+});

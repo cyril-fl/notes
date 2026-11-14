@@ -131,6 +131,7 @@ require (
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.51.0 // indirect
+	gonum.org/v1/gonum v0.17.0 // indirect
 	gopkg.in/ini.v1 v1.67.3 // indirect
 	mellium.im/sasl v0.3.2 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect

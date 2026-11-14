@@ -2,14 +2,12 @@
 import type { NotesGraph } from '~/types/items';
 
 const { icons } = useIcons();
-const appConfig = useAppConfig();
 
 // tag: a note to one of its tags; otherwise a [[link]] between two notes.
 type Edge = { source: string; target: string; strength: number; tag: boolean };
 
 // mini: in a narrow panel, icons instead of titles, and the card of the hovered note in a popover drawn out of the panel.
-// cache: where the settled layout is kept for the next visit (layoutCache), for a graph worth it.
-const props = defineProps<{ graph: NotesGraph; selected?: string; mini?: boolean; cache?: string }>();
+const props = defineProps<{ graph: NotesGraph; selected?: string; mini?: boolean }>();
 
 const hovered = ref<string | null>(null);
 // The card keeps the last hovered note: the popover still draws it while it fades out.
@@ -25,29 +23,13 @@ function hover(id: string, event?: Event) {
 }
 const active = computed(() => hovered.value ?? props.selected ?? null);
 
-// The layout settles in a worker, drawn once settled: a big graph takes seconds.
-const positions = shallowRef(new Map<string, { x: number; y: number }>());
-const settled = ref(false);
-watch(
-  () => props.graph,
-  (graph, _, onCleanup) => {
-    settled.value = false;
-    const worker = new Worker(new URL('../workers/layout.ts', import.meta.url), { type: 'module' });
-    let done = false;
-    worker.onmessage = ({ data }: MessageEvent<typeof positions.value>) => {
-      positions.value = data;
-      settled.value = done = true;
-    };
-    worker.postMessage({
-      notes: graph.notes.map(({ id, tags }) => ({ id, tags: tags && [...tags] })),
-      links: graph.links.map(({ source, target }) => ({ source, target })),
-      cache: props.cache,
-    });
-    // Once it answered, it is saving the layout: it closes itself after, leaving the page must not lose it.
-    onCleanup(() => done || worker.terminate());
-  },
-  { immediate: true },
-);
+// The server lays the graph out: each note and tag comes at its place, in % of the view.
+const positions = computed(() => {
+  const at = new Map<string, { x: number; y: number }>();
+  for (const note of props.graph.notes) at.set(note.id, { x: note.x ?? 50, y: note.y ?? 50 });
+  for (const [tag, point] of Object.entries(props.graph.tag_positions ?? {})) at.set(tagNode(tag), point);
+  return at;
+});
 
 // The tags are nodes too, each with how many notes carry it.
 const tags = computed(() => {
@@ -57,14 +39,12 @@ const tags = computed(() => {
 });
 const isTag = (id: string) => id.startsWith('#');
 // The springs of the layout, drawn: a link pulling little is drawn faint.
-const edges = computed<Edge[]>(() =>
-  graphEdges(props.graph.notes, props.graph.links).map(({ source, target, strength }) => ({
-    source,
-    target,
-    strength,
-    tag: isTag(target),
-  })),
-);
+const edges = computed<Edge[]>(() => [
+  ...props.graph.notes.flatMap(({ id, tags = [], tag_strengths = [] }) =>
+    tags.map((tag, i) => ({ source: id, target: tagNode(tag), strength: tag_strengths[i] ?? 1, tag: true })),
+  ),
+  ...props.graph.links.map(({ source, target, strength }) => ({ source, target, strength: strength ?? 1, tag: false })),
+]);
 const neighbors = computed(() => {
   const ends = new Map<string, string[]>();
   for (const { source, target } of edges.value) {
@@ -364,20 +344,13 @@ function openDot(event: MouseEvent) {
     ref="view"
     class="relative size-full cursor-grab touch-none overflow-hidden select-none active:cursor-grabbing"
     :class="{ 'rounded-md bg-muted': mini }"
-    :data-settled="settled || undefined"
+    data-settled
     @pointerdown="startDrag"
     @pointermove="hoverDot"
     @pointerleave="hovered = null"
     @click.capture="swallowClickAfterDrag"
     @click="openDot"
   >
-    <div v-if="!settled" class="absolute inset-0 flex items-center justify-center" role="status">
-      <UIcon
-        :name="appConfig.ui.icons.loading"
-        class="size-5 animate-spin text-muted"
-        :aria-label="$t('graph.loading')"
-      />
-    </div>
     <canvas ref="canvas" class="pointer-events-none absolute inset-0 size-full" aria-hidden="true" />
     <div class="absolute inset-0" :style="{ transform: `translate(${offset.x}px, ${offset.y}px)` }">
       <NuxtLink
