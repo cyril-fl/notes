@@ -13,7 +13,7 @@ const isOver = useDropReorder(row, () => props.search.id, reorderSavedSearch);
 
 <template>
   <li ref="row" class="flex items-center gap-3 px-4 py-2" :class="{ 'bg-elevated': isOver }">
-    <UIcon :name="icons.savedSearch" class="size-4 shrink-0 text-muted" />
+    <UIcon :name="icons.savedSearch" class="size-4 shrink-0 text-primary" />
     <p class="min-w-0 flex-1 truncate text-sm">{{ search.name }}</p>
     <UButton
       :icon="icons.rename"
