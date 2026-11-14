@@ -2,7 +2,7 @@
 import type { Editor } from '@tiptap/vue-3';
 import type { FetchError } from 'ofetch';
 import type { RouteLocationNormalized } from 'vue-router';
-import type { Item, ItemDetail } from '~/types/items';
+import type { Item, ItemDetail, NotesGraph } from '~/types/items';
 import type { Changes } from '~/utils/saver';
 
 const { icons } = useIcons();
@@ -10,8 +10,8 @@ const { has, ready } = usePro();
 const focus = useState('focus', () => false);
 const { t } = useI18n();
 
-// start: the starting text of a new note, saved only once typed in.
-const props = defineProps<{ noteId?: string; parentId?: string; start?: string }>();
+// start: the starting text of a new note, saved only once typed in. note: the note already read by the page, shown at once.
+const props = defineProps<{ noteId?: string; parentId?: string; start?: string; note?: ItemDetail }>();
 const emit = defineEmits<{ created: [id: string] }>();
 
 const api = useApi();
@@ -173,7 +173,8 @@ function showResolvedLinks(sent: string, saved: string) {
 async function load() {
   if (!props.noteId) return;
   try {
-    const note = await api<ItemDetail>(`/api/notes/${props.noteId}`, { quiet: true });
+    // No await when the page read it: the first render already shows the note.
+    const note = props.note ?? (await api<ItemDetail>(`/api/notes/${props.noteId}`, { quiet: true }));
     initialContent.value = note.content ?? '';
     tags.value = note.tags ?? [];
     links = linkedNotes(initialContent.value);
@@ -376,7 +377,11 @@ onBeforeUnmount(async () => {
 // The headings of the note, for the context panel: a click scrolls the text to one, without moving the cursor.
 const panel = useContextPanel();
 // Laid out by the server, only when the panel shows it.
-const { data: nearGraph } = useNoteGraph(() => (panel.value && has('graph') ? id.value : undefined));
+const { data: graph, status: graphStatus } = useNoteGraph(() => (panel.value && has('graph') ? id.value : undefined));
+// The graph of the previous note until this one's comes, rather than none (#154).
+const lastGraph = useState<NotesGraph | null | undefined>('graph-shown');
+watch(graph, (value) => value && (lastGraph.value = value), { immediate: true });
+const nearGraph = computed(() => graph.value ?? (graphStatus.value === 'error' ? undefined : lastGraph.value));
 const outline = ref<{ level: number; text: string; pos: number }[]>([]);
 function readOutline(editor: Editor) {
   const headings: typeof outline.value = [];

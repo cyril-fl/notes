@@ -1,12 +1,18 @@
 <script setup lang="ts">
+import type { Neighbors } from '~/types/items';
+
 const { icons } = useIcons();
 const { t } = useI18n();
 
-// panel: in the context panel, open, without the graph link: the mini graph below has its own, and shown even empty, like the history below.
+// panel: in the context panel, open, without the graph link: the mini graph below has its own, and shown even empty once read, like the history below.
 const props = defineProps<{ noteId: string; panel?: boolean }>();
 
 const { has } = usePro();
-const { data, status } = useNeighbors(() => props.noteId);
+const { data: neighbors, status } = useNeighbors(() => props.noteId);
+// The related notes of the previous note until this one's come, rather than an empty section (#154).
+const last = useState<Neighbors | null | undefined>('related-shown');
+watch(neighbors, (value) => value && (last.value = value), { immediate: true });
+const data = computed(() => neighbors.value ?? (status.value === 'error' ? undefined : last.value));
 
 const sections = computed(() =>
   [
@@ -20,7 +26,7 @@ const total = computed(() => sections.value.reduce((sum, section) => sum + secti
 </script>
 
 <template>
-  <UCollapsible v-if="sections.length || (panel && status === 'success')" :default-open="panel">
+  <UCollapsible v-if="sections.length || (panel && data)" :default-open="panel">
     <template #default="{ open }">
       <div class="flex items-center py-2">
         <UButton

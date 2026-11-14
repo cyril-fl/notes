@@ -568,6 +568,51 @@ test('the empty Pro context panel explains the related notes and the history', a
   }
 });
 
+// #154: the next note is read before it replaces the one shown, the panel keeps the previous related notes and graph meanwhile.
+test('going from a note to another never empties the toolbar, the footer or the panel', async ({ page }) => {
+  const target = await box.note(`# ${box.prefix} target\n\n#${box.prefix}-tag`);
+  const source = await box.note(
+    `# ${box.prefix} source\n\n[${box.prefix} target](note:${target.id}) #${box.prefix}-tag`,
+  );
+  try {
+    await box.api.patch('/api/me', { data: { plan: 'pro' } });
+    await page.goto(`/notes/${source.id}`);
+    await expect(page.locator('#context-panel').getByText(/Notes liées/)).toBeVisible();
+    await expect(page.locator('#context-panel section').getByText('Graphe')).toBeVisible();
+
+    // Slow answers for the target, so a blink has the time to show.
+    await page.route(new RegExp(`/api/notes/${target.id}(/neighbors|/graph)?$`), async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await route.continue();
+    });
+    await page.evaluate(() => {
+      const panel = () => document.querySelector('#context-panel');
+      const parts: Record<string, () => unknown> = {
+        toolbar: () => document.querySelector('article [role=toolbar]'),
+        footer: () => document.querySelector('article footer'),
+        outline: () => panel()?.querySelector('nav'),
+        related: () => panel()?.textContent?.includes('Notes liées'),
+        graph: () => panel()?.querySelector('section svg, section canvas'),
+      };
+      const missing = new Set<string>();
+      (window as unknown as { missing: Set<string> }).missing = missing;
+      new MutationObserver(() => {
+        for (const [name, shown] of Object.entries(parts)) if (!shown()) missing.add(name);
+      }).observe(document.body, { childList: true, subtree: true });
+    });
+
+    await page.locator(`.ProseMirror a[data-note="${target.id}"]`).click();
+    await expect(page).toHaveURL(`/notes/${target.id}`);
+    await expect(page.locator('.ProseMirror')).toContainText(`${box.prefix} target`);
+    await expect(
+      page.locator('#context-panel').getByRole('link', { name: new RegExp(`${box.prefix} source`) }),
+    ).toBeVisible();
+    expect(await page.evaluate(() => [...(window as unknown as { missing: Set<string> }).missing])).toEqual([]);
+  } finally {
+    await box.api.patch('/api/me', { data: { plan: 'base' } });
+  }
+});
+
 // Pro (#61): the text replaced by an edit is kept, and restoring it saves it back.
 test('the Pro history restores an earlier version', async ({ page }) => {
   const note = await box.note(`# ${box.prefix} history\n\nfirst`);
