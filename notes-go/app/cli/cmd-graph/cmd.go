@@ -7,6 +7,7 @@ import (
 
 	cmdeditnote "github.com/cyril-fl/notes/notes-go/app/cli/cmd-edit-note"
 	cmdreadnote "github.com/cyril-fl/notes/notes-go/app/cli/cmd-read-note"
+	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/navigator"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readgraph"
@@ -48,6 +49,7 @@ func notesPage(ctx context.Context) (navigator.Page, error) {
 	process.Run()
 
 	result := process.GetResult()
+	domain.SortFold(result.Notes, func(n readgraph.Note) string { return n.Path }, nil)
 	linked := map[string]int{}
 	for _, link := range result.Links {
 		linked[link.Source]++
