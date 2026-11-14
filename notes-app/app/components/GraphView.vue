@@ -33,16 +33,18 @@ watch(
   (graph, _, onCleanup) => {
     settled.value = false;
     const worker = new Worker(new URL('../workers/layout.ts', import.meta.url), { type: 'module' });
+    let done = false;
     worker.onmessage = ({ data }: MessageEvent<typeof positions.value>) => {
       positions.value = data;
-      settled.value = true;
+      settled.value = done = true;
     };
     worker.postMessage({
       notes: graph.notes.map(({ id, tags }) => ({ id, tags: tags && [...tags] })),
       links: graph.links.map(({ source, target }) => ({ source, target })),
       cache: props.cache,
     });
-    onCleanup(() => worker.terminate());
+    // Once it answered, it is saving the layout: it closes itself after, leaving the page must not lose it.
+    onCleanup(() => done || worker.terminate());
   },
   { immediate: true },
 );

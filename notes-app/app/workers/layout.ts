@@ -11,4 +11,5 @@ onmessage = async ({ data: { notes, links, cache } }: MessageEvent<Graph & { cac
   const positions = saved?.signature === signature ? saved.positions : simulateGraph(notes, links, saved?.positions);
   postMessage(fitLayout(positions));
   if (cache && saved?.signature !== signature) await saveLayout(cache, { signature, positions }).catch(() => {});
+  close();
 };
