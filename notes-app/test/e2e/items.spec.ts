@@ -79,6 +79,32 @@ test('a folder bigger than a page reads its notes as it scrolls', async ({ page 
   expect(reads).toHaveLength(2);
 });
 
+// A tag and a search with a page more than the web app reads at once render only the rows in sight (#143).
+for (const [name, path, api] of [
+  ['the page of a tag', (tag: string) => `/tags/${tag}`, (tag: string) => `/api/tags/${tag}?`],
+  ['a search', (tag: string) => `/search?q=${tag}`, (tag: string) => `/api/search?q=${tag}&`],
+] as const)
+  test(`${name} bigger than a page reads its notes as it scrolls`, async ({ page }) => {
+    const tag = box.prefix;
+    await box.notes(pages.map((content) => `${content}\n\n#${tag}`));
+    try {
+      const reads: string[] = [];
+      page.on('request', (request) => request.url().includes(api(tag)) && reads.push(request.url()));
+      await page.goto(path(tag));
+      const main = page.getByRole('main');
+
+      await expect(main.getByRole('link', { name: /Page 000/ })).toBeVisible();
+      expect(reads).toEqual([expect.stringContaining('limit=200&offset=0')]);
+      expect(await main.getByRole('link').count()).toBeLessThan(100);
+      await main.hover();
+      await page.mouse.wheel(0, 100_000);
+      await expect(main.getByRole('link', { name: /Page 200/ })).toBeVisible();
+      expect(reads).toHaveLength(2);
+    } finally {
+      await box.api.delete(`/api/tags/${tag}`);
+    }
+  });
+
 // The tree learns from has_folders that a folder opens, and reads only folders, never the notes of a big one (#140).
 test('the sidebar tree opens a folder without reading its notes', async ({ page }) => {
   const branch = await (

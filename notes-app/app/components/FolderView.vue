@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useVirtualizer } from '@tanstack/vue-virtual';
 import type { Item } from '~/types/items';
 
 const { icons } = useIcons();
@@ -53,54 +52,16 @@ async function removeSelection() {
 const panel = useTemplateRef('panel');
 const isOver = useDropFolder(panel, () => props.folderId ?? null);
 
-// Only the rows in sight are rendered, the others stand as padding: a folder may hold 50,000 notes.
+// A row is h-9, a tile has two text-xs lines under its square.
 const list = useTemplateRef('list');
-const { width } = useElementSize(list);
-// As .mosaic lays them out: tiles of 7.5rem at least, 1rem apart.
-const columns = computed(() => (view.value === 'grid' ? Math.max(1, Math.floor((width.value + 16) / 136)) : 1));
-// A row is h-9; a tile is square, then gap-2, two text-xs lines and gap-y-5.
-const rowHeight = computed(() =>
-  view.value === 'grid' ? (width.value - (columns.value - 1) * 16) / columns.value + 8 + 32 + 20 : 36,
+const rows = useVirtualRows(
+  list,
+  () => items.value.length,
+  () => view.value === 'grid',
+  { row: 36, caption: 32 },
+  () => selected.value.length > 0,
 );
-// Where the list starts in the panel's scroll, below the header and the selection bar.
-const scrollMargin = ref(0);
-const scroller = () => panel.value?.closest<HTMLElement>('[data-slot="body"]') ?? null;
-watch(
-  [list, () => selected.value.length > 0],
-  () => {
-    const element = scroller();
-    if (list.value && element)
-      scrollMargin.value =
-        list.value.getBoundingClientRect().top - element.getBoundingClientRect().top + element.scrollTop;
-  },
-  { flush: 'post' },
-);
-const virtualizer = useVirtualizer(
-  computed(() => {
-    const size = rowHeight.value;
-    return {
-      count: Math.ceil(items.value.length / columns.value),
-      getScrollElement: scroller,
-      estimateSize: () => size,
-      scrollMargin: scrollMargin.value,
-      overscan: 5,
-    };
-  }),
-);
-watch(rowHeight, () => virtualizer.value.measure());
-const visible = computed(() => {
-  const rows = virtualizer.value.getVirtualItems();
-  const first = rows[0];
-  const last = rows.at(-1);
-  if (!first || !last) return { start: 0, items: [] as (Item | undefined)[], before: 0, after: 0 };
-  const start = first.index * columns.value;
-  return {
-    start,
-    items: items.value.slice(start, (last.index + 1) * columns.value),
-    before: first.start - scrollMargin.value,
-    after: virtualizer.value.getTotalSize() - (last.end - scrollMargin.value),
-  };
-});
+const visible = computed(() => ({ ...rows.value, items: items.value.slice(rows.value.start, rows.value.end) }));
 // The rows in sight that are not read yet come by pages.
 watchEffect(() => load(visible.value.start, visible.value.start + visible.value.items.length - 1));
 </script>

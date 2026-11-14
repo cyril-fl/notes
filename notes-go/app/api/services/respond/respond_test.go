@@ -97,3 +97,35 @@ func TestValidIDs(t *testing.T) {
 		t.Errorf("status = %d, want 400", w.Code)
 	}
 }
+
+func TestPage(t *testing.T) {
+	items := []int{0, 1, 2, 3, 4}
+	tests := map[string]struct {
+		query  string
+		ok     bool
+		result []int
+	}{
+		"every item":   {"", true, items},
+		"first page":   {"?limit=2", true, []int{0, 1}},
+		"middle page":  {"?limit=2&offset=2", true, []int{2, 3}},
+		"last page":    {"?limit=2&offset=4", true, []int{4}},
+		"past the end": {"?limit=2&offset=9", true, []int{}},
+		"huge numbers": {"?limit=9223372036854775807&offset=3", true, []int{3, 4}},
+		"negative":     {"?limit=-1", false, nil},
+		"not a number": {"?offset=a", false, nil},
+	}
+
+	for name, test := range tests {
+		w := httptest.NewRecorder()
+		result, ok := Page(w, httptest.NewRequest(http.MethodGet, "/"+test.query, nil), items)
+		if ok != test.ok || fmt.Sprint(result) != fmt.Sprint(test.result) {
+			t.Errorf("%s: %v, %v; want %v, %v", name, result, ok, test.result, test.ok)
+		}
+		if ok && w.Header().Get("X-Total-Count") != "5" {
+			t.Errorf("%s: X-Total-Count = %q, want 5", name, w.Header().Get("X-Total-Count"))
+		}
+		if !ok && w.Code != http.StatusBadRequest {
+			t.Errorf("%s: status %d, want 400", name, w.Code)
+		}
+	}
+}

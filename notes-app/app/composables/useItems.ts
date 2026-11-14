@@ -289,60 +289,78 @@ export function useChildren(parentId?: string, kind?: Item['kind']) {
   });
 }
 
-// Children read at once: about 40 KB, where a folder of 48,000 notes was 9 MB in one answer.
+// Items read at once: about 40 KB, where a folder of 48,000 notes was 9 MB in one answer.
 const PAGE = 200;
 
-/** Items a folder holds by pages, the root without an id: a hole stands for an item not read yet, load fills them. */
-export function useFolderPages(parentId?: string) {
-  const api = useApi();
-  const loading = new Set<number>();
+/**
+ * A long list read by pages, the API counting them all in X-Total-Count: a hole stands for an item not read yet,
+ * load fills them. fetch reads one page, handing the query and onResponse to the API.
+ */
+export function usePages<T>(
+  key: MaybeRefOrGetter<string>,
+  fetch: (
+    query: { limit: number; offset: number },
+    onResponse: (context: { response: Response }) => void,
+  ) => Promise<T[]>,
+) {
+  const loading = new Set<string>();
 
   async function read(page: number) {
     let total = 0;
-    const items = await api<Item[]>('/api/items', {
-      query: { parent: parentId, limit: PAGE, offset: page * PAGE },
-      onResponse: ({ response }) => void (total = Number(response.headers.get('X-Total-Count'))),
-    });
+    const items = await fetch(
+      { limit: PAGE, offset: page * PAGE },
+      ({ response }) => void (total = Number(response.headers.get('X-Total-Count'))),
+    );
     return { page, items, total };
   }
 
-  function place(all: (Item | undefined)[], { page, items, total }: Awaited<ReturnType<typeof read>>) {
+  function place(all: (T | undefined)[], { page, items, total }: Awaited<ReturnType<typeof read>>) {
     all.length = total;
     all.splice(page * PAGE, items.length, ...items);
   }
 
   // Read again after every change: the first page and those read since, the total as it is now.
-  const { data, status } = useLazyAsyncData(
-    `items:${parentId ?? 'root'}:pages`,
+  const { data, status, error } = useLazyAsyncData(
+    key,
     async () => {
       const pages = [0];
       for (let page = 1; page * PAGE < data.value.length; page++) if (data.value[page * PAGE]) pages.push(page);
-      const all: (Item | undefined)[] = [];
+      const all: (T | undefined)[] = [];
       for (const result of await Promise.all(pages.map(read))) place(all, result);
       return all;
     },
-    { default: () => [] as (Item | undefined)[] },
+    { default: () => [] as (T | undefined)[] },
   );
 
   /** Reads the pages holding the items from one index to another, both included, that are not read yet. */
   async function load(from: number, to: number) {
+    const current = toValue(key);
     for (let page = Math.floor(from / PAGE); page <= Math.floor(to / PAGE); page++) {
-      if (data.value[page * PAGE] || loading.has(page)) continue;
-      loading.add(page);
+      if (data.value[page * PAGE] || loading.has(`${current}:${page}`)) continue;
+      loading.add(`${current}:${page}`);
       try {
         const result = await read(page);
+        if (toValue(key) !== current) return; // Another list in the meantime, as a new search.
         const all = [...data.value];
         place(all, result);
         data.value = all;
       } catch {
         // The toast already told the user; scrolling there again tries again.
       } finally {
-        loading.delete(page);
+        loading.delete(`${current}:${page}`);
       }
     }
   }
 
-  return { items: data, status, load };
+  return { items: data, status, error, load };
+}
+
+/** Items a folder holds by pages, the root without an id. */
+export function useFolderPages(parentId?: string) {
+  const api = useApi();
+  return usePages(`items:${parentId ?? 'root'}:pages`, (query, onResponse) =>
+    api<Item[]>('/api/items', { query: { parent: parentId, ...query }, onResponse }),
+  );
 }
 
 /** Every tag of the account, with its id:a saved search's criteria match tags by id, never by their decrypted value. */

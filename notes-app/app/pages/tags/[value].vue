@@ -9,15 +9,23 @@ const { renameTag, removeTag } = useItems();
 const view = useView();
 
 const value = route.params.value as string;
-const { data: tag, error } = useLazyAsyncData(`tag:${value}`, () =>
-  api<TagDetail>(`/api${tagPath(value)}`, { quiet: true }),
-);
+const {
+  items: notes,
+  status,
+  error,
+  load,
+} = usePages(`tag:${value}`, async (query, onResponse) => {
+  return (await api<TagDetail>(`/api${tagPath(value)}`, { query, onResponse, quiet: true })).notes;
+});
 useHead({ title: `#${value}` });
 </script>
 
 <template>
   <div class="p-8">
-    <PageHeader :title="`#${value}`" :subtitle="tag ? $t('tag.count', tag.notes.length) : undefined">
+    <PageHeader
+      :title="`#${value}`"
+      :subtitle="notes.length || status === 'success' ? $t('tag.count', notes.length) : undefined"
+    >
       <ViewToggle />
       <UTooltip :text="$t('common.rename')">
         <UButton
@@ -38,7 +46,7 @@ useHead({ title: `#${value}` });
         />
       </UTooltip>
     </PageHeader>
-    <NoteList v-if="tag?.notes.length" :notes="tag.notes" :grid="view === 'grid'" />
+    <NoteList v-if="notes.length" :notes="notes" :grid="view === 'grid'" :load="load" />
     <UEmpty
       v-else-if="error"
       :icon="icons.tag"
@@ -47,7 +55,7 @@ useHead({ title: `#${value}` });
       :actions="[{ label: $t('common.backToNotes'), icon: icons.home, color: 'neutral', variant: 'subtle', to: '/' }]"
     />
     <UEmpty
-      v-else-if="tag"
+      v-else-if="status === 'success'"
       :icon="icons.tag"
       :title="$t('tag.empty')"
       :description="$t('tag.emptyDescription', { value })"

@@ -8,12 +8,15 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// Handler finds notes by title or content: GET /api/search?q=.
+// Handler finds notes by title or content: GET /api/search?q=&limit=&offset=, X-Total-Count counting every match.
 // @Summary  Find notes by title or content
 // @Tags     search
 // @Produce  json
-// @Param    q query string true "text to find"
+// @Param    q      query string  true  "text to find"
+// @Param    limit  query integer false "matches in the page, all when left out or 0"
+// @Param    offset query integer false "matches skipped before the page"
 // @Success  200 {array} searchnotes.Match
+// @Header   200 {integer} X-Total-Count "every match, not only the page"
 // @Failure  400 {object} respond.Failure
 // @Failure  500 {object} respond.Failure
 // @Router   /api/search [get]
@@ -25,6 +28,10 @@ func Handler(db bun.IDB) http.HandlerFunc {
 			respond.Error(w, process.GetErr())
 			return
 		}
-		respond.List(w, http.StatusOK, process.GetResult())
+		matches, ok := respond.Page(w, r, process.GetResult())
+		if !ok {
+			return
+		}
+		respond.List(w, http.StatusOK, matches)
 	}
 }

@@ -2311,6 +2311,10 @@ export interface paths {
                 query: {
                     /** @description text to find */
                     q: string;
+                    /** @description matches in the page, all when left out or 0 */
+                    limit?: number;
+                    /** @description matches skipped before the page */
+                    offset?: number;
                 };
                 header?: never;
                 path?: never;
@@ -2321,6 +2325,8 @@ export interface paths {
                 /** @description OK */
                 200: {
                     headers: {
+                        /** @description every match, not only the page */
+                        "X-Total-Count"?: number;
                         [name: string]: unknown;
                     };
                     content: {
@@ -2365,7 +2371,12 @@ export interface paths {
         /** Run a saved search */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description matches in the page, all when left out or 0 */
+                    limit?: number;
+                    /** @description matches skipped before the page */
+                    offset?: number;
+                };
                 header?: never;
                 path: {
                     /** @description saved search id */
@@ -2378,6 +2389,8 @@ export interface paths {
                 /** @description OK */
                 200: {
                     headers: {
+                        /** @description every match, not only the page */
+                        "X-Total-Count"?: number;
                         [name: string]: unknown;
                     };
                     content: {
@@ -2605,7 +2618,12 @@ export interface paths {
         /** Read a tag and the notes carrying it */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description notes in the page, all when left out or 0 */
+                    limit?: number;
+                    /** @description notes skipped before the page */
+                    offset?: number;
+                };
                 header?: never;
                 path: {
                     /** @description tag */
@@ -2618,6 +2636,8 @@ export interface paths {
                 /** @description OK */
                 200: {
                     headers: {
+                        /** @description every note, not only the page */
+                        "X-Total-Count"?: number;
                         [name: string]: unknown;
                     };
                     content: {

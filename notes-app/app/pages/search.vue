@@ -9,10 +9,14 @@ const view = useView();
 
 const q = computed(() => (typeof route.query.q === 'string' ? route.query.q : ''));
 
-const { data: matches, status } = useLazyAsyncData(
-  'search',
-  () => (q.value.trim() ? api<Match[]>('/api/search', { query: { q: q.value } }) : Promise.resolve([])),
-  { watch: [q], default: () => [] as Match[] },
+const {
+  items: matches,
+  status,
+  load,
+} = usePages(
+  () => `search:q:${q.value}`,
+  (query, onResponse) =>
+    q.value.trim() ? api<Match[]>('/api/search', { query: { q: q.value, ...query }, onResponse }) : Promise.resolve([]),
 );
 </script>
 
@@ -21,7 +25,7 @@ const { data: matches, status } = useLazyAsyncData(
     <PageHeader :title="$t('search.title')" :subtitle="q">
       <ViewToggle />
     </PageHeader>
-    <NoteList v-if="matches.length" :notes="matches" :grid="view === 'grid'" />
+    <NoteList v-if="matches.length" :notes="matches" :grid="view === 'grid'" :load="load" />
     <UEmpty
       v-else-if="status !== 'pending'"
       :icon="icons.searchEmpty"

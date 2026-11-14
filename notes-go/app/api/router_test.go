@@ -479,6 +479,17 @@ func TestTagsAndGraph(t *testing.T) {
 	}
 	c.do("GET", "/api/tags/"+unique("unknown"), "", http.StatusNotFound, nil)
 
+	// A page of the notes keeps their order, the total counts them all (#143).
+	r := httptest.NewRequest(http.MethodGet, "/api/tags/"+first+"?limit=1&offset=1", nil)
+	r.Host = "localhost:8080"
+	w := httptest.NewRecorder()
+	c.handler.ServeHTTP(w, r)
+	both := tag.Notes
+	if err := json.Unmarshal(w.Body.Bytes(), &tag); err != nil || len(tag.Notes) != 1 || tag.Notes[0].ID != both[1].ID || w.Header().Get("X-Total-Count") != "2" {
+		t.Errorf("page = %+v, total %q, %v; want the second note, total 2", tag.Notes, w.Header().Get("X-Total-Count"), err)
+	}
+	c.do("GET", "/api/tags/"+first+"?limit=-1", "", http.StatusBadRequest, nil)
+
 	var neighbors struct {
 		Note      detail `json:"note"`
 		Neighbors []struct {
@@ -574,6 +585,10 @@ func TestTagsAndGraph(t *testing.T) {
 		t.Errorf("no match = %q, want []", got)
 	}
 	c.do("GET", "/api/search", "", http.StatusBadRequest, nil)
+	if got := c.raw("/api/search?limit=1&offset=1&q=needle-" + first); strings.TrimSpace(got) != "[]" {
+		t.Errorf("past the end = %q, want []", got)
+	}
+	c.do("GET", "/api/search?offset=many&q=needle", "", http.StatusBadRequest, nil)
 
 	var recent []struct {
 		ID string `json:"id"`

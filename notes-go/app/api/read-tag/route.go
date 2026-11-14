@@ -9,12 +9,15 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// Handler shows a tag and the notes carrying it: GET /api/tags/{value}.
+// Handler shows a tag and the notes carrying it: GET /api/tags/{value}?limit=&offset=, X-Total-Count counting every note.
 // @Summary  Read a tag and the notes carrying it
 // @Tags     tags
 // @Produce  json
-// @Param    value path string true "tag"
+// @Param    value  path  string  true  "tag"
+// @Param    limit  query integer false "notes in the page, all when left out or 0"
+// @Param    offset query integer false "notes skipped before the page"
 // @Success  200 {object} readtag.Result
+// @Header   200 {integer} X-Total-Count "every note, not only the page"
 // @Failure  404 {object} respond.Failure
 // @Failure  500 {object} respond.Failure
 // @Router   /api/tags/{value} [get]
@@ -27,7 +30,11 @@ func Handler(db bun.IDB) http.HandlerFunc {
 			return
 		}
 		tag := process.GetResult()
-		tag.Notes = append([]readtag.Note{}, tag.Notes...)
+		notes, ok := respond.Page(w, r, tag.Notes)
+		if !ok {
+			return
+		}
+		tag.Notes = append([]readtag.Note{}, notes...)
 		respond.JSON(w, http.StatusOK, tag)
 	}
 }

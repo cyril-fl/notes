@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strconv"
 
 	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/hashtag"
@@ -100,6 +101,23 @@ func List[T any](w http.ResponseWriter, status int, items []T) {
 	JSON(w, status, append([]T{}, items...))
 }
 
+// Page keeps the items of ?limit=&offset= (all of them without a limit) and counts them all in X-Total-Count.
+// On false the response is already written.
+func Page[T any](w http.ResponseWriter, r *http.Request, items []T) ([]T, bool) {
+	limit, errLimit := number(r.URL.Query().Get("limit"))
+	offset, errOffset := number(r.URL.Query().Get("offset"))
+	if errLimit != nil || errOffset != nil || limit < 0 || offset < 0 {
+		fail(w, http.StatusBadRequest, "invalid limit or offset")
+		return nil, false
+	}
+	w.Header().Set("X-Total-Count", strconv.Itoa(len(items)))
+	if limit == 0 {
+		return items, true
+	}
+	start := min(offset, len(items))
+	return items[start : start+min(limit, len(items)-start)], true
+}
+
 // Error writes the status of a process error. An unknown error is a bug or an outage:
 // its detail may expose SQL or connection strings, so it only goes to the logs.
 func Error(w http.ResponseWriter, err error) {
@@ -160,6 +178,14 @@ func ValidIDs(w http.ResponseWriter, ids ...string) bool {
 // Failure is the body of every error.
 type Failure struct {
 	Error string `json:"error"`
+}
+
+// number reads a query number, 0 when left out.
+func number(value string) (int, error) {
+	if value == "" {
+		return 0, nil
+	}
+	return strconv.Atoi(value)
 }
 
 func fail(w http.ResponseWriter, status int, message string) {
