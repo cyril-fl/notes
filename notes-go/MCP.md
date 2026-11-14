@@ -14,48 +14,80 @@ Le transport est **stdio** : le client MCP démarre `notes mcp` comme sous-proce
 JSON-RPC sur son entrée et sa sortie standard. Rien d'autre ne doit être écrit sur stdout, ce qui
 casserait le dialogue.
 
-Conséquence : **on ne lance pas `notes mcp` à la main**. Tapé dans un terminal, il attend du JSON et
-ne répond rien d'utile. C'est le client qui le démarre, l'arrête et parle avec lui. Il faut donc
-seulement le déclarer chez le client, et le faire tourner là où la base est joignable.
+Conséquence : **on ne lance pas `notes mcp` à la main** pour s'en servir. C'est le client qui le
+démarre, l'arrête et parle avec lui. Il faut donc seulement le déclarer chez le client, et le faire
+tourner là où la base est joignable (voir « Vérifier que ça marche » pour le tester sans client).
 
-Avec Claude Code, le binaire installé (`go install github.com/cyril-fl/notes/notes-go@latest`) et
-l'environnement de la CLI déjà en place :
+### Le binaire s'appelle `notes-go`
+
+`go install github.com/cyril-fl/notes/notes-go@latest` l'installe sous le nom **`notes-go`**, dans
+`$(go env GOPATH)/bin`. Les exemples de ce document écrivent `notes` (le nom de la commande), mais
+chez un client MCP il faut le nom réel, de préférence en chemin absolu : un client lancé depuis le
+Finder n'a pas le `PATH` du shell.
 
 ```sh
-claude mcp add notes -- notes mcp
+echo "$(go env GOPATH)/bin/notes-go"   # le chemin à donner au client
 ```
 
-Dans un `.mcp.json` ou dans la configuration de Claude Desktop, l'environnement doit être donné
-explicitement : une application lancée depuis le Finder n'hérite pas du shell.
+### L'environnement : en général, n'en donner aucun
+
+`notes mcp` se configure **exactement comme la CLI**, et la CLI lit tout seule
+`~/.config/notes/.env` (créé par `make cli`, ou à la main, voir le README). Si `notes-go recent --json`
+marche dans un terminal, le MCP marchera **sans aucune variable** chez le client :
+
+```sh
+claude mcp add notes -- "$(go env GOPATH)/bin/notes-go" mcp
+```
+
+Codex (`~/.codex/config.toml`) :
+
+```toml
+[mcp_servers.notes]
+command = "/Users/<moi>/go/bin/notes-go"   # le chemin donné par la commande plus haut
+args = ["mcp"]
+```
+
+`.mcp.json` ou Claude Desktop :
 
 ```json
 {
   "mcpServers": {
-    "notes": {
-      "command": "notes",
-      "args": ["mcp"],
-      "env": {
-        "CONFIG_FILE": "/opt/docker/notes/config/config.yaml",
-        "POSTGRES_HOST": "localhost",
-        "POSTGRES_PORT": "5432",
-        "POSTGRES_DB": "notes",
-        "POSTGRES_USER": "app",
-        "POSTGRES_PASSWORD": "…",
-        "NOTES_SECRET": "…"
-      }
-    }
+    "notes": { "command": "/Users/<moi>/go/bin/notes-go", "args": ["mcp"] }
   }
 }
 ```
 
-Il lui faut exactement ce qu'il faut à la CLI : les variables Postgres, `NOTES_SECRET` (sans quoi les
-notes restent illisibles) et `CONFIG_FILE`. Comme toute commande de la CLI, il crée au démarrage les
-tables ou colonnes manquantes et vide la corbeille arrivée à échéance.
+**Le piège : une variable donnée par le client gagne toujours sur `~/.config/notes/.env`.** Le
+fichier n'écrase jamais une valeur déjà présente dans l'environnement. Un bloc `env` recopié d'une
+autre installation (le serveur, la stack de dev) envoie donc le MCP vers une autre base, même si
+`~/.config/notes/.env` est juste. Symptôme : le client annonce le serveur en échec, et l'agent ne voit
+aucun outil Notes.
+
+### Si un bloc `env` est vraiment nécessaire
+
+Seulement quand `~/.config/notes/.env` n'existe pas sous l'utilisateur qui lance l'agent. Les noms
+exacts, lus par le code (aucun autre n'est pris en compte) :
+
+| Variable | Exemple : stack du Mac (`mac/`) | Exemple : stack de dev |
+|---|---|---|
+| `POSTGRES_HOST` | `127.0.0.1` | `localhost` |
+| `PORT` (**pas** `POSTGRES_PORT`) | `5433` | `5432` |
+| `POSTGRES_DB` | `notes` | `notes` |
+| `POSTGRES_USER` | `notes` | `app` |
+| `POSTGRES_PASSWORD` | celui du `.env` de la stack | celui du `.env` de la stack |
+| `NOTES_SECRET` | celui du `.env` de la stack | celui du `.env` de la stack |
+| `CONFIG_FILE` | à ne pas mettre : la config est dans le binaire | idem |
+
+Les valeurs doivent être celles de **la stack qui tourne vraiment** : `docker ps` montre les ports
+publiés. Un mauvais `NOTES_SECRET` ne fait pas d'erreur au démarrage : les notes sortent illisibles.
+
+Comme toute commande de la CLI, il crée au démarrage les tables ou colonnes manquantes et vide la
+corbeille arrivée à échéance.
 
 Un fichier de configuration d'un client MCP n'est pas un endroit pour `NOTES_SECRET` ni pour le mot
-de passe Postgres : sur le serveur, préférer l'environnement du processus de l'agent. Le plus simple
-reste d'ailleurs de faire tourner l'agent sur le serveur, où la base est locale et `notes` déjà
-installé : il n'y a alors rien de plus à installer.
+de passe Postgres : c'est une raison de plus pour s'en tenir à `~/.config/notes/.env` (en `0600`). Le
+plus simple reste d'ailleurs de faire tourner l'agent sur le serveur, où la base est locale et
+`notes` déjà installé : il n'y a alors rien de plus à installer.
 
 ## 2. Pour quel compte il agit
 
@@ -194,5 +226,30 @@ seul d'une structure d'arguments mal formée.
 make test ARGS=./app/cli/cmd-mcp/
 ```
 
-Côté client, `claude mcp list` dit si le serveur répond. S'il échoue, c'est presque toujours
-l'environnement : base injoignable, `NOTES_SECRET` absent, ou pas de session (`notes login`).
+Côté client, `claude mcp list` dit si le serveur répond (Codex : `codex mcp list`).
+
+Sans client, on peut lui parler à la main, dans l'environnement que le client lui donnera : la commande
+ci-dessous lui envoie l'ouverture du dialogue puis un `recent_notes`, en lecture seule. Deux lignes de
+JSON en retour : il marche. Rien, ou une erreur : c'est l'environnement.
+
+```sh
+{ printf '%s\n' \
+  '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"0"}}}' \
+  '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+  '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"recent_notes","arguments":{}}}'
+  sleep 3; } | notes-go mcp
+```
+
+Le `sleep` garde l'entrée ouverte le temps des réponses : sans lui, le serveur s'arrête avant d'avoir
+répondu.
+
+Quand il échoue, dans l'ordre :
+
+1. **La base est-elle joignable là où il la cherche ?** `docker ps` montre les ports publiés (stack
+   du Mac : `127.0.0.1:5433`, stack de dev : `5432`). Puis : le client lui donne-t-il un bloc `env` qui
+   pointe ailleurs que `~/.config/notes/.env` ? (voir le piège, section 1).
+2. **Les noms de variables** : `PORT`, pas `POSTGRES_PORT`.
+3. **`NOTES_SECRET`** est celui de la stack visée.
+4. **La session** : `notes-go login` sous l'utilisateur Unix qui lance l'agent, ou `NOTES_SESSION`
+   (qui gagne sur le fichier : une valeur périmée masque une session valide) ; expirée, les outils
+   répondent `not logged in, or the session expired`.
