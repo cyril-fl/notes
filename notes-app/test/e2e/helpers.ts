@@ -21,6 +21,15 @@ export async function sandbox() {
       const response = await api.post('/api/notes', { data: { content, parent_id: folder.id } });
       return (await response.json()) as { id: string; title: string };
     },
+    /** Many notes, 25 requests at a time: a folder bigger than a page of the web app. */
+    async notes(contents: string[]) {
+      for (let start = 0; start < contents.length; start += 25)
+        await Promise.all(
+          contents
+            .slice(start, start + 25)
+            .map((content) => api.post('/api/notes', { data: { content, parent_id: folder.id } })),
+        );
+    },
     async content(id: string) {
       return ((await (await api.get(`/api/notes/${id}`)).json()) as { content: string }).content;
     },

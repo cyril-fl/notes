@@ -15,13 +15,7 @@ useHead({ title: () => folder.value && displayTitle(folder.value.item.title, t('
 </script>
 
 <template>
-  <FolderView
-    v-if="folder"
-    :folder-id="id"
-    :title="folder.item.title"
-    :subtitle="folder.path"
-    :items="folder.children ?? []"
-  />
+  <FolderView v-if="folder" :folder-id="id" :title="folder.item.title" :subtitle="folder.path" />
   <UEmpty
     v-else-if="error"
     :icon="icons.folderNotFound"

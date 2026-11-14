@@ -78,7 +78,7 @@ test('a picked folder holding a zip imports its notes', async ({ page }) => {
   await expect(page.getByText('1 note(s) et 1 dossier(s) importés').first()).toBeVisible();
 
   const child = async (id: string) =>
-    ((await (await box.api.get(`/api/folders/${id}`)).json()).children as { id: string }[])[0]!.id;
+    ((await (await box.api.get(`/api/items?parent=${id}`)).json()) as { id: string }[])[0]!.id;
   expect(await box.content(await child(await child(box.folder.id)))).toContain('[CV](/api/files/');
 });
 

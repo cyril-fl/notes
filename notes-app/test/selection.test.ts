@@ -15,6 +15,10 @@ test('a ⇧-click adds the range in either direction, without doubles', () => {
   assert.deepEqual(selectRange(['c'], ids, 2, 0), ['c', 'a', 'b']);
 });
 
+test('a ⇧-click range skips the items not read yet', () => {
+  assert.deepEqual(selectRange([], ['a', undefined, undefined, 'd'], 0, 3), ['a', 'd']);
+});
+
 const drag = (itemId: string, parentId: string | null, itemIds = [itemId]) => ({ itemId, parentId, itemIds });
 
 test('items drop into another folder or the root', () => {

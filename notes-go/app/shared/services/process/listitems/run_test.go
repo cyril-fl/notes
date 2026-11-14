@@ -96,6 +96,44 @@ func TestListItems(t *testing.T) {
 		t.Errorf("err = %v, want %v", kind.GetErr(), ErrInvalidKind)
 	}
 
+	// Pages: the same order as the whole list, even under equal titles; the total counts every child.
+	for range 3 {
+		twin := createnote.Process(ctx, tx, createnote.Input{Content: "# Twin", ParentID: id})
+		twin.Run()
+		if twin.HasErr() {
+			t.Fatalf("twin: %v", twin.GetErr())
+		}
+	}
+	all := Process(ctx, tx, id, "")
+	all.Run()
+	var paged, want []string
+	for _, item := range all.GetResult() {
+		want = append(want, item.ID)
+	}
+	for offset := 0; offset < 6; offset += 2 {
+		page := Process(ctx, tx, id, "").Page(2, offset)
+		page.Run()
+		if page.HasErr() || page.GetTotal() != 5 {
+			t.Fatalf("page %d: total = %d, %v; want 5", offset, page.GetTotal(), page.GetErr())
+		}
+		for _, item := range page.GetResult() {
+			paged = append(paged, item.ID)
+		}
+	}
+	if all.HasErr() || len(want) != 5 || !slices.Equal(paged, want) {
+		t.Errorf("pages = %v, want %v (%v)", paged, want, all.GetErr())
+	}
+	past := Process(ctx, tx, id, "").Page(2, 10)
+	past.Run()
+	if past.HasErr() || len(past.GetResult()) != 0 || past.GetTotal() != 5 {
+		t.Errorf("past the end = %v, total %d, %v; want none of 5", past.GetResult(), past.GetTotal(), past.GetErr())
+	}
+	negative := Process(ctx, tx, id, "").Page(-1, 0)
+	negative.Run()
+	if !errors.Is(negative.GetErr(), ErrInvalidPage) {
+		t.Errorf("err = %v, want %v", negative.GetErr(), ErrInvalidPage)
+	}
+
 	// Last: a DB error.
 	invalid := Process(ctx, tx, "nope", "")
 	invalid.Run()

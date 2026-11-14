@@ -69,7 +69,7 @@ func patch(ctx context.Context, tx bun.IDB, id string, changes Body) (domain.Ite
 		}
 	}
 	if changes.Title == nil {
-		current := readitem.Process(ctx, tx, domain.FOLDER, id)
+		current := readitem.Process(ctx, tx, domain.FOLDER, id).SkipChildren()
 		current.Run()
 		if current.HasErr() {
 			return domain.Item{}, current.GetErr()

@@ -90,6 +90,12 @@ func TestPathAndChildren(t *testing.T) {
 	if read.HasErr() || got.Path != "/"+root || len(got.Children) != 2 || got.Children[0].ID != b || got.Children[1].ID != note.GetResult().ID {
 		t.Errorf("folder = %+v, %v; want /<root> with [B, N]", got, read.GetErr())
 	}
+
+	skipped := Process(ctx, tx, domain.FOLDER, a).SkipChildren()
+	skipped.Run()
+	if skipped.HasErr() || skipped.GetResult().Path != "/"+root || skipped.GetResult().Children != nil {
+		t.Errorf("skipped = %+v, %v; want /<root> without children", skipped.GetResult(), skipped.GetErr())
+	}
 }
 
 func folder(t *testing.T, ctx context.Context, db bun.IDB, title, parentID string) string {

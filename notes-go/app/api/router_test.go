@@ -261,8 +261,9 @@ func TestFoldersAndMove(t *testing.T) {
 	c.do("POST", "/api/folders", fmt.Sprintf(`{"title":%q}`, title), http.StatusCreated, &folder)
 	path := "/api/folders/" + folder.ID
 
-	if !strings.Contains(c.raw(path), `"children":[]`) {
-		t.Errorf("an empty folder has children: []: %s", c.raw(path))
+	// Its children come by pages from /api/items, not with it.
+	if strings.Contains(c.raw(path), "children") {
+		t.Errorf("a folder has a children field: %s", c.raw(path))
 	}
 
 	c.do("POST", "/api/folders", fmt.Sprintf(`{"title":"sub","parent_id":%q}`, folder.ID), http.StatusCreated, &sub)
@@ -295,7 +296,7 @@ func TestFoldersAndMove(t *testing.T) {
 
 	var read detail
 	c.do("GET", path, "", http.StatusOK, &read)
-	if read.Path != "/"+title || len(read.Children) != 2 {
+	if read.Path != "/"+title {
 		t.Errorf("read = %+v", read)
 	}
 
@@ -316,6 +317,22 @@ func TestFoldersAndMove(t *testing.T) {
 		t.Errorf("no children = %q, want []", got)
 	}
 	c.do("GET", "/api/items?parent=nope", "", http.StatusBadRequest, nil)
+
+	// A page keeps the order, the total counts every child.
+	c.do("GET", "/api/items?parent="+folder.ID, "", http.StatusOK, &items)
+	r := httptest.NewRequest(http.MethodGet, "/api/items?limit=1&offset=1&parent="+folder.ID, nil)
+	r.Host = "localhost:8080"
+	w := httptest.NewRecorder()
+	c.handler.ServeHTTP(w, r)
+	var page []item
+	if err := json.Unmarshal(w.Body.Bytes(), &page); err != nil || len(page) != 1 || page[0].ID != items[1].ID || w.Header().Get("X-Total-Count") != "2" {
+		t.Errorf("page = %+v, total %q, %v; want the note, total 2", page, w.Header().Get("X-Total-Count"), err)
+	}
+	if got := c.raw("/api/items?limit=1&offset=2&parent=" + folder.ID); strings.TrimSpace(got) != "[]" {
+		t.Errorf("past the end = %q, want []", got)
+	}
+	c.do("GET", "/api/items?limit=-1", "", http.StatusBadRequest, nil)
+	c.do("GET", "/api/items?offset=many", "", http.StatusBadRequest, nil)
 
 	var folders []struct {
 		ID   string `json:"id"`

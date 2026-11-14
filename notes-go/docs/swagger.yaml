@@ -1200,7 +1200,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/respond.Failure'
           description: Internal Server Error
-      summary: Read a folder and its direct children
+      summary: Read a folder
       tags:
       - folders
     patch:
@@ -1464,6 +1464,16 @@ paths:
         name: kind
         schema:
           type: string
+      - description: children in the page, all when left out or 0
+        in: query
+        name: limit
+        schema:
+          type: integer
+      - description: children skipped before the page, folders first then by title
+        in: query
+        name: offset
+        schema:
+          type: integer
       responses:
         "200":
           content:
@@ -1473,6 +1483,11 @@ paths:
                   $ref: '#/components/schemas/domain.Item'
                 type: array
           description: OK
+          headers:
+            X-Total-Count:
+              description: every child, not only the page
+              schema:
+                type: integer
         "400":
           content:
             application/json:

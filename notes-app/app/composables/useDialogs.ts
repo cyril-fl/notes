@@ -9,8 +9,16 @@ import {
 import type { SavedSearch, Snippet } from '~/types/items';
 import type { MergePart } from '~/utils/merge';
 
+// Made once for the app (client only): overlay.create adds to a global list never emptied, and every row
+// of a folder calls useItems, so a folder of 1,000 notes made 12,000 modals on each visit.
+let dialogs: ReturnType<typeof createDialogs> | undefined;
+
 /** Modals that are awaited: a text, a yes, a snippet, a saved search, the import done, or the text chosen after a conflict. */
 export function useDialogs() {
+  return (dialogs ??= createDialogs());
+}
+
+function createDialogs() {
   const overlay = useOverlay();
   const promptDialog = overlay.create(PromptDialog);
   const confirmDialog = overlay.create(ConfirmDialog);

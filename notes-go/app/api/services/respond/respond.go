@@ -61,7 +61,7 @@ var statuses = []struct {
 		adduser.ErrNoName, adduser.ErrShortPassword, editpassword.ErrWrongPassword,
 		edittag.ErrNoValue,
 		hashtag.ErrInvalid,
-		listitems.ErrInvalidID, listitems.ErrInvalidKind,
+		listitems.ErrInvalidID, listitems.ErrInvalidKind, listitems.ErrInvalidPage,
 		moveitems.ErrNoValue, moveitems.ErrInvalidID, moveitems.ErrParentNotFound,
 		readitem.ErrNoValue,
 		readtag.ErrNoValue,

@@ -57,6 +57,28 @@ test('a new note in a trashed folder is refused with a French text', async ({ pa
   expect(items).toHaveLength(0);
 });
 
+// 201 notes: one page more than the web app reads at once (#142).
+const pages = Array.from({ length: 201 }, (_, i) => `# Page ${String(i).padStart(3, '0')}`);
+
+// A big folder reads its first page only, then the next one when scrolled to its end (#142).
+test('a folder bigger than a page reads its notes as it scrolls', async ({ page }) => {
+  await box.notes(pages);
+  const reads: string[] = [];
+  page.on(
+    'request',
+    (request) => request.url().includes(`/api/items?parent=${box.folder.id}`) && reads.push(request.url()),
+  );
+  await page.goto(`/folders/${box.folder.id}`);
+  const main = page.getByRole('main');
+
+  await expect(main.getByRole('link', { name: /Page 000/ })).toBeVisible();
+  expect(reads).toEqual([expect.stringContaining('limit=200&offset=0')]);
+  await main.hover();
+  await page.mouse.wheel(0, 100_000);
+  await expect(main.getByRole('link', { name: /Page 200/ })).toBeVisible();
+  expect(reads).toHaveLength(2);
+});
+
 // The tree learns from has_folders that a folder opens, and reads only folders, never the notes of a big one (#140).
 test('the sidebar tree opens a folder without reading its notes', async ({ page }) => {
   const branch = await (

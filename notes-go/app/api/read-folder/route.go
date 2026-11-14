@@ -10,8 +10,8 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// Handler shows a folder and its direct children: GET /api/folders/{id}.
-// @Summary  Read a folder and its direct children
+// Handler shows a folder, without its children: GET /api/items?parent= gives them by pages.
+// @Summary  Read a folder
 // @Tags     folders
 // @Produce  json
 // @Param    id path string true "uuid"
@@ -26,15 +26,13 @@ func Handler(db bun.IDB) http.HandlerFunc {
 			return
 		}
 
-		process := readitem.Process(r.Context(), db, domain.FOLDER, id)
+		process := readitem.Process(r.Context(), db, domain.FOLDER, id).SkipChildren()
 		process.Run()
 		if process.HasErr() {
 			respond.Error(w, process.GetErr())
 			return
 		}
-		folder := process.GetResult()
-		folder.Children = append([]domain.Item{}, folder.Children...)
-		respond.JSON(w, http.StatusOK, folder)
+		respond.JSON(w, http.StatusOK, process.GetResult())
 	}
 }
 

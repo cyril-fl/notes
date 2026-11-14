@@ -42,6 +42,7 @@ type run struct {
 	db   bun.IDB // *bun.DB or bun.Tx: tests run inside a rolled-back transaction
 	kind domain.Kind
 	id   string
+	skip bool // no children: the web app reads them by pages
 }
 
 type cache struct {
@@ -57,6 +58,12 @@ func Process(ctx context.Context, db bun.IDB, kind domain.Kind, id string) *run 
 		kind: kind,
 		id:   id,
 	}
+}
+
+// SkipChildren leaves a folder's children out.
+func (p *run) SkipChildren() *run {
+	p.skip = true
+	return p
 }
 
 func (p *run) Run() {
@@ -143,7 +150,7 @@ func (p *run) loadPath() {
 }
 
 func (p *run) loadChildren() {
-	if p.HasErr() || p.kind != domain.FOLDER {
+	if p.HasErr() || p.kind != domain.FOLDER || p.skip {
 		return
 	}
 

@@ -3,9 +3,10 @@ export function toggleSelected(selection: string[], id: string) {
   return selection.includes(id) ? selection.filter((other) => other !== id) : [...selection, id];
 }
 
-/** Adds the ids between two indexes, both included and in any order, without doubles. */
-export function selectRange(selection: string[], ids: string[], from: number, to: number) {
-  return [...new Set([...selection, ...ids.slice(Math.min(from, to), Math.max(from, to) + 1)])];
+/** Adds the ids between two indexes, both included and in any order, without doubles; an item not read yet has none. */
+export function selectRange(selection: string[], ids: (string | undefined)[], from: number, to: number) {
+  const range = ids.slice(Math.min(from, to), Math.max(from, to) + 1).filter((id) => id !== undefined);
+  return [...new Set([...selection, ...range])];
 }
 
 /** What a dragged item carries, set by useDragItem. */

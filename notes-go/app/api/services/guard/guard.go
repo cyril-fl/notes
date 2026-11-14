@@ -58,8 +58,8 @@ func New(origin string, next http.Handler) http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			// The web app runs on another port in development: its requests carry the session cookie.
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
-			// The login and account pages read how long to wait after wrong passwords.
-			w.Header().Set("Access-Control-Expose-Headers", "Retry-After")
+			// The login and account pages read how long to wait after wrong passwords, a folder how many children it has.
+			w.Header().Set("Access-Control-Expose-Headers", "Retry-After, X-Total-Count")
 			next.ServeHTTP(w, r)
 		}
 	})

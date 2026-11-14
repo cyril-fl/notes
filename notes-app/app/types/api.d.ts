@@ -438,7 +438,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Read a folder and its direct children */
+        /** Read a folder */
         get: {
             parameters: {
                 query?: never;
@@ -967,6 +967,10 @@ export interface paths {
                     parent?: string;
                     /** @description folder or note, both when left out */
                     kind?: string;
+                    /** @description children in the page, all when left out or 0 */
+                    limit?: number;
+                    /** @description children skipped before the page, folders first then by title */
+                    offset?: number;
                 };
                 header?: never;
                 path?: never;
@@ -977,6 +981,8 @@ export interface paths {
                 /** @description OK */
                 200: {
                     headers: {
+                        /** @description every child, not only the page */
+                        "X-Total-Count"?: number;
                         [name: string]: unknown;
                     };
                     content: {
