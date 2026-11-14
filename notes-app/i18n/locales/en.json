@@ -130,6 +130,7 @@
     "zoomOut": "Zoom out",
     "zoomIn": "Zoom in",
     "recenter": "Recenter",
+    "hideWide": "Hide the tags on over {share}% of the notes ({count})",
     "loading": "Placing the notes…",
     "showAll": "Whole graph"
   },

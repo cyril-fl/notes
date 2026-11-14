@@ -17,7 +17,13 @@ const { data: all } = useLazyAsyncData(
   { watch: [noteId] },
 );
 const me = useNuxtData<User>('me').data;
-const graph = computed(() => (noteId.value ? neighbors.value && neighborGraph(neighbors.value) : all.value));
+// The tags on most notes, left out on demand: they say little of each note and pull them all together. Remembered on this device.
+const hideWide = useLocalStorage('graph-hide-wide', false);
+const narrow = computed(() => all.value && withoutWideTags(all.value));
+const graph = computed(() => {
+  if (noteId.value) return neighbors.value && neighborGraph(neighbors.value);
+  return hideWide.value ? narrow.value?.graph : all.value;
+});
 
 const selectedNotePath = computed(() => {
   const path = neighbors.value?.note.path;
@@ -31,6 +37,13 @@ const selectedNotePath = computed(() => {
       :title="$t('common.graph')"
       :subtitle="neighbors && noteId ? displayTitle(neighbors.note.item.title, $t('untitled')) : undefined"
     >
+      <USwitch
+        v-if="!noteId && narrow?.wide.length"
+        v-model="hideWide"
+        :label="$t('graph.hideWide', { count: narrow.wide.length, share: WIDE_TAG_SHARE * 100 })"
+        :title="narrow.wide.map((tag) => `#${tag}`).join(' ')"
+        size="sm"
+      />
       <UButton
         v-if="noteId"
         :label="$t('graph.showAll')"
@@ -47,7 +60,7 @@ const selectedNotePath = computed(() => {
         class="min-h-0 flex-1"
         :graph="graph"
         :selected="noteId"
-        :cache="noteId ? undefined : `graph:${me?.id}`"
+        :cache="noteId ? undefined : `graph:${me?.id}:${hideWide ? 'narrow' : 'all'}`"
       />
       <UEmpty
         v-else

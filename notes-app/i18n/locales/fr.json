@@ -130,6 +130,7 @@
     "zoomOut": "Dézoomer",
     "zoomIn": "Zoomer",
     "recenter": "Recentrer",
+    "hideWide": "Masquer les tags sur plus de {share} % des notes ({count})",
     "loading": "Placement des notes…",
     "showAll": "Tout le graphe"
   },

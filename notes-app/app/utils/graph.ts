@@ -142,6 +142,22 @@ export function graphSignature(notes: Note[], links: Link[]) {
   return `${notes.length}:${links.length}:${(hash >>> 0).toString(36)}`;
 }
 
+// A tag on more than this share of the notes says little of each: the graph can leave it out.
+export const WIDE_TAG_SHARE = 0.2;
+
+/** The tags on more than WIDE_TAG_SHARE of the notes, biggest first, and the graph without them. */
+export function withoutWideTags<G extends { notes: Note[] }>(graph: G) {
+  const counts = new Map<string, number>();
+  for (const note of graph.notes) for (const tag of note.tags ?? []) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+  const wide = [...counts]
+    .filter(([, count]) => count > graph.notes.length * WIDE_TAG_SHARE)
+    .sort((a, b) => b[1] - a[1])
+    .map(([tag]) => tag);
+  const hidden = new Set(wide);
+  const notes = graph.notes.map((note) => ({ ...note, tags: note.tags?.filter((tag) => !hidden.has(tag)) }));
+  return { wide, graph: { ...graph, notes } };
+}
+
 type Near = { id: string; title: string; path: string };
 
 /**

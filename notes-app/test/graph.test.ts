@@ -9,6 +9,7 @@ import {
   neighborGraph,
   simulateGraph,
   tagNode,
+  withoutWideTags,
 } from '../app/utils/graph.ts';
 
 const note = (id: string, ...tags: string[]) => ({ id, tags });
@@ -127,6 +128,17 @@ test('from a saved layout, the notes stay in place and a new one joins its tag',
     Math.hypot(from.x - to.x, from.y - to.y);
   for (const id of 'abcdef') assert.ok(gap(at(before, id), at(after, id)) < 10, `${id} moved`);
   assert.ok(gap(at(warm, 'g'), at(warm, tagNode('cuisine'))) < gap(at(warm, 'g'), at(warm, tagNode('go'))));
+});
+
+test('the tags on over a fifth of the notes can be left out, the notes kept', () => {
+  const notes = Array.from({ length: 10 }, (_, i) =>
+    note(`n${i}`, 'all', ...(i < 3 ? ['some'] : []), ...(i < 2 ? ['two'] : [])),
+  );
+  const { wide, graph } = withoutWideTags({ notes, links: [link('n0', 'n1')] });
+  assert.deepEqual(wide, ['all', 'some']);
+  assert.equal(graph.notes.length, 10);
+  assert.deepEqual(graph.notes[0]!.tags, ['two']);
+  assert.deepEqual(graph.links, [link('n0', 'n1')]);
 });
 
 test('the graph of the neighbors keeps the note with its tags, the neighbors with the shared ones, and the [[links]] either way', () => {
