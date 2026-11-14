@@ -9,6 +9,7 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/api/services/auth"
 	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
 	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/countnotes"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createsession"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deletesession"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/editpassword"
@@ -157,6 +158,26 @@ func EditPassword(db bun.IDB) http.HandlerFunc {
 		}
 		failed.reset(key)
 		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// Stats counts the live notes of the account logged in and the bytes its notes take in the base: GET /api/me/stats.
+// @Summary  Count the notes of the account logged in and their size in the base
+// @Tags     account
+// @Produce  json
+// @Success  200 {object} countnotes.Stats
+// @Failure  401 {object} respond.Failure
+// @Failure  500 {object} respond.Failure
+// @Router   /api/me/stats [get]
+func Stats(db bun.IDB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		process := countnotes.Process(r.Context(), db)
+		process.Run()
+		if process.HasErr() {
+			respond.Error(w, process.GetErr())
+			return
+		}
+		respond.JSON(w, http.StatusOK, process.GetResult())
 	}
 }
 

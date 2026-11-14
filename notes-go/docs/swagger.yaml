@@ -24,6 +24,18 @@ components:
       - name
       - password
       type: object
+    countnotes.Stats:
+      properties:
+        notes:
+          type: integer
+        size:
+          description: 'items, texts and versions, the trash included: what the base
+            keeps'
+          type: integer
+      required:
+      - notes
+      - size
+      type: object
     counttags.TagCount:
       properties:
         notes:
@@ -1682,6 +1694,30 @@ paths:
                 $ref: '#/components/schemas/respond.Failure'
           description: Internal Server Error
       summary: Change the password of the account logged in
+      tags:
+      - account
+  /api/me/stats:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/countnotes.Stats'
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Internal Server Error
+      summary: Count the notes of the account logged in and their size in the base
       tags:
       - account
   /api/move:

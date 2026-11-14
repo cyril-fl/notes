@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui';
-import type { Account, BrokenLink, Invite, NoteFile, Snippet, User } from '~/types/items';
+import type { Account, BrokenLink, Invite, NoteFile, NoteStats, Snippet, User } from '~/types/items';
 
 // Decided before the page renders, so the Pro mode never shows every section first and then jumps to one.
 definePageMeta({
@@ -80,16 +80,21 @@ const { data: files } = useLazyAsyncData(
   () => (showStorage.value ? 'files' : 'files-hidden'),
   () => (showStorage.value ? api<NoteFile[]>('/api/files') : Promise.resolve(null)),
 );
+const { data: stats } = useLazyAsyncData(
+  () => (showStorage.value ? 'note-stats' : 'note-stats-hidden'),
+  () => (showStorage.value ? api<NoteStats>('/api/me/stats') : Promise.resolve(null)),
+);
 const used = computed(() => (files.value ?? []).reduce((sum, file) => sum + file.size, 0));
+// The bar splits the notes' bytes in the base and the files' in Silo.
+const total = computed(() => (stats.value?.size ?? 0) + used.value);
 // The kinds the account has, each with its share of the bar, as Apple's storage splits it.
 const kinds = computed(() =>
   fileKinds
     .map((kind) => ({
       kind,
-      size: (files.value ?? [])
-        .filter((file) => fileKind(file.content_type) === kind)
-        .reduce((sum, file) => sum + file.size, 0),
+      files: (files.value ?? []).filter((file) => fileKind(file.content_type) === kind),
     }))
+    .map(({ kind, files }) => ({ kind, count: files.length, size: files.reduce((sum, file) => sum + file.size, 0) }))
     .filter(({ size }) => size),
 );
 const kindStyles = {
@@ -101,10 +106,32 @@ const kindStyles = {
 // The list, the Pro mode's, a page at a time: an account of photos keeps hundreds.
 const filesPerPage = 20;
 const filesPage = ref(1);
-const pagedFiles = computed(() =>
-  has('storageFiles')
-    ? (files.value ?? []).slice((filesPage.value - 1) * filesPerPage, filesPage.value * filesPerPage)
+// The labels under the bar are tabs, the Pro mode's: the notes show nothing, a kind its files.
+const storageTab = ref<'notes' | FileKind>('notes');
+watch(storageTab, () => (filesPage.value = 1));
+const storageTabs = computed(() => [
+  {
+    id: 'notes' as const,
+    label: t('common.notes'),
+    color: 'bg-inverted',
+    count: stats.value?.notes ?? 0,
+    size: stats.value?.size ?? 0,
+  },
+  ...kinds.value.map(({ kind, count, size }) => ({
+    id: kind,
+    label: t(`settings.fileKinds.${kind}`),
+    color: kindStyles[kind].color,
+    count,
+    size,
+  })),
+]);
+const tabFiles = computed(() =>
+  has('storageFiles') && storageTab.value !== 'notes'
+    ? (files.value ?? []).filter((file) => fileKind(file.content_type) === storageTab.value)
     : [],
+);
+const pagedFiles = computed(() =>
+  tabFiles.value.slice((filesPage.value - 1) * filesPerPage, filesPage.value * filesPerPage),
 );
 
 const linkColors = { unresolved: 'warning', ambiguous: 'info', missing: 'error', file: 'error' } as const;
@@ -466,29 +493,45 @@ async function deleteData() {
         </ul>
         <h3 class="mt-6 mb-2 text-xs font-medium text-muted">{{ $t('settings.sections.storage') }}</h3>
         <div class="rounded-lg border border-default">
-          <div v-if="files" class="space-y-3 px-4 py-3" :class="{ 'border-b border-default': pagedFiles.length }">
+          <div
+            v-if="files && stats"
+            class="space-y-3 px-4 py-3"
+            :class="{ 'border-b border-default': pagedFiles.length }"
+          >
             <p class="text-sm">
-              {{ $t('settings.storageUsed', { size: fileSize(used, locale), count: files.length }, files.length) }}
+              {{ $t('settings.storageUsed', { size: fileSize(total, locale) }) }}
             </p>
-            <template v-if="kinds.length">
-              <div class="flex h-3 gap-0.5 overflow-hidden rounded-full bg-elevated">
-                <div
-                  v-for="{ kind, size } in kinds"
-                  :key="kind"
-                  :class="kindStyles[kind].color"
-                  :style="{ width: `${(size / used) * 100}%` }"
-                />
-              </div>
-              <ul class="flex flex-wrap gap-x-4 gap-y-1 text-xs">
-                <li v-for="{ kind, size } in kinds" :key="kind" class="flex items-center gap-1.5">
-                  <span class="size-2 rounded-full" :class="kindStyles[kind].color" />
-                  {{ $t(`settings.fileKinds.${kind}`) }}
-                  <span class="text-muted">{{ fileSize(size, locale) }}</span>
-                </li>
-              </ul>
-            </template>
+            <div class="flex h-3 gap-0.5 overflow-hidden rounded-full bg-elevated">
+              <div v-if="stats.size" class="bg-inverted" :style="{ width: `${(stats.size / total) * 100}%` }" />
+              <div
+                v-for="{ kind, size } in kinds"
+                :key="kind"
+                :class="kindStyles[kind].color"
+                :style="{ width: `${(size / total) * 100}%` }"
+              />
+            </div>
+            <div class="flex flex-wrap gap-x-2 gap-y-1 text-xs" :role="has('storageFiles') ? 'tablist' : undefined">
+              <component
+                :is="has('storageFiles') ? 'button' : 'span'"
+                v-for="tab in storageTabs"
+                :key="tab.id"
+                :type="has('storageFiles') ? 'button' : undefined"
+                :role="has('storageFiles') ? 'tab' : undefined"
+                :aria-selected="has('storageFiles') ? storageTab === tab.id : undefined"
+                class="flex items-center gap-1.5 rounded-md px-1.5 py-0.5"
+                :class="{
+                  'hover:bg-elevated/50': has('storageFiles'),
+                  'bg-elevated': has('storageFiles') && storageTab === tab.id,
+                }"
+                @click="has('storageFiles') && (storageTab = tab.id)"
+              >
+                <span class="size-2 rounded-full" :class="tab.color" />
+                {{ tab.label }}
+                <span class="text-muted">{{ tab.count }} · {{ fileSize(tab.size, locale) }}</span>
+              </component>
+            </div>
           </div>
-          <p v-if="files && !files.length" class="px-4 py-3 text-xs text-muted">
+          <p v-if="files && !files.length" class="px-4 pb-3 text-xs text-muted">
             {{ $t('settings.storageEmpty') }}
           </p>
           <ul v-if="pagedFiles.length" class="divide-y divide-default">
@@ -498,11 +541,8 @@ async function deleteData() {
               <span class="shrink-0 text-xs text-muted">{{ fileSize(file.size, locale) }}</span>
             </li>
           </ul>
-          <div
-            v-if="files && pagedFiles.length && files.length > filesPerPage"
-            class="flex justify-center border-t border-default px-4 py-2"
-          >
-            <UPagination v-model:page="filesPage" :total="files.length" :items-per-page="filesPerPage" size="sm" />
+          <div v-if="tabFiles.length > filesPerPage" class="flex justify-center border-t border-default px-4 py-2">
+            <UPagination v-model:page="filesPage" :total="tabFiles.length" :items-per-page="filesPerPage" size="sm" />
           </div>
         </div>
         <!-- Each section keeps what cannot be undone at its bottom, apart. -->

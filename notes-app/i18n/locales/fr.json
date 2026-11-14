@@ -392,7 +392,7 @@
       "missing": "Note supprimée",
       "file": "Fichier absent"
     },
-    "storageUsed": "{size} utilisés · {count} fichier | {size} utilisés · {count} fichiers",
+    "storageUsed": "{size} utilisés",
     "storageEmpty": "Aucun fichier gardé.",
     "unnamedFile": "Image sans nom",
     "fileKinds": {
