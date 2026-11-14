@@ -1100,4 +1100,14 @@ func TestAccountsPublicMode(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("signup in the public mode: status = %d, want 200: %s", w.Code, w.Body)
 	}
+
+	// One address creates a few accounts, then waits.
+	for i := range 3 {
+		if w := send("/api/signup", fmt.Sprintf(`{"name":%q,"password":"a-good-password"}`, unique("public"))); w.Code != http.StatusOK {
+			t.Fatalf("signup %d in a row: status = %d, want 200: %s", i+2, w.Code, w.Body)
+		}
+	}
+	if w := send("/api/signup", fmt.Sprintf(`{"name":%q,"password":"a-good-password"}`, unique("public"))); w.Code != http.StatusTooManyRequests {
+		t.Errorf("signup 5 in a row: status = %d, want 429: %s", w.Code, w.Body)
+	}
 }

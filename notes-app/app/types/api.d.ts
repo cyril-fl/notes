@@ -2472,6 +2472,15 @@ export interface paths {
                         "application/json": components["schemas"]["respond.Failure"];
                     };
                 };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
                 /** @description Internal Server Error */
                 500: {
                     headers: {

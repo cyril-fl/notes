@@ -2334,6 +2334,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/respond.Failure'
           description: Conflict
+        "429":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Too Many Requests
         "500":
           content:
             application/json:

@@ -3,11 +3,13 @@
 package users
 
 import (
+	"net"
 	"net/http"
 	"time"
 
 	"github.com/cyril-fl/notes/notes-go/app/api/services/auth"
 	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
+	"github.com/cyril-fl/notes/notes-go/app/api/services/throttle"
 	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/password"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/addinvite"
@@ -22,6 +24,9 @@ import (
 
 // pendingInvites keeps the invitations still usable: neither used nor expired.
 const pendingInvites = "used_at IS NULL AND expires_at > current_timestamp"
+
+// created counts the accounts created by address in the public mode: one address cannot fill the server.
+var created = throttle.New("too many accounts created from this address, try again later")
 
 // Account is an account as the admin panel lists it: the settings of someone else are none of its business.
 type Account struct {
@@ -64,8 +69,8 @@ func Modes(db bun.IDB, mode string) http.HandlerFunc {
 }
 
 // Signup creates an account without a session and logs it in: POST /api/signup. Allowed by an invitation, by the
-// public mode, or on a base with no account yet, which the first account then runs.
-// TODO: no limit per address, a public server can be filled with accounts; add one if one ever faces the internet.
+// public mode, or on a base with no account yet, which the first account then runs. In the public mode an address
+// waits longer after each account it creates.
 // @Summary  Create an account and log it in
 // @Tags     account
 // @Accept   json
@@ -75,6 +80,7 @@ func Modes(db bun.IDB, mode string) http.HandlerFunc {
 // @Failure  400 {object} respond.Failure
 // @Failure  403 {object} respond.Failure
 // @Failure  409 {object} respond.Failure
+// @Failure  429 {object} respond.Failure
 // @Failure  500 {object} respond.Failure
 // @Router   /api/signup [post]
 func Signup(db bun.IDB, mode string) http.HandlerFunc {
@@ -92,10 +98,18 @@ func Signup(db bun.IDB, mode string) http.HandlerFunc {
 			forbidden(w, "this server does not take new accounts")
 			return
 		}
+		address, _, _ := net.SplitHostPort(r.RemoteAddr)
+		throttled := mode == domain.AddUserModes[1]
+		if throttled && created.Blocked(w, address) {
+			return
+		}
 
 		process := adduser.Process(r.Context(), db, input)
 		process.Run()
 		if process.HasErr() {
+			if throttled {
+				created.Forgive(address)
+			}
 			respond.Error(w, process.GetErr())
 			return
 		}

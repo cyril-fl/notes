@@ -8,6 +8,7 @@ import (
 
 	"github.com/cyril-fl/notes/notes-go/app/api/services/auth"
 	"github.com/cyril-fl/notes/notes-go/app/api/services/respond"
+	"github.com/cyril-fl/notes/notes-go/app/api/services/throttle"
 	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/countnotes"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createsession"
@@ -17,6 +18,9 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/purgeaccount"
 	"github.com/uptrace/bun"
 )
+
+// failed counts the wrong passwords in a row, by address for the login and by account for a new password.
+var failed = throttle.New("too many wrong passwords, try again later")
 
 // Handler logs in: POST /api/login. The session token goes in an HttpOnly cookie, never in the body.
 // @Summary  Log in
@@ -38,7 +42,7 @@ func Handler(db bun.IDB) http.HandlerFunc {
 		if !respond.Decode(w, r, &input) {
 			return
 		}
-		if failed.blocked(w, key) {
+		if failed.Blocked(w, key) {
 			return
 		}
 
@@ -46,12 +50,12 @@ func Handler(db bun.IDB) http.HandlerFunc {
 		process.Run()
 		if process.HasErr() {
 			if !errors.Is(process.GetErr(), createsession.ErrBadCredentials) {
-				failed.forgive(key)
+				failed.Forgive(key)
 			}
 			respond.Error(w, process.GetErr())
 			return
 		}
-		failed.reset(key)
+		failed.Reset(key)
 		result := process.GetResult()
 		auth.SetCookie(w, result.Token, result.ExpiresAt)
 		respond.JSON(w, http.StatusOK, result)
@@ -143,7 +147,7 @@ func EditPassword(db bun.IDB) http.HandlerFunc {
 		if !respond.Decode(w, r, &input) {
 			return
 		}
-		if failed.blocked(w, key) {
+		if failed.Blocked(w, key) {
 			return
 		}
 
@@ -151,12 +155,12 @@ func EditPassword(db bun.IDB) http.HandlerFunc {
 		process.Run()
 		if process.HasErr() {
 			if !errors.Is(process.GetErr(), editpassword.ErrWrongPassword) {
-				failed.forgive(key)
+				failed.Forgive(key)
 			}
 			respond.Error(w, process.GetErr())
 			return
 		}
-		failed.reset(key)
+		failed.Reset(key)
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
