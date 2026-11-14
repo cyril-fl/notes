@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
@@ -35,6 +36,7 @@ type run struct {
 
 type cache struct {
 	parentID string
+	order    []string // every child id, sorted
 	result   []domain.Item
 	total    int
 }
@@ -59,6 +61,7 @@ func (p *run) Run() {
 	p.checkKind()
 	p.checkPage()
 	p.makeParentID()
+	p.loadOrder()
 	p.loadItems()
 }
 
@@ -90,12 +93,31 @@ func (p *run) makeParentID() {
 	p.cache.parentID = strings.TrimSpace(p.parentID)
 }
 
-// loadItems lists folders first, then notes, by title (sealed: ordered here); soft_delete hides the trashed ones.
-// The order comes from the cached paths (no title decrypted), then only the page is read: a folder may hold
-// 48,000 notes. readonly marks the locked notes, for their padlock in the folder; has_folders tells the sidebar
-// a folder opens without reading its children.
-func (p *run) loadItems() {
+// loadOrder sorts the children folders first, then notes, by title (sealed: ordered here); soft_delete hides the
+// trashed ones. The titles come from the cached paths (none decrypted), and the order itself is cached while
+// users.items_version stays the same: sorting 48,000 notes takes 140 ms, redone on every page otherwise.
+func (p *run) loadOrder() {
 	if p.HasErr() {
+		return
+	}
+
+	// The version before the items, as in domain.Paths: a write committed between the two only makes the next call rebuild.
+	userID := domain.UserID(p.ctx)
+	var version int64
+	if err := p.db.NewSelect().Model((*domain.User)(nil)).Column("items_version").Where("id = ?", userID).Scan(p.ctx, &version); err != nil {
+		p.SetErr(err)
+		return
+	}
+	cached, ok := orders.Load(userID)
+	if !ok || cached.(*cachedOrders).version != version {
+		cached = &cachedOrders{version: version, ids: map[orderKey][]string{}}
+		orders.Store(userID, cached)
+	}
+	account, key := cached.(*cachedOrders), orderKey{p.cache.parentID, p.kind}
+	account.mu.Lock()
+	p.cache.order, ok = account.ids[key]
+	account.mu.Unlock()
+	if ok {
 		return
 	}
 
@@ -122,6 +144,23 @@ func (p *run) loadItems() {
 		return boolOrder(b.Kind == domain.FOLDER) - boolOrder(a.Kind == domain.FOLDER)
 	})
 
+	p.cache.order = make([]string, len(order))
+	for i, item := range order {
+		p.cache.order[i] = item.ID
+	}
+	account.mu.Lock()
+	account.ids[key] = p.cache.order
+	account.mu.Unlock()
+}
+
+// loadItems reads only the page of the order: a folder may hold 48,000 notes. readonly marks the locked notes,
+// for their padlock in the folder; has_folders tells the sidebar a folder opens without reading its children.
+func (p *run) loadItems() {
+	if p.HasErr() {
+		return
+	}
+
+	order := p.cache.order
 	p.cache.total = len(order)
 	paged := p.limit > 0
 	if paged {
@@ -132,16 +171,12 @@ func (p *run) loadItems() {
 	}
 
 	var items []domain.Item
-	query = p.children(p.db.NewSelect().Model(&items)).
+	query := p.children(p.db.NewSelect().Model(&items)).
 		Column("id", "parent_id", "created_at", "updated_at", "kind", "title").
 		ColumnExpr("COALESCE((SELECT mn.readonly FROM metadata_notes AS mn WHERE mn.item_id = i.id), false) AS readonly").
 		ColumnExpr("EXISTS (SELECT 1 FROM items AS c WHERE c.parent_id = i.id AND c.kind = ? AND c.deleted_at IS NULL) AS has_folders", domain.FOLDER)
 	if paged {
-		ids := make([]string, len(order))
-		for i, item := range order {
-			ids[i] = item.ID
-		}
-		query.Where("id IN (?)", bun.In(ids))
+		query.Where("id IN (?)", bun.In(order))
 	}
 	if err := query.Scan(p.ctx); err != nil {
 		p.SetErr(err)
@@ -153,8 +188,8 @@ func (p *run) loadItems() {
 		byID[item.ID] = item
 	}
 	p.cache.result = make([]domain.Item, 0, len(order))
-	for _, item := range order {
-		if full, ok := byID[item.ID]; ok { // trashed between the two reads
+	for _, id := range order {
+		if full, ok := byID[id]; ok { // trashed between the two reads
 			p.cache.result = append(p.cache.result, full)
 		}
 	}
@@ -172,6 +207,21 @@ func (p *run) children(query *bun.SelectQuery) *bun.SelectQuery {
 		query.Where("kind = ?", p.kind)
 	}
 	return query
+}
+
+// orders keeps, by account id, the sorted children ids of the folders listed since items_version last changed:
+// a new version drops them all, so an account holds at most about twice its items. Ids only, no title.
+var orders sync.Map
+
+type cachedOrders struct {
+	version int64
+	mu      sync.Mutex
+	ids     map[orderKey][]string // shared, do not modify
+}
+
+type orderKey struct {
+	parentID string
+	kind     domain.Kind
 }
 
 // Helpers

@@ -13,6 +13,8 @@ import (
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createnote"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createschema"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deleteitems"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/editfolder"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/moveitems"
 )
 
 func TestListItems(t *testing.T) {
@@ -132,6 +134,57 @@ func TestListItems(t *testing.T) {
 	negative.Run()
 	if !errors.Is(negative.GetErr(), ErrInvalidPage) {
 		t.Errorf("err = %v, want %v", negative.GetErr(), ErrInvalidPage)
+	}
+
+	// The order is cached: reversed by hand, the next page follows it, until a write changes items_version.
+	reverse := func() {
+		cached, _ := orders.Load(domain.UserID(ctx))
+		account := cached.(*cachedOrders)
+		ids := slices.Clone(account.ids[orderKey{id, ""}])
+		slices.Reverse(ids)
+		account.ids[orderKey{id, ""}] = ids
+	}
+	first := func() (string, int) {
+		page := Process(ctx, tx, id, "").Page(1, 0)
+		page.Run()
+		if page.HasErr() || len(page.GetResult()) != 1 {
+			t.Fatalf("first: %v, %v", page.GetResult(), page.GetErr())
+		}
+		return string(page.GetResult()[0].Title), page.GetTotal()
+	}
+	reverse()
+	if title, _ := first(); title != "Twin" {
+		t.Errorf("first = %q, want Twin (the reversed order in cache)", title)
+	}
+	added := createnote.Process(ctx, tx, createnote.Input{Content: "# Added", ParentID: id})
+	writes := []struct {
+		name  string
+		write interface {
+			Run()
+			HasErr() bool
+			GetErr() error
+		}
+		title string
+		total int
+	}{
+		{"add", added, "Z folder", 6},
+		{"rename", editfolder.Process(ctx, tx, editfolder.Input{ID: sub.GetResult().ID, Title: "Y folder"}), "Y folder", 6},
+		{"move", nil, "Y folder", 5},
+		{"trash", deleteitems.Process(ctx, tx, domain.FOLDER, []string{sub.GetResult().ID}), "A note", 4},
+	}
+	for _, w := range writes {
+		first()
+		reverse()
+		if w.write == nil { // after add ran: its note is known
+			w.write = moveitems.Process(ctx, tx, moveitems.Input{IDs: []string{added.GetResult().ID}})
+		}
+		w.write.Run()
+		if w.write.HasErr() {
+			t.Fatalf("%s: %v", w.name, w.write.GetErr())
+		}
+		if title, total := first(); title != w.title || total != w.total {
+			t.Errorf("after %s: first = %q of %d, want %q of %d", w.name, title, total, w.title, w.total)
+		}
 	}
 
 	// Last: a DB error.
