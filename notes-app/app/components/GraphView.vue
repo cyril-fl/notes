@@ -177,7 +177,7 @@ function iconClass(id: string) {
 
 function tagClass(tag: string) {
   if (tagNode(tag) === active.value) return 'font-medium text-primary';
-  return isDimmed(tagNode(tag)) ? 'text-dimmed opacity-30' : 'text-muted';
+  return isDimmed(tagNode(tag)) ? 'text-dimmed opacity-30' : 'text-primary';
 }
 
 // What is on screen, in px from the view's corner; a margin keeps a dot or a title cut by the edge.
@@ -270,7 +270,7 @@ function draw() {
   fillDots(
     ctx,
     untitled.filter((id) => !focus.value.has(id)),
-    color(active.value ? '--ui-border-accented' : '--ui-text-dimmed'),
+    color,
   );
   strokeEdges(
     ctx,
@@ -281,18 +281,17 @@ function draw() {
   fillDots(
     ctx,
     untitled.filter((id) => focus.value.has(id)),
-    color('--ui-text-dimmed'),
+    color,
   );
 }
 
-// A [[link]] in a plain line, a note to its tag dashed; by how hard it pulls, in a few steps of opacity: one path each.
+// A [[link]] thicker than a note to its tag; by how hard it pulls, in a few steps of opacity: one path each.
 const OPACITY_STEPS = 4;
 function strokeEdges(ctx: CanvasRenderingContext2D, list: Edge[], stroke: string, opacity: number) {
   ctx.strokeStyle = stroke;
   for (const tag of [false, true])
     for (let step = 1; step <= OPACITY_STEPS; step++) {
       ctx.lineWidth = tag ? 1 : 2;
-      ctx.setLineDash(tag ? [4, 4] : []);
       ctx.globalAlpha = opacity * (step / OPACITY_STEPS);
       ctx.beginPath();
       for (const edge of list) {
@@ -307,16 +306,25 @@ function strokeEdges(ctx: CanvasRenderingContext2D, list: Edge[], stroke: string
   ctx.globalAlpha = 1;
 }
 
-function fillDots(ctx: CanvasRenderingContext2D, ids: string[], fill: string) {
-  ctx.fillStyle = fill;
-  ctx.beginPath();
-  for (const id of ids) {
-    const { x, y } = px(id);
-    const r = radius(id);
-    ctx.moveTo(x + r, y);
-    ctx.arc(x, y, r, 0, 2 * Math.PI);
+// A tag in the theme's color, a note in grey; the dimmed ones fade into the background. One path per color.
+function dotColor(id: string) {
+  if (isDimmed(id)) return '--ui-border-accented';
+  return isTag(id) ? '--ui-primary' : '--ui-text-dimmed';
+}
+
+function fillDots(ctx: CanvasRenderingContext2D, ids: string[], color: (token: string) => string) {
+  const byColor = Map.groupBy(ids, dotColor);
+  for (const [token, group] of byColor) {
+    ctx.fillStyle = color(token);
+    ctx.beginPath();
+    for (const id of group) {
+      const { x, y } = px(id);
+      const r = radius(id);
+      ctx.moveTo(x + r, y);
+      ctx.arc(x, y, r, 0, 2 * Math.PI);
+    }
+    ctx.fill();
   }
-  ctx.fill();
 }
 
 // An untitled dot under the pointer: hovered, opened on a click. Titled nodes handle both themselves.
