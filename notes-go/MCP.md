@@ -2,7 +2,7 @@
 
 `notes mcp` est la troisième façade sur les notes, à côté de la CLI et de l'API : un serveur MCP qui
 donne à un agent (Claude Code, Claude Desktop, tout client MCP) des outils pour chercher, lire,
-écrire, ranger et supprimer les notes d'un compte.
+écrire, ranger et supprimer les notes d'un compte, avec leurs fichiers, leur historique et leurs liens.
 
 Ce n'est pas une API HTTP : il n'écoute sur aucun port, n'a pas de routes, ne vérifie aucun jeton
 dans une requête. Les trois points à comprendre sont donc ailleurs : **comment l'agent le lance**,
@@ -109,7 +109,7 @@ entre comptes : c'est le compte, en entier.
 
 ## 3. Ce qu'il peut faire
 
-À la connexion, l'agent reçoit les quinze outils avec leur description et leur schéma, puis travaille
+À la connexion, l'agent reçoit les vingt-trois outils avec leur description et leur schéma, puis travaille
 en langage naturel : « range mes notes de réunion de novembre dans /Travail/Réunions » devient un
 `search_notes`, un `create_folder`, puis une suite de `move_item`.
 
@@ -130,6 +130,21 @@ en langage naturel : « range mes notes de réunion de novembre dans /Travail/R�
 | `delete_folder` | Met un dossier **et tout son contenu** à la corbeille |
 | `list_trash` | Ce qui est à la corbeille, avec l'uuid que `restore_item` attend |
 | `restore_item` | Ressort de la corbeille, avec ce qui y est parti en même temps |
+| `rename_tag` | Renomme un tag sur toutes ses notes, dans leur texte aussi |
+| `delete_tag` | Retire un tag de toutes ses notes ; une note qui ne contenait que lui part à la corbeille |
+| `note_history` | Les versions antérieures d'une note (sans `version`), ou le texte de l'une d'elles |
+| `note_links` | Les liens d'une note, ses rétroliens et les notes qui partagent ses tags ; sans note, les liens cassés de tout le compte |
+| `read_file` | Une image (que l'agent voit) ou une pièce jointe citée par une note ; sans fichier, la liste des fichiers |
+| `attach_file` | Stocke un fichier envoyé en base64 et rend le markdown qui le cite, à poser avec `create_note` ou `edit_note` |
+| `export_notes` | Un dossier, des éléments ou tout le compte en fichiers markdown, `[[liens]]` réécrits |
+| `import_notes` | Des fichiers markdown en notes, leurs répertoires en dossiers, tout ou rien |
+
+**Un outil par domaine, pas un par processus.** Chaque outil annoncé coûte du contexte à l'agent à
+chaque connexion (environ 300 à 750 octets de nom, description et schéma d'entrée ; le schéma de
+sortie, que les clients ne donnent en général pas au modèle, double à peu près ce chiffre). Lister et
+lire passent donc par le même outil, un argument vide donnant la liste (`note_history`, `note_links`,
+`read_file`) : treize processus tiennent en huit outils. La création d'un tag seul n'est pas exposée,
+un tag sans note ne sert à rien à un agent.
 
 Ils passent par les mêmes processus (`app/shared/services/process/`) que la CLI et l'API : une règle
 (titre, tags, liens, corbeille, chiffrement) s'applique pareil des trois côtés.
@@ -150,14 +165,18 @@ Ils passent par les mêmes processus (`app/shared/services/process/`) que la CLI
   et `move_item` ne demande aucune confirmation. Un client MCP qui demande validation avant chaque
   appel d'outil est la bonne façon de travailler au début. `make backup` avant une grosse
   réorganisation reste la règle.
-- **Ce qui n'est pas exposé** : les images et pièces jointes, l'historique des versions, le graphe,
-  l'export et l'import, les plans, la gestion des comptes, la création et la suppression de tags (les
-  tags d'une note se posent par `create_note` et `edit_note`).
+- **Les fichiers passent par Silo.** `read_file` (lecture), `attach_file` et `import_notes` ouvrent
+  Silo à l'appel : sans les variables `S3_*`, ils répondent en erreur, les autres outils marchent.
+  `read_file` rend le fichier entier en un bloc, une vidéo comprise.
+- **`delete_tag` et `rename_tag` réécrivent le texte des notes**, corbeille comprise, sans passer par
+  l'historique : c'est le comportement de la CLI et de l'app.
+- **Ce qui n'est pas exposé** : le graphe complet (`note_links` en donne le voisinage note par note),
+  les plans, la gestion des comptes, la création d'un tag seul, le vidage de la corbeille.
 
 ## Vérifier que ça marche
 
 Le test `app/cli/cmd-mcp/cmd_test.go` branche un client MCP en mémoire sur le serveur et vérifie que
-les quinze outils sont annoncés avec un schéma et une description — ce que le SDK ne sait pas déduire
+les vingt-trois outils sont annoncés avec un schéma et une description — ce que le SDK ne sait pas déduire
 seul d'une structure d'arguments mal formée.
 
 ```sh

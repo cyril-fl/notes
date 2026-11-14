@@ -4,30 +4,52 @@ package cmdmcp
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
+	"fmt"
+	"io"
+	"io/fs"
+	"path"
+	"strings"
+	"testing/fstest"
 
 	"github.com/cyril-fl/notes/notes-go/app/shared/domain"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/postgrey"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/counttags"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createfile"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createfolder"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/createnote"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deleteitems"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/deletetag"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/editfolder"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/editnote"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/edittag"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/exportnotes"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/importnotes"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listbrokenlinks"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listfiles"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listitems"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listrecent"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listtrash"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/listversions"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/moveitems"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readfile"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readitem"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readneighbors"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readtag"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/readversion"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/resolveitem"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/restoreitems"
 	"github.com/cyril-fl/notes/notes-go/app/shared/services/process/searchnotes"
+	"github.com/cyril-fl/notes/notes-go/app/shared/services/silo"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/spf13/cobra"
 )
 
-var errNotFound = errors.New("no note or folder of this name")
+var (
+	errNotFound = errors.New("no note or folder of this name")
+	errBadPath  = errors.New("not the relative path of a .md file")
+)
 
 // item is a note or a folder as an agent needs it: no timestamps, no model, nothing to read twice.
 type item struct {
@@ -91,6 +113,71 @@ type trashedArgs struct {
 
 type tagArgs struct {
 	Tag string `json:"tag" jsonschema:"the tag, without the #"`
+}
+
+type renameTagArgs struct {
+	Tag string `json:"tag" jsonschema:"the tag to rename, without the #"`
+	To  string `json:"to" jsonschema:"its new name, without the #"`
+}
+
+type historyArgs struct {
+	Note    string `json:"note" jsonschema:"the note: its uuid, or its path from the root (/Folder/Note)"`
+	Version string `json:"version,omitempty" jsonschema:"the uuid of a version to read, as the list gives it; the list of versions when empty"`
+}
+
+// history is the list of versions, their texts left out, or the one version asked with its text.
+type history struct {
+	Versions []domain.NoteVersion `json:"versions,omitempty"`
+	Version  *domain.NoteVersion  `json:"version,omitempty"`
+}
+
+type linksArgs struct {
+	Note string `json:"note,omitempty" jsonschema:"the note: its uuid, or its path from the root (/Folder/Note); the broken links of every note when empty"`
+}
+
+// links joins a note to the others, the note itself left out (read_note reads it), or lists the broken links of every note.
+type links struct {
+	Links     []readneighbors.Linked   `json:"links,omitempty"`
+	Backlinks []readneighbors.Linked   `json:"backlinks,omitempty"`
+	Neighbors []readneighbors.Neighbor `json:"neighbors,omitempty"`
+	Broken    []listbrokenlinks.Link   `json:"broken,omitempty"`
+}
+
+type fileArgs struct {
+	File string `json:"file,omitempty" jsonschema:"the uuid of a file, as a note cites it (/api/files/<uuid>) or the list gives it; the list of files when empty"`
+}
+
+type attachArgs struct {
+	Name string `json:"name" jsonschema:"the file name, with its extension"`
+	Data string `json:"data" jsonschema:"the bytes of the file in base64: an image (PNG, JPEG, GIF, WebP), a PDF, a zip, an audio or a video file"`
+}
+
+// attached is the stored file and the markdown a note cites it with.
+type attached struct {
+	ID       string `json:"id"`
+	Markdown string `json:"markdown"`
+}
+
+type exportArgs struct {
+	Folder string   `json:"folder,omitempty" jsonschema:"the folder to export: its uuid, or its path from the root (/Folder); everything when empty"`
+	Items  []string `json:"items,omitempty" jsonschema:"notes or folders to export instead of a folder: their uuid, or their path from the root"`
+}
+
+// exported is a note as a markdown file, or a file it cites, whose bytes read_file gives.
+type exported struct {
+	Path    string `json:"path"`
+	Content string `json:"content,omitempty"`
+	File    string `json:"file,omitempty"`
+}
+
+type importArgs struct {
+	Files  []importFile `json:"files" jsonschema:"the markdown files; their directories become folders"`
+	Folder string       `json:"folder,omitempty" jsonschema:"the folder to import into: its uuid, or its path from the root (/Folder); the root itself when empty"`
+}
+
+type importFile struct {
+	Path    string `json:"path" jsonschema:"the file path, relative (Folder/Note.md)"`
+	Content string `json:"content" jsonschema:"the markdown content"`
 }
 
 // Serve speaks MCP on stdin and stdout: nothing else may be printed there.
@@ -311,6 +398,225 @@ func AddTools(server *mcp.Server, ctx context.Context) {
 		}
 		return nil, process.GetResult(), nil
 	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "rename_tag",
+		Description: "Rename a tag on every note carrying it, in their text too.",
+	}, func(_ context.Context, _ *mcp.CallToolRequest, args renameTagArgs) (*mcp.CallToolResult, domain.Tag, error) {
+		process := edittag.Process(ctx, postgrey.GetDb(), args.Tag, args.To)
+		process.Run()
+		if process.HasErr() {
+			return nil, domain.Tag{}, process.GetErr()
+		}
+		return nil, process.GetResult(), nil
+	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "delete_tag",
+		Description: "Remove a tag from every note carrying it, in their text too. A note holding nothing but the tag goes to the trash.",
+	}, func(_ context.Context, _ *mcp.CallToolRequest, args tagArgs) (*mcp.CallToolResult, []domain.Tag, error) {
+		process := deletetag.Process(ctx, postgrey.GetDb(), []string{args.Tag})
+		process.Run()
+		if process.HasErr() {
+			return nil, nil, process.GetErr()
+		}
+		return nil, process.GetResult(), nil
+	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "note_history",
+		Description: "List the earlier texts of a note, newest first, or read one: what edit_note replaced.",
+	}, func(_ context.Context, _ *mcp.CallToolRequest, args historyArgs) (*mcp.CallToolResult, history, error) {
+		id, err := resolve(ctx, domain.NOTE, args.Note)
+		if err != nil {
+			return nil, history{}, err
+		}
+
+		if args.Version == "" {
+			process := listversions.Process(ctx, postgrey.GetDb(), id)
+			process.Run()
+			return nil, history{Versions: process.GetResult()}, process.GetErr()
+		}
+		process := readversion.Process(ctx, postgrey.GetDb(), id, args.Version)
+		process.Run()
+		if process.HasErr() {
+			return nil, history{}, process.GetErr()
+		}
+		version := process.GetResult()
+		return nil, history{Version: &version}, nil
+	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "note_links",
+		Description: "List the notes a note links to, those linking to it, and those sharing its tags. Without a note, the broken links of every note.",
+	}, func(_ context.Context, _ *mcp.CallToolRequest, args linksArgs) (*mcp.CallToolResult, links, error) {
+		if args.Note == "" {
+			process := listbrokenlinks.Process(ctx, postgrey.GetDb())
+			process.Run()
+			return nil, links{Broken: process.GetResult()}, process.GetErr()
+		}
+
+		id, err := resolve(ctx, domain.NOTE, args.Note)
+		if err != nil {
+			return nil, links{}, err
+		}
+		process := readneighbors.Process(ctx, postgrey.GetDb(), id)
+		process.Run()
+		if process.HasErr() {
+			return nil, links{}, process.GetErr()
+		}
+		result := process.GetResult()
+		return nil, links{Links: result.Links, Backlinks: result.Backlinks, Neighbors: result.Neighbors}, nil
+	})
+
+	// Out is any: a read answers the file as content (an image the agent sees), not as JSON.
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "read_file",
+		Description: "Read an image or attachment a note cites. Without a file, list the account's files, largest first.",
+	}, func(_ context.Context, _ *mcp.CallToolRequest, args fileArgs) (*mcp.CallToolResult, any, error) {
+		if args.File == "" {
+			process := listfiles.Process(ctx, postgrey.GetDb())
+			process.Run()
+			return nil, process.GetResult(), process.GetErr()
+		}
+
+		// Silo is opened here, not at start: without S3, every other tool still works.
+		store, err := silo.New(ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+		process := readfile.Process(ctx, postgrey.GetDb(), store, args.File)
+		process.Run()
+		if process.HasErr() {
+			return nil, nil, process.GetErr()
+		}
+		body := process.GetBody()
+		defer body.Close()
+		data, err := io.ReadAll(body)
+		if err != nil {
+			return nil, nil, err
+		}
+		return &mcp.CallToolResult{Content: []mcp.Content{fileContent(process.GetResult(), data)}}, nil, nil
+	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "attach_file",
+		Description: "Store an image or attachment and answer the markdown citing it, to put in a note with create_note or edit_note.",
+	}, func(_ context.Context, _ *mcp.CallToolRequest, args attachArgs) (*mcp.CallToolResult, attached, error) {
+		data, err := base64.StdEncoding.DecodeString(args.Data)
+		if err != nil {
+			return nil, attached{}, fmt.Errorf("data is not base64: %w", err)
+		}
+		store, err := silo.New(ctx)
+		if err != nil {
+			return nil, attached{}, err
+		}
+
+		process := createfile.Process(ctx, postgrey.GetDb(), store, createfile.Input{Name: args.Name, Data: data})
+		process.Run()
+		if process.HasErr() {
+			return nil, attached{}, process.GetErr()
+		}
+		file := process.GetResult()
+		return nil, attached{ID: file.ID, Markdown: citation(file, args.Name)}, nil
+	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "export_notes",
+		Description: "Export notes as markdown files, [[links]] written back, their folders as directories.",
+	}, func(_ context.Context, _ *mcp.CallToolRequest, args exportArgs) (*mcp.CallToolResult, []exported, error) {
+		folderID, err := resolveFolder(ctx, args.Folder)
+		if err != nil {
+			return nil, nil, err
+		}
+		ids := make([]string, 0, len(args.Items))
+		for _, ref := range args.Items {
+			id, err := resolve(ctx, "", ref)
+			if err != nil {
+				return nil, nil, err
+			}
+			ids = append(ids, id)
+		}
+
+		process := exportnotes.Process(ctx, postgrey.GetDb(), folderID, ids...)
+		process.Run()
+		if process.HasErr() {
+			return nil, nil, process.GetErr()
+		}
+		return nil, exportedFiles(process.GetResult()), nil
+	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "import_notes",
+		Description: "Import markdown files as notes, their directories as folders, all or nothing: a folder name already taken refuses.",
+	}, func(_ context.Context, _ *mcp.CallToolRequest, args importArgs) (*mcp.CallToolResult, importnotes.Result, error) {
+		parentID, err := resolveFolder(ctx, args.Folder)
+		if err != nil {
+			return nil, importnotes.Result{}, err
+		}
+		dir, err := importDir(args.Files)
+		if err != nil {
+			return nil, importnotes.Result{}, err
+		}
+
+		// Silo even for text: a note linking to another whose bytes look like a PDF stores it as a file.
+		store, err := silo.New(ctx)
+		if err != nil {
+			return nil, importnotes.Result{}, err
+		}
+		process := importnotes.Process(ctx, postgrey.GetDb(), store, importnotes.Input{Dir: dir, ParentID: parentID})
+		process.Run()
+		return nil, process.GetResult(), process.GetErr()
+	})
+}
+
+// fileContent shows an image or plays an audio to the agent; anything else comes as a resource of its type.
+func fileContent(file domain.File, data []byte) mcp.Content {
+	switch {
+	case strings.HasPrefix(file.ContentType, "image/"):
+		return &mcp.ImageContent{Data: data, MIMEType: file.ContentType}
+	case strings.HasPrefix(file.ContentType, "audio/"):
+		return &mcp.AudioContent{Data: data, MIMEType: file.ContentType}
+	}
+	return &mcp.EmbeddedResource{Resource: &mcp.ResourceContents{URI: domain.FileURL(file.ID), MIMEType: file.ContentType, Blob: data}}
+}
+
+// citation is the markdown of a file in a note, under the name given (the stored one is sealed): an image shown, anything else linked.
+func citation(file domain.File, name string) string {
+	link := "[" + name + "](" + domain.FileURL(file.ID) + ")"
+	if strings.HasPrefix(file.ContentType, "image/") {
+		return "!" + link
+	}
+	return link
+}
+
+// exportedFiles leaves the directories out, implied by the paths of what they hold, and names a file by the id read_file takes.
+func exportedFiles(files []exportnotes.File) []exported {
+	out := []exported{}
+	for _, file := range files {
+		switch {
+		case file.Dir:
+		case file.Key != "":
+			// exportnotes names it <id><ext> in its FilesDir.
+			out = append(out, exported{Path: file.Path, File: strings.TrimSuffix(path.Base(file.Path), path.Ext(file.Path))})
+		default:
+			out = append(out, exported{Path: file.Path, Content: file.Content})
+		}
+	}
+	return out
+}
+
+// importDir makes a directory of the notes, refusing a path that would climb out of it: an agent sends text, not the
+// bytes of an image.
+func importDir(files []importFile) (fstest.MapFS, error) {
+	dir := fstest.MapFS{}
+	for _, file := range files {
+		if !fs.ValidPath(file.Path) || !strings.EqualFold(path.Ext(file.Path), ".md") {
+			return nil, fmt.Errorf("%w: %q", errBadPath, file.Path)
+		}
+		dir[file.Path] = &fstest.MapFile{Data: []byte(file.Content)}
+	}
+	return dir, nil
 }
 
 // deleteItem trashes one note or folder, named by uuid or by path.

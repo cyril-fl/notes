@@ -175,9 +175,9 @@ Le détail de chaque commande est dans `notes <commande> --help`.
 notes mcp   # parle MCP sur stdin/stdout, pour le compte de la session CLI (notes login)
 ```
 
-`notes mcp` donne à un agent quinze outils sur les notes du compte : lecture (`search_notes`, `recent_notes`, `read_note`, `list_folder`, `list_tags`, `read_tag`), écriture (`create_note`, `edit_note`, `create_folder`, `rename_folder`, `move_item`) et corbeille (`delete_note`, `delete_folder`, `list_trash`, `restore_item`). Il passe par les mêmes processus que la CLI et l'API, n'écoute sur aucun port et n'a rien à authentifier : c'est la session CLI de la machine qui décide du compte, avec tous ses droits.
+`notes mcp` donne à un agent vingt-trois outils sur les notes du compte : lecture (`search_notes`, `recent_notes`, `read_note`, `list_folder`, `list_tags`, `read_tag`, `note_history`, `note_links`, `read_file`, `export_notes`), écriture (`create_note`, `edit_note`, `create_folder`, `rename_folder`, `move_item`, `rename_tag`, `delete_tag`, `attach_file`, `import_notes`) et corbeille (`delete_note`, `delete_folder`, `list_trash`, `restore_item`). Il passe par les mêmes processus que la CLI et l'API, n'écoute sur aucun port et n'a rien à authentifier : c'est la session CLI de la machine qui décide du compte, avec tous ses droits.
 
-Un MCP ne se lit pas comme une API : on ne le lance pas à la main, c'est le client qui le démarre, et la question du compte ne se règle pas dans la requête mais par `notes login`. Tout est dans **[MCP.md](MCP.md)** : déclarer le serveur chez le client, le compte pour lequel il agit et comment le partager entre machines, les quinze outils, et ce qu'il faut savoir avant de lâcher un agent sur ses notes.
+Un MCP ne se lit pas comme une API : on ne le lance pas à la main, c'est le client qui le démarre, et la question du compte ne se règle pas dans la requête mais par `notes login`. Tout est dans **[MCP.md](MCP.md)** : déclarer le serveur chez le client, le compte pour lequel il agit et comment le partager entre machines, les vingt-trois outils, et ce qu'il faut savoir avant de lâcher un agent sur ses notes.
 
 ## API
 
