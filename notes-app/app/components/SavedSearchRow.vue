@@ -20,7 +20,7 @@ const isOver = useDropReorder(link, () => props.search.id, reorderSavedSearch);
       class="row"
       :class="{ 'row-active': route.params.id === search.id, 'row-over': isOver }"
     >
-      <UIcon :name="icons.search" class="size-4 shrink-0" :class="isOver ? 'text-inverted' : 'text-muted'" />
+      <UIcon :name="icons.savedSearch" class="size-4 shrink-0" :class="isOver ? 'text-inverted' : 'text-muted'" />
       <span class="truncate">{{ search.name }}</span>
     </NuxtLink>
   </UContextMenu>

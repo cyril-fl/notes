@@ -58,8 +58,6 @@
       "add": "Smart folder",
       "edit": "Edit the smart folder",
       "delete": "Delete “{name}”?",
-      "moveUp": "Move up",
-      "moveDown": "Move down",
       "name": "Name",
       "anyTag": "Any tag",
       "tagMode": "Combine tags",

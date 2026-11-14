@@ -330,16 +330,6 @@ export function useSavedSearches() {
     if (confirmed) await save(list().filter((s) => s.id !== search.id));
   }
 
-  /** Moves a saved search next to its neighbor: the Monter/Descendre fallback to dragging a row. */
-  async function moveSavedSearch(id: string, direction: 'up' | 'down') {
-    const searches = [...list()];
-    const from = searches.findIndex((s) => s.id === id);
-    const to = direction === 'up' ? from - 1 : from + 1;
-    if (from < 0 || to < 0 || to >= searches.length) return;
-    [searches[from], searches[to]] = [searches[to]!, searches[from]!];
-    await save(searches);
-  }
-
   /** Drops what useDragItem carried onto this saved search, moving the dragged one right before it. */
   async function reorderSavedSearch(draggedId: string, targetId: string) {
     if (draggedId === targetId) return;
@@ -354,11 +344,7 @@ export function useSavedSearches() {
 
   function savedSearchMenu(search: SavedSearch): ContextMenuItem[][] {
     return [
-      [
-        { label: t('common.edit'), icon: icons.rename, onSelect: () => editSavedSearch(search) },
-        { label: t('search.saved.moveUp'), icon: icons.up, onSelect: () => moveSavedSearch(search.id, 'up') },
-        { label: t('search.saved.moveDown'), icon: icons.down, onSelect: () => moveSavedSearch(search.id, 'down') },
-      ],
+      [{ label: t('common.edit'), icon: icons.rename, onSelect: () => editSavedSearch(search) }],
       [
         {
           label: t('common.delete'),
@@ -370,5 +356,5 @@ export function useSavedSearches() {
     ];
   }
 
-  return { addSavedSearch, editSavedSearch, removeSavedSearch, moveSavedSearch, reorderSavedSearch, savedSearchMenu };
+  return { addSavedSearch, editSavedSearch, removeSavedSearch, reorderSavedSearch, savedSearchMenu };
 }

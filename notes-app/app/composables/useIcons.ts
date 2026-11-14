@@ -16,6 +16,7 @@ export function useIcons() {
     pin: 'i-reicon-thumbtack-filled',
     unpin: 'i-reicon-thumbtack',
     favorite: 'i-reicon-star-filled',
+    savedSearch: 'i-reicon-folder-bookmark',
     unfavorite: 'i-reicon-star-off',
     rename: 'i-reicon-edit',
     move: 'i-reicon-folder-move',

@@ -227,11 +227,6 @@ const isOverRoot = useDropFolder(rootLink, () => null);
           </div>
         </section>
 
-        <section v-if="has('savedSearches') && sections.savedSearches && me?.saved_searches?.length">
-          <h2 class="px-2 pb-1 text-xs font-medium text-muted">{{ $t('sidebar.savedSearches') }}</h2>
-          <SavedSearchRow v-for="search in me.saved_searches" :key="search.id" :search="search" />
-        </section>
-
         <section v-if="sections.pinned && pinnedNotes.length">
           <h2 class="px-2 pb-1 text-xs font-medium text-muted">{{ $t('sidebar.pinned') }}</h2>
           <div
@@ -301,6 +296,11 @@ const isOverRoot = useDropFolder(rootLink, () => null);
             </UTooltip>
           </div>
           <FolderTree />
+        </section>
+
+        <section v-if="has('savedSearches') && sections.savedSearches && me?.saved_searches?.length">
+          <h2 class="px-2 pb-1 text-xs font-medium text-muted">{{ $t('sidebar.savedSearches') }}</h2>
+          <SavedSearchRow v-for="search in me.saved_searches" :key="search.id" :search="search" />
         </section>
       </div>
     </template>

@@ -58,8 +58,6 @@
       "add": "Dossier intelligent",
       "edit": "Modifier le dossier intelligent",
       "delete": "Supprimer « {name} » ?",
-      "moveUp": "Monter",
-      "moveDown": "Descendre",
       "name": "Nom",
       "anyTag": "N'importe quel tag",
       "tagMode": "Combinaison des tags",
