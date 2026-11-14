@@ -36,7 +36,11 @@ func sessionFile() (string, error) {
 	return filepath.Join(dir, "notes", "session"), nil
 }
 
+// readToken takes NOTES_SESSION first, for an agent that cannot run notes login where it runs, then the session file.
 func readToken() string {
+	if token := strings.TrimSpace(os.Getenv("NOTES_SESSION")); token != "" {
+		return token
+	}
 	file, err := sessionFile()
 	if err != nil {
 		return ""
@@ -58,13 +62,20 @@ func WithAccount(ctx context.Context) (context.Context, error) {
 	return domain.WithUser(ctx, session.GetResult().ID), nil
 }
 
-// Login asks the account's name and password and keeps the session in the user's config folder.
+// Login asks the account's name and password and keeps the session in the user's config folder, or with
+// --print-token prints a session of its own, for NOTES_SESSION, and keeps nothing.
 func Login(cobra *cobra.Command, args []string) error {
 	var input createsession.Input
-	if err := huhform.New(
+	print, _ := cobra.Flags().GetBool("print-token")
+	form := huhform.New(
 		huh.NewInput().Title("Name").Value(&input.Name),
 		huh.NewInput().Title("Password").EchoMode(huh.EchoModePassword).Value(&input.Password),
-	).Run(); err != nil {
+	)
+	// The form on stderr leaves stdout to the token alone, for NOTES_SESSION=$(notes login --print-token).
+	if print && huhform.Input == nil {
+		form = form.WithOutput(os.Stderr)
+	}
+	if err := form.Run(); err != nil {
 		return err
 	}
 
@@ -72,6 +83,10 @@ func Login(cobra *cobra.Command, args []string) error {
 	process.Run()
 	if process.HasErr() {
 		return process.GetErr()
+	}
+	if print {
+		fmt.Println(process.GetResult().Token)
+		return nil
 	}
 
 	file, err := sessionFile()
@@ -88,12 +103,16 @@ func Login(cobra *cobra.Command, args []string) error {
 	return nil
 }
 
-// Logout ends the CLI's session, in the base and on disk.
+// Logout ends the CLI's session, in the base and on disk; a NOTES_SESSION one in the base only, the file is another.
 func Logout(cobra *cobra.Command, args []string) error {
 	process := deletesession.Process(cobra.Context(), postgrey.GetDb(), readToken())
 	process.Run()
 	if process.HasErr() {
 		return process.GetErr()
+	}
+	if strings.TrimSpace(os.Getenv("NOTES_SESSION")) != "" {
+		fmt.Println("Logged out")
+		return nil
 	}
 	if file, err := sessionFile(); err == nil {
 		if err := os.Remove(file); err != nil && !errors.Is(err, os.ErrNotExist) {

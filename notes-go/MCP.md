@@ -81,24 +81,33 @@ notes login
 
 ### Quand on ne peut pas se connecter là où l'agent tourne
 
-Le jeton n'est lié à aucune machine : la base n'en garde que le hash, et `readsession` ne compare que
-ça. Il se recopie donc, de la machine où la session existe :
+Un agent dans un conteneur ou hébergé ailleurs n'a pas de shell pour `notes login`, ni de home
+persistant pour le fichier. Il prend alors le jeton dans **`NOTES_SESSION`**, lue avant le fichier
+(le fichier reste le cas normal). Le jeton se demande là où l'on peut se connecter :
 
 ```sh
-cat ~/Library/Application\ Support/notes/session
+notes login --print-token
 ```
 
-vers celle de l'agent, sous le bon utilisateur :
+Il crée une session **à part**, l'affiche et n'écrit rien : celle de la machine n'est pas touchée.
+Le formulaire s'affiche sur stderr, stdout ne porte que le jeton : `NOTES_SESSION=$(notes login
+--print-token)` le range directement dans une variable, sans qu'il passe par l'écran. Le
+jeton n'est lié à aucune machine (la base n'en garde que le hash), il se donne donc à l'agent par son
+environnement :
 
 ```sh
-mkdir -p ~/.config/notes && printf '%s' '<le-jeton>' > ~/.config/notes/session && chmod 600 ~/.config/notes/session
+NOTES_SESSION='<le-jeton>' notes-go mcp
 ```
 
-Les deux partagent alors la même session, et un `notes logout` d'un côté la coupe des deux.
+- Elle vit comme les autres : **30 jours glissants**, relancée à chaque usage.
+- Pour la couper : `NOTES_SESSION='<le-jeton>' notes logout`. Seule cette session part, le fichier
+  de la machine reste.
 
-Ce fichier ouvre le compte entier : il se traite comme un mot de passe, jamais dans un dépôt ni dans
-un fichier de configuration versionné. Il n'y a pas encore de jeton par variable d'environnement, ce
-qui serait plus pratique pour un conteneur ou un agent hébergé.
+**Ce jeton ouvre le compte entier.** Il se traite comme un mot de passe : il ne va **pas** dans un
+`.mcp.json`, un `config.toml` ou tout fichier versionné, ni dans le bloc `env` d'un client dont la
+configuration se partage. Il se donne par le gestionnaire de secrets de la plateforme qui héberge
+l'agent (secret de conteneur, variable chiffrée du CI), ou par l'environnement du shell qui lance le
+client.
 
 ### Ce que ça implique
 

@@ -336,3 +336,55 @@ func TestSession(t *testing.T) {
 		t.Errorf("session in the base: err = %v, want it deleted", check.GetErr())
 	}
 }
+
+// --print-token prints a session of its own and keeps no file; NOTES_SESSION then wins over the file, and logout ends
+// that session only, the file's staying.
+func TestPrintToken(t *testing.T) {
+	ctx := setup(t)
+	name := account(t, ctx)
+	if _, err := run(t, ctx, AddUser, "a password\n", name); err != nil {
+		t.Fatal(err)
+	}
+	keys(t, name+"\r", "a password\r")
+	if _, err := run(t, ctx, Login, ""); err != nil {
+		t.Fatal(err)
+	}
+	file, err := sessionFile()
+	if err != nil {
+		t.Fatal(err)
+	}
+	kept, _ := os.ReadFile(file)
+
+	keys(t, name+"\r", "a password\r")
+	command := func(cobra *cobra.Command, args []string) error {
+		cobra.Flags().Bool("print-token", true, "")
+		return Login(cobra, args)
+	}
+	printed, err := run(t, ctx, command, "")
+	token := strings.TrimSpace(printed)
+	if err != nil || token == "" || token == string(kept) {
+		t.Fatalf("printed %q, err = %v; want a new token", printed, err)
+	}
+	if now, _ := os.ReadFile(file); string(now) != string(kept) {
+		t.Errorf("session file rewritten by --print-token")
+	}
+
+	t.Setenv("NOTES_SESSION", token+"\n")
+	if readToken() != token {
+		t.Errorf("readToken() = %q, want NOTES_SESSION's", readToken())
+	}
+	if _, err := WithAccount(ctx); err != nil {
+		t.Errorf("act through NOTES_SESSION: %v", err)
+	}
+	if _, err := run(t, ctx, Logout, ""); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := WithAccount(ctx); !errors.Is(err, domain.ErrNoUser) {
+		t.Errorf("NOTES_SESSION after logout: err = %v, want %v", err, domain.ErrNoUser)
+	}
+
+	t.Setenv("NOTES_SESSION", "")
+	if _, err := WithAccount(ctx); err != nil {
+		t.Errorf("the file's session after logging NOTES_SESSION out: %v, want it kept", err)
+	}
+}

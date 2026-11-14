@@ -307,8 +307,14 @@ commands:
   login:
     use: "login"
     short: "Log the CLI in to an account"
-    long: "Ask the account's name and password, and keep the session in the user's config folder (readable by the user only). Every other command then acts for this account."
-    example: "notes login"
+    long: "Ask the account's name and password, and keep the session in the user's config folder (readable by the user only). Every other command then acts for this account. With --print-token, print a new session token instead and keep nothing: an agent that cannot log in where it runs gets it through NOTES_SESSION, which wins over the file. The token opens the whole account."
+    example: "notes login\nexport NOTES_SESSION=$(notes login --print-token)"
+    args:
+      - name: "print-token"
+        shorthand: ""
+        value: ""
+        usage: "Print a new session token for NOTES_SESSION instead of keeping it"
+        type: "bool"
   logout:
     use: "logout"
     short: "Log the CLI out"

@@ -84,6 +84,7 @@ var cmdAccountPurge = &cobra.Command{
 var noAccount = map[*cobra.Command]bool{cmdUser: true, cmdLogin: true, cmdLogout: true, cmdUserAdd: true, cmdUserPerf: true, cmdResetPassword: true, cmdRotateSecret: true, cmdServe: true}
 
 func init() {
+	plumcliutilsargs.Makeflags(cmdLogin, cmd.Login.Flags)
 	plumcliutilsargs.Makeflags(cmdUserAdd, cmd.UserAdd.Flags)
 	plumcliutilsargs.Makeflags(cmdUserPerf, cmd.UserPerf.Flags)
 	plumcliutilsargs.Makeflags(cmdResetPassword, cmd.ResetPassword.Flags)

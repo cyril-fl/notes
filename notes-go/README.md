@@ -56,7 +56,7 @@ notes account purge             # vide le compte connecté (notes, dossiers, tag
 
 - **Scripts :** `--password-stdin` lit le mot de passe sur l'entrée standard, pour `user add` et `reset-password`.
 - **Admin :** le drapeau est posé par le premier compte créé dans une base vide, quelle que soit la façon. Pour le déplacer ou en ajouter un, il faut toucher la base : `UPDATE users SET admin = true WHERE name = '<nom>'`.
-- **Session de la CLI :** elle est gardée dans `~/.config/notes/session` sous Linux et `~/Library/Application Support/notes/session` sous macOS, lisible par l'utilisateur seul. Elle dure 30 jours, prolongés à chaque usage.
+- **Session de la CLI :** elle est gardée dans `~/.config/notes/session` sous Linux et `~/Library/Application Support/notes/session` sous macOS, lisible par l'utilisateur seul. Elle dure 30 jours, prolongés à chaque usage. `NOTES_SESSION`, si elle est posée, passe avant ce fichier : `notes login --print-token` crée une session à part et n'affiche que son jeton, pour un agent qui ne peut pas se connecter là où il tourne (voir `MCP.md`). `notes logout` avec la variable ne coupe que cette session. Le jeton ouvre le compte entier, il ne va dans aucun fichier versionné.
 
 Les commandes `note` et `folder`, ainsi que `move`, `finder` et `graph`, acceptent un UUID ou un chemin :
 
